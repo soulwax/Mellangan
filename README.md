@@ -1,17 +1,42 @@
 # Mellangan
 
-A CMake/C++ project built on the [Vulkan2D](https://github.com/soulwax/Vulkan2D) library.
+A small top-down survivors-like built with C++20 on the [Vulkan2D](https://github.com/soulwax/Vulkan2D) renderer,
+using [EnTT](https://github.com/skypjack/entt) for entity storage and [spdlog](https://github.com/gabime/spdlog) for logging.
 
-## Getting started
+Walk; your weapons fire on their own. Collect gems to level up, choose upgrades, and survive the waves and the cyclops.
 
-Clone with submodules:
+## Building
+
+Requires CMake 3.21+, a C++20 compiler (MSVC on Windows), and the [Vulkan SDK](https://vulkan.lunarg.com/).
 
 ```sh
 git clone --recurse-submodules git@github.com:soulwax/Mellangan.git
+cmake -S . -B build
+cmake --build build --config Release
 ```
 
-Or, if already cloned:
+On Windows, if `VULKAN_SDK` is not set, CMake picks the newest install under `C:/VulkanSDK`.
+The first build compiles Slang (Vulkan2D's runtime shader compiler) and takes a while.
+The executable lands in `build/Release/` with `res/` copied next to it.
 
-```sh
-git submodule update --init --recursive
-```
+## Controls
+
+| Key | Action |
+| --- | --- |
+| WASD / Arrows | Move |
+| 1-3, Arrows + Enter, Mouse | Pick an upgrade |
+| Esc / P | Pause |
+| F11 | Fullscreen |
+| F3 | FPS counter |
+
+## Layout
+
+- `src/entity` – `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, particles
+- `src/item` – `Upgrade` and its weapons and passives
+- `src/level` – `Level` (backed by an `entt::registry`) and the `Spawner`
+- `src/menu` – title, pause, level-up, and death menus
+- `src/gfx` – `Screen`, the thin layer over Vulkan2D
+- `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
+- `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites
+
+See `res/CREDITS.md` for asset licenses.

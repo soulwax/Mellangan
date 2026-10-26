@@ -1,0 +1,154 @@
+#include "gfx/Screen.hpp"
+
+#include <spdlog/spdlog.h>
+
+#include <algorithm>
+#include <string>
+
+bool Screen::load(const std::string &base) {
+    auto path = [&](const char *rel) { return base + rel; };
+    atlas = vk2dTextureLoad(path("res/atlas.png").c_str());
+    font = vk2dTextureLoad(path("res/font.png").c_str());
+    post = vk2dSlangLoad(path("res/shaders/post.slang").c_str());
+    flashShader = vk2dSlangLoad(path("res/shaders/flash.slang").c_str());
+    world = vk2dTextureCreate(W, H);
+    light = vk2dTextureCreate(W, H);
+    if (atlas && font && post && flashShader && world && light) return true;
+    spdlog::error("Failed to load resources from {}res: {}", base, vk2dStatusMessage());
+    return false;
+}
+
+void Screen::unload() {
+    for (VK2DShader s : {post, flashShader})
+        if (s) vk2dShaderFree(s);
+    for (VK2DTexture t : {atlas, font, world, light})
+        if (t) vk2dTextureFree(t);
+}
+
+void Screen::beginLight(Color ambient) {
+    vk2dRendererSetTarget(light);
+    vk2dRendererSetBlendMode(VK2D_BLEND_MODE_BLEND);
+    color(ambient);
+    vk2dRendererClear();
+    vk2dRendererSetBlendMode(VK2D_BLEND_MODE_ADD);
+    // VK2D flushes its sprite batch on every additive draw, so lights are rationed.
+    lightBudget = 240;
+}
+
+void Screen::beginWorld(Color clear) {
+    vk2dRendererSetTarget(world);
+    vk2dRendererSetBlendMode(VK2D_BLEND_MODE_BLEND);
+    color(clear);
+    vk2dRendererClear();
+    color(col::white);
+}
+
+void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
+    vk2dRendererSetTarget(VK2D_TARGET_SCREEN);
+    int pw, ph;
+    SDL_GetWindowSizeInPixels(window, &pw, &ph);
+    w = float(std::max(pw, 1)), h = float(std::max(ph, 1));
+
+    VK2DCameraSpec cam{};
+    cam.type = VK2D_CAMERA_TYPE_DEFAULT;
+    cam.w = w, cam.h = h, cam.zoom = 1;
+    vk2dRendererSetCamera(cam);
+
+    float fit = std::min(w / W, h / H);
+    scale = fit >= 1 ? std::floor(fit) : fit;
+    u = std::max(1.0f, std::round(scale * 0.5f));
+    offset = {};
+
+    color(col::black);
+    vk2dRendererClear();
+    color(col::white);
+
+    struct {
+        float time, hurt, lowHealth;
+        uint32_t light;
+        float resW, resH, vignette, grain;
+    } data{fx.time, fx.hurt, fx.lowHealth, vk2dTextureGetID(light), float(W), float(H), 0.85f, 0.035f};
+    vk2dRendererDrawShader(post, &data, world, std::floor((w - W * scale) / 2), std::floor((h - H * scale) / 2),
+                           scale, scale, 0, 0, 0, 0, 0, W, H);
+}
+
+void Screen::color(Color c) {
+    current = c;
+    const float v[4] = {c.r, c.g, c.b, c.a};
+    vk2dRendererSetColourMod(v);
+}
+
+void Screen::sprite(const Sprite &s, Vec2 at, Vec2 o, Vec2 sc, float rot) {
+    // VK2D puts the scaled quad's top-left at pos and pivots on pos + origin * scale.
+    Vec2 p = at - offset - Vec2{o.x * sc.x, o.y * sc.y};
+    vk2dRendererDrawTexture(atlas, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
+}
+
+void Screen::center(const Sprite &s, Vec2 at, float sc, float rot) {
+    sprite(s, at, {s.w * 0.5f, s.h * 0.5f}, {sc, sc}, rot);
+}
+
+void Screen::flash(const Sprite &s, Vec2 at, Vec2 o, Vec2 sc, float rot, float amount, Color c) {
+    if (amount <= 0) return sprite(s, at, o, sc, rot);
+    float data[4] = {amount, c.r, c.g, c.b};
+    Vec2 p = at - offset - Vec2{o.x * sc.x, o.y * sc.y};
+    vk2dRendererDrawShader(flashShader, data, atlas, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
+}
+
+void Screen::glow(Vec2 at, float size, Color c) {
+    if (lightBudget <= 0 || !visible(at, size * 0.5f)) return;
+    lightBudget--;
+    color(c);
+    center(atlas::Glow, at, size / atlas::Glow.w);
+}
+
+void Screen::rect(float x, float y, float rw, float rh, Color c) {
+    Color prev = current;
+    color(c);
+    const Sprite &s = atlas::White;
+    vk2dRendererDrawTexture(atlas, x - offset.x, y - offset.y, rw / s.w, rh / s.h, 0, 0, 0, s.x, s.y, s.w, s.h);
+    color(prev);
+}
+
+void Screen::frame(float x, float y, float rw, float rh, float t, Color c) {
+    rect(x, y, rw, t, c);
+    rect(x, y + rh - t, rw, t, c);
+    rect(x, y + t, t, rh - 2 * t, c);
+    rect(x + rw - t, y + t, t, rh - 2 * t, c);
+}
+
+void Screen::number(int n, Vec2 at, Color c) {
+    std::string s = std::to_string(std::max(n, 0));
+    float x = std::round(at.x - (s.size() * 4 + 1) * 0.5f), y = std::round(at.y - 3);
+    Color prev = current;
+    color(c);
+    for (char ch : s) sprite(atlas::digit(ch - '0'), {x, y}, {0, 0}), x += 4;
+    color(prev);
+}
+
+void Screen::glyphs(std::string_view s, float x, float y, float size) {
+    for (unsigned char ch : s) {
+        if (ch != ' ')
+            vk2dRendererDrawTexture(font, x - offset.x, y - offset.y, size, size, 0, 0, 0,
+                                    float(ch % 16 * 8), float(ch / 16 * 16), 8, 16);
+        x += 8 * size;
+    }
+}
+
+void Screen::text(std::string_view s, float x, float y, float size, Color c) {
+    Color prev = current;
+    color({0.02f, 0.01f, 0.05f, c.a * 0.85f});
+    glyphs(s, x + size, y + size, size);
+    color(c);
+    glyphs(s, x, y, size);
+    color(prev);
+}
+
+void Screen::textCenter(std::string_view s, float cx, float y, float size, Color c) {
+    text(s, std::floor(cx - textWidth(s, size) * 0.5f), y, size, c);
+}
+
+bool Screen::visible(Vec2 p, float m) const {
+    Vec2 v = p - offset;
+    return v.x > -m && v.y > -m && v.x < W + m && v.y < H + m;
+}

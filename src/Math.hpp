@@ -6,6 +6,7 @@
 
 constexpr float PI = 3.14159265358979f;
 constexpr float TAU = PI * 2.0f;
+constexpr float DT = 1.0f / 60.0f;
 
 struct Vec2 {
     float x = 0, y = 0;
@@ -29,6 +30,10 @@ inline Vec2 normalized(Vec2 v) {
 }
 inline Vec2 perp(Vec2 v) { return {-v.y, v.x}; }
 inline Vec2 fromAngle(float a) { return {std::cos(a), std::sin(a)}; }
+inline Vec2 rotate(Vec2 v, float a) {
+    float c = std::cos(a), s = std::sin(a);
+    return {v.x * c - v.y * s, v.x * s + v.y * c};
+}
 inline float lerpf(float a, float b, float t) { return a + (b - a) * t; }
 inline Vec2 lerp(Vec2 a, Vec2 b, float t) { return a + (b - a) * t; }
 inline float clampf(float v, float lo, float hi) { return std::max(lo, std::min(hi, v)); }
@@ -50,6 +55,8 @@ struct Rng {
     bool chance(float p) { return unit() < p; }
     Vec2 onCircle() { return fromAngle(range(0, TAU)); }
 };
+
+inline Rng rng;
 
 inline uint32_t hash2(int x, int y) {
     uint32_t h = uint32_t(x) * 0x8DA6B343u ^ uint32_t(y) * 0xD8163841u;
