@@ -61,9 +61,13 @@ protected:
 class Cultist : public Enemy {
 public:
     using Enemy::Enemy;
+    void tick() override;
 
 protected:
     Vec2 steer(Vec2 dir) override;
+
+private:
+    float castTimer = 2.5f;
 };
 
 class Ghost : public Enemy {
@@ -74,6 +78,18 @@ public:
 protected:
     Vec2 steer(Vec2 dir) override;
     Color tint() const override { return col::white.alpha(0.72f); }
+};
+
+// Breakable supplies: an Enemy so every weapon can hit it, but it never moves, attacks or counts as a kill.
+class SupplyBarrel : public Enemy {
+public:
+    SupplyBarrel();
+    void tick() override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
+
+protected:
+    void die() override;
 };
 
 class Cyclops : public Enemy {

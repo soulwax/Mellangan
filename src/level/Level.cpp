@@ -79,7 +79,6 @@ bool propAt(int x, int y, Prop &p) {
         {tt::Mushrooms, true, 0, {0.03f, 0.12f, 0.10f, 1}}, {tt::Sprouts, true, 0, none},
         {tt::Log, true, 0.9f, none},                         {tt::Beehive, true, 0.8f, none},
         {tt::Sign, true, 0.6f, none},                        {tt::Sack, true, 0.6f, none},
-        {t::Barrel, false, 0.8f, none},
         {t::Crystal, false, 0.7f, {0.05f, 0.18f, 0.30f, 1}}, {tt::Well, true, 1.0f, none},
     };
     r -= graves;
@@ -231,6 +230,12 @@ void Spawner::tick() {
         for (int i = 0; i < count; i++) spawn(pool.back(), level.player->pos + fromAngle(TAU * i / count) * 270);
         level.game.announce("THE HORDE CLOSES IN");
         Sound::horde.play(0.7f, 0);
+    }
+    if (t >= nextBarrel) {
+        nextBarrel += 20;
+        auto b = std::make_unique<SupplyBarrel>();
+        b->pos = ring(rng.range(270, 300));
+        level.add(std::move(b));
     }
     if (t >= nextBoss) {
         nextBoss += 150;

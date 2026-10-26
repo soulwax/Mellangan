@@ -65,6 +65,29 @@ void Potion::take(Player &p) {
     Spark::burst(*level, pos, col::heal, 10, 50, true);
 }
 
+void Magnet::render(Screen &s) { s.center(atlas::tile(atlas::t::Coin), pos + Vec2{0, bob()}); }
+
+void Magnet::renderLight(Screen &s) { s.glow(pos, 50, {0.10f, 0.25f, 0.45f, 1}); }
+
+void Magnet::take(Player &) {
+    level->each<Gem>([](Gem &g) { g.magnet = true, g.speed = 0; });
+    Sound::magnet.play(0.7f, 0);
+    Spark::burst(*level, pos, col::xp, 16, 80, true);
+}
+
+void Nova::render(Screen &s) { s.center(atlas::tile(atlas::t::VialBlue), pos + Vec2{0, bob()}, 0.9f); }
+
+void Nova::renderLight(Screen &s) { s.glow(pos, 60, Color{0.3f, 0.3f, 0.45f, 1} * (0.8f + 0.2f * std::sin(t * 6))); }
+
+void Nova::take(Player &p) {
+    level->each<Enemy>([&](Enemy &e) {
+        if (lengthSq(e.pos - p.pos) < 260 * 260) e.hurt(e.type.tile == atlas::t::Cyclops ? 250.0f : 9999.0f, normalized(e.pos - p.pos), 200);
+    });
+    Sound::nova.play(0.8f, 0);
+    Spark::burst(*level, p.body(), {0.8f, 0.85f, 1, 1}, 40, 220, true);
+    level->game.onExplosion();
+}
+
 void Chest::render(Screen &s) { s.center(atlas::tile(atlas::t::Chest), pos + Vec2{0, bob() - 4}); }
 
 void Chest::renderLight(Screen &s) { s.glow(pos, 110, Color{0.45f, 0.35f, 0.1f, 1} * (1 + 0.2f * std::sin(t * 5))); }

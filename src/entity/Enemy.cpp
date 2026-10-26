@@ -6,6 +6,7 @@
 #include "audio/Sound.hpp"
 #include "entity/Particle.hpp"
 #include "entity/Pickup.hpp"
+#include "entity/Projectile.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
 
@@ -24,6 +25,7 @@ const EnemyType TYPES[] = {
     {t::Knight, 120, 26, 18, 7, 1.15f, 10, 0.4f, {0.75f, 0.78f, 0.85f, 1}, false, 300},
     {t::Cyclops, 900, 30, 28, 15, 2.5f, 40, 0.15f, {1, 0.75f, 0.5f, 1}, false, 1e9f},
 };
+const EnemyType BARREL{t::Barrel, 12, 0, 0, 6, 1, 0, 0, {0.6f, 0.4f, 0.25f, 1}, false, 1e9f};
 constexpr int ELITE_XP = 6;
 } // namespace
 
@@ -82,7 +84,8 @@ void Enemy::separate() {
         Vec2 d = pos - o.pos;
         float min = (radius + o.radius) * 0.85f, d2 = lengthSq(d);
         if (d2 >= min * min || d2 < 1e-6f) return;
-        float dd = std::sqrt(d2), w = o.radius / (radius + o.radius);
+        // Things that never move (barrels) don't get shoved.
+        float dd = std::sqrt(d2), w = o.type.speed <= 0 ? 1 : o.radius / (radius + o.radius);
         Vec2 n = d / dd * ((min - dd) * 0.5f);
         pos += n * w;
         o.pos -= n * (1 - w);
@@ -135,6 +138,43 @@ Vec2 Bat::steer(Vec2 dir) { return dir * type.speed + perp(dir) * (std::sin(anim
 Vec2 Scorpion::steer(Vec2 dir) { return dir * (type.speed * (0.5f + std::max(0.0f, std::sin(animT * 4)) * 1.2f)); }
 
 Vec2 Cultist::steer(Vec2 dir) { return dir * type.speed + perp(dir) * (std::cos(animT * 3) * 28); }
+
+void Cultist::tick() {
+    Enemy::tick();
+    if (removed || (castTimer -= DT) > 0) return;
+    castTimer = rng.range(2.5f, 4.0f);
+    Player &p = *level->player;
+    Vec2 to = p.body() - body();
+    if (p.dead() || lengthSq(to) > 200 * 200) return;
+    level->add<Orb>(body(), normalized(to) * 70, 10 * damageMul);
+    Sound::orb.play(0.3f);
+}
+
+SupplyBarrel::SupplyBarrel() : Enemy(BARREL, 1, 0) {}
+
+void SupplyBarrel::tick() {
+    flash = std::max(0.0f, flash - DT);
+    animT += DT;
+    if (lengthSq(level->player->pos - pos) > 700 * 700) remove();
+}
+
+void SupplyBarrel::render(Screen &s) {
+    s.flash(atlas::tile(t::Barrel), pos, {8, 16}, {1, 1}, 0, flash > 0 ? 1.0f : 0.0f, col::white);
+}
+
+void SupplyBarrel::renderLight(Screen &s) {
+    s.glow(body(), 50, Color{0.22f, 0.16f, 0.06f, 1} * (0.8f + 0.2f * std::sin(animT * 3)));
+}
+
+void SupplyBarrel::die() {
+    remove();
+    Sound::barrel.play(0.6f);
+    Spark::burst(*level, body(), type.blood, 12, 80, false);
+    float r = rng.unit();
+    if (r < 0.45f) level->add<Potion>(pos);
+    else if (r < 0.8f) level->add<Magnet>(pos);
+    else level->add<Nova>(pos);
+}
 
 Vec2 Ghost::steer(Vec2 dir) { return dir * (type.speed * (0.8f + 0.4f * std::sin(animT * 2))); }
 

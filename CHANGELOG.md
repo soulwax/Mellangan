@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-26
+
 ### Added
 
 - Top-down survivors-like on Vulkan2D: auto-firing Arcane Staff, Moon Blade, Warding Halo, Orbiting Knives and
@@ -25,7 +27,15 @@ All notable changes to Mellangan are documented here. The format follows
   logs, beehives, signposts, wells, barrels, sacks, sprouts, glowing crystals and mushrooms.
 - `--dev` flag: F5 grants a level-up, F6 skips 30 seconds, F7 toggles god mode, and performance is logged every 5 s.
 
+- Four new weapons: Storm Rod (lightning on random foes), Fire Bomb (lobbed bomb that leaves burning ground),
+  Hunter's Bow (piercing arrows in your walking direction) and Reaper's Scythe (full-circle sweep).
+- Three new passives: Iron Buckler (armor), Troll Blood (regeneration) and Lucky Key (critical hit chance).
+- Breakable supply barrels that drop a healing potion, a gem magnet or a Starfire nova.
+- Cultists throw slow, dodgeable orbs.
+
 ### Changed
+
+- At most six weapons and six passives per run; new picks are offered only while a slot is free.
 
 - New music: Heavy Battle 2 by MintoDog (CC0), streamed from Vorbis via stb_vorbis.
 - Sound effects are peak-normalized at conversion; the axe throw was 22 dB too quiet.
@@ -37,5 +47,7 @@ All notable changes to Mellangan are documented here. The format follows
 - Sound effects stopped after a while: pitch-shifted voices never drained without a flush, exhausting the voice
   pool. Voices are now flushed and the oldest one is stolen when all are busy.
 - Two-tile trees and wells always draw both halves.
-- White squares over heavy fights: Vulkan2D re-flushed its sprite batch for every additive sprite, which corrupted
-  lights under load (patched in the Vulkan2D submodule).
+- White squares over heavy fights: the bloom smeared clustered damage numbers into blocks; it is now tighter and
+  capped.
+- Vulkan2D flushed its sprite batch for every sprite drawn in a non-default blend mode, so the additive light pass cost
+  one compute dispatch and draw call per light (up to 240 a frame). Patched in the Vulkan2D submodule.

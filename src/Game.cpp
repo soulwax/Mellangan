@@ -79,7 +79,7 @@ void Game::tick() {
     camera = lerp(camera, level->player->pos, damp(9, DT));
     hurt *= std::exp(-3.5f * DT);
     shake *= std::exp(-10 * DT);
-    bannerTime = std::max(0.0f, bannerTime - DT);
+    if (!menu) bannerTime = std::max(0.0f, bannerTime - DT);
     if (bannerTime <= 0 && !banners.empty()) banner = std::move(banners.front()), banners.pop_front(), bannerTime = 3;
 }
 
@@ -165,7 +165,7 @@ void Game::renderHud() {
     s.rect(5 * u, hy + u, (hw - 2 * u) * clampf(p.hp / p.maxHp, 0, 1), 4 * u, col::red);
     s.text(fmt::format("{}/{}", int(std::ceil(p.hp)), int(p.maxHp)), 8 * u + hw, hy - 5 * small, small, col::white);
 
-    if (bannerTime > 0) {
+    if (bannerTime > 0 && !menu) {
         float a = std::min({1.0f, bannerTime * 2, (3 - bannerTime) * 4});
         s.textCenter(banner, s.w / 2, s.h * 0.22f, 2 * u, col::gold.alpha(a));
     }

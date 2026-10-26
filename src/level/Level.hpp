@@ -52,7 +52,7 @@ public:
 
 private:
     Level &level;
-    float timer = 1, nextWave = 60, nextBoss = 150;
+    float timer = 1, nextWave = 60, nextBoss = 150, nextBarrel = 15;
     int bosses = 0;
 
     void spawn(EnemyKind kind, Vec2 at);
