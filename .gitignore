@@ -1,0 +1,40 @@
+# Build directories
+build/
+build-*/
+out/
+cmake-build-*/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# IDE / editor
+.vs/
+.vscode/
+*.vcxproj*
+*.sln
+.idea/
+*.swp
+
+# Compiled binaries
+*.o
+*.obj
+*.exe
+*.dll
+*.lib
+*.pdb
+*.a
+*.so
+*.dylib
+
+# OS cruft
+.DS_Store
+Thumbs.db
