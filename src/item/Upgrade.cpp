@@ -8,12 +8,13 @@
 
 namespace {
 namespace t = atlas::t;
+namespace tt = atlas::tt;
 
 int at(int lvl, int from) { return lvl >= from ? 1 : 0; }
 
 class Staff : public Upgrade {
 public:
-    Staff() : Upgrade("Arcane Staff", atlas::t::Staff, {"Fires bolts at the nearest foe", "+4 damage, casts faster",
+    Staff() : Upgrade("Arcane Staff", atlas::tile(t::Staff), {"Fires bolts at the nearest foe", "+4 damage, casts faster",
                                                         "Fires one more bolt", "Bolts pierce one more foe",
                                                         "Fires one more bolt"}, true) {}
 
@@ -39,7 +40,7 @@ private:
 
 class Blade : public Upgrade {
 public:
-    Blade() : Upgrade("Moon Blade", t::Sword, {"Cleaves the side you face", "Also cleaves behind you",
+    Blade() : Upgrade("Moon Blade", atlas::tile(t::Sword), {"Cleaves the side you face", "Also cleaves behind you",
                                             "+6 damage, wider arc", "+6 damage, faster swings",
                                             "+6 damage, wider arc"}, true) {}
 
@@ -76,7 +77,7 @@ class Halo : public Upgrade {
 public:
     float pulse = 0;
 
-    Halo() : Upgrade("Warding Halo", t::Shield, {"Scorches foes that get close", "Wider and hotter", "Wider and hotter",
+    Halo() : Upgrade("Warding Halo", atlas::tile(t::PotionGrey), {"Scorches foes that get close", "Wider and hotter", "Wider and hotter",
                                               "Wider, pulses faster", "Wider and hotter"}, true) {}
 
     float range() const { return 30.0f + 7 * (level - 1); }
@@ -133,7 +134,7 @@ class Knives : public Upgrade {
 public:
     float angle = 0;
 
-    Knives() : Upgrade("Orbiting Knives", t::Dagger, {"Two knives circle around you", "One more knife",
+    Knives() : Upgrade("Orbiting Knives", atlas::tile(t::Dagger), {"Two knives circle around you", "One more knife",
                                                    "One more knife, +4 damage", "One more knife",
                                                    "Faster spin, +4 damage"}, true) {}
 
@@ -166,7 +167,7 @@ void Knife::tick() {
 
 class AxeThrow : public Upgrade {
 public:
-    AxeThrow() : Upgrade("Hurled Axe", atlas::t::Axe, {"Lobs a heavy spinning axe", "+10 damage", "Throws one more axe",
+    AxeThrow() : Upgrade("Hurled Axe", atlas::tile(t::Axe), {"Lobs a heavy spinning axe", "+10 damage", "Throws one more axe",
                                                        "+10 damage, more pierce", "Throws one more axe"}, true) {}
 
     void tick(Player &p) override {
@@ -185,9 +186,95 @@ private:
     float cd = 1;
 };
 
+class StormRod : public Upgrade {
+public:
+    StormRod() : Upgrade("Storm Rod", atlas::tile(t::StormStaff), {"Calls lightning on random foes", "One more strike",
+                                                                  "+12 damage, wider blast", "One more strike, faster",
+                                                                  "Two more strikes"}, true) {}
+
+    void tick(Player &p) override {
+        if ((cd -= DT) > 0) return;
+        std::vector<Enemy *> pool;
+        p.level->each<Enemy>([&](Enemy &e) {
+            if (lengthSq(e.pos - p.pos) < 230 * 230) pool.push_back(&e);
+        });
+        if (pool.empty()) return void(cd = 0.2f);
+        cd = (level >= 4 ? 1.6f : 2.1f) * p.haste;
+        int n = 1 + at(level, 2) + at(level, 4) + 2 * at(level, 5);
+        float dmg = (28.0f + 12 * at(level, 3)) * p.might, r = 14.0f + 8 * at(level, 3);
+        for (int i = 0; i < n; i++) p.level->add<Strike>(pool[rng.irange(0, int(pool.size()) - 1)]->pos, dmg, r);
+        Sound::thunder.play(0.35f);
+    }
+
+private:
+    float cd = 1.5f;
+};
+
+class FireBomb : public Upgrade {
+public:
+    FireBomb() : Upgrade("Fire Bomb", atlas::town(tt::Bomb), {"Lobs a bomb that leaves flames", "Bigger, longer fire",
+                                                             "Throws one more bomb", "Hotter flames, faster throws",
+                                                             "Throws one more bomb"}, true) {}
+
+    void tick(Player &p) override {
+        if ((cd -= DT) > 0) return;
+        cd = (level >= 4 ? 2.4f : 3.0f) * p.haste;
+        int n = 1 + at(level, 3) + at(level, 5);
+        auto targets = p.level->nearest(p.pos, 200, 12);
+        for (int i = 0; i < n; i++) {
+            Vec2 to = targets.empty() ? p.pos + rng.onCircle() * rng.range(50, 110)
+                                      : targets[rng.irange(0, int(targets.size()) - 1)]->pos;
+            p.level->add<Bomb>(p.body(), to, 20 * p.might, 22.0f + 6 * at(level, 2), (5.0f + 4 * at(level, 4)) * p.might,
+                               2.5f + at(level, 2));
+        }
+        Sound::axe.play(0.4f);
+    }
+
+private:
+    float cd = 1.2f;
+};
+
+class Bow : public Upgrade {
+public:
+    Bow() : Upgrade("Hunter's Bow", atlas::town(tt::Bow), {"Looses arrows where you walk", "+6 damage, more pierce",
+                                                          "Fires a second arrow", "Faster draw, more pierce",
+                                                          "Fires a third arrow"}, true) {}
+
+    void tick(Player &p) override {
+        if ((cd -= DT) > 0) return;
+        cd = (level >= 4 ? 0.6f : 0.85f) * p.haste;
+        int n = 1 + at(level, 3) + at(level, 5), pierce = 3 + 2 * at(level, 2) + 2 * at(level, 4);
+        float dmg = (13.0f + 6 * at(level, 2)) * p.might, aim = std::atan2(p.aim.y, p.aim.x);
+        for (int i = 0; i < n; i++)
+            p.level->add<Arrow>(p.body(), fromAngle(aim + (i - (n - 1) * 0.5f) * 0.14f) * 320, dmg, pierce);
+        Sound::bow.play(0.35f);
+    }
+
+private:
+    float cd = 0.5f;
+};
+
+class Scythe : public Upgrade {
+public:
+    Scythe() : Upgrade("Reaper's Scythe", atlas::town(tt::Scythe), {"Sweeps a full circle around you", "+10 damage",
+                                                                    "Longer reach", "+10 damage, faster sweeps",
+                                                                    "Longer reach, +10 damage"}, true) {}
+
+    void tick(Player &p) override {
+        if ((cd -= DT) > 0) return;
+        cd = (level >= 4 ? 2.0f : 2.8f) * p.haste;
+        p.level->add<Sweep>(p, 28.0f + 8 * (at(level, 3) + at(level, 5)),
+                            (24.0f + 10 * (at(level, 2) + at(level, 4) + at(level, 5))) * p.might);
+        Sound::scythe.play(0.5f);
+    }
+
+private:
+    float cd = 1;
+};
+
 class Passive : public Upgrade {
 public:
-    Passive(const char *name, int icon, const char *desc, float Player::*stat, float amount)
+    Passive(const char *name, Sprite icon, const char *desc, float Player::*stat, float amount)
         : Upgrade(name, icon, {desc, desc, desc, desc, desc}, false), stat(stat), amount(amount) {}
 
     void levelUp(Player &p) override {
@@ -210,10 +297,20 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
     u.push_back(std::make_unique<Halo>());
     u.push_back(std::make_unique<Knives>());
     u.push_back(std::make_unique<AxeThrow>());
-    u.push_back(std::make_unique<Passive>("Quicksilver", t::PotionBlue, "+10% movement speed", &Player::speed, 7.4f));
-    u.push_back(std::make_unique<Passive>("Heartroot", t::PotionRed, "+20 max health", &Player::maxHp, 20.0f));
-    u.push_back(std::make_unique<Passive>("Ogre Hammer", t::Hammer, "+10% damage", &Player::might, 0.1f));
-    u.push_back(std::make_unique<Passive>("Hourglass Tonic", t::PotionGreen, "-7% weapon cooldowns", &Player::haste, -0.07f));
-    u.push_back(std::make_unique<Passive>("Lodestone", t::Coin, "+30% pickup range", &Player::magnet, 8.4f));
+    u.push_back(std::make_unique<StormRod>());
+    u.push_back(std::make_unique<FireBomb>());
+    u.push_back(std::make_unique<Bow>());
+    u.push_back(std::make_unique<Scythe>());
+    auto passive = [&](const char *name, Sprite icon, const char *desc, float Player::*stat, float amount) {
+        u.push_back(std::make_unique<Passive>(name, icon, desc, stat, amount));
+    };
+    passive("Quicksilver", atlas::tile(t::PotionBlue), "+10% movement speed", &Player::speed, 7.4f);
+    passive("Heartroot", atlas::tile(t::PotionRed), "+20 max health", &Player::maxHp, 20);
+    passive("Ogre Hammer", atlas::tile(t::Hammer), "+10% damage", &Player::might, 0.1f);
+    passive("Hourglass Tonic", atlas::tile(t::PotionGreen), "-7% weapon cooldowns", &Player::haste, -0.07f);
+    passive("Lodestone", atlas::tile(t::Coin), "+30% pickup range", &Player::magnet, 8.4f);
+    passive("Iron Buckler", atlas::tile(t::Shield), "Take 1 less damage per hit", &Player::armor, 1);
+    passive("Troll Blood", atlas::tile(t::VialGreen), "Regenerate 0.3 health/second", &Player::regen, 0.3f);
+    passive("Lucky Key", atlas::town(tt::Key), "+4% critical hit chance", &Player::luck, 0.04f);
     return u;
 }

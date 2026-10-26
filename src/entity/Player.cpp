@@ -22,7 +22,9 @@ void Player::tick() {
     vel = lerp(vel, dir * speed, damp(18, DT));
     pos += vel * DT;
     if (dir.x != 0) facing = dir.x > 0 ? 1.0f : -1.0f;
+    if (dir.x != 0 || dir.y != 0) aim = dir;
     invuln = std::max(0.0f, invuln - DT);
+    hp = std::min(maxHp, hp + regen * DT);
 
     for (auto &u : upgrades)
         if (u->level > 0) u->tick(*this);
@@ -52,6 +54,7 @@ void Player::renderLight(Screen &s) {
 
 void Player::hurt(float damage) {
     if (invuln > 0 || dead() || god) return;
+    damage = std::max(1.0f, damage - armor);
     hp -= damage;
     invuln = 0.6f;
     level->game.onPlayerHurt();

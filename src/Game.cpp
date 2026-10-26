@@ -156,7 +156,7 @@ void Game::renderHud() {
         int row = up->weapon ? 0 : 1;
         float x = 4 * u + slot[row]++ * 20 * u, y = top + row * 24 * u;
         s.rect(x, y, 18 * u, 18 * u, {0.07f, 0.06f, 0.11f, 0.7f});
-        s.sprite(atlas::tile(up->icon), {x + u, y + u}, {0, 0}, {u, u});
+        s.sprite(up->icon, {x + u, y + u}, {0, 0}, {u, u});
         for (int i = 0; i < up->level; i++) s.rect(x + u + i * 3.4f * u, y + 19 * u, 2 * u, 2 * u, col::gold);
     }
 

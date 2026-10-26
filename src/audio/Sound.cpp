@@ -54,6 +54,22 @@ Sound Sound::select{"select", 0};
 Sound Sound::confirm{"confirm", 0};
 Sound Sound::boss{"boss", 0};
 Sound Sound::horde{"horde", 0};
+Sound Sound::thunder{"thunder", 0.08f};
+Sound Sound::explosion{"explosion", 0.08f};
+Sound Sound::bow{"bow", 0.05f};
+Sound Sound::scythe{"scythe", 0.1f};
+Sound Sound::magnet{"magnet", 0};
+Sound Sound::nova{"nova", 0};
+Sound Sound::barrel{"barrel", 0.05f};
+Sound Sound::orb{"orb", 0.1f};
+
+namespace {
+Sound *const ALL[] = {&Sound::cast,  &Sound::hit,     &Sound::kill,    &Sound::slash,   &Sound::axe,
+                      &Sound::gem,   &Sound::levelUp, &Sound::hurt,    &Sound::death,   &Sound::chest,
+                      &Sound::potion, &Sound::select, &Sound::confirm, &Sound::boss,    &Sound::horde,
+                      &Sound::thunder, &Sound::explosion, &Sound::bow, &Sound::scythe, &Sound::magnet,
+                      &Sound::nova,  &Sound::barrel,  &Sound::orb};
+} // namespace
 
 bool Sound::load(const std::string &path) {
     SDL_AudioSpec spec;
@@ -81,9 +97,7 @@ bool Sound::init(const std::string &base) {
         spdlog::info("Audio: {} Hz, {} ch, {} frame buffer", deviceSpec.freq, deviceSpec.channels, frames);
     for (auto &v : voices) v = SDL_CreateAudioStream(&SPEC, nullptr), SDL_BindAudioStream(device, v);
 
-    for (Sound *s : {&cast, &hit, &kill, &slash, &axe, &gem, &levelUp, &hurt, &death, &chest, &potion, &select,
-                     &confirm, &boss, &horde})
-        s->load(base + "res/sfx/" + s->file + ".wav");
+    for (Sound *s : ALL) s->load(base + "res/sfx/" + s->file + ".wav");
 
     loadMusic(base + "res/music/night.ogg");
     SDL_ResumeAudioDevice(device);
@@ -95,9 +109,7 @@ void Sound::shutdown() {
     for (auto *v : voices) SDL_DestroyAudioStream(v);
     SDL_DestroyAudioStream(musicStream);
     SDL_CloseAudioDevice(device);
-    for (Sound *s : {&cast, &hit, &kill, &slash, &axe, &gem, &levelUp, &hurt, &death, &chest, &potion, &select,
-                     &confirm, &boss, &horde})
-        SDL_free(s->data), s->data = nullptr;
+    for (Sound *s : ALL) SDL_free(s->data), s->data = nullptr;
     std::free(musicData);
     musicData = nullptr;
     device = 0;

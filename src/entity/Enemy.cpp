@@ -110,7 +110,7 @@ void Enemy::renderShadow(Screen &s) { drawShadow(s, type.floats); }
 
 void Enemy::hurt(float damage, Vec2 dir, float force) {
     if (removed) return;
-    bool crit = rng.chance(0.08f);
+    bool crit = rng.chance(0.08f + level->player->luck);
     if (crit) damage *= 1.8f;
     hp -= damage;
     flash = 0.1f;

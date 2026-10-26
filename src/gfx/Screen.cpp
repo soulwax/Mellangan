@@ -140,6 +140,15 @@ void Screen::frame(float x, float y, float rw, float rh, float t, Color c) {
     rect(x + rw - t, y + t, t, rh - 2 * t, c);
 }
 
+void Screen::line(Vec2 a, Vec2 b, float width, Color c) {
+    Vec2 d = b - a;
+    Color prev = current;
+    color(c);
+    const Sprite &s = atlas::White;
+    sprite(s, a, {0, s.h * 0.5f}, {length(d) / s.w, width / s.h}, std::atan2(d.y, d.x));
+    color(prev);
+}
+
 void Screen::number(int n, Vec2 at, Color c) {
     std::string s = std::to_string(std::max(n, 0));
     float x = std::round(at.x - (s.size() * 4 + 1) * 0.5f), y = std::round(at.y - 3);

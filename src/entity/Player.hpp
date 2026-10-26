@@ -9,11 +9,11 @@ class Upgrade;
 
 class Player : public Mob {
 public:
-    Vec2 vel;
+    Vec2 vel, aim{1, 0};
     float invuln = 0;
     int lvl = 1, pendingLevels = 0;
     float xp = 0, xpNext = 5;
-    float speed = 74, might = 1, haste = 1, magnet = 28;
+    float speed = 74, might = 1, haste = 1, magnet = 28, armor = 0, regen = 0, luck = 0;
     bool god = false;
     std::vector<std::unique_ptr<Upgrade>> upgrades;
 

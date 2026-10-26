@@ -33,6 +33,7 @@ public:
     void toTitle();
     void announce(std::string text);
     void onPlayerHurt() { hurt = 1, shake = 4; }
+    void onExplosion() { shake = std::max(shake, 2.5f); }
     void onPlayerDied();
 
 private:

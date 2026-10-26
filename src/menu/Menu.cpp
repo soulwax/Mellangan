@@ -60,8 +60,13 @@ void DeadMenu::render(Screen &s) {
 }
 
 LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
-    for (auto &u : game.level->player->upgrades)
-        if (!u->maxed()) choices.push_back(u.get());
+    // New picks are only offered while a slot of their kind (weapon or passive) is free.
+    auto &all = game.level->player->upgrades;
+    int owned[2] = {0, 0};
+    for (auto &u : all)
+        if (u->level > 0) owned[u->weapon]++;
+    for (auto &u : all)
+        if (!u->maxed() && (u->level > 0 || owned[u->weapon] < Upgrade::SLOTS)) choices.push_back(u.get());
     for (size_t i = choices.size(); i > 1; i--) std::swap(choices[i - 1], choices[rng.irange(0, int(i) - 1)]);
     if (choices.size() > 3) choices.resize(3);
     if (choices.empty()) choices.push_back(nullptr);
@@ -129,7 +134,7 @@ void LevelUpMenu::render(Screen &s) {
         float box = 24 * u, bx = x + 6 * u, by = y + (h - box) / 2;
         s.rect(bx, by, box, box, {0.16f, 0.14f, 0.22f, in});
         s.color(col::white.alpha(in));
-        s.sprite(atlas::tile(up ? up->icon : atlas::t::PotionRed), {bx + 4 * u, by + 4 * u}, {0, 0}, {u, u});
+        s.sprite(up ? up->icon : atlas::tile(atlas::t::PotionRed), {bx + 4 * u, by + 4 * u}, {0, 0}, {u, u});
         s.color(col::white);
 
         float tx = bx + box + 6 * u;

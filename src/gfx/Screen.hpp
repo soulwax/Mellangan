@@ -54,6 +54,7 @@ public:
     void glow(Vec2 at, float size, Color c);
     void rect(float x, float y, float rw, float rh, Color c);
     void frame(float x, float y, float rw, float rh, float t, Color c);
+    void line(Vec2 a, Vec2 b, float width, Color c);
     void number(int n, Vec2 at, Color c);
     void text(std::string_view s, float x, float y, float size, Color c);
     void textCenter(std::string_view s, float cx, float y, float size, Color c);

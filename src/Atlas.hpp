@@ -36,6 +36,7 @@ constexpr int AutumnCrown = 3, Crown = 4, AutumnTrunk = 15, Trunk = 16;
 constexpr int Bush = 5, Sprouts = 17, AutumnPine = 27, Pine = 28, Mushrooms = 29;
 constexpr int DirtTopLeft = 12; // 3x3 grass-to-dirt edge set, centre at DirtTopLeft + 13
 constexpr int Sign = 83, Beehive = 94, Log = 106, Sack = 107;
+constexpr int Bomb = 105, Key = 117, Bow = 118, Arrow = 119, Scythe = 129;
 constexpr int WellRoof = 92, Well = 104; // roof stacks on the well
 } // namespace tt
 
@@ -47,6 +48,7 @@ constexpr int Sand = 48, SandSpeckleA = 49, SandSpeckleB = 51, SandRocks = 42;
 constexpr int GraveCross = 64, GraveStone = 65, Barrel = 82, Crystal = 56;
 constexpr int Staff = 129, Sword = 104, Shield = 102, Dagger = 103, Axe = 118;
 constexpr int PotionGreen = 114, PotionRed = 115, PotionBlue = 116, Hammer = 117, Coin = 101;
+constexpr int PotionGrey = 113, VialGreen = 126, VialBlue = 128, StormStaff = 130;
 constexpr int Chest = 89;
 } // namespace t
 

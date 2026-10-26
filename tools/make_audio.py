@@ -25,6 +25,14 @@ SFX = {
     "confirm": "Interface Sounds/confirmation_002",
     "boss": "Impact Sounds/impactBell_heavy_000",
     "horde": "Impact Sounds/impactBell_heavy_002",
+    "thunder": "Retro Sounds 2/explosion1",
+    "explosion": "Retro Sounds 2/explosion3",
+    "bow": "RPG Audio/drawKnife1",
+    "scythe": "RPG Audio/knifeSlice2",
+    "magnet": "Retro Sounds 2/secret1",
+    "nova": "Retro Sounds 2/explosion5",
+    "barrel": "Impact Sounds/impactWood_heavy_000",
+    "orb": "Retro Sounds 2/laser3",
 }
 
 
