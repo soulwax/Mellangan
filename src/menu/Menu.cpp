@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Game.hpp"
+#include "Version.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
@@ -21,6 +22,8 @@ void TitleMenu::render(Screen &s) {
     s.textCenter("survive the night", s.w / 2, y + 70 * u, u, col::muted);
     if (std::fmod(t, 1.0f) < 0.65f) s.textCenter("PRESS ENTER", s.w / 2, s.h * 0.62f, u, col::white);
     s.textCenter("WASD/Arrows move   Esc pause   M mute   F11 fullscreen", s.w / 2, s.h - 30 * small, small, col::muted);
+    std::string_view version = "v" MELLANGAN_VERSION;
+    s.text(version, s.w - Screen::textWidth(version, small) - 6 * small, s.h - 22 * small, small, col::muted * 0.7f);
 }
 
 void PauseMenu::tick() {

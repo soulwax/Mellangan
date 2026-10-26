@@ -4,11 +4,12 @@
 
 #include "entity/Entity.hpp"
 
-enum class EnemyKind { Bat, Rat, Slime, Spider, Ghost, Demon, Cyclops };
+// Cyclops stays last: the spawner draws regular enemies from every kind before it.
+enum class EnemyKind { Bat, Rat, Slime, Scorpion, Spider, Ghost, Cultist, Demon, Knight, Cyclops };
 
 struct EnemyType {
     int tile;
-    float hp, speed, damage, radius, scale, xp;
+    float hp, speed, damage, radius, scale, xp, knockResist;
     Color blood;
     bool floats;
     float unlockAt;
@@ -17,7 +18,8 @@ struct EnemyType {
 class Enemy : public Mob {
 public:
     const EnemyType &type;
-    float damageMul, knockResist = 1, knifeCooldown = 0;
+    float damageMul, knifeCooldown = 0;
+    bool elite = false;
 
     Enemy(const EnemyType &type, float hpMul, float damageMul);
     static const EnemyType &typeOf(EnemyKind kind);
@@ -27,7 +29,9 @@ public:
     void tick() override;
     void render(Screen &s) override;
     void renderShadow(Screen &s) override;
+    void renderLight(Screen &s) override;
     void hurt(float damage, Vec2 dir, float force);
+    void makeElite();
 
 protected:
     virtual Vec2 steer(Vec2 dir) { return dir * type.speed; }
@@ -39,6 +43,22 @@ private:
 };
 
 class Bat : public Enemy {
+public:
+    using Enemy::Enemy;
+
+protected:
+    Vec2 steer(Vec2 dir) override;
+};
+
+class Scorpion : public Enemy {
+public:
+    using Enemy::Enemy;
+
+protected:
+    Vec2 steer(Vec2 dir) override;
+};
+
+class Cultist : public Enemy {
 public:
     using Enemy::Enemy;
 
@@ -58,7 +78,7 @@ protected:
 
 class Cyclops : public Enemy {
 public:
-    Cyclops(const EnemyType &type, float hpMul, float damageMul);
+    using Enemy::Enemy;
     void renderLight(Screen &s) override;
 
 protected:

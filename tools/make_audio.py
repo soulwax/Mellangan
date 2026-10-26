@@ -1,7 +1,10 @@
-"""Converts the Kenney OGGs the game uses into res/sfx and res/music as mono 44.1 kHz s16 WAV (what src/audio expects).
+"""Converts the Kenney OGGs the game uses into res/sfx as mono 44.1 kHz s16 WAV (what src/audio expects),
+peak-normalized to -1 dBFS so the volumes set in code are the only balance that matters.
+The music (res/music/night.ogg) is sourced separately; see res/CREDITS.md.
 
 Usage: python tools/make_audio.py "<path to Kenney Game Assets All-in-1>"   (needs ffmpeg on PATH)
 """
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -23,7 +26,6 @@ SFX = {
     "boss": "Impact Sounds/impactBell_heavy_000",
     "horde": "Impact Sounds/impactBell_heavy_002",
 }
-MUSIC = {"night": "Music Loops/Retro Mystic"}
 
 
 def find(audio: Path, rel: str) -> Path:
@@ -34,11 +36,18 @@ def find(audio: Path, rel: str) -> Path:
     return hits[0]
 
 
+def peak_db(src: Path) -> float:
+    out = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(src), "-ac", "1", "-af", "volumedetect", "-f", "null", "-"],
+                         capture_output=True, text=True, check=True).stderr
+    return float(re.search(r"max_volume: (-?[\d.]+) dB", out).group(1))
+
+
 def convert(src: Path, dst: Path):
     dst.parent.mkdir(parents=True, exist_ok=True)
+    gain = -1.0 - peak_db(src)
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-ac", "1", "-ar", "44100", "-sample_fmt", "s16",
-                    str(dst)], check=True)
-    print(f"{src.name} -> {dst.relative_to(dst.parents[2])}")
+                    "-af", f"volume={gain:.2f}dB", str(dst)], check=True)
+    print(f"{src.name} -> {dst.relative_to(dst.parents[2])} ({gain:+.1f} dB)")
 
 
 def main():
@@ -48,8 +57,6 @@ def main():
     res = Path(__file__).resolve().parent.parent / "res"
     for name, rel in SFX.items():
         convert(find(audio, rel), res / "sfx" / f"{name}.wav")
-    for name, rel in MUSIC.items():
-        convert(find(audio, rel), res / "music" / f"{name}.wav")
 
 
 if __name__ == "__main__":

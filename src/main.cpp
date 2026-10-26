@@ -6,6 +6,7 @@
 
 #include "Crash.hpp"
 #include "Game.hpp"
+#include "Version.hpp"
 
 static void initLogging(const std::string &base) {
     std::vector<spdlog::sink_ptr> sinks{std::make_shared<spdlog::sinks::stdout_color_sink_mt>()};
@@ -22,12 +23,13 @@ static void initLogging(const std::string &base) {
     spdlog::set_default_logger(log);
 }
 
-int main(int, char **) {
+int main(int argc, char **argv) {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS)) return 1;
     const char *basePath = SDL_GetBasePath();
     std::string base = basePath ? basePath : "";
     initLogging(base);
     installCrashHandler();
+    spdlog::info("Mellangan v{}", MELLANGAN_VERSION);
 
     SDL_Window *window = SDL_CreateWindow("Mellangan", Screen::W * 3, Screen::H * 3, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (!window) {
@@ -48,6 +50,8 @@ int main(int, char **) {
     int code = 0;
     {
         Game game;
+        for (int i = 1; i < argc; i++) game.dev |= std::string_view(argv[i]) == "--dev";
+        if (game.dev) spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode");
         if (game.init(window, base)) {
             spdlog::info("Mellangan ready");
             game.run();

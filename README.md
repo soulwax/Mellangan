@@ -20,6 +20,21 @@ Shaders in `res/shaders` are compiled to SPIR-V at build time with the SDK's `sl
 runtime Slang compiler is disabled and never built.
 The executable lands in `build/Release/` with `res/` copied next to it.
 
+## Releasing
+
+The version lives in `VERSION` (`MAJOR.MINOR.PATCH`) and every release needs notes under `## [Unreleased]` in
+`CHANGELOG.md`. Then run (PowerShell 7, 7-Zip on PATH or installed):
+
+```powershell
+./dist.ps1             # patch bump: 0.1.0 -> 0.1.1
+./dist.ps1 -Bump minor # 0.1.1 -> 0.2.0
+./dist.ps1 -Bump none  # rebuild the current version, changelog untouched
+```
+
+It bumps `VERSION`, dates the changelog section, builds Release, and writes `dist/Mellangan-<version>.7z` containing
+the executable, `res/`, and the changelog. The CRT is linked statically, so players only need a Vulkan-capable driver.
+If the build fails, `VERSION` and `CHANGELOG.md` are restored.
+
 ## Controls
 
 | Key | Action |

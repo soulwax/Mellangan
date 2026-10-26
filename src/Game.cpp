@@ -26,8 +26,8 @@ void Game::shutdown() {
 
 void Game::run() {
     uint64_t last = SDL_GetPerformanceCounter();
-    double acc = 0, fpsTime = 0;
-    int frames = 0;
+    double acc = 0, fpsTime = 0, cpuTime = 0, perfTime = 0;
+    int frames = 0, perfFrames = 0;
     while (running && !vk2dStatusFatal()) {
         uint64_t now = SDL_GetPerformanceCounter();
         double dt = double(now - last) / double(SDL_GetPerformanceFrequency());
@@ -39,12 +39,19 @@ void Game::run() {
             if (e.type == SDL_EVENT_QUIT) running = false;
             input.handle(e, SDL_GetWindowPixelDensity(window));
         }
+        uint64_t work = SDL_GetPerformanceCounter();
         for (; acc >= DT; acc -= DT) tick();
         render();
+        cpuTime += double(SDL_GetPerformanceCounter() - work) / double(SDL_GetPerformanceFrequency());
         vk2dRendererPresent();
 
-        frames++;
+        frames++, perfFrames++;
         if ((fpsTime += dt) >= 0.5) fps = float(frames / fpsTime), frames = 0, fpsTime = 0;
+        if (dev && (perfTime += dt) >= 5) {
+            spdlog::info("perf {:.0f} fps, cpu {:.2f} ms/frame, {} entities, {} enemies", perfFrames / perfTime,
+                         cpuTime * 1000 / perfFrames, level->reg.view<Owned>().size(), level->count<Enemy>());
+            perfTime = cpuTime = 0, perfFrames = 0;
+        }
     }
     if (vk2dStatusFatal()) spdlog::critical("Vulkan2D: {}", vk2dStatusMessage());
 }
@@ -56,6 +63,7 @@ void Game::tick() {
     if (input.fps.clicked) showFps = !showFps;
     if (input.mute.clicked) Sound::toggleMute();
     if (input.fullscreen.clicked) SDL_SetWindowFullscreen(window, !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN));
+    if (dev) devTick();
 
     if (menu) {
         menu->tick();
@@ -72,12 +80,21 @@ void Game::tick() {
     hurt *= std::exp(-3.5f * DT);
     shake *= std::exp(-10 * DT);
     bannerTime = std::max(0.0f, bannerTime - DT);
+    if (bannerTime <= 0 && !banners.empty()) banner = std::move(banners.front()), banners.pop_front(), bannerTime = 3;
+}
+
+void Game::devTick() {
+    Player &p = *level->player;
+    if (input.devLevel.clicked) p.pendingLevels++;
+    if (input.devTime.clicked) level->time += 30, spdlog::info("dev: skipped to {}", clockText(level->time));
+    if (input.devGod.clicked) p.god = !p.god, spdlog::info("dev: god mode {}", p.god ? "on" : "off");
 }
 
 void Game::newGame() {
     level = std::make_unique<Level>(*this);
     camera = level->player->pos;
     hurt = shake = bannerTime = 0;
+    banners.clear();
     setMenu(nullptr);
     spdlog::info("New run");
 }
@@ -89,8 +106,7 @@ void Game::toTitle() {
 
 void Game::announce(std::string text) {
     spdlog::info("[{}] {}", clockText(level->time), text);
-    banner = std::move(text);
-    bannerTime = 3;
+    banners.push_back(std::move(text));
 }
 
 void Game::onPlayerDied() {

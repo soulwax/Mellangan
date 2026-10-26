@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <spdlog/fmt/fmt.h>
 
+#include <deque>
 #include <memory>
 #include <string>
 
@@ -20,13 +21,13 @@ public:
     Input input;
     std::unique_ptr<Level> level;
     std::unique_ptr<Menu> menu;
-    bool running = true;
+    bool running = true, dev = false;
 
     bool init(SDL_Window *window, const std::string &base);
     void shutdown();
     void run();
 
-    // Takes effect at the start of the next tick, so a menu can safely replace itself.
+    // Applied once the current tick is done, so a menu can safely replace itself.
     void setMenu(std::unique_ptr<Menu> m) { nextMenu = std::move(m), menuChanged = true; }
     void newGame();
     void toTitle();
@@ -39,9 +40,11 @@ private:
     bool menuChanged = false, showFps = false;
     float time = 0, hurt = 0, shake = 0, fps = 0, bannerTime = 0;
     std::string banner;
+    std::deque<std::string> banners;
     Vec2 camera;
 
     void tick();
+    void devTick();
     void render();
     void renderHud();
 };

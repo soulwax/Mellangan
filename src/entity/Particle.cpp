@@ -24,11 +24,11 @@ void Spark::render(Screen &s) {
 }
 
 void Spark::renderLight(Screen &s) {
-    if (glow) s.glow(pos, 34, color * (0.5f * frac()));
+    if (glow) s.glow(pos, 34, color * (0.3f * frac()));
 }
 
 void TextParticle::pop(Level &level, Vec2 at, int value, Color c) {
-    if (level.count<TextParticle>() < 120) level.add<TextParticle>(at + Vec2{rng.range(-3, 3), -4}, value, c);
+    if (level.count<TextParticle>() < 48) level.add<TextParticle>(at + Vec2{rng.range(-3, 3), -4}, value, c);
 }
 
 void TextParticle::onAdded() { level->tag(this); }

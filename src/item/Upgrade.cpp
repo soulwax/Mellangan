@@ -30,7 +30,7 @@ public:
             p.level->add<Bolt>(p.body(), dir * 230, (level >= 2 ? 14.0f : 10.0f) * p.might, 1 + at(level, 4), e->id);
         }
         Spark::burst(*p.level, p.body(), {0.45f, 0.8f, 1, 1}, 4, 40, true);
-        Sound::cast.play(0.2f, 0.1f);
+        Sound::cast.play(0.3f, 0.1f);
     }
 
 private:
@@ -50,7 +50,7 @@ public:
         float scale = 1 + 0.2f * (at(level, 3) + at(level, 5));
         p.level->add<Slash>(p, p.facing, dmg, scale);
         if (level >= 2) p.level->add<Slash>(p, -p.facing, dmg, scale);
-        Sound::slash.play(0.45f);
+        Sound::slash.play(0.5f);
     }
 
 private:
@@ -109,7 +109,7 @@ void HaloField::render(Screen &s) {
 }
 
 void HaloField::renderLight(Screen &s) {
-    s.glow(pos, halo.range() * 2.8f, Color{0.16f, 0.08f, 0.30f, 1} * (1 + halo.pulse * 0.8f));
+    s.glow(pos, halo.range() * 2.8f, Color{0.10f, 0.05f, 0.20f, 1} * (1 + halo.pulse * 0.6f));
 }
 
 class Knives;
@@ -120,7 +120,7 @@ public:
     int layer() const override { return 2; }
     void tick() override;
     void render(Screen &s) override { s.center(atlas::tile(t::Dagger), pos, 1, angle + PI); }
-    void renderLight(Screen &s) override { s.glow(pos, 30, {0.16f, 0.16f, 0.22f, 1}); }
+    void renderLight(Screen &s) override { s.glow(pos, 30, {0.08f, 0.08f, 0.12f, 1}); }
 
 private:
     const Knives &knives;
@@ -172,7 +172,7 @@ public:
     void tick(Player &p) override {
         if ((cd -= DT) > 0) return;
         cd = 2.3f * p.haste;
-        Sound::axe.play(0.5f);
+        Sound::axe.play(0.45f);
         int n = 1 + at(level, 3) + at(level, 5);
         float dmg = (26.0f + 10 * (at(level, 2) + at(level, 4))) * p.might;
         for (int i = 0; i < n; i++) {

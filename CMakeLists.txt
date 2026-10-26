@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.21)
-project(Mellangan VERSION 0.1.0 LANGUAGES C CXX)
+file(STRINGS VERSION MELLANGAN_VERSION LIMIT_COUNT 1)
+project(Mellangan VERSION ${MELLANGAN_VERSION} LANGUAGES C CXX)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS VERSION)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# Static CRT everywhere so a release needs no VC++ redistributable.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 if (WIN32 AND NOT DEFINED ENV{VULKAN_SDK})
     file(GLOB _sdks LIST_DIRECTORIES true "C:/VulkanSDK/*")
@@ -21,10 +25,15 @@ add_subdirectory(Vulkan2D)
 add_subdirectory(extern/spdlog)
 add_subdirectory(extern/entt)
 
+add_library(stb_vorbis STATIC extern/stb/stb_vorbis.c)
+target_include_directories(stb_vorbis PUBLIC extern/stb)
+
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.hpp)
 add_executable(Mellangan ${SOURCES})
-target_include_directories(Mellangan PRIVATE src)
-target_link_libraries(Mellangan PRIVATE Vulkan2D SDL3::SDL3 spdlog::spdlog EnTT::EnTT)
+# Generated header so a version bump only recompiles the files that show the version.
+configure_file(src/Version.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Version.hpp @ONLY)
+target_include_directories(Mellangan PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/generated)
+target_link_libraries(Mellangan PRIVATE Vulkan2D SDL3::SDL3 spdlog::spdlog EnTT::EnTT stb_vorbis)
 # Only heavy, stable third-party headers: project headers change often and would invalidate the PCH.
 target_precompile_headers(Mellangan PRIVATE
         <algorithm> <array> <cmath> <cstdint> <memory> <string> <string_view> <vector>
@@ -37,7 +46,8 @@ endif ()
 if (MSVC)
     # PDBs in every config so crash traces resolve to file:line.
     target_compile_options(Mellangan PRIVATE /W4 /permissive- /utf-8 /Zi)
-    target_link_options(Mellangan PRIVATE /DEBUG /OPT:REF /OPT:ICF)
+    target_link_options(Mellangan PRIVATE /DEBUG /OPT:REF /OPT:ICF
+            $<$<NOT:$<CONFIG:Debug>>:/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup>)
 else ()
     target_compile_options(Mellangan PRIVATE -Wall -Wextra)
 endif ()

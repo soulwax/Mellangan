@@ -31,13 +31,18 @@ constexpr Sprite digit(int d) { return {float(176 + d * 5), 220, 5, 7}; }
 
 namespace tt {
 constexpr int Grass = 0, GrassTufts = 1, GrassFlowers = 2;
-constexpr int AutumnCrown = 3, Crown = 4, Bush = 5, AutumnTree = 15, Tree = 16, AutumnPine = 27, Pine = 28, Mushrooms = 29;
+// Tall trees are a crown stacked on a trunk.
+constexpr int AutumnCrown = 3, Crown = 4, AutumnTrunk = 15, Trunk = 16;
+constexpr int Bush = 5, Sprouts = 17, AutumnPine = 27, Pine = 28, Mushrooms = 29;
+constexpr int DirtTopLeft = 12; // 3x3 grass-to-dirt edge set, centre at DirtTopLeft + 13
+constexpr int Sign = 83, Beehive = 94, Log = 106, Sack = 107;
+constexpr int WellRoof = 92, Well = 104; // roof stacks on the well
 } // namespace tt
 
 namespace t {
 constexpr int Wizard = 84;
-constexpr int Bat = 120, Ghost = 121, Spider = 122, Rat = 123;
-constexpr int Slime = 108, Cyclops = 109, Demon = 110;
+constexpr int Bat = 120, Ghost = 121, Spider = 122, Rat = 123, Scorpion = 124;
+constexpr int Slime = 108, Cyclops = 109, Demon = 110, Cultist = 111, Knight = 96;
 constexpr int Sand = 48, SandSpeckleA = 49, SandSpeckleB = 51, SandRocks = 42;
 constexpr int GraveCross = 64, GraveStone = 65, Barrel = 82, Crystal = 56;
 constexpr int Staff = 129, Sword = 104, Shield = 102, Dagger = 103, Axe = 118;

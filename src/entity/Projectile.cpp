@@ -38,7 +38,7 @@ void Bolt::render(Screen &s) {
     s.center(atlas::Dot, pos, 0.45f);
 }
 
-void Bolt::renderLight(Screen &s) { s.glow(pos, 52, {0.10f, 0.35f, 0.6f, 1}); }
+void Bolt::renderLight(Screen &s) { s.glow(pos, 52, {0.06f, 0.20f, 0.36f, 1}); }
 
 void Bolt::spent() { Spark::burst(*level, pos, {0.45f, 0.8f, 1, 1}, 6, 60, true); }
 
@@ -64,7 +64,7 @@ void Slash::render(Screen &s) {
     s.color(col::white);
 }
 
-void Slash::renderLight(Screen &s) { s.glow(pos, 80 * scale, Color{0.28f, 0.26f, 0.2f, 1} * frac()); }
+void Slash::renderLight(Screen &s) { s.glow(pos, 80 * scale, Color{0.16f, 0.15f, 0.11f, 1} * frac()); }
 
 Axe::Axe(Vec2 at, Vec2 vel, float damage, int pierce, float spin)
     : Projectile(at, vel, 2.2f, damage, 60, pierce), spin(spin) { radius = 8; }
@@ -79,4 +79,4 @@ void Axe::tick() {
 
 void Axe::render(Screen &s) { s.center(atlas::tile(atlas::t::Axe), pos, 1, rot); }
 
-void Axe::renderLight(Screen &s) { s.glow(pos, 44, {0.35f, 0.18f, 0.06f, 1}); }
+void Axe::renderLight(Screen &s) { s.glow(pos, 44, {0.20f, 0.10f, 0.03f, 1}); }

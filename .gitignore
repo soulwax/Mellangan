@@ -38,3 +38,4 @@ _deps/
 # OS cruft
 .DS_Store
 Thumbs.db
+dist/

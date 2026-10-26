@@ -1,0 +1,3 @@
+#pragma once
+
+#define MELLANGAN_VERSION "@PROJECT_VERSION@"

@@ -14,6 +14,7 @@ public:
     int lvl = 1, pendingLevels = 0;
     float xp = 0, xpNext = 5;
     float speed = 74, might = 1, haste = 1, magnet = 28;
+    bool god = false;
     std::vector<std::unique_ptr<Upgrade>> upgrades;
 
     Player();

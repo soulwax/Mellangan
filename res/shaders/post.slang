@@ -67,17 +67,14 @@ float4 PixelShader(float2 uv) {
     float3 albedo = float3(albedoAt(uv + ca).r, albedoAt(uv).g, albedoAt(uv - ca).b);
     float3 col = albedo * lightAt(uv);
 
-    // Two-ring bloom of over-exposed pixels
+    // Tight bloom around strongly over-exposed pixels. Kept small: wide nearest-sampled taps smear into squares.
     float2 taps[8] = {
         float2(1, 0), float2(-1, 0), float2(0, 1), float2(0, -1),
         float2(0.7, 0.7), float2(-0.7, 0.7), float2(0.7, -0.7), float2(-0.7, -0.7)
     };
     float3 bloom = 0;
-    for (int k = 0; k < 8; k++) {
-        bloom += max(litAt(uv + taps[k] * 2.0) - 0.8, 0.0);
-        bloom += max(litAt(uv + taps[k] * 5.0) - 0.8, 0.0) * 0.6;
-    }
-    col += bloom * 0.11;
+    for (int k = 0; k < 8; k++) bloom += max(litAt(uv + taps[k] * 1.5) - 1.15, 0.0);
+    col += min(bloom * 0.06, 0.2);
 
     col = aces(col * 1.15);
 

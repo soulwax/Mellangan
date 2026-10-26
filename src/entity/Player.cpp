@@ -51,7 +51,7 @@ void Player::renderLight(Screen &s) {
 }
 
 void Player::hurt(float damage) {
-    if (invuln > 0 || dead()) return;
+    if (invuln > 0 || dead() || god) return;
     hp -= damage;
     invuln = 0.6f;
     level->game.onPlayerHurt();

@@ -1,21 +1,42 @@
 #include "audio/Sound.hpp"
 
+#define STB_VORBIS_HEADER_ONLY
+#include <stb_vorbis.c>
+
 #include <spdlog/spdlog.h>
 
 #include <array>
+#include <cstdlib>
 
 #include "Math.hpp"
 
 namespace {
 constexpr SDL_AudioSpec SPEC{SDL_AUDIO_S16, 1, 44100};
-constexpr float MUSIC_VOLUME = 0.35f;
+constexpr float MUSIC_VOLUME = 0.28f;
 
 SDL_AudioDeviceID device = 0;
 std::array<SDL_AudioStream *, 32> voices{};
+std::array<Uint64, 32> voiceStarted{};
 SDL_AudioStream *musicStream = nullptr;
-Uint8 *musicData = nullptr;
-Uint32 musicLength = 0;
+short *musicData = nullptr;
+int musicLength = 0;
 bool muted = false;
+
+// The music is a stereo Vorbis file, decoded once into memory and fed to its own stream in its own format.
+void loadMusic(const std::string &path) {
+    int channels = 0, rate = 0;
+    int frames = stb_vorbis_decode_filename(path.c_str(), &channels, &rate, &musicData);
+    if (frames <= 0) {
+        spdlog::warn("Can't decode {}", path);
+        return;
+    }
+    musicLength = frames * channels * int(sizeof(short));
+    SDL_AudioSpec spec{SDL_AUDIO_S16, channels, rate};
+    musicStream = SDL_CreateAudioStream(&spec, nullptr);
+    SDL_BindAudioStream(device, musicStream);
+    SDL_SetAudioStreamGain(musicStream, MUSIC_VOLUME);
+    spdlog::info("Music: {} ({:.0f} s, {} Hz, {} ch)", path, frames / double(rate), rate, channels);
+}
 } // namespace
 
 Sound Sound::cast{"cast", 0.05f};
@@ -54,18 +75,17 @@ bool Sound::init(const std::string &base) {
         spdlog::warn("No audio device: {}", SDL_GetError());
         return false;
     }
-    for (auto &v : voices) v = SDL_CreateAudioStream(&SPEC, &SPEC), SDL_BindAudioStream(device, v);
-    musicStream = SDL_CreateAudioStream(&SPEC, &SPEC);
-    SDL_BindAudioStream(device, musicStream);
-    SDL_SetAudioStreamGain(musicStream, MUSIC_VOLUME);
+    SDL_AudioSpec deviceSpec;
+    int frames = 0;
+    if (SDL_GetAudioDeviceFormat(device, &deviceSpec, &frames))
+        spdlog::info("Audio: {} Hz, {} ch, {} frame buffer", deviceSpec.freq, deviceSpec.channels, frames);
+    for (auto &v : voices) v = SDL_CreateAudioStream(&SPEC, nullptr), SDL_BindAudioStream(device, v);
 
     for (Sound *s : {&cast, &hit, &kill, &slash, &axe, &gem, &levelUp, &hurt, &death, &chest, &potion, &select,
                      &confirm, &boss, &horde})
         s->load(base + "res/sfx/" + s->file + ".wav");
 
-    SDL_AudioSpec spec;
-    if (!SDL_LoadWAV((base + "res/music/night.wav").c_str(), &spec, &musicData, &musicLength))
-        spdlog::warn("No music: {}", SDL_GetError());
+    loadMusic(base + "res/music/night.ogg");
     SDL_ResumeAudioDevice(device);
     return true;
 }
@@ -78,14 +98,15 @@ void Sound::shutdown() {
     for (Sound *s : {&cast, &hit, &kill, &slash, &axe, &gem, &levelUp, &hurt, &death, &chest, &potion, &select,
                      &confirm, &boss, &horde})
         SDL_free(s->data), s->data = nullptr;
-    SDL_free(musicData);
+    std::free(musicData);
+    musicData = nullptr;
     device = 0;
 }
 
 void Sound::tick() {
     // Keep at least one full copy of the loop queued so it never runs dry.
-    if (musicStream && musicData && SDL_GetAudioStreamQueued(musicStream) < int(musicLength))
-        SDL_PutAudioStreamData(musicStream, musicData, int(musicLength));
+    if (musicStream && SDL_GetAudioStreamQueued(musicStream) < musicLength)
+        SDL_PutAudioStreamData(musicStream, musicData, musicLength);
 }
 
 void Sound::toggleMute() {
@@ -97,12 +118,21 @@ void Sound::play(float volume, float pitchJitter) {
     if (!device || !data) return;
     Uint64 now = SDL_GetTicks();
     if (now - last < Uint64(gap * 1000)) return;
-    for (auto *v : voices) {
-        if (SDL_GetAudioStreamQueued(v) > 0) continue;
-        last = now;
-        SDL_SetAudioStreamGain(v, volume);
-        SDL_SetAudioStreamFrequencyRatio(v, 1 + rng.range(-pitchJitter, pitchJitter));
-        SDL_PutAudioStreamData(v, data, int(length));
-        return;
+    // Take a free voice, or steal the one that has been playing longest.
+    size_t pick = 0;
+    for (size_t i = 0; i < voices.size(); i++) {
+        if (SDL_GetAudioStreamQueued(voices[i]) == 0) {
+            pick = i;
+            break;
+        }
+        if (voiceStarted[i] < voiceStarted[pick]) pick = i;
     }
+    SDL_AudioStream *v = voices[pick];
+    SDL_ClearAudioStream(v);
+    SDL_SetAudioStreamGain(v, volume);
+    SDL_SetAudioStreamFrequencyRatio(v, 1 + rng.range(-pitchJitter, pitchJitter));
+    SDL_PutAudioStreamData(v, data, int(length));
+    // Without a flush the resampler holds back its last few samples and the voice never reads as idle again.
+    SDL_FlushAudioStream(v);
+    voiceStarted[pick] = last = now;
 }

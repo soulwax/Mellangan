@@ -49,7 +49,7 @@ void Gem::renderLight(Screen &s) { s.glow(pos, 26, color() * 0.3f); }
 
 void Gem::take(Player &p) {
     p.gainXp(value);
-    Sound::gem.play(0.25f, 0.1f);
+    Sound::gem.play(0.3f, 0.1f);
     level->add<Spark>(pos, Vec2{0, -20}, color(), 0.25f, 0.4f, false);
 }
 
