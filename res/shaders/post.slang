@@ -22,7 +22,7 @@ struct PostData {
     float vignette;
     float grain;
 };
-// VK2D reflects user data from the last global, so this must stay last.
+// Layout must match PostData in src/gfx/Screen.cpp.
 [[vk::binding(3,3)]] ConstantBuffer<PostData> post;
 
 float3 albedoAt(float2 uv) {

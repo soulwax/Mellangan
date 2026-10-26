@@ -1,6 +1,6 @@
-"""Builds res/atlas.png from Kenney's Tiny Dungeon sheet plus procedurally drawn FX sprites.
+"""Builds res/atlas.png from Kenney's Tiny Dungeon and Tiny Town sheets plus procedurally drawn FX sprites.
 
-Usage: uv run --with pillow tools/make_assets.py <path/to/tilemap_packed.png>
+Usage: uv run --with pillow tools/make_assets.py "<path to Kenney Game Assets All-in-1>"
 The layout here must stay in sync with src/Atlas.hpp.
 """
 import math
@@ -13,7 +13,8 @@ TILE = 16
 CELL = 18  # 1px transparent gutter on each side of every tile, prevents bleeding
 SHEET_COLS, SHEET_ROWS = 12, 11
 FX_Y = SHEET_ROWS * CELL + 2  # 200
-ATLAS_W, ATLAS_H = 256, 264
+SHEETS = ["Tiny Dungeon", "Tiny Town"]  # side by side, each SHEET_COLS * CELL wide
+ATLAS_W, ATLAS_H = len(SHEETS) * SHEET_COLS * CELL, 264
 
 
 def clamp01(v):
@@ -162,13 +163,14 @@ def digits():
 def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
-    sheet = Image.open(sys.argv[1]).convert("RGBA")
     atlas = Image.new("RGBA", (ATLAS_W, ATLAS_H), (0, 0, 0, 0))
-
-    for r in range(SHEET_ROWS):
-        for c in range(SHEET_COLS):
-            tile = sheet.crop((c * TILE, r * TILE, c * TILE + TILE, r * TILE + TILE))
-            atlas.paste(tile, (c * CELL + 1, r * CELL + 1))
+    for i, name in enumerate(SHEETS):
+        sheet = Image.open(Path(sys.argv[1]) / "2D assets" / name / "Tilemap" / "tilemap_packed.png").convert("RGBA")
+        ox = i * SHEET_COLS * CELL
+        for r in range(SHEET_ROWS):
+            for c in range(SHEET_COLS):
+                tile = sheet.crop((c * TILE, r * TILE, c * TILE + TILE, r * TILE + TILE))
+                atlas.paste(tile, (ox + c * CELL + 1, r * CELL + 1))
 
     fx = [
         (glow(64), (0, FX_Y)),

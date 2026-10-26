@@ -18,7 +18,7 @@ struct FlashData {
     float g;
     float b;
 };
-// VK2D reflects user data from the last global, so this must stay last.
+// Layout must match FlashData in src/gfx/Screen.cpp.
 [[vk::binding(3,3)]] ConstantBuffer<FlashData> flash;
 
 [shader("pixel")]

@@ -3,24 +3,24 @@
 #include <spdlog/spdlog.h>
 
 #include "Game.hpp"
+#include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
 
 void TitleMenu::tick() {
     Menu::tick();
     game.level->player->animT += DT;
-    if (game.input.confirm.clicked) game.newGame();
+    if (game.input.confirm.clicked) Sound::confirm.play(0.6f, 0), game.newGame();
     else if (game.input.escape.clicked) game.running = false;
 }
 
 void TitleMenu::render(Screen &s) {
-    float u = s.u, small = std::max(1.0f, u - 1), y = s.h * 0.24f;
+    float u = s.u, small = std::max(1.0f, u - 1), y = s.h * 0.12f;
     s.rect(0, 0, s.w, s.h, {0.02f, 0.01f, 0.05f, 0.35f});
     s.textCenter("MELLANGAN", s.w / 2, y, 4 * u, col::gold.alpha(0.9f + 0.1f * std::sin(t * 2)));
     s.textCenter("survive the night", s.w / 2, y + 70 * u, u, col::muted);
     if (std::fmod(t, 1.0f) < 0.65f) s.textCenter("PRESS ENTER", s.w / 2, s.h * 0.62f, u, col::white);
-    s.textCenter("WASD/Arrows move   Esc pause   F11 fullscreen", s.w / 2, s.h - 40 * small, small, col::muted);
-    s.textCenter("Art: Kenney.nl (CC0)", s.w / 2, s.h - 22 * small, small, col::muted * 0.8f);
+    s.textCenter("WASD/Arrows move   Esc pause   M mute   F11 fullscreen", s.w / 2, s.h - 30 * small, small, col::muted);
 }
 
 void PauseMenu::tick() {
@@ -62,6 +62,7 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
     for (size_t i = choices.size(); i > 1; i--) std::swap(choices[i - 1], choices[rng.irange(0, int(i) - 1)]);
     if (choices.size() > 3) choices.resize(3);
     if (choices.empty()) choices.push_back(nullptr);
+    Sound::levelUp.play(0.6f, 0);
 }
 
 std::array<SDL_FRect, 3> LevelUpMenu::cards() const {
@@ -77,6 +78,7 @@ void LevelUpMenu::tick() {
     Menu::tick();
     Input &in = game.input;
     int n = int(choices.size());
+    int prev = selected;
     if (in.up.clicked) selected = (selected + n - 1) % n;
     if (in.down.clicked) selected = (selected + 1) % n;
     Key *keys[] = {&in.one, &in.two, &in.three};
@@ -85,14 +87,16 @@ void LevelUpMenu::tick() {
         if (keys[i]->clicked) return choose(i);
         SDL_FPoint m{in.mouseX, in.mouseY};
         if (!SDL_PointInRectFloat(&m, &r[i])) continue;
-        if (in.mouseMoved) selected = i;
+        if (in.mouseMoved && selected != i) selected = i, Sound::select.play(0.4f, 0);
         if (in.mouseClicked && t > 0.3f) return choose(i);
     }
+    if (selected != prev) Sound::select.play(0.4f, 0);
     if (in.confirm.clicked && t > 0.3f) choose(selected);
 }
 
 void LevelUpMenu::choose(int i) {
     Player &p = *game.level->player;
+    Sound::confirm.play(0.6f, 0);
     if (Upgrade *u = choices[i]) {
         u->levelUp(p);
         spdlog::info("Level {}: {} -> {}", p.lvl, u->name, u->level);

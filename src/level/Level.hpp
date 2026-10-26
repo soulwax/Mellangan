@@ -22,6 +22,21 @@ template <class T> struct Is {
     T *self;
 };
 
+// Scenery: generated from the tile hash each frame and y-sorted with entities, never stored in the registry.
+class Prop : public Entity {
+public:
+    Sprite sprite{}, crown{};
+    bool tall = false, wisp = false, hasCrown = false;
+
+    void render(Screen &s) override {
+        s.sprite(sprite, pos, {8, 16});
+        if (hasCrown) s.sprite(crown, pos - Vec2{0, 16}, {8, 16});
+    }
+    void renderShadow(Screen &s) override {
+        if (tall) s.sprite(atlas::Shadow, pos + Vec2{0, -1}, {8, 4}, {1.3f, 1.2f});
+    }
+};
+
 class Spawner {
 public:
     explicit Spawner(Level &level) : level(level) {}
@@ -80,6 +95,7 @@ private:
     std::vector<std::unique_ptr<Entity>> pending;
     std::vector<entt::entity> dead;
     std::vector<Entity *> sorted;
+    std::vector<Prop> props;
     std::vector<int> cellStart, cellFill;
     std::vector<Enemy *> cells;
     Vec2 gridOrigin;

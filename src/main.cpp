@@ -1,10 +1,10 @@
-#define SDL_MAIN_HANDLED
 #include <SDL3/SDL.h>
 #include <VK2D/VK2D.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include "Crash.hpp"
 #include "Game.hpp"
 
 static void initLogging(const std::string &base) {
@@ -15,7 +15,7 @@ static void initLogging(const std::string &base) {
     }
     auto log = std::make_shared<spdlog::logger>("mellangan", sinks.begin(), sinks.end());
     log->set_pattern("[%H:%M:%S.%e] [%^%l%$] %v");
-    log->flush_on(spdlog::level::warn);
+    log->flush_on(spdlog::level::info);
 #ifndef NDEBUG
     log->set_level(spdlog::level::debug);
 #endif
@@ -23,11 +23,11 @@ static void initLogging(const std::string &base) {
 }
 
 int main(int, char **) {
-    SDL_SetMainReady();
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) return 1;
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS)) return 1;
     const char *basePath = SDL_GetBasePath();
     std::string base = basePath ? basePath : "";
     initLogging(base);
+    installCrashHandler();
 
     SDL_Window *window = SDL_CreateWindow("Mellangan", Screen::W * 3, Screen::H * 3, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (!window) {

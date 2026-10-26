@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Game.hpp"
+#include "audio/Sound.hpp"
 #include "entity/Particle.hpp"
 #include "entity/Pickup.hpp"
 #include "entity/Player.hpp"
@@ -94,12 +95,14 @@ void Enemy::hurt(float damage, Vec2 dir, float force) {
     flash = 0.1f;
     knock += dir * (force * knockResist);
     TextParticle::pop(*level, body(), int(std::lround(damage)), crit ? col::gold : col::white);
+    Sound::hit.play(0.3f);
     if (hp <= 0) die();
 }
 
 void Enemy::die() {
     remove();
     level->kills++;
+    Sound::kill.play(0.3f, 0.12f);
     Gem::drop(*level, pos + Vec2{0, -3}, type.xp);
     if (rng.chance(1 / 150.0f)) level->add<Potion>(pos);
     Spark::burst(*level, body(), type.blood, 8, 70, false);

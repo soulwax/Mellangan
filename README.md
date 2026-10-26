@@ -16,7 +16,8 @@ cmake --build build --config Release
 ```
 
 On Windows, if `VULKAN_SDK` is not set, CMake picks the newest install under `C:/VulkanSDK`.
-The first build compiles Slang (Vulkan2D's runtime shader compiler) and takes a while.
+Shaders in `res/shaders` are compiled to SPIR-V at build time with the SDK's `slangc`, so Vulkan2D's
+runtime Slang compiler is disabled and never built.
 The executable lands in `build/Release/` with `res/` copied next to it.
 
 ## Controls

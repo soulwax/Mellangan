@@ -1,5 +1,6 @@
 #include "item/Upgrade.hpp"
 
+#include "audio/Sound.hpp"
 #include "entity/Particle.hpp"
 #include "entity/Player.hpp"
 #include "entity/Projectile.hpp"
@@ -29,6 +30,7 @@ public:
             p.level->add<Bolt>(p.body(), dir * 230, (level >= 2 ? 14.0f : 10.0f) * p.might, 1 + at(level, 4), e->id);
         }
         Spark::burst(*p.level, p.body(), {0.45f, 0.8f, 1, 1}, 4, 40, true);
+        Sound::cast.play(0.2f, 0.1f);
     }
 
 private:
@@ -48,6 +50,7 @@ public:
         float scale = 1 + 0.2f * (at(level, 3) + at(level, 5));
         p.level->add<Slash>(p, p.facing, dmg, scale);
         if (level >= 2) p.level->add<Slash>(p, -p.facing, dmg, scale);
+        Sound::slash.play(0.45f);
     }
 
 private:
@@ -169,6 +172,7 @@ public:
     void tick(Player &p) override {
         if ((cd -= DT) > 0) return;
         cd = 2.3f * p.haste;
+        Sound::axe.play(0.5f);
         int n = 1 + at(level, 3) + at(level, 5);
         float dmg = (26.0f + 10 * (at(level, 2) + at(level, 4))) * p.might;
         for (int i = 0; i < n; i++) {
@@ -207,7 +211,7 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
     u.push_back(std::make_unique<Knives>());
     u.push_back(std::make_unique<AxeThrow>());
     u.push_back(std::make_unique<Passive>("Quicksilver", t::PotionBlue, "+10% movement speed", &Player::speed, 7.4f));
-    u.push_back(std::make_unique<Passive>("Heartroot", t::PotionRed, "+20 max health", &Player::maxHp, 20));
+    u.push_back(std::make_unique<Passive>("Heartroot", t::PotionRed, "+20 max health", &Player::maxHp, 20.0f));
     u.push_back(std::make_unique<Passive>("Ogre Hammer", t::Hammer, "+10% damage", &Player::might, 0.1f));
     u.push_back(std::make_unique<Passive>("Hourglass Tonic", t::PotionGreen, "-7% weapon cooldowns", &Player::haste, -0.07f));
     u.push_back(std::make_unique<Passive>("Lodestone", t::Coin, "+30% pickup range", &Player::magnet, 8.4f));

@@ -8,8 +8,15 @@ struct Sprite {
 
 namespace atlas {
 
+// Kenney Tiny Dungeon
 constexpr Sprite tile(int index) {
     return {float((index % 12) * 18 + 1), float((index / 12) * 18 + 1), 16, 16};
+}
+// Kenney Tiny Town, packed to the right of Tiny Dungeon
+constexpr Sprite town(int index) {
+    Sprite s = tile(index);
+    s.x += 12 * 18;
+    return s;
 }
 
 constexpr Sprite Glow{0, 200, 64, 64};
@@ -22,7 +29,11 @@ constexpr Sprite Dot{244, 200, 8, 8};
 constexpr Sprite White{197, 213, 2, 2};
 constexpr Sprite digit(int d) { return {float(176 + d * 5), 220, 5, 7}; }
 
-// Kenney Tiny Dungeon tile indices
+namespace tt {
+constexpr int Grass = 0, GrassTufts = 1, GrassFlowers = 2;
+constexpr int AutumnCrown = 3, Crown = 4, Bush = 5, AutumnTree = 15, Tree = 16, AutumnPine = 27, Pine = 28, Mushrooms = 29;
+} // namespace tt
+
 namespace t {
 constexpr int Wizard = 84;
 constexpr int Bat = 120, Ghost = 121, Spider = 122, Rat = 123;

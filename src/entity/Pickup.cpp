@@ -1,6 +1,7 @@
 #include "entity/Pickup.hpp"
 
 #include "Game.hpp"
+#include "audio/Sound.hpp"
 #include "entity/Particle.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
@@ -48,6 +49,7 @@ void Gem::renderLight(Screen &s) { s.glow(pos, 26, color() * 0.3f); }
 
 void Gem::take(Player &p) {
     p.gainXp(value);
+    Sound::gem.play(0.25f, 0.1f);
     level->add<Spark>(pos, Vec2{0, -20}, color(), 0.25f, 0.4f, false);
 }
 
@@ -59,6 +61,7 @@ float Potion::reach() const { return level->player->magnet * 0.6f; }
 
 void Potion::take(Player &p) {
     p.heal(30);
+    Sound::potion.play(0.7f, 0);
     Spark::burst(*level, pos, col::heal, 10, 50, true);
 }
 
@@ -68,6 +71,7 @@ void Chest::renderLight(Screen &s) { s.glow(pos, 110, Color{0.45f, 0.35f, 0.1f, 
 
 void Chest::take(Player &p) {
     p.pendingLevels++;
+    Sound::chest.play(0.8f, 0);
     level->game.announce("TREASURE!");
     Spark::burst(*level, pos, col::gold, 30, 110, true);
 }

@@ -24,7 +24,7 @@ private:
 
 class Input {
 public:
-    Key up, down, left, right, confirm, escape, pause, one, two, three, restart, quit, fps, fullscreen;
+    Key up, down, left, right, confirm, escape, pause, one, two, three, restart, quit, fps, fullscreen, mute;
     float mouseX = 0, mouseY = 0;
     bool mouseClicked = false, mouseMoved = false;
 
@@ -57,8 +57,8 @@ public:
 private:
     int clicks = 0, moves = 0;
 
-    std::array<Key *, 14> keys() {
-        return {&up, &down, &left, &right, &confirm, &escape, &pause, &one, &two, &three, &restart, &quit, &fps, &fullscreen};
+    std::array<Key *, 15> keys() {
+        return {&up, &down, &left, &right, &confirm, &escape, &pause, &one, &two, &three, &restart, &quit, &fps, &fullscreen, &mute};
     }
 
     Key *bind(SDL_Scancode sc) {
@@ -77,6 +77,7 @@ private:
         case SDL_SCANCODE_Q: return &quit;
         case SDL_SCANCODE_F3: return &fps;
         case SDL_SCANCODE_F11: return &fullscreen;
+        case SDL_SCANCODE_M: return &mute;
         default: return nullptr;
         }
     }

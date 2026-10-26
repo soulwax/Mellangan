@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Game.hpp"
+#include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 
 namespace {
@@ -16,21 +17,38 @@ float valueNoise(float x, float y) {
 }
 
 int floorTile(uint32_t h) {
-    using namespace atlas::t;
     int r = h % 100;
-    return r < 12 ? SandSpeckleA : r < 22 ? SandSpeckleB : r < 25 ? SandRocks : Sand;
+    return r < 2 ? atlas::tt::GrassFlowers : r < 20 ? atlas::tt::GrassTufts : atlas::tt::Grass;
 }
 
-int decorTile(int x, int y) {
-    using namespace atlas::t;
-    if (std::abs(x) < 4 && std::abs(y) < 4) return -1;
-    int r = (hash2(x * 7 + 3, y * 13 + 1) >> 4) % 1000;
-    return r < 5 ? GraveCross : r < 10 ? GraveStone : r < 13 ? Barrel : r < 15 ? Crystal : -1;
-}
-
-bool hasWisp(int x, int y) {
-    int d = decorTile(x, y);
-    return (d == atlas::t::GraveCross || d == atlas::t::GraveStone) && (hash2(x, y) >> 16) % 3 == 0;
+// Forests cluster where low-frequency noise is high; graves, bushes and mushrooms are sprinkled everywhere.
+bool propAt(int x, int y, Prop &p) {
+    namespace tt = atlas::tt;
+    namespace t = atlas::t;
+    if (std::abs(x) < 4 && std::abs(y) < 4) return false;
+    uint32_t h = hash2(x * 7 + 3, y * 13 + 1);
+    int r = (h >> 4) % 1000;
+    float forest = valueNoise(x * 0.09f + 50, y * 0.09f);
+    int trees = 4 + int(std::max(0.0f, forest - 0.55f) * 450);
+    p.tall = true, p.wisp = false, p.hasCrown = false;
+    if (r < trees) {
+        // trunk, crown (-1: single tile); the last two only grow outside dense forest
+        const int kinds[][2] = {{tt::Tree, tt::Crown}, {tt::Pine, -1}, {tt::Tree, -1}, {tt::Tree, tt::Crown},
+                                {tt::Pine, -1}, {tt::AutumnTree, tt::AutumnCrown}, {tt::AutumnPine, -1}};
+        auto [trunk, crown] = kinds[(h >> 16) % (forest > 0.7f ? 5 : 7)];
+        p.sprite = atlas::town(trunk);
+        if (crown >= 0) p.crown = atlas::town(crown), p.hasCrown = true;
+    } else if ((r -= trees) < 6) {
+        p.sprite = atlas::town(tt::Bush), p.tall = false;
+    } else if (r < 9) {
+        p.sprite = atlas::town(tt::Mushrooms), p.tall = false, p.wisp = true;
+    } else if (r < 14) {
+        p.sprite = atlas::tile(r < 11 ? t::GraveCross : t::GraveStone), p.tall = false, p.wisp = (h >> 20) % 3 == 0;
+    } else {
+        return false;
+    }
+    p.pos = {x * 16 + 8.0f, y * 16 + 16.0f};
+    return true;
 }
 
 template <class F> void eachVisibleTile(const Screen &s, F &&f) {
@@ -108,10 +126,16 @@ void Level::renderFloor(Screen &s) {
         Vec2 at{x * 16.0f, y * 16.0f};
         float n = valueNoise(x * 0.13f, y * 0.13f), shade = 0.8f + 0.2f * n;
         s.color({shade, shade * 0.97f, shade * 0.93f + 0.04f * (1 - n), 1});
-        s.sprite(atlas::tile(floorTile(hash2(x, y))), at, {0, 0});
-        if (int d = decorTile(x, y); d >= 0) s.color(col::white), s.sprite(atlas::tile(d), at, {0, 0});
+        s.sprite(atlas::town(floorTile(hash2(x, y))), at, {0, 0});
     });
     s.color(col::white);
+
+    props.clear();
+    Prop p;
+    int x0 = int(std::floor(s.offset.x / 16)) - 1, y0 = int(std::floor(s.offset.y / 16));
+    for (int y = y0; y <= y0 + Screen::H / 16 + 3; y++)
+        for (int x = x0; x <= x0 + Screen::W / 16 + 2; x++)
+            if (propAt(x, y, p)) props.push_back(p);
 }
 
 void Level::render(Screen &s) {
@@ -119,6 +143,7 @@ void Level::render(Screen &s) {
     sorted.clear();
     for (auto [id, o] : reg.view<Owned>().each())
         if (!o.self->removed && s.visible(o.self->pos, 48)) sorted.push_back(o.self.get());
+    for (Prop &p : props) sorted.push_back(&p);
     std::sort(sorted.begin(), sorted.end(), [](Entity *a, Entity *b) {
         int la = a->layer(), lb = b->layer();
         return la != lb ? la < lb : a->pos.y < b->pos.y;
@@ -138,10 +163,11 @@ void Level::renderLight(Screen &s) {
     player->renderLight(s);
     for (auto [id, o] : reg.view<Owned>().each())
         if (o.self.get() != player && !o.self->removed) o.self->renderLight(s);
+    Prop p;
     eachVisibleTile(s, [&](int x, int y) {
-        if (!hasWisp(x, y)) return;
+        if (!propAt(x, y, p) || !p.wisp) return;
         float f = 0.8f + 0.2f * std::sin(time * 2 + float(hash2(x, y) % 100));
-        s.glow({x * 16 + 8.0f, y * 16 + 4 + std::sin(time * 1.7f + x) * 2}, 80, Color{0.07f, 0.15f, 0.32f, 1} * f);
+        s.glow(p.pos + Vec2{0, -10 + std::sin(time * 1.7f + x) * 2}, 80, Color{0.07f, 0.15f, 0.32f, 1} * f);
     });
 }
 
@@ -162,12 +188,14 @@ void Spawner::tick() {
         int count = std::min(64, 24 + int(t / 12));
         for (int i = 0; i < count; i++) spawn(pool.back(), level.player->pos + fromAngle(TAU * i / count) * 270);
         level.game.announce("THE HORDE CLOSES IN");
+        Sound::horde.play(0.7f, 0);
     }
     if (t >= nextBoss) {
         nextBoss += 150;
         bosses++;
         spawn(EnemyKind::Cyclops, ring(300));
         level.game.announce("A CYCLOPS APPROACHES");
+        Sound::boss.play(0.8f, 0);
     }
 }
 

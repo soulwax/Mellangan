@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
 
@@ -9,6 +10,7 @@ bool Game::init(SDL_Window *w, const std::string &base) {
     window = w;
     rng.state ^= SDL_GetPerformanceCounter() * 0x2545F4914F6CDD1Dull;
     if (!screen.load(base)) return false;
+    Sound::init(base);
     toTitle();
     return true;
 }
@@ -19,6 +21,7 @@ void Game::shutdown() {
     nextMenu.reset();
     level.reset();
     screen.unload();
+    Sound::shutdown();
 }
 
 void Game::run() {
@@ -49,12 +52,15 @@ void Game::run() {
 void Game::tick() {
     input.tick();
     time += DT;
+    Sound::tick();
     if (input.fps.clicked) showFps = !showFps;
+    if (input.mute.clicked) Sound::toggleMute();
     if (input.fullscreen.clicked) SDL_SetWindowFullscreen(window, !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN));
 
     if (menu) {
         menu->tick();
     } else if (input.escape.clicked || input.pause.clicked) {
+        Sound::select.play(0.5f, 0);
         setMenu(std::make_unique<PauseMenu>(*this));
     } else {
         level->tick();
@@ -89,6 +95,7 @@ void Game::announce(std::string text) {
 
 void Game::onPlayerDied() {
     Player &p = *level->player;
+    Sound::death.play(0.8f, 0);
     spdlog::info("Fallen after {} at level {} with {} kills", clockText(level->time), p.lvl, level->kills);
     setMenu(std::make_unique<DeadMenu>(*this));
 }
@@ -98,7 +105,7 @@ void Game::render() {
     Vec2 jitter = shake > 0.05f ? Vec2{rng.range(-1, 1), rng.range(-1, 1)} * shake : Vec2{};
     screen.offset = {std::floor(camera.x + jitter.x - Screen::W / 2), std::floor(camera.y + jitter.y - Screen::H / 2)};
 
-    screen.beginLight({0.30f, 0.29f, 0.42f, 1});
+    screen.beginLight({0.10f, 0.12f, 0.24f, 1});
     level->renderLight(screen);
     screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
     level->render(screen);

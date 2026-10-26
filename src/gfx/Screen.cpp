@@ -1,16 +1,43 @@
 #include "gfx/Screen.hpp"
 
+#include <VK2D/Blobs.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <string>
 
+// Defined in Vulkan2D's Shader.c but missing from its public header.
+extern "C" VK2DShader vk2dShaderFrom(const uint8_t *vert, int vertSize, const uint8_t *frag, int fragSize, uint32_t uniformSize);
+
+// Uniform layouts; must match the ConstantBuffers in res/shaders.
+struct PostData {
+    float time, hurt, lowHealth;
+    uint32_t light;
+    float resW, resH, vignette, grain;
+};
+struct FlashData {
+    float amount, r, g, b;
+};
+
+static VK2DShader loadShader(const std::string &path, uint32_t uniformSize) {
+    size_t size = 0;
+    void *spv = SDL_LoadFile(path.c_str(), &size);
+    if (!spv) {
+        spdlog::error("Can't read {}: {}", path, SDL_GetError());
+        return nullptr;
+    }
+    VK2DShader s = vk2dShaderFrom(VK2DVertUsershader, sizeof(VK2DVertUsershader), static_cast<const uint8_t *>(spv),
+                                  int(size), uniformSize);
+    SDL_free(spv);
+    return s;
+}
+
 bool Screen::load(const std::string &base) {
     auto path = [&](const char *rel) { return base + rel; };
     atlas = vk2dTextureLoad(path("res/atlas.png").c_str());
     font = vk2dTextureLoad(path("res/font.png").c_str());
-    post = vk2dSlangLoad(path("res/shaders/post.slang").c_str());
-    flashShader = vk2dSlangLoad(path("res/shaders/flash.slang").c_str());
+    post = loadShader(path("res/shaders/post.spv"), sizeof(PostData));
+    flashShader = loadShader(path("res/shaders/flash.spv"), sizeof(FlashData));
     world = vk2dTextureCreate(W, H);
     light = vk2dTextureCreate(W, H);
     if (atlas && font && post && flashShader && world && light) return true;
@@ -63,11 +90,7 @@ void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
     vk2dRendererClear();
     color(col::white);
 
-    struct {
-        float time, hurt, lowHealth;
-        uint32_t light;
-        float resW, resH, vignette, grain;
-    } data{fx.time, fx.hurt, fx.lowHealth, vk2dTextureGetID(light), float(W), float(H), 0.85f, 0.035f};
+    PostData data{fx.time, fx.hurt, fx.lowHealth, vk2dTextureGetID(light), float(W), float(H), 0.85f, 0.02f};
     vk2dRendererDrawShader(post, &data, world, std::floor((w - W * scale) / 2), std::floor((h - H * scale) / 2),
                            scale, scale, 0, 0, 0, 0, 0, W, H);
 }
@@ -90,9 +113,9 @@ void Screen::center(const Sprite &s, Vec2 at, float sc, float rot) {
 
 void Screen::flash(const Sprite &s, Vec2 at, Vec2 o, Vec2 sc, float rot, float amount, Color c) {
     if (amount <= 0) return sprite(s, at, o, sc, rot);
-    float data[4] = {amount, c.r, c.g, c.b};
+    FlashData data{amount, c.r, c.g, c.b};
     Vec2 p = at - offset - Vec2{o.x * sc.x, o.y * sc.y};
-    vk2dRendererDrawShader(flashShader, data, atlas, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
+    vk2dRendererDrawShader(flashShader, &data, atlas, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
 }
 
 void Screen::glow(Vec2 at, float size, Color c) {

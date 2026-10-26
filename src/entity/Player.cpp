@@ -1,6 +1,7 @@
 #include "entity/Player.hpp"
 
 #include "Game.hpp"
+#include "audio/Sound.hpp"
 #include "entity/Particle.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
@@ -45,8 +46,8 @@ void Player::renderLight(Screen &s) {
     float t = level->time + animT;
     float f = 1 + 0.035f * std::sin(t * 13.1f) + 0.025f * std::sin(t * 7.7f + 1.3f);
     if (dead()) return s.glow(body(), 200, {0.25f, 0.05f, 0.05f, 1});
-    s.glow(body(), 430 * f, {0.30f, 0.25f, 0.18f, 1});
-    s.glow(body(), 130 * f, {0.20f, 0.15f, 0.09f, 1});
+    s.glow(body(), 300 * f, {0.34f, 0.27f, 0.17f, 1});
+    s.glow(body(), 110 * f, {0.22f, 0.16f, 0.08f, 1});
 }
 
 void Player::hurt(float damage) {
@@ -54,6 +55,7 @@ void Player::hurt(float damage) {
     hp -= damage;
     invuln = 0.6f;
     level->game.onPlayerHurt();
+    Sound::hurt.play(0.7f);
     TextParticle::pop(*level, body(), int(std::lround(damage)), col::red);
     Spark::burst(*level, body(), col::red, 6, 60, false);
     if (hp > 0) return;
