@@ -40,8 +40,8 @@ def snow_over_dirt(rgba):
 
 def add_winter_band(atlas):
     base = atlas.crop((0, 0, atlas.width, BASE_H))
-    out = Image.new("RGBA", (atlas.width, RIM_Y + 3 * CELL), (0, 0, 0, 0))
-    out.paste(base, (0, 0))
+    out = Image.new("RGBA", (atlas.width, max(atlas.height, RIM_Y + 3 * CELL)), (0, 0, 0, 0))
+    out.paste(atlas, (0, 0))
     band = base.crop((TOWN_X, 0, TOWN_X + 12 * CELL, ROWS * CELL))
     px = band.load()
     for y in range(band.height):

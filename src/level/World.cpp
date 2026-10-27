@@ -8,7 +8,7 @@ namespace {
 
 namespace tt = atlas::tt;
 
-StructureKind pickKind(const BiomeDef *b, uint32_t roll) {
+StructureKind pickKind(const Biome *b, uint32_t roll) {
     int total = 0;
     for (int k = 0; k < int(StructureKind::Count); k++) total += b->structureWeights[k];
     int r = int(roll % uint32_t(total));
@@ -17,7 +17,7 @@ StructureKind pickKind(const BiomeDef *b, uint32_t roll) {
     return StructureKind::Cottage;
 }
 
-bool dirtNoise(int x, int y, const BiomeDef *b) { return noise_fbm(x * 0.11f - 200.5f, y * 0.11f + 77.5f, 2, 505) > b->dirt; }
+bool dirtNoise(int x, int y, const Biome *b) { return noise_fbm(x * 0.11f - 200.5f, y * 0.11f + 77.5f, 2, 505) > b->dirt; }
 
 // Per-tile memo of everything noise-derived. bits holds the biome in its low 3 bits plus has/value flags, so one
 // direct-mapped slot answers biome, dirt, shade and clump. Indexed by the low coordinate bits: any 128x64-tile
@@ -36,6 +36,12 @@ TileMemo *memoAt(int x, int y) {
     return m;
 }
 
+bool patchDirt(int x, int y) {
+    if (!dirtNoise(x, y, BIOMES[biomeAt(x, y)])) return false;
+    return dirtNoise(x - 1, y, BIOMES[biomeAt(x - 1, y)]) || dirtNoise(x + 1, y, BIOMES[biomeAt(x + 1, y)]) ||
+           dirtNoise(x, y - 1, BIOMES[biomeAt(x, y - 1)]) || dirtNoise(x, y + 1, BIOMES[biomeAt(x, y + 1)]);
+}
+
 // Dirt rim tile offset from a 4-bit neighbour mask (n, s, w, e): a lone side picks that edge, both or neither the middle.
 constexpr uint8_t rimOffset(int mask) {
     constexpr uint8_t edge[4] = {1, 2, 0, 1};
@@ -48,7 +54,7 @@ constexpr uint8_t RIM[16] = {rimOffset(0), rimOffset(1), rimOffset(2),  rimOffse
 bool rollStructure(int rx, int ry, Structure *out) {
     uint32_t h = hash2(rx * 31 + 7, ry * 17 - 3);
     int cx = rx * REGION + REGION / 2, cy = ry * REGION + REGION / 2;
-    const BiomeDef *b = &BIOMES[biomeAt(cx, cy)];
+    const Biome *b = BIOMES[biomeAt(cx, cy)];
     if (int(h % 100) >= b->structureChance) return false;
 
     StructureKind kind = pickKind(b, h >> 8);
@@ -104,33 +110,37 @@ bool isDirt(int x, int y) {
     TileMemo *m = memoAt(x, y);
     if (!(m->bits & HAS_DIRT)) {
         Structure s;
-        bool dirt = structureAt(x, y, s, 1) ? structureDirt(&s, x - s.x, y - s.y) : dirtNoise(x, y, &BIOMES[biomeAt(x, y)]);
+        bool dirt = structureAt(x, y, s, 1) ? structureDirt(&s, x - s.x, y - s.y) : patchDirt(x, y);
         m->bits |= HAS_DIRT | (dirt ? uint32_t(DIRT) : 0u);
     }
     return m->bits & DIRT;
 }
 
-bool winterAt(int x, int y) { return BIOMES[biomeAt(x, y)].winter; }
+bool winterAt(int x, int y) { return BIOMES[biomeAt(x, y)]->winter(); }
+
+const Biome *blendedBiome(int x, int y) {
+    const Biome *here = BIOMES[biomeAt(x, y)];
+    uint32_t h = hash2(x * 31 + 5, y * 17 + 9);
+    const Biome *there = BIOMES[biomeAt(x + int(h % 7) - 3, y + int((h >> 3) % 7) - 3)];
+    return there->winter() == here->winter() ? there : here;
+}
 
 Sprite groundTile(int x, int y) {
     Structure st;
     Sprite out;
-    const BiomeDef *b = &BIOMES[biomeAt(x, y)];
-    if (structureAt(x, y, st) && structureGround(&st, x - st.x, y - st.y, &out)) {
-        if (b->winter && out.x >= 216 && out.y < 72) out.y += 264;
-        return out;
-    }
-    Sprite (*sheet)(int) = b->winter ? atlas::winter : atlas::town;
+    const Biome *b = BIOMES[biomeAt(x, y)];
+    if (structureAt(x, y, st) && structureGround(&st, x - st.x, y - st.y, &out)) return b->frost(out);
     if (!isDirt(x, y)) {
-        if (b->winter) {
+        if (b->winter()) {
             int snow = int(winterAt(x, y - 1)) | winterAt(x, y + 1) << 1 | winterAt(x - 1, y) << 2 | winterAt(x + 1, y) << 3;
             if (snow != 15) return atlas::snowRim(RIM[snow]);
         }
+        const Biome *d = blendedBiome(x, y);
         int r = hash2(x, y) % 100;
-        return sheet(r < b->flowers ? tt::GrassFlowers : r < b->flowers + b->tufts ? tt::GrassTufts : tt::Grass);
+        return d->grass(r < d->flowers ? 2 : r < d->flowers + d->tufts ? 1 : 0);
     }
     int mask = int(isDirt(x, y - 1)) | isDirt(x, y + 1) << 1 | isDirt(x - 1, y) << 2 | isDirt(x + 1, y) << 3;
-    return sheet(tt::DirtTopLeft + RIM[mask]);
+    return b->dirtRim(RIM[mask]);
 }
 
 float groundShade(int x, int y) {
@@ -144,7 +154,7 @@ Color groundTint(int x, int y) {
     static const int OFFSETS[5][2] = {{0, 0}, {-3, 0}, {3, 0}, {0, -3}, {0, 3}};
     Color c{0, 0, 0, 1};
     for (int i = 0; i < 5; i++) {
-        const Color *t = &BIOMES[biomeAt(x + OFFSETS[i][0], y + OFFSETS[i][1])].tint;
+        const Color *t = &BIOMES[biomeAt(x + OFFSETS[i][0], y + OFFSETS[i][1])]->tint;
         c.r += t->r * 0.2f, c.g += t->g * 0.2f, c.b += t->b * 0.2f;
     }
     return c;
@@ -159,7 +169,7 @@ bool propAt(int x, int y, Prop &p) {
     if (structureAt(x, y, st, 1)) return structureProp(&st, x - st.x, y - st.y, &p);
     if ((std::abs(x) < 4 && std::abs(y) < 4) || isDirt(x, y)) return false;
 
-    const BiomeDef *b = &BIOMES[biomeAt(x, y)];
+    const Biome *b = blendedBiome(x, y);
     uint32_t h = hash2(x * 7 + 3, y * 13 + 1);
     int r = (h >> 4) % 1000;
     TileMemo *m = memoAt(x, y);

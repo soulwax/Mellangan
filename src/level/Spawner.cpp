@@ -4,7 +4,7 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/SupplyBarrel.hpp"
-#include "level/Biome.hpp"
+#include "level/biome/Biome.hpp"
 #include "level/Level.hpp"
 
 void Spawner::tick() {
@@ -14,7 +14,7 @@ void Spawner::tick() {
         if (Enemy::typeOf(EnemyKind(k)).unlockAt <= t) pool.push_back(EnemyKind(k));
     int n = int(pool.size());
     auto pick = [&](double x, double y) {
-        uint32_t foes = BIOMES[world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)))].foes;
+        uint32_t foes = BIOMES[world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)))]->foes;
         EnemyKind local[int(EnemyKind::Cyclops)];
         int m = 0;
         for (EnemyKind k : pool)

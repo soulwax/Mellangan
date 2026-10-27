@@ -129,7 +129,7 @@ void Level::renderWorldDebug(Screen &s, int xView, int yView, float xMouse, floa
     if (hovering) {
         s.frame(v.guiX(hx * 16.0), v.guiY(hy * 16.0), 16 * k, 16 * k, u, col::white.alpha(0.8f));
         Climate hc = world::climateAt(hx, hy);
-        const BiomeDef *hb = &BIOMES[world::biomeOf(hc)];
+        const Biome *hb = BIOMES[world::biomeOf(hc)];
         std::vector<std::pair<std::string, Color>> info{
             {fmt::format("tile {},{}  region {},{}", hx, hy, world::regionOf(hx), world::regionOf(hy)), col::white},
             {fmt::format("{}  clump {:.2f}  {}", hb->name, world::clumpAt(hx, hy), world::isDirt(hx, hy) ? "dirt" : "grass"),
@@ -151,7 +151,7 @@ void Level::renderWorldDebug(Screen &s, int xView, int yView, float xMouse, floa
         panel(s, info, px, py, small, false);
     }
 
-    const BiomeDef *pb = &BIOMES[world::biomeAt(int(std::floor(player->x / 16)), int(std::floor(player->y / 16)))];
+    const Biome *pb = BIOMES[world::biomeAt(int(std::floor(player->x / 16)), int(std::floor(player->y / 16)))];
     std::vector<std::pair<std::string, Color>> hud{
         {"WORLD DEBUG  F8 hide  F9 warp", col::gold},
         {fmt::format("player tile {},{}  region {},{}", int(std::floor(player->x / 16)), int(std::floor(player->y / 16)),

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from make_flora import add_flora_band
 from make_winter import add_winter_band
 
 TILE = 16
@@ -196,7 +197,7 @@ def main():
     for im, pos in fx:
         atlas.paste(im, pos)
 
-    atlas = add_winter_band(atlas)
+    atlas = add_flora_band(add_winter_band(atlas))
     out = Path(__file__).resolve().parent.parent / "res" / "atlas.png"
     atlas.save(out)
     print(f"wrote {out}")

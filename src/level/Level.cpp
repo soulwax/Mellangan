@@ -10,7 +10,6 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Encounter.hpp"
-#include "particle/debris/SnowDebris.hpp"
 
 namespace {
 uint32_t orderedBits(float f) {
@@ -146,10 +145,7 @@ void Level::ambience() {
 }
 
 void Level::weather() {
-    if (!BIOMES[world::biomeAt(int(std::floor(player->x / 16)), int(std::floor(player->y / 16)))].winter) return;
-    double wind = 0.25 * std::sin(time * 0.3);
-    for (int i = 0; i < 3 && Debris::room(); i++)
-        add<SnowDebris>(player->x + rng.range(-300, 300), player->y + rng.range(-180, 200), rng.range(30, 90), wind);
+    BIOMES[world::biomeAt(int(std::floor(player->x / 16)), int(std::floor(player->y / 16)))]->weather(*this, player->x, player->y);
 }
 
 void Level::explore() {

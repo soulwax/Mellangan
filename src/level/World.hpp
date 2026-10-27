@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "level/Biome.hpp"
+#include "level/biome/Biome.hpp"
 #include "level/Prop.hpp"
 #include "level/Structure.hpp"
 

@@ -12,6 +12,7 @@ struct Feature {
     float shadow, solid; // solid: collider radius at the foot, 0 to walk through
     Color light;
     bool winter = false;
+    Sprite (*art)(int) = nullptr;
 };
 
 bool placeStack(const Feature *f, uint32_t roll, Prop *p);
@@ -19,5 +20,7 @@ bool placeGrave(const Feature *f, uint32_t roll, Prop *p);
 
 namespace feature {
 extern const Feature oak, autumnOak, pine, autumnPine, bush, snowOak, snowPine, snowBush;
+extern const Feature pinkOak, whiteOak, lilac, berryBush, dryBush, deadPine, spiritPine, mossPine, blueShrooms;
+extern const Feature willow, reeds, toadstools;
 extern const Feature grave, mushrooms, sprouts, log, beehive, sign, sack, crystal, well, barrel, crate;
 } // namespace feature

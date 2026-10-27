@@ -8,6 +8,7 @@ namespace t = atlas::t;
 constexpr Color NONE{0, 0, 0, 0};
 
 Sprite sheet(const Feature *f, int index) {
+    if (f->art) return f->art(index);
     return f->winter ? atlas::winter(index) : f->town ? atlas::town(index) : atlas::tile(index);
 }
 
@@ -37,6 +38,19 @@ const Feature bush{"bush", placeStack, tt::Bush, -1, true, 0.9f, 4, NONE};
 const Feature snowOak{"snowy oak", placeStack, tt::Trunk, tt::Crown, true, 1.3f, 3, NONE, true};
 const Feature snowPine{"snowy pine", placeStack, tt::Pine, -1, true, 1.0f, 3, NONE, true};
 const Feature snowBush{"snowy bush", placeStack, tt::Bush, -1, true, 0.9f, 4, NONE, true};
+
+const Feature pinkOak{"pink blossom", placeStack, atlas::fl::PinkLow, atlas::fl::PinkHigh, true, 1.3f, 3, NONE, false, atlas::flora};
+const Feature whiteOak{"white blossom", placeStack, atlas::fl::WhiteLow, atlas::fl::WhiteHigh, true, 1.3f, 3, NONE, false, atlas::flora};
+const Feature lilac{"lilac", placeStack, atlas::fl::Lilac, -1, true, 0.9f, 4, NONE, false, atlas::flora};
+const Feature berryBush{"berry bush", placeStack, atlas::fl::Berries, -1, true, 0.9f, 4, NONE, false, atlas::flora};
+const Feature dryBush{"dry bush", placeStack, atlas::fl::Straw, -1, true, 0.9f, 4, NONE, false, atlas::flora};
+const Feature deadPine{"dead pine", placeStack, atlas::fl::DeadPine, -1, true, 1.0f, 3, NONE, false, atlas::flora};
+const Feature spiritPine{"spirit pine", placeStack, atlas::fl::SpiritPine, -1, true, 1.0f, 3, {0.04f, 0.16f, 0.17f, 1}, false, atlas::flora};
+const Feature mossPine{"moss pine", placeStack, atlas::fl::MossPine, -1, true, 1.0f, 3, NONE, false, atlas::flora};
+const Feature willow{"willow", placeStack, atlas::fl::WillowLow, atlas::fl::WillowHigh, true, 1.3f, 3, NONE, false, atlas::flora};
+const Feature reeds{"reeds", placeStack, atlas::fl::Reeds, -1, true, 0.4f, 0, NONE, false, atlas::flora};
+const Feature toadstools{"toadstools", placeStack, atlas::fl::Toadstools, -1, true, 0, 0, {0.12f, 0.04f, 0.2f, 1}, false, atlas::flora};
+const Feature blueShrooms{"blue mushrooms", placeStack, atlas::fl::BlueShrooms, -1, true, 0, 0, {0.04f, 0.07f, 0.22f, 1}, false, atlas::flora};
 
 const Feature grave{"grave", placeGrave, t::GraveStone, -1, false, 0, 4, {0.07f, 0.15f, 0.32f, 1}};
 const Feature mushrooms{"mushrooms", placeStack, tt::Mushrooms, -1, true, 0, 0, {0.03f, 0.12f, 0.10f, 1}};
