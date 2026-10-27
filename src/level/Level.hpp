@@ -26,13 +26,13 @@ class Spawner {
 public:
     explicit Spawner(Level &level) : level(level) {}
     void tick();
+    void spawn(EnemyKind kind, Vec2 at);
 
 private:
     Level &level;
     float timer = 1, nextWave = 60, nextBoss = 150, nextBarrel = 15;
     int bosses = 0;
 
-    void spawn(EnemyKind kind, Vec2 at);
     Vec2 ring(float dist) const;
 };
 
@@ -43,6 +43,7 @@ public:
     Player *player = nullptr;
     float time = 0;
     int kills = 0;
+    Spawner spawner{*this};
 
     explicit Level(Game &game);
 
@@ -72,12 +73,15 @@ public:
     void render(Screen &s);
     void renderLight(Screen &s);
     void renderWorldDebug(Screen &s, Vec2 view, Vec2 mouse);
+    void collide(Vec2 &foot, float radius) const;
+    bool visited(const Structure &s) const;
+    static bool unvisited(const Structure *s, const void *level);
 
 private:
     static constexpr int GRID = 48;
     static constexpr float CELL = 28;
+    static constexpr int SOLID_W = Screen::W / 16 + 8, SOLID_H = Screen::H / 16 + 8;
 
-    Spawner spawner{*this};
     std::vector<std::unique_ptr<Entity>> pending;
     std::vector<entt::entity> dead;
     std::vector<Entity *> sorted;
@@ -85,8 +89,13 @@ private:
     std::vector<int> cellStart, cellFill;
     std::vector<Enemy *> cells;
     Vec2 gridOrigin;
+    float solids[SOLID_H * SOLID_W]{}; // prop collider radius per tile over the last scatter window
+    int solidX = 0, solidY = 0;
+    uint64_t visits[256]{};
+    int visitCount = 0;
 
     void flush();
+    void explore();
     void buildGrid();
     void renderFloor(Screen &s);
     void scatter(Screen &s);

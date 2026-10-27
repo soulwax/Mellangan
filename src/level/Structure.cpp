@@ -35,21 +35,22 @@ bool cottage(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
         p->add(atlas::town(door ? (stone ? tt::StoneDoor : tt::WoodDoor) : (stone ? tt::StoneWindow : tt::WoodWindow)));
         p->add(atlas::town(roof + 12 + c), {0, -16});
         p->add(atlas::town(door && (s->seed & 4) ? roof + 3 : roof + c), {0, -32});
-        p->shadow = 1.4f;
+        p->shadow = 1.4f, p->solid = 8;
         if (!door && lit) p->light = {0.34f, 0.2f, 0.06f, 1}, p->lightOffset = {0, -8}, p->lightSize = 56, p->wisp = false;
         return true;
     }
-    if (lx == 0 && ly == 3) return p->add(atlas::tile(r & 1 ? t::Barrel : t::Crate)), p->shadow = 0.8f, true;
+    if (lx == 0 && ly == 3) return p->add(atlas::tile(r & 1 ? t::Barrel : t::Crate)), p->shadow = 0.8f, p->solid = 5, true;
     if (lx == 4 && ly == 3) {
-        if (s->seed & 8) return p->add(atlas::town(tt::Beehive)), p->shadow = 0.8f, true;
-        p->add(atlas::town(tt::Well)), p->add(atlas::town(tt::WellRoof), {0, -16}), p->shadow = 1.0f;
+        if (s->seed & 8) return p->add(atlas::town(tt::Beehive)), p->shadow = 0.8f, p->solid = 4, true;
+        p->add(atlas::town(tt::Well)), p->add(atlas::town(tt::WellRoof), {0, -16}), p->shadow = 1.0f, p->solid = 6;
         return true;
     }
-    if (lx == 1 && ly == 4 && (s->seed & 16)) return p->add(atlas::town(tt::Sign)), p->shadow = 0.6f, true;
+    if (lx == 1 && ly == 4 && (s->seed & 16)) return p->add(atlas::town(tt::Sign)), p->shadow = 0.6f, p->solid = 3, true;
     return false;
 }
 bool graveyard(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
     int right = s->w - 1, bottom = s->h - 1, gate = s->w / 2;
+    p->solid = 6;
     if (ly == 0) return p->add(atlas::town(lx == 0 ? tt::FenceTopLeft : lx == right ? tt::FenceTopRight : tt::FenceTop)), true;
     if (ly == bottom) {
         if (lx == gate) return false;
@@ -70,11 +71,11 @@ bool shrine(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
     if (corner) {
         p->add(atlas::tile(t::Pillar));
         if (r % 3 != 0) p->add(atlas::tile(t::Pillar), {0, -16});
-        p->shadow = 1.0f;
+        p->shadow = 1.0f, p->solid = 6;
         return true;
     }
     if (lx == s->w / 2 && ly == s->h / 2) {
-        p->add(atlas::tile(t::Crystal)), p->shadow = 0.7f;
+        p->add(atlas::tile(t::Crystal)), p->shadow = 0.7f, p->solid = 4;
         p->light = {0.06f, 0.22f, 0.38f, 1}, p->lightSize = 130, p->lightOffset = {0, -12};
         return true;
     }
@@ -82,6 +83,7 @@ bool shrine(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
 }
 bool camp(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
     int c = s->w / 2;
+    p->solid = 5;
     if (lx == c && ly == c) {
         p->add(atlas::town(tt::Log));
         p->light = {0.55f, 0.27f, 0.07f, 1}, p->lightSize = 150, p->lightOffset = {0, -6}, p->wisp = false;
@@ -101,7 +103,7 @@ bool ruin(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
             p->add(atlas::town(lx == arch ? tt::ArchLeft : tt::ArchRight));
             p->add(atlas::town(tt::Bricks), {0, -16});
         } else if (r % 10 < 7) {
-            p->add(atlas::town(tt::Bricks));
+            p->add(atlas::town(tt::Bricks)), p->solid = 8;
             if (r % 10 < 3) p->add(atlas::town(tt::Bricks), {0, -16});
         } else {
             return false;
@@ -110,7 +112,7 @@ bool ruin(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
         return true;
     }
     if (ly < 2) return false;
-    if (r % 11 == 0) return p->add(atlas::town(tt::Bricks)), p->shadow = 1.0f, true;
+    if (r % 11 == 0) return p->add(atlas::town(tt::Bricks)), p->shadow = 1.0f, p->solid = 7, true;
     if (r % 13 == 0) return p->add(atlas::town(tt::Mushrooms)), p->light = {0.03f, 0.12f, 0.10f, 1}, true;
     return false;
 }

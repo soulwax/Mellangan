@@ -75,7 +75,7 @@ void Enemy::tick() {
         pos = p.pos - dir * reach;
         p.hurt(type.damage * damageMul);
     }
-    if (!type.floats) separate();
+    if (!type.floats) separate(), level->collide(pos, radius);
 }
 
 void Enemy::separate() {

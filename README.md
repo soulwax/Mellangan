@@ -49,7 +49,9 @@ If the build fails, `VERSION` and `CHANGELOG.md` are restored.
 
 - `src/entity` – `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, particles
 - `src/item` – `Upgrade` and its weapons and passives
-- `src/level` – `Level` (backed by an `entt::registry`) and the `Spawner`
+- `src/level` – `Level` (backed by an `entt::registry`) and the `Spawner`; world generation as small table-driven
+  modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and
+  `Encounter` (what a structure does when entered)
 - `src/menu` – title, pause, level-up, and death menus
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)

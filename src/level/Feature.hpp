@@ -2,7 +2,6 @@
 
 #include "level/Prop.hpp"
 
-// A free-standing prop scattered over open ground. Biomes reference these by address.
 struct Feature;
 typedef bool (*FeaturePlace)(const Feature *f, uint32_t roll, Prop *p);
 struct Feature {
@@ -10,7 +9,7 @@ struct Feature {
     FeaturePlace place;
     int tile, top; // atlas indices; top stacks one tile up, -1 for none
     bool town;     // Tiny Town sheet, else Tiny Dungeon
-    float shadow;
+    float shadow, solid; // solid: collider radius at the foot, 0 to walk through
     Color light;
 };
 

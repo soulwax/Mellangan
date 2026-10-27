@@ -5,6 +5,7 @@
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "level/Encounter.hpp"
 
 namespace {
 template <class F> void eachVisibleTile(const Screen &s, F &&f, int before = 0, int after = 0) {
@@ -46,11 +47,35 @@ void Level::flush() {
 
 void Level::tick() {
     time += DT;
-    if (!player->dead()) spawner.tick();
+    if (!player->dead()) spawner.tick(), explore();
     buildGrid();
     for (auto [id, o] : reg.view<Owned>().each())
         if (!o.self->removed) o.self->tick();
     flush();
+}
+
+namespace {
+uint64_t structureKey(const Structure *s) { return uint64_t(uint32_t(s->rx)) << 32 | uint32_t(s->ry); }
+} // namespace
+
+bool Level::visited(const Structure &s) const {
+    uint64_t key = structureKey(&s);
+    for (int i = 0, n = std::min(visitCount, 256); i < n; i++)
+        if (visits[i] == key) return true;
+    return false;
+}
+
+bool Level::unvisited(const Structure *s, const void *level) { return !static_cast<const Level *>(level)->visited(*s); }
+
+void Level::explore() {
+    Structure s;
+    int tx = int(std::floor(player->pos.x / 16)), ty = int(std::floor(player->pos.y / 16));
+    if (!world::structureAt(tx, ty, s) || visited(s)) return;
+    visits[visitCount++ % 256] = structureKey(&s);
+    const EncounterDef *e = &ENCOUNTERS[int(s.kind)];
+    game.announce(e->banner);
+    e->enter(this, &s);
+    spdlog::info("encounter: {} at tile ({}, {})", s.name(), s.x, s.y);
 }
 
 void Level::buildGrid() {
@@ -90,10 +115,28 @@ void Level::renderFloor(Screen &s) {
 
 void Level::scatter(Screen &s) {
     props.clear();
+    std::fill(std::begin(solids), std::end(solids), 0.0f);
+    solidX = int(std::floor(s.offset.x / 16)) - 3, solidY = int(std::floor(s.offset.y / 16)) - 3;
     Prop p;
     eachVisibleTile(s, [&](int x, int y) {
-        if (world::propAt(x, y, p)) props.push_back(p);
+        if (!world::propAt(x, y, p)) return;
+        props.push_back(p);
+        if (p.solid > 0) solids[(y - solidY) * SOLID_W + x - solidX] = p.solid;
     }, 3, 2);
+}
+
+void Level::collide(Vec2 &foot, float radius) const {
+    int tx = int(std::floor(foot.x / 16)), ty = int(std::floor((foot.y - 3) / 16));
+    for (int y = ty - 1; y <= ty + 1; y++)
+        for (int x = tx - 1; x <= tx + 1; x++) {
+            int gx = x - solidX, gy = y - solidY;
+            if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H || solids[gy * SOLID_W + gx] <= 0) continue;
+            Vec2 c{x * 16 + 8.0f, y * 16 + 13.0f}, d = foot - c;
+            float min = solids[gy * SOLID_W + gx] + radius, d2 = lengthSq(d);
+            if (d2 >= min * min) continue;
+            float len = std::sqrt(d2);
+            foot = len > 1e-4f ? c + d / len * min : c + Vec2{0, min};
+        }
 }
 
 void Level::render(Screen &s) {
@@ -140,11 +183,22 @@ void Spawner::tick() {
     for (int k = 0; k < int(EnemyKind::Cyclops); k++)
         if (Enemy::typeOf(EnemyKind(k)).unlockAt <= t) pool.push_back(EnemyKind(k));
     int n = int(pool.size());
-    auto pick = [&] { return n > 2 && rng.chance(0.55f) ? pool[n - 1 - rng.irange(0, 1)] : pool[rng.irange(0, n - 1)]; };
+    auto pick = [&](Vec2 at) {
+        uint32_t foes = BIOMES[world::biomeAt(int(std::floor(at.x / 16)), int(std::floor(at.y / 16)))].foes;
+        EnemyKind local[int(EnemyKind::Cyclops)];
+        int m = 0;
+        for (EnemyKind k : pool)
+            if (foes & foe(k)) local[m++] = k;
+        if (m && rng.chance(0.45f)) return local[rng.irange(0, m - 1)];
+        return n > 2 && rng.chance(0.55f) ? pool[n - 1 - rng.irange(0, 1)] : pool[rng.irange(0, n - 1)];
+    };
 
     if ((timer -= DT) <= 0) {
         timer += std::max(0.06f, 0.9f - t * 0.005f);
-        for (int i = 0, batch = 1 + int(t / 70); i < batch && level.count<Enemy>() < 550; i++) spawn(pick(), ring(rng.range(280, 320)));
+        for (int i = 0, batch = 1 + int(t / 70); i < batch && level.count<Enemy>() < 550; i++) {
+            Vec2 at = ring(rng.range(280, 320));
+            spawn(pick(at), at);
+        }
     }
     if (t >= nextWave) {
         nextWave += 60;

@@ -73,7 +73,7 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
     bool hoverStructure = hovering && world::structureAt(hx, hy, hovered, 1);
 
     Structure target{};
-    bool targeted = world::nearestStructure(player->pos, 8, target);
+    bool targeted = world::nearestStructure(player->pos, 8, target, Level::unvisited, this);
 
     auto box = [&](const Structure &st, int margin) {
         Vec2 a = v.gui({float(st.x - margin) * 16, float(st.y - margin) * 16});

@@ -12,23 +12,25 @@ uint32_t noise_hash(int32_t x, int32_t y, uint32_t seed) {
 
 static float fade(float t) { return t * t * t * (t * (t * 6 - 15) + 10); }
 
+
+static const float GRAD[8][2] = {
+    {1, 1}, {-1, 1}, {1, -1}, {-1, -1}, {1.41421356f, 0}, {-1.41421356f, 0}, {0, 1.41421356f}, {0, -1.41421356f},
+};
+
 static float grad(int32_t ix, int32_t iy, uint32_t seed, float dx, float dy) {
-    switch (noise_hash(ix, iy, seed) >> 29) {
-    case 0: return dx + dy;
-    case 1: return dy - dx;
-    case 2: return dx - dy;
-    case 3: return -dx - dy;
-    case 4: return dx * 1.41421356f;
-    case 5: return dx * -1.41421356f;
-    case 6: return dy * 1.41421356f;
-    default: return dy * -1.41421356f;
-    }
+    const float *g = GRAD[noise_hash(ix, iy, seed) >> 29];
+    return g[0] * dx + g[1] * dy;
+}
+
+
+static int32_t ifloor(float v) {
+    int32_t i = (int32_t)v;
+    return i - (v < (float)i);
 }
 
 float noise_perlin(float x, float y, uint32_t seed) {
-    float fx = floorf(x), fy = floorf(y);
-    int32_t ix = (int32_t)fx, iy = (int32_t)fy;
-    float dx = x - fx, dy = y - fy, u = fade(dx), v = fade(dy);
+    int32_t ix = ifloor(x), iy = ifloor(y);
+    float dx = x - (float)ix, dy = y - (float)iy, u = fade(dx), v = fade(dy);
     float a = grad(ix, iy, seed, dx, dy), b = grad(ix + 1, iy, seed, dx - 1, dy);
     float c = grad(ix, iy + 1, seed, dx, dy - 1), d = grad(ix + 1, iy + 1, seed, dx - 1, dy - 1);
     float ab = a + (b - a) * u, cd = c + (d - c) * u;

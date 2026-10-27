@@ -7,18 +7,23 @@ namespace f = feature;
 // structureWeights: cottage, graveyard, shrine, camp, ruin
 const BiomeDef BIOMES[BIOME_COUNT] = {
     {"MEADOW", {0.55f, 0.9f, 0.35f, 1}, {1, 1, 1, 1}, 0.34f, 6, 22, 55, {50, 10, 15, 15, 10},
+     foe(EnemyKind::Rat) | foe(EnemyKind::Slime) | foe(EnemyKind::Knight),
      {{&f::oak, 4, 110}, {&f::bush, 4, 60}, {&f::pine, 2, 50}, {&f::sprouts, 4, 0},
       {&f::beehive, 2, 0}, {&f::sign, 1, 0}, {&f::well, 1, 0}, {&f::log, 1, 0}}},
     {"FOREST", {0.2f, 0.7f, 0.3f, 1}, {0.88f, 0.96f, 0.86f, 1}, 0.42f, 1, 30, 50, {5, 0, 10, 45, 40},
+     foe(EnemyKind::Bat) | foe(EnemyKind::Spider),
      {{&f::oak, 30, 330}, {&f::pine, 25, 300}, {&f::bush, 10, 80}, {&f::mushrooms, 6, 0},
       {&f::log, 4, 0}, {&f::sprouts, 3, 0}}},
     {"AUTUMN", {1.0f, 0.55f, 0.2f, 1}, {1.04f, 0.94f, 0.8f, 1}, 0.4f, 1, 28, 50, {20, 0, 10, 35, 35},
+     foe(EnemyKind::Slime) | foe(EnemyKind::Demon),
      {{&f::autumnOak, 25, 300}, {&f::autumnPine, 20, 260}, {&f::bush, 6, 40}, {&f::mushrooms, 8, 0},
       {&f::log, 5, 0}, {&f::sack, 1, 0}}},
     {"HEATH", {0.9f, 0.82f, 0.45f, 1}, {1.06f, 1.0f, 0.82f, 1}, 0.24f, 0, 35, 45, {10, 0, 15, 30, 45},
+     foe(EnemyKind::Rat) | foe(EnemyKind::Scorpion),
      {{&f::bush, 12, 120}, {&f::pine, 3, 40}, {&f::sprouts, 6, 0}, {&f::log, 4, 0},
       {&f::sack, 2, 0}, {&f::crate, 1, 0}, {&f::barrel, 1, 0}, {&f::crystal, 1, 0}}},
     {"BARROW", {0.6f, 0.55f, 1.0f, 1}, {0.8f, 0.86f, 1.0f, 1}, 0.3f, 0, 12, 55, {0, 65, 25, 0, 10},
+     foe(EnemyKind::Bat) | foe(EnemyKind::Ghost) | foe(EnemyKind::Cultist),
      {{&f::grave, 8, 90}, {&f::bush, 6, 50}, {&f::autumnPine, 4, 50}, {&f::mushrooms, 6, 0},
       {&f::crystal, 3, 0}}},
 };
@@ -41,19 +46,6 @@ BiomeId biomeOf(Climate c) {
     if (c.moist < -0.18f) return BIOME_HEATH;
     if (c.moist > 0.03f) return c.temp > 0.0f ? BIOME_AUTUMN : BIOME_FOREST;
     return BIOME_MEADOW;
-}
-
-// Every visible tile asks for its biome several times a frame (dirt rims, tint, props), so memoise per tile.
-BiomeId biomeAt(int x, int y) {
-    struct Slot {
-        int x, y;
-        uint8_t biome;
-        bool used;
-    };
-    static Slot cache[1 << 13];
-    Slot *s = &cache[hash2(x, y) & ((1 << 13) - 1)];
-    if (!s->used || s->x != x || s->y != y) *s = {x, y, uint8_t(biomeOf(climateAt(x, y))), true};
-    return BiomeId(s->biome);
 }
 
 float clumpAt(int x, int y) {

@@ -10,10 +10,12 @@ namespace world {
 
 constexpr int REGION = 20;
 
-inline int regionOf(int tile) { return int(std::floor(float(tile) / REGION)); }
+// Floor division: bias negatives by REGION - 1 (sign mask & 19) so truncation rounds down.
+inline int regionOf(int tile) { return (tile - (tile >> 31 & (REGION - 1))) / REGION; }
 bool structureIn(int rx, int ry, Structure &out);
 bool structureAt(int x, int y, Structure &out, int margin = 0);
-bool nearestStructure(Vec2 p, int maxRegions, Structure &out);
+typedef bool (*StructureFilter)(const Structure *s, const void *ctx);
+bool nearestStructure(Vec2 p, int maxRegions, Structure &out, StructureFilter keep = nullptr, const void *ctx = nullptr);
 
 bool isDirt(int x, int y);
 Sprite groundTile(int x, int y);

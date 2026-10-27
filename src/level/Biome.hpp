@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entity/Enemy.hpp"
 #include "level/Feature.hpp"
 #include "level/Structure.hpp"
 
@@ -16,6 +17,8 @@ struct FeatureSpawn {
     int base, dense;
 };
 
+constexpr uint32_t foe(EnemyKind k) { return 1u << int(k); }
+
 constexpr int MAX_SPAWNS = 8;
 struct BiomeDef {
     const char *name;
@@ -24,6 +27,7 @@ struct BiomeDef {
     int flowers, tufts;       // percent of grass tiles
     int structureChance;      // percent of regions holding a structure
     int structureWeights[int(StructureKind::Count)];
+    uint32_t foes;            // foe() bits the spawner favours here once unlocked
     FeatureSpawn spawns[MAX_SPAWNS]; // rolled in order, ends at the first null feature
 };
 

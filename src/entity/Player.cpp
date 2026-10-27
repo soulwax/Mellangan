@@ -21,6 +21,7 @@ void Player::tick() {
     Vec2 dir = normalized({float(in.right.down - in.left.down), float(in.down.down - in.up.down)});
     vel = lerp(vel, dir * speed, damp(18, DT));
     pos += vel * DT;
+    level->collide(pos, radius);
     if (dir.x != 0) facing = dir.x > 0 ? 1.0f : -1.0f;
     if (dir.x != 0 || dir.y != 0) aim = dir;
     invuln = std::max(0.0f, invuln - DT);

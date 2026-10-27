@@ -10,7 +10,7 @@ public:
     };
     Part parts[3]{};
     int count = 0;
-    float shadow = 0, lightSize = 80;
+    float shadow = 0, solid = 0, lightSize = 80;
     Color light{0, 0, 0, 0};
     Vec2 lightOffset{0, -10};
     bool wisp = true;

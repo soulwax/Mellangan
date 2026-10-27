@@ -90,8 +90,8 @@ void Game::devTick() {
     if (input.devGod.clicked) p.god = !p.god, spdlog::info("dev: god mode {}", p.god ? "on" : "off");
     if (input.devWorld.clicked) worldDebug = !worldDebug, spdlog::info("dev: world debug {}", worldDebug ? "on" : "off");
     Structure target;
-    if (input.devWarp.clicked && world::nearestStructure(p.pos, 8, target)) {
-        p.pos = target.center() + Vec2{0, target.h * 8.0f + 20};
+    if (input.devWarp.clicked && world::nearestStructure(p.pos, 8, target, Level::unvisited, level.get())) {
+        p.pos = target.center();
         camera = p.pos;
         spdlog::info("dev: warped to {} at tile ({}, {}), region ({}, {})", target.name(), target.x, target.y, target.rx,
                      target.ry);

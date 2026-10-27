@@ -6,6 +6,26 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-27
+
+### Added
+
+- Each biome favours its own enemies once they unlock: rats, slimes and knights in meadows, bats and spiders in
+  forests, slimes and demons in autumn woods rats and scorpions on the heath, bats, ghosts and cultists in barrows
+- Structures react the first time you step inside: cottages leave a healing potion, camps a supply barrel, shrines a
+  starfire vial; ruins a chest or a gem magnet, and graveyards raise a ring of ghosts.
+- Collision detection w/ world: tree stems, bushes, graves, etc.
+  block the player and ground enemies, that slide around them. Only the foot of a prop should be solid, so you can walk
+  behind crowns, roofs and walls, and through a ruin's archway. Flying enemies ignore that.
+
+### Changed
+
+- World queries cost about a fifth of what they did (0.24 to 0.045 ms per frame) with an identical world: a per-tile
+  memo packs biome, dirt, shade and clump into one direct-mapped slot, Perlin gradients come from a table instead of
+  a branch, and dirt rims come from a 4-bit neighbour mask.
+- Dev F9 warps into the nearest structure you haven't visited yet, so repeated presses "tour the map", and the F8 overlay
+  targets much of the same.
+
 ## [0.1.2] - 2026-10-27
 
 ### Added
