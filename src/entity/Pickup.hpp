@@ -30,8 +30,8 @@ public:
 
     void onAdded() override;
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 protected:
     void take(Player &p) override;
@@ -44,8 +44,8 @@ private:
 class Potion : public Pickup {
 public:
     using Pickup::Pickup;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 protected:
     float reach() const override;
@@ -56,8 +56,8 @@ protected:
 class Magnet : public Pickup {
 public:
     using Pickup::Pickup;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 protected:
     void take(Player &p) override;
@@ -67,8 +67,8 @@ protected:
 class Nova : public Pickup {
 public:
     using Pickup::Pickup;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 protected:
     void take(Player &p) override;
@@ -77,8 +77,8 @@ protected:
 class Chest : public Pickup {
 public:
     using Pickup::Pickup;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 protected:
     void take(Player &p) override;

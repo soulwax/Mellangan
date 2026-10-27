@@ -45,6 +45,13 @@ public:
     void render(Screen &s) override;
 };
 
+class DawnMenu : public Menu {
+public:
+    using Menu::Menu;
+    void tick() override;
+    void render(Screen &s) override;
+};
+
 class LevelUpMenu : public Menu {
 public:
     explicit LevelUpMenu(Game &game);

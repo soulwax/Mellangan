@@ -2,9 +2,10 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
-#include "entity/Particle.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
+#include "particle/Debris.hpp"
+#include "particle/Particle.hpp"
 
 Player::Player() : upgrades(Upgrade::all()) { hp = maxHp = 100; }
 
@@ -34,30 +35,37 @@ void Player::tick() {
 
     for (auto &u : upgrades)
         if (u->level > 0) u->tick(*this);
+    if (rng.chance(0.7f)) FlameDebris::lick(*level, torchX(), y + 0.5, 12, 1);
 }
 
-void Player::render(Screen &s, int xp, int yp) {
+void Player::render(Screen &s) {
     if (dead()) return;
     bool blink = invuln > 0 && std::fmod(invuln, 0.12f) < 0.06f;
     float move = float(std::sqrt(xa * xa + ya * ya) / speed);
     drawBody(s, xp, yp, atlas::t::Wizard, false, move, col::white, blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
+    int xt = xp + int(facing * 6);
+    s.rect(xt, yp - 10, 1, 7, {0.42f, 0.26f, 0.13f, 1});
+    s.rect(xt - 1, yp - 12, 3, 2, {0.22f, 0.13f, 0.08f, 1});
     if (hp < maxHp) {
         s.rect(xp - 8, yp + 2, 16, 2, {0.1f, 0.02f, 0.04f, 0.9f});
         s.rect(xp - 8, yp + 2, 16 * hp / maxHp, 2, col::red);
     }
 }
 
-void Player::renderShadow(Screen &s, int xp, int yp) {
+void Player::renderShadow(Screen &s) {
     if (!dead()) drawShadow(s, xp, yp, false);
 }
 
-void Player::renderLight(Screen &s, int xp, int yp) {
-    float t = level->time + animT;
-    float f = 1 + 0.035f * std::sin(t * 13.1f) + 0.025f * std::sin(t * 7.7f + 1.3f);
+void Player::renderLight(Screen &s) {
     int yb = yp - 7;
     if (dead()) return s.glow(xp, yb, 200, {0.25f, 0.05f, 0.05f, 1});
-    s.glow(xp, yb, 300 * f, {0.34f, 0.27f, 0.17f, 1});
-    s.glow(xp, yb, 110 * f, {0.22f, 0.16f, 0.08f, 1});
+    float f = flicker(level->time, 0), reach = 1 + 0.08f * std::min(level->night.lit, 8);
+    int xt = xp + int(facing * 6), yt = yp - 13;
+    Color warm{0.34f * f, 0.27f * f * f, 0.17f * f * f, 1}, core{0.22f * f, 0.16f * f * f, 0.08f * f, 1};
+    s.glow(xt, yt, 300 * reach * (0.97f + 0.03f * f), warm);
+    s.glow(xt, yt, 110 * reach * f, core);
+    s.glow(xt, yt, 22 * f, {0.35f * f, 0.2f * f, 0.05f, 1});
+    level->lights.add(torchX(), y, 200 * reach, f);
 }
 
 void Player::hurt(float damage) {

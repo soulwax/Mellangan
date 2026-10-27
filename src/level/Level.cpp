@@ -43,6 +43,12 @@ Level::Level(Game &game) : game(game) {
     flush();
 }
 
+SpriteObject *Level::spawn(std::unique_ptr<SpriteObject> p) {
+    p->level = this;
+    particles.push_back(std::move(p));
+    return particles.back().get();
+}
+
 Entity *Level::add(std::unique_ptr<Entity> e) {
     e->level = this;
     pending.push_back(std::move(e));
@@ -67,10 +73,17 @@ void Level::flush() {
 
 void Level::tick() {
     time += DT;
-    if (!player->dead()) spawner.tick(), explore();
+    if (!player->dead() && !night.dawn) night.tick();
+    if (!player->dead() && !night.dawn) spawner.tick(), explore();
     buildGrid();
     for (auto [id, o] : reg.view<Owned>().each())
         if (!o.self->removed) o.self->tick();
+    for (size_t i = 0; i < particles.size(); i++)
+        if (!particles[i]->removed) particles[i]->tick();
+    size_t alive = 0;
+    for (auto &p : particles)
+        if (!p->removed) particles[alive++] = std::move(p);
+    particles.resize(alive);
     flush();
 }
 
@@ -175,42 +188,67 @@ void Level::collide(double &x, double &y, float radius) const {
         }
 }
 
+bool Level::blocks(double x, double y) const {
+    int tx = int(std::floor(x / 16)), ty = int(std::floor(y / 16));
+    for (int yt = ty - 1; yt <= ty + 1; yt++)
+        for (int xt = tx - 1; xt <= tx + 1; xt++) {
+            int gx = xt - solidX, gy = yt - solidY;
+            if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H) continue;
+            float r = solids[gy * SOLID_W + gx];
+            double xd = x - (xt * 16 + 8.0), yd = y - (yt * 16 + 13.0);
+            if (r > 0 && xd * xd + yd * yd < r * r) return true;
+        }
+    return false;
+}
+
 void Level::render(Screen &s) {
     renderFloor(s);
     drawn.clear(), keys.clear();
     for (auto [id, o] : reg.view<Owned>().each())
         if (!o.self->removed && s.visible(o.self->x, o.self->y, 48)) queue(o.self.get());
+    for (auto &p : particles)
+        if (!p->removed && s.visible(p->x, p->y, 48)) queue(p.get());
     for (Prop &p : props) queue(&p);
     radixSort(keys, keysTmp);
     bool shadows = false;
     for (uint64_t k : keys) {
         if (!shadows && k >> 56 >= 1) {
             shadows = true;
-            for (uint64_t m : keys)
-                if (m >> 56 == 1) drawn[m & 0xFFFFFF]->renderShadow(s);
+            for (uint64_t m : keys) {
+                if (m >> 56 != 1) continue;
+                SpriteObject *e = drawn[m & 0xFFFFFF];
+                float width, height = e->occlusion(width);
+                if (height > 0) lights.cast(s, e->x, e->y, width, height);
+                e->drawShadow(s);
+            }
         }
-        drawn[k & 0xFFFFFF]->render(s);
+        drawn[k & 0xFFFFFF]->draw(s);
     }
 }
 
-void Level::queue(Entity *e) {
+void Level::queue(SpriteObject *e) {
     keys.push_back(uint64_t(e->layer()) << 56 | uint64_t(orderedBits(float(e->y))) << 24 | drawn.size());
     drawn.push_back(e);
 }
 
 void Level::renderLight(Screen &s) {
     scatter(s);
-    static_cast<Entity *>(player)->renderLight(s);
+    lights.clear();
+    player->drawLight(s);
+    night.renderLight(s);
     for (auto [id, o] : reg.view<Owned>().each())
-        if (o.self.get() != player && !o.self->removed) o.self->renderLight(s);
+        if (o.self.get() != player && !o.self->removed) o.self->drawLight(s);
+    for (auto &p : particles)
+        if (!p->removed) p->drawLight(s);
     for (Prop &p : props) {
         if (p.light.a <= 0) continue;
         if (p.wisp) {
             float f = 0.8f + 0.2f * float(std::sin(time * 2 + p.x * 0.37));
             s.glow(p.x, p.y + p.lightYo + std::sin(time * 1.7 + p.y) * 2, p.lightSize, p.light * f);
         } else {
-            float f = 0.85f + 0.1f * float(std::sin(time * 11 + p.x)) + 0.05f * float(std::sin(time * 23 + p.y));
-            s.glow(p.x, p.y + p.lightYo, p.lightSize, p.light * f);
+            float f = flicker(time, float(p.x * 0.13 + p.y * 0.07));
+            s.glow(p.x, p.y + p.lightYo, p.lightSize * (0.95f + 0.05f * f), p.light * f);
+            lights.add(p.x, p.y + p.lightYo + 6, p.lightSize * 0.9f, f);
         }
     }
 }

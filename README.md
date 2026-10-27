@@ -3,7 +3,8 @@
 A small top-down survivors-like built with C++20 on the [Vulkan2D](https://github.com/soulwax/Vulkan2D) renderer,
 using [EnTT](https://github.com/skypjack/entt) for entity storage and [spdlog](https://github.com/gabime/spdlog) for logging.
 
-Walk; your weapons fire on their own. Collect gems to level up, choose upgrades, and survive the waves and the cyclops.
+Walk; your weapons fire on their own. Collect gems to level up and choose upgrades. Each run is one night: kindle the
+shrines scattered through the biomes to pull the dawn closer, and survive the horde until it breaks.
 
 ## Building
 
@@ -49,7 +50,11 @@ Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits w
 
 ## Layout
 
-- `src/entity` – `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, particles
+- `src/SpriteObject.hpp` – root of everything in the world: position, velocity, pixel position and a sprite
+- `src/entity` – `SpriteObject` → `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, and `Pool.c`
+  (slab allocator for entities)
+- `src/particle` – particles kept outside the registry in `Level::particles`: `Spark` and `TextParticle`, and `Debris` after dittany: blood, meat, smoke, flames, heal crosses and
+  the `Explosion` emitter
 - `src/item` – `Upgrade` and its weapons and passives
 - `src/level` – `Level` (backed by an `entt::registry`) and the `Spawner`; world generation as small table-driven
   modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and

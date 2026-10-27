@@ -32,19 +32,20 @@ static VK2DShader loadShader(const std::string &path, uint32_t uniformSize) {
 bool Screen::load(const std::string &base) {
     auto path = [&](const char *rel) { return base + rel; };
     atlas = vk2dTextureLoad(path("res/atlas.png").c_str());
+    particles = vk2dTextureLoad(path("res/particles.png").c_str());
     font = vk2dTextureLoad(path("res/font.png").c_str());
     post = loadShader(path("res/shaders/post.spv"), sizeof(PostData));
     loadSilhouette(path("res/atlas.png"));
     world = vk2dTextureCreate(W, H);
     light = vk2dTextureCreate(W, H);
-    if (atlas && silhouette && font && post && world && light) return true;
+    if (atlas && silhouette && particles && font && post && world && light) return true;
     spdlog::error("Failed to load resources from {}res: {}", base, vk2dStatusMessage());
     return false;
 }
 
 void Screen::unload() {
     if (post) vk2dShaderFree(post);
-    for (VK2DTexture t : {atlas, silhouette, font, world, light})
+    for (VK2DTexture t : {atlas, silhouette, particles, font, world, light})
         if (t) vk2dTextureFree(t);
     if (silhouetteImg) vk2dImageFree(silhouetteImg);
 }
@@ -97,6 +98,13 @@ void Screen::color(Color c) {
     vk2dRendererSetColourMod(v);
 }
 
+void Screen::particle(int icon, double x, double y, Color c) {
+    color(c);
+    vk2dRendererDrawTexture(particles, float(x - xOffset - 4), float(y - yOffset - 4), 1, 1, 0, 0, 0, float(icon % 8 * 8),
+                            float(icon / 8 * 8), 8, 8);
+    color(col::white);
+}
+
 void Screen::sprite(const Sprite &s, double x, double y, float xo, float yo, float xs, float ys, float rot) {
     float xp = float(x - xOffset - xo * xs), yp = float(y - yOffset - yo * ys);
     vk2dRendererDrawTexture(atlas, xp, yp, xs, ys, rot, xo, yo, s.x, s.y, s.w, s.h);
@@ -111,7 +119,7 @@ bool Screen::loadSilhouette(const std::string &path) {
     stbi_uc *px = stbi_load(path.c_str(), &iw, &ih, &n, 4);
     if (!px) return false;
     uint32_t *texel = reinterpret_cast<uint32_t *>(px);
-    for (int i = 0; i < iw * ih; i++) texel[i] |= 0x00FFFFFFu; // RGBA bytes, little-endian: set R, G, B, keep A
+    for (int i = 0; i < iw * ih; i++) texel[i] |= 0x00FFFFFFu;
     silhouetteImg = vk2dImageFromPixels(vk2dRendererGetDevice(), px, iw, ih, true);
     stbi_image_free(px);
     if (silhouetteImg) silhouette = vk2dTextureLoadFromImage(silhouetteImg);

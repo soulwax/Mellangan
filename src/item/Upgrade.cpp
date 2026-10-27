@@ -1,10 +1,10 @@
 #include "item/Upgrade.hpp"
 
 #include "audio/Sound.hpp"
-#include "entity/Particle.hpp"
 #include "entity/Player.hpp"
 #include "entity/Projectile.hpp"
 #include "level/Level.hpp"
+#include "particle/Particle.hpp"
 
 namespace {
 namespace t = atlas::t;
@@ -66,8 +66,8 @@ public:
     HaloField(const Halo &halo, const Player &p) : halo(halo), player(p) {}
     int layer() const override { return 0; }
     void tick() override { x = player.x, y = player.y; }
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 private:
     const Halo &halo;
@@ -105,13 +105,13 @@ private:
     float timer = 0;
 };
 
-void HaloField::render(Screen &s, int xp, int yp) {
+void HaloField::render(Screen &s) {
     s.color({0.7f, 0.55f, 1, 0.22f + 0.35f * halo.pulse});
     s.center(atlas::Ring, xp, yp - 4, halo.range() * 2 / atlas::Ring.w * (1 + 0.05f * halo.pulse), level->time * 0.6f);
     s.color(col::white);
 }
 
-void HaloField::renderLight(Screen &s, int xp, int yp) {
+void HaloField::renderLight(Screen &s) {
     s.glow(xp, yp, halo.range() * 2.8f, Color{0.10f, 0.05f, 0.20f, 1} * (1 + halo.pulse * 0.6f));
 }
 
@@ -122,8 +122,8 @@ public:
     Knife(const Knives &knives, const Player &p, int index) : knives(knives), player(p), index(index) {}
     int layer() const override { return 2; }
     void tick() override;
-    void render(Screen &s, int xp, int yp) override { s.center(atlas::tile(t::Dagger), xp, yp, 1, angle + PI); }
-    void renderLight(Screen &s, int xp, int yp) override { s.glow(xp, yp, 30, {0.08f, 0.08f, 0.12f, 1}); }
+    void render(Screen &s) override { s.center(atlas::tile(t::Dagger), xp, yp, 1, angle + PI); }
+    void renderLight(Screen &s) override { s.glow(xp, yp, 30, {0.08f, 0.08f, 0.12f, 1}); }
 
 private:
     const Knives &knives;

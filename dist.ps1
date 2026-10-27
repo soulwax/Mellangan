@@ -86,7 +86,7 @@ New-Item -ItemType Directory "$stage/res/shaders" -Force | Out-Null
 
 $bin = 'build/Release'
 Copy-Item "$bin/Mellangan.exe", CHANGELOG.md $stage
-Copy-Item res/atlas.png, res/font.png, res/CREDITS.md "$stage/res"
+Copy-Item res/atlas.png, res/particles.png, res/font.png, res/CREDITS.md "$stage/res"
 Copy-Item "$bin/res/shaders/*.spv" "$stage/res/shaders"
 Copy-Item res/sfx, res/music "$stage/res" -Recurse
 

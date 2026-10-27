@@ -19,7 +19,7 @@ void TitleMenu::render(Screen &s) {
     float u = s.u, small = std::max(1.0f, u - 1), y = s.h * 0.12f;
     s.rect(0, 0, s.w, s.h, {0.02f, 0.01f, 0.05f, 0.35f});
     s.textCenter("MELLANGAN", s.w / 2, y, 4 * u, col::gold.alpha(0.9f + 0.1f * std::sin(t * 2)));
-    s.textCenter("survive the night", s.w / 2, y + 70 * u, u, col::muted);
+    s.textCenter("kindle the shrines, outlast the night", s.w / 2, y + 70 * u, u, col::muted);
     if (std::fmod(t, 1.0f) < 0.65f) s.textCenter("PRESS ENTER", s.w / 2, s.h * 0.62f, u, col::white);
     s.textCenter("WASD/Arrows move   Esc pause   M mute   F11 fullscreen", s.w / 2, s.h - 30 * small, small, col::muted);
     std::string_view version = "v" MELLANGAN_VERSION;
@@ -57,6 +57,25 @@ void DeadMenu::render(Screen &s) {
     s.textCenter(fmt::format("Survived {}", clockText(l.time)), s.w / 2, y + 64 * u, u, col::white);
     s.textCenter(fmt::format("Level {}   {} kills", l.player->lvl, l.kills), s.w / 2, y + 84 * u, u, col::muted);
     if (t > 1 && std::fmod(t, 1.0f) < 0.65f) s.textCenter("R / Enter to rise again", s.w / 2, y + 120 * u, u, col::gold);
+}
+
+void DawnMenu::tick() {
+    Menu::tick();
+    game.level->tick();
+    Input &in = game.input;
+    if (t > 2 && (in.restart.clicked || in.confirm.clicked)) game.newGame();
+    else if (in.escape.clicked) game.toTitle();
+}
+
+void DawnMenu::render(Screen &s) {
+    float u = s.u, y = s.h * 0.3f;
+    Level &l = *game.level;
+    s.rect(0, 0, s.w, s.h, {0.08f, 0.04f, 0.02f, std::min(0.5f, t * 0.4f)});
+    s.textCenter("DAWN BREAKS", s.w / 2, y, 3 * u, col::gold);
+    s.textCenter(fmt::format("The night ended at {}", clockText(l.time)), s.w / 2, y + 64 * u, u, col::white);
+    s.textCenter(fmt::format("{} shrine{} kindled   Level {}   {} kills", l.night.lit, l.night.lit == 1 ? "" : "s", l.player->lvl, l.kills), s.w / 2,
+                 y + 84 * u, u, col::muted);
+    if (t > 2 && std::fmod(t, 1.0f) < 0.65f) s.textCenter("R / Enter for another night", s.w / 2, y + 120 * u, u, col::gold);
 }
 
 LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {

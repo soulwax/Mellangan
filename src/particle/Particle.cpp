@@ -1,17 +1,15 @@
-#include "entity/Particle.hpp"
+#include "particle/Particle.hpp"
 
 #include "level/Level.hpp"
 
 void Spark::burst(Level &level, double x, double y, Color c, int n, float speed, bool glow) {
-    if (level.count<Spark>() > 700) return;
+    if (alive > 700) return;
     for (int i = 0; i < n; i++) {
         float dir = rng.range(0, TAU), v = rng.range(0.3f, 1) * speed;
         level.add<Spark>(x, y, std::cos(dir) * v, std::sin(dir) * v, c, rng.range(0.25f, 0.6f), rng.range(0.3f, 0.7f),
                          glow && i < 3);
     }
 }
-
-void Spark::onAdded() { level->tag(this); }
 
 void Spark::tick() {
     Particle::tick();
@@ -21,25 +19,23 @@ void Spark::tick() {
     y += ya * DT;
 }
 
-void Spark::render(Screen &s, int xp, int yp) {
+void Spark::render(Screen &s) {
     s.color(color.alpha(color.a * frac()));
-    s.center(atlas::Dot, xp, yp, size * (0.5f + 0.5f * frac()));
+    s.center(sprite, xp, yp, size * (0.5f + 0.5f * frac()));
     s.color(col::white);
 }
 
-void Spark::renderLight(Screen &s, int xp, int yp) {
+void Spark::renderLight(Screen &s) {
     if (glow) s.glow(xp, yp, 34, color * (0.3f * frac()));
 }
 
 void TextParticle::pop(Level &level, double x, double y, int value, Color c) {
-    if (level.count<TextParticle>() < 48) level.add<TextParticle>(x + rng.range(-3, 3), y - 4, value, c);
+    if (alive < 48) level.add<TextParticle>(x + rng.range(-3, 3), y - 4, value, c);
 }
-
-void TextParticle::onAdded() { level->tag(this); }
 
 void TextParticle::tick() {
     Particle::tick();
     y -= 18 * DT * frac();
 }
 
-void TextParticle::render(Screen &s, int xp, int yp) { s.number(value, xp, yp, color.alpha(std::min(1.0f, frac() * 3))); }
+void TextParticle::render(Screen &s) { s.number(value, xp, yp, color.alpha(std::min(1.0f, frac() * 3))); }

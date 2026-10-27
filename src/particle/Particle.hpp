@@ -1,8 +1,8 @@
 #pragma once
 
-#include "entity/Entity.hpp"
+#include "SpriteObject.hpp"
 
-class Particle : public Entity {
+class Particle : public SpriteObject {
 public:
     float life, maxLife;
 
@@ -22,16 +22,18 @@ public:
     float size;
     bool glow;
 
+    inline static int alive = 0;
+
     Spark(double x, double y, double xa, double ya, Color color, float life, float size, bool glow)
         : Particle(x, y, life), color(color), size(size), glow(glow) {
-        this->xa = xa, this->ya = ya;
+        this->xa = xa, this->ya = ya, sprite = atlas::Dot, alive++;
     }
+    ~Spark() override { alive--; }
     static void burst(Level &level, double x, double y, Color c, int n, float speed, bool glow);
 
-    void onAdded() override;
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 };
 
 class TextParticle : public Particle {
@@ -39,10 +41,12 @@ public:
     int value;
     Color color;
 
-    TextParticle(double x, double y, int value, Color color) : Particle(x, y, 0.8f), value(value), color(color) {}
+    inline static int alive = 0;
+
+    TextParticle(double x, double y, int value, Color color) : Particle(x, y, 0.8f), value(value), color(color) { alive++; }
+    ~TextParticle() override { alive--; }
     static void pop(Level &level, double x, double y, int value, Color c);
 
-    void onAdded() override;
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
 };

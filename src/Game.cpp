@@ -5,6 +5,8 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
+#include "particle/Debris.hpp"
+#include "particle/Particle.hpp"
 
 bool Game::init(SDL_Window *w, const std::string &base) {
     window = w;
@@ -133,6 +135,19 @@ void Game::onPlayerDied() {
     setMenu(std::make_unique<DeadMenu>(*this));
 }
 
+void Game::onDawn() {
+    Player &p = *level->player;
+    p.god = true;
+    level->each<Enemy>([&](Enemy &e) {
+        if (Debris::room()) level->add<FlameDebris>(e.x, e.y, 6);
+        e.remove();
+    });
+    Sound::levelUp.play(0.8f, 0);
+    spdlog::info("Dawn at {} with {} shrines kindled, level {}, {} kills", clockText(level->time), level->night.lit, p.lvl,
+                 level->kills);
+    setMenu(std::make_unique<DawnMenu>(*this));
+}
+
 void Game::render() {
     Player &p = *level->player;
     double xj = 0, yj = 0;
@@ -140,7 +155,8 @@ void Game::render() {
     screen.xOffset = int(std::floor(xCam + xj - Screen::W / 2));
     screen.yOffset = int(std::floor(yCam + yj - Screen::H / 2));
 
-    screen.beginLight({0.10f, 0.12f, 0.24f, 1});
+    float d = level->night.daylight();
+    screen.beginLight({lerpf(0.06f, 0.42f, d), lerpf(0.07f, 0.34f, d), lerpf(0.15f, 0.33f, d), 1});
     level->renderLight(screen);
     screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
     level->render(screen);
@@ -156,6 +172,29 @@ void Game::render() {
                     screen.h - 40 * screen.u, std::max(1.0f, screen.u - 1), col::muted);
 }
 
+void Game::renderCompass() {
+    Night &n = level->night;
+    if (!n.hasBeacon || menu) return;
+    Screen &s = screen;
+    float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
+    float xo = std::floor((s.w - Screen::W * k) / 2), yo = std::floor((s.h - Screen::H * k) / 2);
+    float xm = xo + Screen::W * k * 0.5f, ym = yo + Screen::H * k * 0.5f;
+    float xt = xo + float(n.beacon.centerX() - xView) * k, yt = yo + float(n.beacon.centerY() - 24 - yView) * k;
+    float xd = xt - xm, yd = yt - ym, dd = std::max(1.0f, std::sqrt(xd * xd + yd * yd));
+    float xh = Screen::W * k * 0.5f - 18 * u, yh = Screen::H * k * 0.5f - 18 * u;
+    float fit = std::min({1.0f, xd != 0 ? xh / std::abs(xd) : 1e9f, yd != 0 ? yh / std::abs(yd) : 1e9f});
+    float xe = xm + xd * fit, ye = ym + yd * fit, xn = xd / dd, yn = yd / dd;
+    if (fit >= 1) xn = 0, yn = 1;
+    Color c = col::gold.alpha(0.75f + 0.25f * std::sin(time * 5));
+    s.line(xe, ye, xe - xn * 8 * u - yn * 5 * u, ye - yn * 8 * u + xn * 5 * u, 2 * u, c);
+    s.line(xe, ye, xe - xn * 8 * u + yn * 5 * u, ye - yn * 8 * u - xn * 5 * u, 2 * u, c);
+    Player &p = *level->player;
+    double xs = n.beacon.centerX() - p.x, ys = n.beacon.centerY() - p.y;
+    std::string tag = fmt::format("SHRINE {:.0f}", std::sqrt(xs * xs + ys * ys) / 16);
+    float half = Screen::textWidth(tag, small) * 0.5f + 4 * u;
+    s.textCenter(tag, clampf(xe - xn * 20 * u, half, s.w - half), ye - yn * 20 * u - 8 * small, small, c);
+}
+
 void Game::renderHud() {
     Screen &s = screen;
     Player &p = *level->player;
@@ -169,7 +208,15 @@ void Game::renderHud() {
     std::string lv = fmt::format("LV {}", p.lvl), kills = fmt::format("{} kills", level->kills);
     s.text(lv, s.w - Screen::textWidth(lv, u) - 4 * u, top, u, col::white);
     s.text(kills, s.w - Screen::textWidth(kills, small) - 4 * u, top + 18 * u, small, col::muted);
-    s.textCenter(clockText(level->time), s.w / 2, top, std::round(u * 1.5f), col::white);
+    Night &n = level->night;
+    s.textCenter(fmt::format("DAWN {}", clockText(n.left())), s.w / 2, top, std::round(u * 1.5f), col::white);
+    s.textCenter(fmt::format("{} shrine{} lit", n.lit, n.lit == 1 ? "" : "s"), s.w / 2, top + 26 * u, small, n.lit ? col::gold : col::muted);
+    if (n.kindling > 0) {
+        float kw = 120 * u, kx = (s.w - kw) / 2, ky = top + 46 * u;
+        s.rect(kx, ky, kw, 4 * u, col::panel);
+        s.rect(kx, ky, kw * n.kindling, 4 * u, col::gold);
+    }
+    renderCompass();
 
     int slot[2] = {0, 0};
     for (auto &up : p.upgrades) {

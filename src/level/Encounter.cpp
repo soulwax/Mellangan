@@ -20,7 +20,7 @@ void graveyard(Level *level, const Structure *s) {
     Sound::horde.play(0.5f, 0.1f);
 }
 
-void shrine(Level *level, const Structure *s) { level->add<Nova>(atX(s, s->w / 2), atY(s, s->h / 2 + 1)); }
+void shrine(Level *, const Structure *) {}
 
 void camp(Level *level, const Structure *s) {
     auto b = std::make_unique<SupplyBarrel>();
@@ -40,7 +40,7 @@ void ruin(Level *level, const Structure *s) {
 const EncounterDef ENCOUNTERS[int(StructureKind::Count)] = {
     {"A WARM HEARTH", cottage},
     {"THE DEAD STIR", graveyard},
-    {"THE SHRINE HUMS", shrine},
+    {"STAND AND KINDLE THE SHRINE", shrine},
     {"AN ABANDONED CAMP", camp},
     {"SOMETHING GLINTS IN THE RUBBLE", ruin},
 };

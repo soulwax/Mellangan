@@ -4,9 +4,10 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
-#include "entity/Particle.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Debris.hpp"
+#include "particle/Particle.hpp"
 
 void Projectile::collide() {
     level->enemiesNear(x, y, radius + 32, [&](Enemy &e) {
@@ -49,14 +50,14 @@ void Bolt::tick() {
     collide();
 }
 
-void Bolt::render(Screen &s, int xp, int yp) {
+void Bolt::render(Screen &s) {
     s.color({0.45f, 0.8f, 1, 1});
     s.center(atlas::Bolt, xp, yp, 1.1f);
     s.color(col::white);
     s.center(atlas::Dot, xp, yp, 0.45f);
 }
 
-void Bolt::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 52, {0.06f, 0.20f, 0.36f, 1}); }
+void Bolt::renderLight(Screen &s) { s.glow(xp, yp, 52, {0.06f, 0.20f, 0.36f, 1}); }
 
 void Bolt::spent() { Spark::burst(*level, x, y, {0.45f, 0.8f, 1, 1}, 6, 60, true); }
 
@@ -76,14 +77,14 @@ bool Slash::touches(const Enemy &e) const {
     return (xd * xd) / (rx * rx) + (yd * yd) / (ry * ry) <= 1;
 }
 
-void Slash::render(Screen &s, int xp, int yp) {
+void Slash::render(Screen &s) {
     float f = frac();
     s.color({1, 0.95f, 0.82f, std::pow(f, 0.6f)});
     s.sprite(atlas::Slash, xp, yp, 12, 24, side * scale * (0.8f + 0.4f * (1 - f)), scale);
     s.color(col::white);
 }
 
-void Slash::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 80 * scale, Color{0.16f, 0.15f, 0.11f, 1} * frac()); }
+void Slash::renderLight(Screen &s) { s.glow(xp, yp, 80 * scale, Color{0.16f, 0.15f, 0.11f, 1} * frac()); }
 
 Axe::Axe(double x, double y, double xa, double ya, float damage, int pierce, float spin)
     : Projectile(x, y, xa, ya, 2.2f, damage, 60, pierce), spin(spin) {
@@ -99,9 +100,9 @@ void Axe::tick() {
     collide();
 }
 
-void Axe::render(Screen &s, int xp, int yp) { s.center(atlas::tile(atlas::t::Axe), xp, yp, 1, rot); }
+void Axe::render(Screen &s) { s.center(atlas::tile(atlas::t::Axe), xp, yp, 1, rot); }
 
-void Axe::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 44, {0.20f, 0.10f, 0.03f, 1}); }
+void Axe::renderLight(Screen &s) { s.glow(xp, yp, 44, {0.20f, 0.10f, 0.03f, 1}); }
 
 void Arrow::tick() {
     if ((life -= DT) <= 0) return remove();
@@ -110,7 +111,7 @@ void Arrow::tick() {
     collide();
 }
 
-void Arrow::render(Screen &s, int xp, int yp) {
+void Arrow::render(Screen &s) {
     s.center(atlas::town(atlas::tt::Arrow), xp, yp, 1, float(std::atan2(ya, xa)) + PI / 4);
 }
 
@@ -132,7 +133,7 @@ void Strike::tick() {
     if ((life -= DT) <= 0) remove();
 }
 
-void Strike::render(Screen &s, int xp, int yp) {
+void Strike::render(Screen &s) {
     float a = life / 0.3f;
     double x0 = xp, y0 = yp - 150;
     for (size_t i = 0; i < jag.size(); i++) {
@@ -148,7 +149,7 @@ void Strike::render(Screen &s, int xp, int yp) {
     s.color(col::white);
 }
 
-void Strike::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 160, Color{0.35f, 0.45f, 0.7f, 1} * (life / 0.3f)); }
+void Strike::renderLight(Screen &s) { s.glow(xp, yp, 160, Color{0.35f, 0.45f, 0.7f, 1} * (life / 0.3f)); }
 
 void FirePool::tick() {
     if ((life -= DT) <= 0) return remove();
@@ -160,14 +161,14 @@ void FirePool::tick() {
             if (xd * xd + yd * yd < r * r) e.hurt(damage, 0, 0, 0);
         });
     }
-    if (rng.chance(0.6f) && level->count<Spark>() < 500) {
+    if (rng.chance(0.6f) && Spark::alive < 500) {
         float dir = rng.range(0, TAU), r = rng.range(0, radius);
         level->add<Spark>(x + std::cos(dir) * r, y + std::sin(dir) * r, rng.range(-6, 6), -rng.range(15, 35),
                           Color{1, rng.range(0.35f, 0.7f), 0.15f, 1}, rng.range(0.3f, 0.6f), rng.range(0.3f, 0.6f), false);
     }
 }
 
-void FirePool::render(Screen &s, int xp, int yp) {
+void FirePool::render(Screen &s) {
     float fade = std::min(1.0f, life * 2) * std::min(1.0f, (maxLife - life) * 6);
     s.color({1, 0.45f, 0.12f, 0.35f * fade});
     s.center(atlas::Glow, xp, yp, radius * 2.4f / atlas::Glow.w);
@@ -176,7 +177,7 @@ void FirePool::render(Screen &s, int xp, int yp) {
     s.color(col::white);
 }
 
-void FirePool::renderLight(Screen &s, int xp, int yp) {
+void FirePool::renderLight(Screen &s) {
     float flicker = 0.85f + 0.15f * std::sin(life * 23) * std::sin(life * 7);
     s.glow(xp, yp, radius * 4, Color{0.45f, 0.22f, 0.05f, 1} * (flicker * std::min(1.0f, life * 2)));
 }
@@ -193,14 +194,15 @@ void Bomb::tick() {
         float r = 28 + e.radius;
         if (xd * xd + yd * yd < r * r) e.hurt(damage, xd, yd, 90);
     });
-    Spark::burst(*level, x, y, {1, 0.55f, 0.2f, 1}, 16, 110, true);
+    Spark::burst(*level, x, y, {1, 0.55f, 0.2f, 1}, 6, 110, true);
+    level->add<Explosion>(x, y, 0);
     level->add<FirePool>(x, y, poolRadius, poolDamage, poolTime);
     Sound::explosion.play(0.5f);
     level->game.onExplosion();
     remove();
 }
 
-void Bomb::render(Screen &s, int xp, int yp) {
+void Bomb::render(Screen &s) {
     s.sprite(atlas::Shadow, xp, std::floor(y) + 1, 8, 4, 0.6f, 0.6f);
     s.center(atlas::town(atlas::tt::Bomb), xp, yp - 6, 1, t * 9);
 }
@@ -225,7 +227,7 @@ void Sweep::tick() {
     if (t >= 1) remove();
 }
 
-void Sweep::render(Screen &s, int xp, int yp) {
+void Sweep::render(Screen &s) {
     int xc = int(std::floor(player.x)), yc = int(std::floor(player.bodyY()));
     for (int i = 3; i >= 1; i--) {
         float a = angle - i * 0.28f;
@@ -236,7 +238,7 @@ void Sweep::render(Screen &s, int xp, int yp) {
     s.center(atlas::town(atlas::tt::Scythe), xp, yp, 1.2f, angle + PI * 0.75f);
 }
 
-void Sweep::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 60, {0.18f, 0.2f, 0.28f, 1}); }
+void Sweep::renderLight(Screen &s) { s.glow(xp, yp, 60, {0.18f, 0.2f, 0.28f, 1}); }
 
 void Orb::tick() {
     if ((life -= DT) <= 0) return remove();
@@ -251,11 +253,11 @@ void Orb::tick() {
     }
 }
 
-void Orb::render(Screen &s, int xp, int yp) {
+void Orb::render(Screen &s) {
     s.color({0.75f, 0.35f, 1, 1});
     s.center(atlas::Bolt, xp, yp, 1.2f, life * 4);
     s.color(col::white);
     s.center(atlas::Dot, xp, yp, 0.4f);
 }
 
-void Orb::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 44, {0.25f, 0.08f, 0.35f, 1}); }
+void Orb::renderLight(Screen &s) { s.glow(xp, yp, 44, {0.25f, 0.08f, 0.35f, 1}); }

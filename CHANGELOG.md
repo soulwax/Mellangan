@@ -6,6 +6,40 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-27
+
+### Changed
+
+- `SpriteObject` is the new root of everything drawn in the world: position, velocity, pixel position and a sprite.
+  `Entity` builds on it with the registry id, and props and particles are plain sprite objects.
+- Particles no longer live in the EnTT registry. The level keeps them in their own list, ticks and compacts it once
+  per tick and draws them in the same depth-sorted pass, and per-kind live counters replace registry counts for the
+  particle caps.
+
+## [0.2.0] - 2026-10-27
+
+### Added
+
+- Kindle the Night: a run is one night, and dawn at 15:00 wins it. Stand six seconds in a cold shrine to kindle it:
+  it burns for the rest of the night, pulls dawn a minute closer, widens your own light and unleashes a starfire
+  blast, and the horde answers with a ring of its strongest unlocked enemies.
+- A compass at the edge of the view points to the nearest cold shrine with its distance in tiles. The HUD shows the
+  time to dawn, shrines lit and kindling progress.
+- The sky warms toward dawn over the last minutes. At dawn the horde burns away and the run ends in victory.
+- Cast shadows: your lantern, campfires, cottage windows and kindled shrines throw soft shadows from trees, walls,
+  props and walking enemies, stretched away from the flame, longer the farther the light, and breathing with it.
+- Debris particles after dittany: blood, meat chunks that trail blood and splash when they land, smoke, flames
+  that burn down and leave smoke, and heal crosses, all with 3D gravity, drag, bounce and ground friction, bouncing
+  off solid props. Enemies die in gore (flyers in smoke), bombs, novas and the cyclops explode in flame, potions and
+  kindled shrines release crosses, and dawn burns the horde to embers.
+- The wizard carries a torch: flames lick off its tip and trail behind when you run, and your light and its
+  shadows now come from the torch in your hand. Kindled shrines burn with a living flame above their crystal.
+- Fire light flickers organically with layered Perlin noise and burns yellower when bright, redder when dim.
+
+### Changed
+
+- The night is darker and the dawn a dimmer, warmer sunrise instead of a washed-out glare.
+
 ## [0.1.4] - 2026-10-27
 
 ### Added

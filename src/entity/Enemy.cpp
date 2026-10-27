@@ -4,11 +4,12 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
-#include "entity/Particle.hpp"
 #include "entity/Pickup.hpp"
-#include "entity/Projectile.hpp"
 #include "entity/Player.hpp"
+#include "entity/Projectile.hpp"
 #include "level/Level.hpp"
+#include "particle/Debris.hpp"
+#include "particle/Particle.hpp"
 
 namespace {
 namespace t = atlas::t;
@@ -112,17 +113,17 @@ void Enemy::makeElite() {
     radius *= 1.3f;
 }
 
-void Enemy::render(Screen &s, int xp, int yp) {
+void Enemy::render(Screen &s) {
     Color c = tint();
     if (elite) c = {c.r, c.g * 0.85f, c.b * 0.45f, c.a};
     drawBody(s, xp, yp, type.tile, type.floats, 1, c, flash > 0 ? 1.0f : 0.0f, col::white);
 }
 
-void Enemy::renderLight(Screen &s, int xp, int yp) {
+void Enemy::renderLight(Screen &s) {
     if (elite) s.glow(xp, yp - 7 * scale, 40 * scale, {0.12f, 0.09f, 0.02f, 1});
 }
 
-void Enemy::renderShadow(Screen &s, int xp, int yp) { drawShadow(s, xp, yp, type.floats); }
+void Enemy::renderShadow(Screen &s) { drawShadow(s, xp, yp, type.floats); }
 
 void Enemy::hurt(float damage, double xd, double yd, float force) {
     if (removed) return;
@@ -148,7 +149,7 @@ void Enemy::die() {
     Gem::drop(*level, x, y - 3, type.xp * (elite ? ELITE_XP : 1));
     if (elite && rng.chance(0.25f)) level->add<Potion>(x + 6, y);
     if (rng.chance(1 / 150.0f)) level->add<Potion>(x, y);
-    Spark::burst(*level, x, bodyY(), type.blood, 8, 70, false);
+    Debris::gore(*level, x, y, 7 * scale, type.blood, !type.floats);
 }
 
 void Bat::steer(double xn, double yn, double &xs, double &ys) {
@@ -190,11 +191,11 @@ void SupplyBarrel::tick() {
     if (xd * xd + yd * yd > 700 * 700) remove();
 }
 
-void SupplyBarrel::render(Screen &s, int xp, int yp) {
+void SupplyBarrel::render(Screen &s) {
     s.flash(atlas::tile(t::Barrel), xp, yp, 8, 16, 1, 1, 0, flash > 0 ? 1.0f : 0.0f, col::white);
 }
 
-void SupplyBarrel::renderLight(Screen &s, int xp, int yp) {
+void SupplyBarrel::renderLight(Screen &s) {
     s.glow(xp, yp - 7 * scale, 50, Color{0.22f, 0.16f, 0.06f, 1} * (0.8f + 0.2f * std::sin(animT * 3)));
 }
 
@@ -214,16 +215,17 @@ void Ghost::steer(double xn, double yn, double &xs, double &ys) {
     ys = yn * v;
 }
 
-void Ghost::renderLight(Screen &s, int xp, int yp) {
-    Enemy::renderLight(s, xp, yp);
+void Ghost::renderLight(Screen &s) {
+    Enemy::renderLight(s);
     s.glow(xp, yp - 7 * scale, 40, {0.06f, 0.10f, 0.18f, 1});
 }
 
-void Cyclops::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp - 7 * scale, 130, {0.35f, 0.08f, 0.04f, 1}); }
+void Cyclops::renderLight(Screen &s) { s.glow(xp, yp - 7 * scale, 130, {0.35f, 0.08f, 0.04f, 1}); }
 
 void Cyclops::die() {
     Enemy::die();
     level->add<Chest>(x, y);
     Spark::burst(*level, x, bodyY(), type.blood, 40, 140, true);
+    level->add<Explosion>(x, y, 10, 9);
     level->game.announce("THE CYCLOPS FALLS");
 }

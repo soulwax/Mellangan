@@ -22,12 +22,13 @@ public:
 
     void onAdded() override;
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderShadow(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderShadow(Screen &s) override;
+    void renderLight(Screen &s) override;
 
     void hurt(float damage);
     void heal(float amount);
     void gainXp(float amount);
     bool dead() const { return hp <= 0; }
+    double torchX() const { return x + facing * 6; }
 };

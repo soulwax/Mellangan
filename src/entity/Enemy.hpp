@@ -25,9 +25,10 @@ public:
 
     void onAdded() override;
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderShadow(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderShadow(Screen &s) override;
+    float occlusion(float &width) const override { return type.floats ? (width = 0, 0.0f) : Mob::occlusion(width); }
+    void renderLight(Screen &s) override;
     void hurt(float damage, double xd, double yd, float force);
     void makeElite();
 
@@ -74,7 +75,7 @@ private:
 class Ghost : public Enemy {
 public:
     using Enemy::Enemy;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s) override;
 
 protected:
     void steer(double xn, double yn, double &xs, double &ys) override;
@@ -84,8 +85,8 @@ class SupplyBarrel : public Enemy {
 public:
     SupplyBarrel();
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 protected:
     void die() override;
@@ -94,7 +95,7 @@ protected:
 class Cyclops : public Enemy {
 public:
     using Enemy::Enemy;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s) override;
 
 protected:
     void die() override;

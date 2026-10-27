@@ -2,9 +2,10 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
-#include "entity/Particle.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Debris.hpp"
+#include "particle/Particle.hpp"
 
 void Pickup::tick() {
     t += DT;
@@ -47,9 +48,9 @@ Color Gem::color() const {
     return c[tier()];
 }
 
-void Gem::render(Screen &s, int xp, int yp) { s.center(atlas::Gems[tier()], xp, yp); }
+void Gem::render(Screen &s) { s.center(atlas::Gems[tier()], xp, yp); }
 
-void Gem::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 26, color() * 0.3f); }
+void Gem::renderLight(Screen &s) { s.glow(xp, yp, 26, color() * 0.3f); }
 
 void Gem::take(Player &p) {
     p.gainXp(value);
@@ -57,21 +58,21 @@ void Gem::take(Player &p) {
     level->add<Spark>(x, y, 0, -20, color(), 0.25f, 0.4f, false);
 }
 
-void Potion::render(Screen &s, int xp, int yp) { s.center(atlas::tile(atlas::t::PotionRed), xp, yp, 0.8f); }
+void Potion::render(Screen &s) { s.center(atlas::tile(atlas::t::PotionRed), xp, yp, 0.8f); }
 
-void Potion::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 50, {0.35f, 0.06f, 0.08f, 1}); }
+void Potion::renderLight(Screen &s) { s.glow(xp, yp, 50, {0.35f, 0.06f, 0.08f, 1}); }
 
 float Potion::reach() const { return level->player->magnet * 0.6f; }
 
 void Potion::take(Player &p) {
     p.heal(30);
     Sound::potion.play(0.7f, 0);
-    Spark::burst(*level, x, y, col::heal, 10, 50, true);
+    for (int i = 0; i < 10 && Debris::room(); i++) level->add<HealDebris>(p.x, p.y, 8, 0);
 }
 
-void Magnet::render(Screen &s, int xp, int yp) { s.center(atlas::tile(atlas::t::Coin), xp, yp); }
+void Magnet::render(Screen &s) { s.center(atlas::tile(atlas::t::Coin), xp, yp); }
 
-void Magnet::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 50, {0.10f, 0.25f, 0.45f, 1}); }
+void Magnet::renderLight(Screen &s) { s.glow(xp, yp, 50, {0.10f, 0.25f, 0.45f, 1}); }
 
 void Magnet::take(Player &) {
     level->each<Gem>([](Gem &g) { g.magnet = true, g.speed = 0; });
@@ -79,9 +80,9 @@ void Magnet::take(Player &) {
     Spark::burst(*level, x, y, col::xp, 16, 80, true);
 }
 
-void Nova::render(Screen &s, int xp, int yp) { s.center(atlas::tile(atlas::t::VialBlue), xp, yp, 0.9f); }
+void Nova::render(Screen &s) { s.center(atlas::tile(atlas::t::VialBlue), xp, yp, 0.9f); }
 
-void Nova::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 60, Color{0.3f, 0.3f, 0.45f, 1} * (0.8f + 0.2f * std::sin(t * 6))); }
+void Nova::renderLight(Screen &s) { s.glow(xp, yp, 60, Color{0.3f, 0.3f, 0.45f, 1} * (0.8f + 0.2f * std::sin(t * 6))); }
 
 void Nova::take(Player &p) {
     level->each<Enemy>([&](Enemy &e) {
@@ -90,12 +91,13 @@ void Nova::take(Player &p) {
     });
     Sound::nova.play(0.8f, 0);
     Spark::burst(*level, p.x, p.bodyY(), {0.8f, 0.85f, 1, 1}, 40, 220, true);
+    level->add<Explosion>(p.x, p.y, 4, 8);
     level->game.onExplosion();
 }
 
-void Chest::render(Screen &s, int xp, int yp) { s.center(atlas::tile(atlas::t::Chest), xp, yp - 4); }
+void Chest::render(Screen &s) { s.center(atlas::tile(atlas::t::Chest), xp, yp - 4); }
 
-void Chest::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp, 110, Color{0.45f, 0.35f, 0.1f, 1} * (1 + 0.2f * std::sin(t * 5))); }
+void Chest::renderLight(Screen &s) { s.glow(xp, yp, 110, Color{0.45f, 0.35f, 0.1f, 1} * (1 + 0.2f * std::sin(t * 5))); }
 
 void Chest::take(Player &p) {
     p.pendingLevels++;

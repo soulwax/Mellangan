@@ -49,6 +49,7 @@ public:
     void center(const Sprite &s, double x, double y, float scale = 1, float rot = 0);
     void flash(const Sprite &s, double x, double y, float xo, float yo, float xs, float ys, float rot, float amount, Color c);
     void glow(double x, double y, float size, Color c);
+    void particle(int icon, double x, double y, Color c);
     void rect(double x, double y, float rw, float rh, Color c);
     void frame(double x, double y, float rw, float rh, float t, Color c);
     void line(double x0, double y0, double x1, double y1, float width, Color c);
@@ -59,7 +60,7 @@ public:
     bool visible(double x, double y, float margin) const;
 
 private:
-    VK2DTexture atlas = nullptr, silhouette = nullptr, font = nullptr, world = nullptr, light = nullptr;
+    VK2DTexture atlas = nullptr, silhouette = nullptr, particles = nullptr, font = nullptr, world = nullptr, light = nullptr;
     VK2DImage silhouetteImg = nullptr;
     VK2DShader post = nullptr;
     Color current;

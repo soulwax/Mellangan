@@ -35,8 +35,8 @@ public:
 
     Bolt(double x, double y, double xa, double ya, float damage, int pierce, entt::entity target);
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 protected:
     void spent() override;
@@ -46,8 +46,8 @@ class Slash : public Projectile {
 public:
     Slash(Player &p, float side, float damage, float scale);
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 protected:
     bool touches(const Enemy &e) const override;
@@ -62,8 +62,8 @@ class Axe : public Projectile {
 public:
     Axe(double x, double y, double xa, double ya, float damage, int pierce, float spin);
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 private:
     float rot = 0, spin;
@@ -76,15 +76,15 @@ public:
         radius = 5;
     }
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
 };
 class Strike : public Entity {
 public:
     Strike(double x, double y, float damage, float radius);
     int layer() const override { return 2; }
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 private:
     float damage, life = 0.3f;
@@ -99,8 +99,8 @@ public:
     }
     int layer() const override { return 0; }
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 private:
     float damage, life, maxLife, timer = 0;
@@ -113,7 +113,7 @@ public:
     }
     int layer() const override { return 2; }
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
 
 private:
     double x0, y0, x1, y1;
@@ -124,8 +124,8 @@ public:
     Sweep(const Player &p, float reach, float damage);
     int layer() const override { return 2; }
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 private:
     const Player &player;
@@ -140,8 +140,8 @@ public:
     }
     int layer() const override { return 2; }
     void tick() override;
-    void render(Screen &s, int xp, int yp) override;
-    void renderLight(Screen &s, int xp, int yp) override;
+    void render(Screen &s) override;
+    void renderLight(Screen &s) override;
 
 private:
     float damage, life = 5;

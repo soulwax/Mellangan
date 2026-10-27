@@ -37,6 +37,7 @@ public:
     void onPlayerHurt() { hurt = 1, shake = 4; }
     void onExplosion() { shake = std::max(shake, 2.5f); }
     void onPlayerDied();
+    void onDawn();
 
 private:
     std::unique_ptr<Menu> nextMenu;
@@ -51,4 +52,5 @@ private:
     void devTick();
     void render();
     void renderHud();
+    void renderCompass();
 };

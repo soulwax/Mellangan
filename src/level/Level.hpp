@@ -9,6 +9,8 @@
 
 #include "entity/Enemy.hpp"
 #include "entity/Entity.hpp"
+#include "level/Light.hpp"
+#include "level/Night.hpp"
 #include "level/World.hpp"
 
 class Game;
@@ -44,12 +46,20 @@ public:
     float time = 0;
     int kills = 0;
     Spawner spawner{*this};
-
+    Night night{*this};
+    LightField lights;
     explicit Level(Game &game);
 
+    std::vector<std::unique_ptr<SpriteObject>> particles;
+
     Entity *add(std::unique_ptr<Entity> e);
+    SpriteObject *spawn(std::unique_ptr<SpriteObject> p);
     template <class T, class... A> T *add(A &&...args) {
-        return static_cast<T *>(add(std::make_unique<T>(std::forward<A>(args)...)));
+        auto p = std::make_unique<T>(std::forward<A>(args)...);
+        T *raw = p.get();
+        if constexpr (std::is_base_of_v<Entity, T>) add(std::unique_ptr<Entity>(std::move(p)));
+        else spawn(std::move(p));
+        return raw;
     }
     template <class T> void tag(T *e) { reg.emplace_or_replace<Is<T>>(e->id, Is<T>{e}); }
     template <class T> T *get(entt::entity id) {
@@ -75,6 +85,7 @@ public:
     void renderLight(Screen &s);
     void renderWorldDebug(Screen &s, int xView, int yView, float xMouse, float yMouse);
     void collide(double &x, double &y, float radius) const;
+    bool blocks(double x, double y) const;
     bool visited(const Structure &s) const;
     static bool unvisited(const Structure *s, const void *level);
 
@@ -85,13 +96,13 @@ private:
 
     std::vector<std::unique_ptr<Entity>> pending;
     std::vector<entt::entity> dead;
-    std::vector<Entity *> drawn;
-    std::vector<uint64_t> keys, keysTmp; // draw order: layer | y | index into drawn
+    std::vector<SpriteObject *> drawn;
+    std::vector<uint64_t> keys, keysTmp;
     std::vector<Prop> props;
     std::vector<int> cellStart, cellFill;
     std::vector<Enemy *> cells;
     double xGrid = 0, yGrid = 0;
-    float solids[SOLID_H * SOLID_W]{}; // prop collider radius per tile over the last scatter window
+    float solids[SOLID_H * SOLID_W]{};
     int solidX = 0, solidY = 0;
     uint64_t visits[256]{};
     int visitCount = 0;
@@ -101,7 +112,7 @@ private:
     void buildGrid();
     void renderFloor(Screen &s);
     void scatter(Screen &s);
-    void queue(Entity *e);
+    void queue(SpriteObject *e);
     int cell(double v, double origin) const { return std::clamp(int(std::floor((v - origin) / CELL)), 0, GRID - 1); }
 };
 
