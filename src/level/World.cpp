@@ -119,7 +119,7 @@ Sprite groundTile(int x, int y) {
         int r = hash2(x, y) % 100;
         return atlas::town(r < b->flowers ? tt::GrassFlowers : r < b->flowers + b->tufts ? tt::GrassTufts : tt::Grass);
     }
-    int mask = isDirt(x, y - 1) | isDirt(x, y + 1) << 1 | isDirt(x - 1, y) << 2 | isDirt(x + 1, y) << 3;
+    int mask = int(isDirt(x, y - 1)) | isDirt(x, y + 1) << 1 | isDirt(x - 1, y) << 2 | isDirt(x + 1, y) << 3;
     return atlas::town(tt::DirtTopLeft + RIM[mask]);
 }
 
