@@ -6,15 +6,15 @@
 #include <algorithm>
 #include <string>
 
-// Defined in Vulkan2D's Shader.c but missing from its public header.
+
 extern "C" VK2DShader vk2dShaderFrom(const uint8_t *vert, int vertSize, const uint8_t *frag, int fragSize, uint32_t uniformSize);
 
-// Uniform layouts; must match the ConstantBuffers in res/shaders.
 struct PostData {
     float time, hurt, lowHealth;
     uint32_t light;
     float resW, resH, vignette, grain;
 };
+
 struct FlashData {
     float amount, r, g, b;
 };
@@ -58,7 +58,6 @@ void Screen::beginLight(Color ambient) {
     color(ambient);
     vk2dRendererClear();
     vk2dRendererSetBlendMode(VK2D_BLEND_MODE_ADD);
-    // VK2D flushes its sprite batch on every additive draw, so lights are rationed.
     lightBudget = 240;
 }
 
@@ -102,7 +101,6 @@ void Screen::color(Color c) {
 }
 
 void Screen::sprite(const Sprite &s, Vec2 at, Vec2 o, Vec2 sc, float rot) {
-    // VK2D puts the scaled quad's top-left at pos and pivots on pos + origin * scale.
     Vec2 p = at - offset - Vec2{o.x * sc.x, o.y * sc.y};
     vk2dRendererDrawTexture(atlas, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
 }

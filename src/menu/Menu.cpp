@@ -60,7 +60,6 @@ void DeadMenu::render(Screen &s) {
 }
 
 LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
-    // New picks are only offered while a slot of their kind (weapon or passive) is free.
     auto &all = game.level->player->upgrades;
     int owned[2] = {0, 0};
     for (auto &u : all)

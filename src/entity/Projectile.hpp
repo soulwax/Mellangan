@@ -73,8 +73,6 @@ public:
     void tick() override;
     void render(Screen &s) override;
 };
-
-// Lightning: damages everything in its radius on the first tick, then lingers as a flash.
 class Strike : public Entity {
 public:
     Strike(Vec2 at, float damage, float radius);
@@ -102,8 +100,6 @@ public:
 private:
     float damage, life, maxLife, timer = 0;
 };
-
-// Lobbed in an arc; explodes on landing and leaves a FirePool.
 class Bomb : public Entity {
 public:
     Bomb(Vec2 from, Vec2 to, float damage, float poolRadius, float poolDamage, float poolTime)
@@ -118,8 +114,6 @@ private:
     Vec2 from, to;
     float damage, poolRadius, poolDamage, poolTime, t = 0, height = 0;
 };
-
-// One full turn of a scythe around the player, hitting each enemy once.
 class Sweep : public Entity {
 public:
     Sweep(const Player &p, float reach, float damage);
@@ -133,8 +127,6 @@ private:
     float reach, damage, angle, start, t = 0;
     std::vector<entt::entity> hits;
 };
-
-// Cultist magic: slow and dodgeable, hurts the player.
 class Orb : public Entity {
 public:
     Orb(Vec2 at, Vec2 vel, float damage) : vel(vel), damage(damage) { pos = at; }

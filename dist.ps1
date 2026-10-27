@@ -49,7 +49,8 @@ if ($Bump -ne 'none') {
     while ($end -lt $lines.Count -and $lines[$end] -notmatch '^## \[') { $end++ }
     $notes = @($lines[($start + 1)..($end - 1)])
     if (-not ($notes | Where-Object { $_ -match '\S' -and $_ -notmatch '^###' })) {
-        throw "Nothing under '## [Unreleased]' in CHANGELOG.md. Describe the changes in $version first."
+        throw "Nothing under '## [Unreleased]' in CHANGELOG.md. Describe the changes in $version first, " +
+              "or run './dist.ps1 -Bump none' to rebuild $($versionText.Trim()) as is."
     }
     $released = @($lines[0..$start]) + '' + "## [$version] - $(Get-Date -Format 'yyyy-MM-dd')" + $notes
     if ($end -lt $lines.Count) { $released += $lines[$end..($lines.Count - 1)] }

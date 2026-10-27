@@ -1,18 +1,13 @@
 #pragma once
 
-// Regions inside res/atlas.png. Layout is produced by tools/make_assets.py.
-
 struct Sprite {
     float x, y, w, h;
 };
 
 namespace atlas {
-
-// Kenney Tiny Dungeon
 constexpr Sprite tile(int index) {
     return {float((index % 12) * 18 + 1), float((index / 12) * 18 + 1), 16, 16};
 }
-// Kenney Tiny Town, packed to the right of Tiny Dungeon
 constexpr Sprite town(int index) {
     Sprite s = tile(index);
     s.x += 12 * 18;
@@ -31,7 +26,6 @@ constexpr Sprite digit(int d) { return {float(176 + d * 5), 220, 5, 7}; }
 
 namespace tt {
 constexpr int Grass = 0, GrassTufts = 1, GrassFlowers = 2;
-// Tall trees are a crown stacked on a trunk.
 constexpr int AutumnCrown = 3, Crown = 4, AutumnTrunk = 15, Trunk = 16;
 constexpr int Bush = 5, Sprouts = 17, AutumnPine = 27, Pine = 28, Mushrooms = 29;
 constexpr int DirtTopLeft = 12; // 3x3 grass-to-dirt edge set, centre at DirtTopLeft + 13
@@ -39,7 +33,6 @@ constexpr int Sign = 83, Beehive = 94, Log = 106, Sack = 107;
 constexpr int Bomb = 105, Key = 117, Bow = 118, Arrow = 119, Scythe = 129;
 constexpr int WellRoof = 92, Well = 104; // roof stacks on the well
 constexpr int Path = 43;
-// Roofs are 3x2: top row at the index, lower row 12 further on, a dormer 3 to the right of the top-left.
 constexpr int GreyRoof = 48, RedRoof = 52;
 constexpr int WoodWindow = 84, WoodDoor = 85, StoneWindow = 88, StoneDoor = 89;
 constexpr int FenceTopLeft = 44, FenceTop = 45, FenceTopRight = 46, FenceLeft = 56, FenceRight = 59;

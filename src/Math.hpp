@@ -37,7 +37,6 @@ inline Vec2 rotate(Vec2 v, float a) {
 inline float lerpf(float a, float b, float t) { return a + (b - a) * t; }
 inline Vec2 lerp(Vec2 a, Vec2 b, float t) { return a + (b - a) * t; }
 inline float clampf(float v, float lo, float hi) { return std::max(lo, std::min(hi, v)); }
-// Frame-rate independent exponential approach factor.
 inline float damp(float rate, float dt) { return 1.0f - std::exp(-rate * dt); }
 
 struct Rng {

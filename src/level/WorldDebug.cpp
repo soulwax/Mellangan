@@ -8,8 +8,6 @@
 #include "level/Level.hpp"
 
 namespace {
-
-// Maps between world pixels and window pixels for the letterboxed world image composited by Screen::beginGui.
 struct View {
     Vec2 origin, world;
     float k;
@@ -29,8 +27,6 @@ void dashed(Screen &s, Vec2 a, Vec2 b, float width, float dash, float phase, Col
         if (t1 > t0) s.line(a + d * t0, a + d * t1, width, c);
     }
 }
-
-// Corner brackets around a rectangle, the classic "locked on" marker.
 void brackets(Screen &s, float x, float y, float w, float h, float arm, float t, Color c) {
     s.rect(x, y, arm, t, c), s.rect(x, y, t, arm, c);
     s.rect(x + w - arm, y, arm, t, c), s.rect(x + w - t, y, t, arm, c);
@@ -56,8 +52,6 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
     int tx0 = int(std::floor(viewOffset.x / 16)), ty0 = int(std::floor(viewOffset.y / 16));
     int rx0 = world::regionOf(tx0), ry0 = world::regionOf(ty0);
     int rx1 = world::regionOf(tx0 + Screen::W / 16 + 1), ry1 = world::regionOf(ty0 + Screen::H / 16 + 1);
-
-    // Region borders, with each region's coordinates in its top-left corner.
     Color grid{1, 1, 1, 0.16f};
     for (int rx = rx0; rx <= rx1 + 1; rx++) {
         float gx = v.gui({rx * RP, 0}).x;
@@ -72,8 +66,6 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
             Vec2 g = v.gui({rx * RP, ry * RP}) + Vec2{3, 3} * small;
             if (v.inside(g)) s.text(fmt::format("R {},{}", rx, ry), g.x, g.y, small, grid.alpha(0.45f));
         }
-
-    // Hovered tile and whatever structure it belongs to.
     Vec2 hw = v.toWorld(mouse);
     int hx = int(std::floor(hw.x / 16)), hy = int(std::floor(hw.y / 16));
     bool hovering = v.inside(mouse);
@@ -112,8 +104,6 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
         auto [x, y, w, h] = box(target, 1);
         float pulse = (2 + 2 * std::sin(t * 6)) * u;
         brackets(s, x - pulse, y - pulse, w + pulse * 2, h + pulse * 2, 6 * u, u, c);
-
-        // Line from the player towards the target, stopped at the edge of the view when it is off screen.
         Vec2 from = v.gui(player->body()), to = v.gui(target.center()), mid = v.gui(viewOffset + Vec2{Screen::W, Screen::H} * 0.5f);
         Vec2 half = Vec2{Screen::W, Screen::H} * (k * 0.5f) - Vec2{14, 14} * u, d = to - mid;
         float fit = std::min(d.x != 0 ? half.x / std::abs(d.x) : INFINITY, d.y != 0 ? half.y / std::abs(d.y) : INFINITY);

@@ -1,4 +1,3 @@
-// Sprite tint used for hit feedback: blends the sprite towards a flat colour, keeping its silhouette.
 
 struct Push {
     int cameraIndex;
@@ -18,7 +17,6 @@ struct FlashData {
     float g;
     float b;
 };
-// Layout must match FlashData in src/gfx/Screen.cpp.
 [[vk::binding(3,3)]] ConstantBuffer<FlashData> flash;
 
 [shader("pixel")]

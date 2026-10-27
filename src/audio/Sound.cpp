@@ -22,7 +22,6 @@ short *musicData = nullptr;
 int musicLength = 0;
 bool muted = false;
 
-// The music is a stereo Vorbis file, decoded once into memory and fed to its own stream in its own format.
 void loadMusic(const std::string &path) {
     int channels = 0, rate = 0;
     int frames = stb_vorbis_decode_filename(path.c_str(), &channels, &rate, &musicData);
@@ -116,7 +115,6 @@ void Sound::shutdown() {
 }
 
 void Sound::tick() {
-    // Keep at least one full copy of the loop queued so it never runs dry.
     if (musicStream && SDL_GetAudioStreamQueued(musicStream) < musicLength)
         SDL_PutAudioStreamData(musicStream, musicData, musicLength);
 }
@@ -130,7 +128,6 @@ void Sound::play(float volume, float pitchJitter) {
     if (!device || !data) return;
     Uint64 now = SDL_GetTicks();
     if (now - last < Uint64(gap * 1000)) return;
-    // Take a free voice, or steal the one that has been playing longest.
     size_t pick = 0;
     for (size_t i = 0; i < voices.size(); i++) {
         if (SDL_GetAudioStreamQueued(voices[i]) == 0) {
@@ -144,7 +141,6 @@ void Sound::play(float volume, float pitchJitter) {
     SDL_SetAudioStreamGain(v, volume);
     SDL_SetAudioStreamFrequencyRatio(v, 1 + rng.range(-pitchJitter, pitchJitter));
     SDL_PutAudioStreamData(v, data, int(length));
-    // Without a flush the resampler holds back its last few samples and the voice never reads as idle again.
     SDL_FlushAudioStream(v);
     voiceStarted[pick] = last = now;
 }

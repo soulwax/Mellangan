@@ -12,7 +12,7 @@
 
 namespace {
 namespace t = atlas::t;
-// tile, hp, speed, damage, radius, scale, xp, knockResist, blood, floats, unlockAt
+
 const EnemyType TYPES[] = {
     {t::Bat, 5, 50, 5, 5, 1, 1, 1, {0.85f, 0.55f, 0.35f, 1}, true, 0},
     {t::Rat, 9, 40, 6, 6, 1, 1, 1, {0.75f, 0.55f, 0.4f, 1}, false, 25},
@@ -84,7 +84,6 @@ void Enemy::separate() {
         Vec2 d = pos - o.pos;
         float min = (radius + o.radius) * 0.85f, d2 = lengthSq(d);
         if (d2 >= min * min || d2 < 1e-6f) return;
-        // Things that never move (barrels) don't get shoved.
         float dd = std::sqrt(d2), w = o.type.speed <= 0 ? 1 : o.radius / (radius + o.radius);
         Vec2 n = d / dd * ((min - dd) * 0.5f);
         pos += n * w;

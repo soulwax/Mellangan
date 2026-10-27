@@ -18,8 +18,6 @@ class Level;
 struct Owned {
     std::unique_ptr<Entity> self;
 };
-
-// Typed view onto an entity, emplaced by Entity::onAdded so systems can query by kind.
 template <class T> struct Is {
     T *self;
 };
@@ -72,9 +70,7 @@ public:
 
     void tick();
     void render(Screen &s);
-    // Light pass runs first each frame and also lays out the visible scenery the world pass reuses.
     void renderLight(Screen &s);
-    // Dev overlay drawn in the GUI pass: regions, structure footprints, the nearest structure and the hovered tile.
     void renderWorldDebug(Screen &s, Vec2 view, Vec2 mouse);
 
 private:

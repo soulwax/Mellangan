@@ -21,7 +21,7 @@ endif ()
 
 # Shaders are compiled offline with the SDK's slangc, so Vulkan2D doesn't need to build Slang from source.
 set(VK2D_DISABLE_SHADERS ON CACHE BOOL "" FORCE)
-add_subdirectory(Vulkan2D)
+add_subdirectory(extern/Vulkan2D)
 add_subdirectory(extern/spdlog)
 add_subdirectory(extern/entt)
 

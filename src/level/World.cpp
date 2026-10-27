@@ -48,8 +48,6 @@ bool cottage(const Structure &s, int lx, int ly, uint32_t r, Prop &p) {
     if (lx == 1 && ly == 4 && (s.seed & 16)) return p.add(atlas::town(tt::Sign)), p.shadow = 0.6f, true;
     return false;
 }
-
-// Rows of graves inside a fence, gated in the middle of the bottom side.
 bool graveyard(const Structure &s, int lx, int ly, uint32_t r, Prop &p) {
     int right = s.w - 1, bottom = s.h - 1, gate = s.w / 2;
     if (ly == 0) return p.add(atlas::town(lx == 0 ? tt::FenceTopLeft : lx == right ? tt::FenceTopRight : tt::FenceTop)), true;
@@ -67,8 +65,6 @@ bool graveyard(const Structure &s, int lx, int ly, uint32_t r, Prop &p) {
     }
     return false;
 }
-
-// A raised slab ringed by pillars around a humming crystal.
 bool shrine(const Structure &s, int lx, int ly, uint32_t r, Prop &p) {
     bool corner = (lx == 0 || lx == s.w - 1) && (ly == 0 || ly == s.h - 1);
     if (corner) {
@@ -84,8 +80,6 @@ bool shrine(const Structure &s, int lx, int ly, uint32_t r, Prop &p) {
     }
     return false;
 }
-
-// Seats around a fire pit, supplies stacked at the edge of the clearing.
 bool camp(const Structure &s, int lx, int ly, uint32_t r, Prop &p) {
     int c = s.w / 2;
     if (lx == c && ly == c) {
@@ -100,8 +94,6 @@ bool camp(const Structure &s, int lx, int ly, uint32_t r, Prop &p) {
         return p.add(atlas::tile(r & 2 ? t::Crate : t::Barrel)), p.shadow = 0.8f, true;
     return false;
 }
-
-// A crumbling brick wall with an archway, rubble and mushrooms on the earth in front of it.
 bool ruin(const Structure &s, int lx, int ly, uint32_t r, Prop &p) {
     int arch = 1 + int(s.seed % uint32_t(s.w - 3));
     if (ly == 1) {
@@ -156,8 +148,6 @@ bool structureIn(int rx, int ry, Structure &s) {
     if (kind == K::Graveyard) w = 7 + 2 * ((h >> 15) & 1), ht = 6 + ((h >> 16) & 1);
     if (kind == K::Camp) w = ht = 7;
     if (kind == K::Ruin) w = 6 + ((h >> 15) & 1), ht = 4;
-
-    // Two tiles of slack on every side keep the one-tile apron inside the region.
     int spanX = REGION - 4 - w, spanY = REGION - 4 - ht;
     int x = rx * REGION + 2 + int((h >> 18) % uint32_t(spanX + 1)), y = ry * REGION + 2 + int((h >> 24) % uint32_t(spanY + 1));
     if (x - 1 < 6 && x + w + 1 > -6 && y - 1 < 6 && y + ht + 1 > -6) return false; // keep the spawn clear
@@ -191,8 +181,6 @@ bool isDirt(int x, int y) {
     if (structureAt(x, y, s, 1)) return structureDirt(s, x - s.x, y - s.y);
     return valueNoise(x * 0.11f - 200, y * 0.11f + 77) > 0.79f;
 }
-
-// Grass, or a dirt clearing whose rim is picked from Tiny Town's 3x3 grass-to-dirt edge set.
 Sprite groundTile(int x, int y) {
     Structure st;
     if (structureAt(x, y, st)) {
@@ -229,8 +217,6 @@ bool propAt(int x, int y, Prop &p) {
     int trees = 6 + int(clampf((forest - 0.55f) * 2000, 0, 750)), graves = yard > 0.65f ? 70 : 3;
 
     if (r < trees) {
-        // Deep forest is mostly single-tile pines so packed rows read like Kenney's own forests;
-        // tall trees always get both their trunk and crown.
         int tall = dense ? 3 : 5, bush = dense ? 10 : 8;
         if (pick < tall) {
             p.add(atlas::town(autumn ? tt::AutumnTrunk : tt::Trunk));
@@ -248,7 +234,6 @@ bool propAt(int x, int y, Prop &p) {
         if (pick % 3 == 0) p.light = {0.07f, 0.15f, 0.32f, 1};
         return true;
     }
-    // Scattered odds and ends, roughly one in a hundred tiles.
     struct Odd {
         int tile;
         bool town;

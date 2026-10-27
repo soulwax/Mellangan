@@ -30,9 +30,6 @@ constexpr Color muted{0.66f, 0.64f, 0.74f, 1};
 struct PostFx {
     float time, hurt, lowHealth;
 };
-
-// Three passes per frame: an additive light map and the world, both at W x H, then the window,
-// where post.slang composites them and the GUI draws at native resolution.
 class Screen {
 public:
     static constexpr int W = 480, H = 270;

@@ -1,37 +1,38 @@
-// Final composite: world albedo * light map, then bloom, tonemap, and screen feedback effects.
-// VK2D's sampler uses unnormalized coordinates, so `uv` is in source-texture pixels.
-
-struct Push {
+struct Push
+{
     int cameraIndex;
     uint textureIndex;
     float4 texturePos;
     float4 colour;
     float4x4 model;
 };
-[[vk::push_constant]] Push push;
+[[vk::push_constant]]
+Push push;
 
-[[vk::binding(1,1)]] SamplerState sampler;
-[[vk::binding(2,2)]] Texture2D<float4> textures[];
+[[vk::binding(1, 1)]]
+SamplerState sampler;
+[[vk::binding(2, 2)]]
+Texture2D<float4> textures[];
 
-struct PostData {
+struct PostData
+{
     float time;
-    float hurt;          // 0..1, spikes when the player takes damage
-    float lowHealth;     // 0..1, how close to death
-    uint lightTexture;   // bindless index of the light map (same size as the world target)
-    float2 resolution;   // world target size in pixels
+    float hurt;        // 0..1, spikes when the player takes damage
+    float lowHealth;   // 0..1, how close to death
+    uint lightTexture; // bindless index of the light map (same size as the world target)
+    float2 resolution; // world target size in pixels
     float vignette;
     float grain;
 };
-// Layout must match PostData in src/gfx/Screen.cpp.
-[[vk::binding(3,3)]] ConstantBuffer<PostData> post;
+[[vk::binding(3, 3)]]
+ConstantBuffer<PostData> post;
 
-float3 albedoAt(float2 uv) {
+float3 albedoAt(float2 uv)
+{
     return textures[push.textureIndex].Sample(sampler, uv).rgb;
 }
-
-// The renderer only exposes a nearest sampler; filter the light map by hand so light stays smooth
-// while the pixel art stays crisp.
-float3 lightAt(float2 uv) {
+float3 lightAt(float2 uv)
+{
     float2 p = uv - 0.5;
     float2 i = floor(p);
     float2 f = p - i;
@@ -44,41 +45,40 @@ float3 lightAt(float2 uv) {
     return l * 1.6; // light map stores 0.625 as neutral so lights can over-expose
 }
 
-float3 litAt(float2 uv) {
+float3 litAt(float2 uv)
+{
     return albedoAt(uv) * textures[post.lightTexture].Sample(sampler, uv).rgb * 1.6;
 }
 
-float3 aces(float3 x) {
+float3 aces(float3 x)
+{
     return saturate((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14));
 }
 
-float hash(float2 p) {
+float hash(float2 p)
+{
     return frac(sin(dot(p, float2(12.9898, 78.233))) * 43758.5453);
 }
 
 [shader("pixel")]
-float4 PixelShader(float2 uv) {
+float4 PixelShader(float2 uv)
+{
     float2 res = post.resolution;
     float2 n = uv / res - 0.5;
     float dist = length(n * float2(res.x / res.y, 1.0)) * 1.15;
-
-    // Chromatic aberration, mostly at the edges, kicked up on damage
     float2 ca = n * (0.35 + post.hurt * 4.0);
     float3 albedo = float3(albedoAt(uv + ca).r, albedoAt(uv).g, albedoAt(uv - ca).b);
     float3 col = albedo * lightAt(uv);
-
-    // Tight bloom around strongly over-exposed pixels. Kept small: wide nearest-sampled taps smear into squares.
     float2 taps[8] = {
         float2(1, 0), float2(-1, 0), float2(0, 1), float2(0, -1),
         float2(0.7, 0.7), float2(-0.7, 0.7), float2(0.7, -0.7), float2(-0.7, -0.7)
     };
     float3 bloom = 0;
-    for (int k = 0; k < 8; k++) bloom += max(litAt(uv + taps[k] * 1.5) - 1.15, 0.0);
+    for (int k = 0; k < 8; k++)
+        bloom += max(litAt(uv + taps[k] * 1.5) - 1.15, 0.0);
     col += min(bloom * 0.06, 0.2);
 
     col = aces(col * 1.15);
-
-    // Gentle grade: cool shadows, warm highlights
     float luma = dot(col, float3(0.2126, 0.7152, 0.0722));
     col = lerp(col, col * float3(0.92, 0.97, 1.12), 1.0 - saturate(luma * 1.6));
     col = lerp(float3(luma, luma, luma), col, 1.12);

@@ -1,5 +1,5 @@
-[submodule "Vulkan2D"]
-	path = Vulkan2D
+[submodule "extern/Vulkan2D"]
+	path = extern/Vulkan2D
 	url = git@github.com:soulwax/Vulkan2D.git
 [submodule "extern/spdlog"]
 	path = extern/spdlog

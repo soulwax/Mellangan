@@ -7,8 +7,6 @@
 #include "entity/Player.hpp"
 
 namespace {
-
-// Visible tiles, widened by `before` tiles up/left and `after` down/right for props that overhang their anchor.
 template <class F> void eachVisibleTile(const Screen &s, F &&f, int before = 0, int after = 0) {
     int x0 = int(std::floor(s.offset.x / 16)) - before, y0 = int(std::floor(s.offset.y / 16)) - before;
     for (int y = y0; y <= y0 + before + Screen::H / 16 + 1 + after; y++)
