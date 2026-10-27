@@ -8,6 +8,7 @@
 #include "Crash.hpp"
 #include "Game.hpp"
 #include "Version.hpp"
+#include "fun/Ouroboros.hpp"
 
 static void initLogging(const std::string &base) {
     std::vector<spdlog::sink_ptr> sinks{std::make_shared<spdlog::sinks::stdout_color_sink_mt>()};
@@ -56,6 +57,13 @@ int main(int argc, char **argv) {
             game.bench.enabled |= std::string_view(argv[i]) == "--bench";
         }
         if (game.dev) spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world debug, F9 warp to nearest structure");
+        if (game.dev) {
+            constexpr ouroboros::Ouroboros council;
+            int n = int(SDL_GetTicks() % 1000);
+            ouroboros::Augury augury;
+            spdlog::info("Ouroboros: {} is {}, {} of 4 serpents agree, the augury {}", n, (council->*n) ? "even" : "odd",
+                         council.agreement(n), augury.even(n) == (council->*n) ? "concurs" : "dissents");
+        }
         if (game.init(window, base)) {
             spdlog::info("Mellangan ready");
             game.run();
