@@ -173,7 +173,14 @@ bool propAt(int x, int y, Prop &p) {
     if ((std::abs(x) < 4 && std::abs(y) < 4) || isDirt(x, y)) return false;
 
     uint32_t h = hash2(x * 7 + 3, y * 13 + 1);
-    if (int own = BIOMES[biomeAt(x, y)]->place(x, y, h, p); own >= 0) return own;
+    const Biome *self = BIOMES[biomeAt(x, y)];
+    if (int own = self->place(x, y, h, p); own >= 0) return own;
+    uint32_t g = hash2(x * 31 + 5, y * 17 + 9);
+    const Biome *other = BIOMES[biomeAt(x + int(g % 7) - 3, y + int((g >> 3) % 7) - 3)];
+    if (other != self && (h >> 4) % 1000 < 110) {
+        const Feature *fringe = (h >> 21) & 1 ? self->fringe : other->fringe;
+        if (fringe) return fringe->place(fringe, h >> 16, &p);
+    }
     const Biome *b = blendedBiome(x, y);
     int r = (h >> 4) % 1000;
     TileMemo *m = memoAt(x, y);

@@ -101,6 +101,7 @@ Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits w
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
 - `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites
+- `tools/sprite_kit.py`, `tools/make_sprites.py` – procedural pixel painter and the sprite-kit band (trees, shrubs, rocks, tufts); `--preview` renders a catalogue
 - `tools/make_flora.py`, `tools/make_desert.py` – add the recoloured and hand-drawn plants, mud, sand and water tiles to `res/atlas.png`
 - `tools/make_winter.py` – adds the frosted winter band to `res/atlas.png` (also run by `make_assets.py`)
 - `tools/footprint_preview.py` – composes a dumped structure footprint (ground and props) into a preview PNG

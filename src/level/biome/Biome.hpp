@@ -19,7 +19,7 @@ struct FeatureSpawn {
 
 constexpr uint32_t foe(EnemyKind k) { return 1u << int(k); }
 
-constexpr int MAX_SPAWNS = 10;
+constexpr int MAX_SPAWNS = 14;
 struct BiomeData {
     const char *name;
     Color debug, tint;
@@ -29,6 +29,7 @@ struct BiomeData {
     int structureWeights[int(StructureKind::Count)];
     uint32_t foes;
     FeatureSpawn spawns[MAX_SPAWNS];
+    const Feature *fringe;
 };
 
 class Biome : public BiomeData {

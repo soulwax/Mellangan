@@ -22,5 +22,6 @@ namespace feature {
 extern const Feature oak, autumnOak, pine, autumnPine, bush, snowOak, snowPine, snowBush;
 extern const Feature pinkOak, whiteOak, lilac, berryBush, dryBush, deadPine, spiritPine, mossPine, blueShrooms;
 extern const Feature willow, reeds, toadstools, cactus, barrelCactus, palm;
+extern const Feature birch, frostBirch, cypress, acacia, baobab, mushroomTree, jungleTree, charredTree, crystalSpire, fir, snowyFir, fern, frostedFern, tallGrass, dryGrass, heather, thornbush, sunflower, tulips, lavender, wheat, cattails, daisies, boulder, mossyBoulder, snowyBoulder, sandstone, iceChunk, obsidian, pebbles, sandTuft, frostTuft, ashTuft, bogTuft, bloomTuft;
 extern const Feature grave, mushrooms, sprouts, log, beehive, sign, sack, crystal, well, barrel, crate;
 } // namespace feature

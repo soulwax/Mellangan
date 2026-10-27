@@ -7,4 +7,4 @@ Meadow::Meadow()
      foe(EnemyKind::Rat) | foe(EnemyKind::Slime) | foe(EnemyKind::Knight),
      {{&f::oak, 4, 110}, {&f::bush, 4, 60}, {&f::pine, 2, 50}, {&f::sprouts, 4, 0},
       {&f::beehive, 2, 0}, {&f::sign, 1, 0}, {&f::well, 1, 0}, {&f::log, 1, 0},
-      {&f::pinkOak, 1, 20}, {&f::berryBush, 2, 10}}}) {}
+      {&f::pinkOak, 1, 20}, {&f::berryBush, 2, 10}, {&f::tallGrass, 4, 0}, {&f::daisies, 3, 0}, {&f::sunflower, 2, 0}, {&f::boulder, 1, 0}}, &f::bloomTuft}) {}

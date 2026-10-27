@@ -9,7 +9,7 @@ Mire::Mire()
     : Biome({"MIRE", {0.45f, 0.55f, 0.3f, 1}, {0.86f, 0.92f, 0.8f, 1}, 0.12f, 0, 34, 50, {5, 15, 15, 25, 40, 0},
      foe(EnemyKind::Slime) | foe(EnemyKind::Spider) | foe(EnemyKind::Cultist),
      {{&f::willow, 14, 200}, {&f::reeds, 16, 60}, {&f::mossPine, 6, 90}, {&f::deadPine, 3, 30},
-      {&f::toadstools, 4, 0}, {&f::blueShrooms, 3, 0}, {&f::log, 4, 0}, {&f::spiritPine, 1, 10}}}) {}
+      {&f::toadstools, 4, 0}, {&f::blueShrooms, 3, 0}, {&f::log, 4, 0}, {&f::spiritPine, 1, 10}, {&f::cattails, 8, 20}, {&f::fern, 3, 0}, {&f::mossyBoulder, 1, 0}, {&f::mushroomTree, 1, 6}}, &f::bogTuft}) {}
 
 Sprite Mire::dirtRim(int offset) const { return atlas::mudRim(offset); }
 

@@ -11,6 +11,7 @@ from PIL import Image
 
 from make_desert import add_desert
 from make_flora import add_flora_band
+from make_sprites import add_sprites
 from make_winter import add_winter_band
 
 TILE = 16
@@ -198,7 +199,7 @@ def main():
     for im, pos in fx:
         atlas.paste(im, pos)
 
-    atlas = add_desert(add_flora_band(add_winter_band(atlas)))
+    atlas = add_sprites(add_desert(add_flora_band(add_winter_band(atlas))))
     out = Path(__file__).resolve().parent.parent / "res" / "atlas.png"
     atlas.save(out)
     print(f"wrote {out}")

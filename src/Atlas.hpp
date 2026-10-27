@@ -28,6 +28,44 @@ constexpr int Sand = 17, SandSpeck = 18, Cactus = 19, PalmLow = 20, PalmHigh = 2
 constexpr Sprite mudRim(int offset) { return {float(216 + (offset % 12) * 18 + 1), float(426 + (offset / 12) * 18 + 1), 16, 16}; }
 constexpr Sprite sandRim(int offset) { return {float(216 + (3 + offset % 12) * 18 + 1), float(426 + (offset / 12) * 18 + 1), 16, 16}; }
 constexpr Sprite waterRim(int offset) { return {float(216 + (6 + offset % 12) * 18 + 1), float(426 + (offset / 12) * 18 + 1), 16, 16}; }
+constexpr Sprite kit(int index) { return {float((index % 24) * 18 + 1), float(480 + (index / 24) * 18 + 1), 16, 16}; }
+namespace kt {
+constexpr int BirchHigh = 0, BirchLow = 24;
+constexpr int FrostBirchHigh = 1, FrostBirchLow = 25;
+constexpr int CypressHigh = 2, CypressLow = 26;
+constexpr int AcaciaHigh = 3, AcaciaLow = 27;
+constexpr int BaobabHigh = 4, BaobabLow = 28;
+constexpr int MushroomTreeHigh = 5, MushroomTreeLow = 29;
+constexpr int JungleTreeHigh = 6, JungleTreeLow = 30;
+constexpr int CharredTreeHigh = 7, CharredTreeLow = 31;
+constexpr int CrystalSpireHigh = 8, CrystalSpireLow = 32;
+constexpr int FirHigh = 9, FirLow = 33;
+constexpr int SnowyFirHigh = 10, SnowyFirLow = 34;
+constexpr int Fern = 11;
+constexpr int FrostedFern = 12;
+constexpr int TallGrass = 13;
+constexpr int DryGrass = 14;
+constexpr int Heather = 15;
+constexpr int Thornbush = 16;
+constexpr int Sunflower = 17;
+constexpr int Tulips = 18;
+constexpr int Lavender = 19;
+constexpr int Wheat = 20;
+constexpr int Cattails = 21;
+constexpr int Daisies = 22;
+constexpr int Boulder = 23;
+constexpr int MossyBoulder = 35;
+constexpr int SnowyBoulder = 36;
+constexpr int Sandstone = 37;
+constexpr int IceChunk = 38;
+constexpr int Obsidian = 39;
+constexpr int Pebbles = 40;
+constexpr int SandTuft = 41;
+constexpr int FrostTuft = 42;
+constexpr int AshTuft = 43;
+constexpr int BogTuft = 44;
+constexpr int BloomTuft = 45;
+} // namespace kt
 constexpr Sprite snowRim(int offset) { return {float(216 + (offset % 12) * 18 + 1), float(336 + (offset / 12) * 18 + 1), 16, 16}; }
 
 constexpr Sprite Glow{0, 200, 64, 64};
