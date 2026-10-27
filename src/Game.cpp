@@ -88,6 +88,14 @@ void Game::devTick() {
     if (input.devLevel.clicked) p.pendingLevels++;
     if (input.devTime.clicked) level->time += 30, spdlog::info("dev: skipped to {}", clockText(level->time));
     if (input.devGod.clicked) p.god = !p.god, spdlog::info("dev: god mode {}", p.god ? "on" : "off");
+    if (input.devWorld.clicked) worldDebug = !worldDebug, spdlog::info("dev: world debug {}", worldDebug ? "on" : "off");
+    Structure target;
+    if (input.devWarp.clicked && world::nearestStructure(p.pos, 8, target)) {
+        p.pos = target.center() + Vec2{0, target.h * 8.0f + 20};
+        camera = p.pos;
+        spdlog::info("dev: warped to {} at tile ({}, {}), region ({}, {})", target.name(), target.x, target.y, target.rx,
+                     target.ry);
+    }
 }
 
 void Game::newGame() {
@@ -125,9 +133,11 @@ void Game::render() {
     level->renderLight(screen);
     screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
     level->render(screen);
+    view = screen.offset;
 
     float health = p.hp / p.maxHp;
     screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0});
+    if (worldDebug && dev) level->renderWorldDebug(screen, view, {input.mouseX, input.mouseY});
     if (!menu || menu->showHud()) renderHud();
     if (menu) menu->render(screen);
     if (showFps)

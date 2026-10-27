@@ -6,6 +6,21 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-27
+
+### Added
+
+- World structures stamped into the meadow, at most one per 20x20-tile region: cottages with lit windows, fenced
+  graveyards, pillared crystal shrines, campfires ringed by logs and crumbling brick ruins with an archway. The local
+  forest and graveyard noise decides which kind appears.
+- Dev world debug overlay (F8 with `--dev`): region grid, colour-coded structure footprints and aprons, a pulsing
+  lock-on to the nearest structure with an off-screen pointer and distance, and a tile inspector under the mouse.
+  F9 warps to the targeted structure.
+
+### Changed
+
+- Terrain and scenery generation moved from `Level` into a stateless `world` module (`src/level/World.cpp`).
+
 ## [0.1.0] - 2026-10-26
 
 ### Added

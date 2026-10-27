@@ -9,6 +9,7 @@
 
 #include "entity/Enemy.hpp"
 #include "entity/Entity.hpp"
+#include "level/World.hpp"
 
 class Game;
 class Player;
@@ -21,28 +22,6 @@ struct Owned {
 // Typed view onto an entity, emplaced by Entity::onAdded so systems can query by kind.
 template <class T> struct Is {
     T *self;
-};
-
-// Scenery: generated from the tile hash each frame and y-sorted with entities, never stored in the registry.
-// A prop is a few stacked tiles, each placed by its bottom-centre relative to pos (the prop's foot).
-class Prop : public Entity {
-public:
-    struct Part {
-        Sprite sprite;
-        Vec2 offset;
-    };
-    std::array<Part, 2> parts{};
-    int count = 0;
-    float shadow = 0;
-    Color light{0, 0, 0, 0};
-
-    void add(const Sprite &s, Vec2 offset = {}) { parts[count++] = {s, offset}; }
-    void render(Screen &s) override {
-        for (int i = 0; i < count; i++) s.sprite(parts[i].sprite, pos + parts[i].offset, {8, 16});
-    }
-    void renderShadow(Screen &s) override {
-        if (shadow > 0) s.sprite(atlas::Shadow, pos + Vec2{0, -1}, {8, 4}, {shadow, 1.2f});
-    }
 };
 
 class Spawner {
@@ -95,6 +74,8 @@ public:
     void render(Screen &s);
     // Light pass runs first each frame and also lays out the visible scenery the world pass reuses.
     void renderLight(Screen &s);
+    // Dev overlay drawn in the GUI pass: regions, structure footprints, the nearest structure and the hovered tile.
+    void renderWorldDebug(Screen &s, Vec2 view, Vec2 mouse);
 
 private:
     static constexpr int GRID = 48;

@@ -38,11 +38,11 @@ public:
 
 private:
     std::unique_ptr<Menu> nextMenu;
-    bool menuChanged = false, showFps = false;
+    bool menuChanged = false, showFps = false, worldDebug = false;
     float time = 0, hurt = 0, shake = 0, fps = 0, bannerTime = 0;
     std::string banner;
     std::deque<std::string> banners;
-    Vec2 camera;
+    Vec2 camera, view;
 
     void tick();
     void devTick();

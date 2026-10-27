@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     {
         Game game;
         for (int i = 1; i < argc; i++) game.dev |= std::string_view(argv[i]) == "--dev";
-        if (game.dev) spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode");
+        if (game.dev) spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world debug, F9 warp to nearest structure");
         if (game.init(window, base)) {
             spdlog::info("Mellangan ready");
             game.run();
