@@ -15,6 +15,19 @@ All notable changes to Mellangan are documented here. The format follows
   edges, and fireflies drifting over the swamp.
 - Blossom Grove biome in warm, mild climates: pink and white blossom trees, lilac and berry bushes, beehives and
   petal-strewn grass.
+- A procedural sprite kit (`tools/sprite_kit.py`, `tools/make_sprites.py`) paints a new atlas band in the Tiny Town
+  style: birch, frost birch, cypress, acacia, baobab, giant mushroom, jungle, charred, fir and snowy fir trees and a
+  crystal spire; ferns, tall and dry grass, heather, thornbush, sunflowers, tulips, lavender, wheat, cattails and
+  daisies; boulders (plain, mossy, snowy), sandstone, ice, obsidian and pebbles; and sand, frost, ash, bog and bloom
+  tufts. `make_sprites.py --preview out.png` renders a labelled catalogue.
+- A second sprite-kit band: apple, autumn birch, dead oak, weeping willow, bamboo, redwood, tree fern, blue spruce and
+  Joshua trees; roses, blueberries, hydrangea, holly, ivy and sage bushes; poppies, cornflowers, bluebells,
+  snowdrops and calla lilies; pumpkins, strawberries, clover, bracken, pampas, brown and glowing mushrooms; stumps,
+  mossy logs, driftwood, menhirs, rock piles, stone rings, amethyst, skulls, prickly pear, agave and tumbleweed. Every
+  biome draws from it, and oases grow bamboo, tree ferns and calla lilies. The kit lays out any number of two-row
+  bands, and `make_sprites.py --constants` prints the matching `atlas::kt` indices.
+- Biome borders grow fringe plants: each biome has a signature fringe (ferns, heather, frost tufts, bog tufts, sand
+  tufts, daisies and more) that sprouts only where it meets another biome, so every pairing mixes differently.
 - More varied flora everywhere: moss pines and glowing mushrooms in forests, dry bushes and dead pines on heath and in
   autumn woods, dead and spirit pines in barrows. The new plants are recoloured or drawn into the atlas by
   `tools/make_flora.py` and `tools/make_desert.py`.

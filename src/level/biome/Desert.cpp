@@ -42,7 +42,7 @@ Desert::Desert()
     : Biome({"DESERT", {0.95f, 0.85f, 0.5f, 1}, {1.06f, 1.0f, 0.9f, 1}, 2.0f, 0, 0, 45, {0, 5, 20, 35, 40, 0},
              foe(EnemyKind::Scorpion) | foe(EnemyKind::Rat) | foe(EnemyKind::Demon),
              {{&f::cactus, 10, 50}, {&f::barrelCactus, 6, 25}, {&f::dryBush, 6, 30}, {&f::deadPine, 1, 6},
-              {&f::sack, 1, 0}, {&f::crystal, 1, 0}, {&f::sandstone, 3, 0}, {&f::pebbles, 2, 0}, {&f::dryGrass, 2, 0}, {&f::acacia, 1, 8}, {&f::baobab, 0, 4}}, &f::sandTuft}) {}
+              {&f::sack, 1, 0}, {&f::crystal, 1, 0}, {&f::sandstone, 3, 0}, {&f::pebbles, 2, 0}, {&f::dryGrass, 2, 0}, {&f::acacia, 1, 8}, {&f::baobab, 0, 4}, {&f::joshuaTree, 3, 25}, {&f::pricklyPear, 4, 0}, {&f::agave, 3, 0}, {&f::tumbleweed, 2, 0}, {&f::skull, 1, 0}, {&f::amethyst, 0, 2}}, &f::sandTuft}) {}
 
 bool Desert::ground(int x, int y, Sprite *out) const {
     if (wet(x, y)) {
@@ -65,7 +65,8 @@ int Desert::place(int x, int y, uint32_t roll, Prop &p) const {
     if (wet(x, y)) return p.solid = 7, 1;
     if (sand(x, y)) return -1;
     int r = int(roll % 1000);
-    const Feature *pick = r < 200 ? &f::palm : r < 230 ? &f::jungleTree : r < 290 ? &f::reeds : r < 330 ? &f::cattails
-                        : r < 360 ? &f::bush : r < 380 ? &f::berryBush : r < 400 ? &f::fern : nullptr;
+    const Feature *pick = r < 180 ? &f::palm : r < 205 ? &f::jungleTree : r < 225 ? &f::bamboo : r < 245 ? &f::treeFern
+                        : r < 295 ? &f::reeds : r < 330 ? &f::cattails : r < 355 ? &f::bush : r < 375 ? &f::berryBush
+                        : r < 395 ? &f::fern : r < 410 ? &f::callaLilies : nullptr;
     return pick ? int(pick->place(pick, roll >> 10, &p)) : 0;
 }

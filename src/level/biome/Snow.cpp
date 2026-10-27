@@ -9,7 +9,7 @@ Snow::Snow()
     : Biome({"SNOW", {0.85f, 0.92f, 1.0f, 1}, {0.96f, 0.98f, 1.04f, 1}, 0.38f, 0, 26, 55, {10, 10, 20, 10, 10, 40},
      foe(EnemyKind::Bat) | foe(EnemyKind::Ghost) | foe(EnemyKind::Knight),
      {{&f::snowPine, 25, 280}, {&f::snowOak, 8, 120}, {&f::snowBush, 6, 50}, {&f::deadPine, 2, 15},
-      {&f::crystal, 3, 0}, {&f::log, 3, 0}, {&f::snowyFir, 12, 140}, {&f::frostBirch, 4, 40}, {&f::snowyBoulder, 2, 0}, {&f::iceChunk, 2, 0}, {&f::frostedFern, 2, 0}}, &f::frostTuft}) {}
+      {&f::crystal, 3, 0}, {&f::log, 3, 0}, {&f::snowyFir, 12, 140}, {&f::frostBirch, 4, 40}, {&f::snowyBoulder, 2, 0}, {&f::iceChunk, 2, 0}, {&f::frostedFern, 2, 0}, {&f::blueSpruce, 6, 60}, {&f::frozenShrub, 3, 0}, {&f::snowdrops, 2, 0}, {&f::holly, 2, 0}}, &f::frostTuft}) {}
 
 Sprite Snow::grass(int kind) const {
     Sprite s = Biome::grass(kind);
