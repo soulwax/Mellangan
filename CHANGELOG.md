@@ -6,6 +6,16 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Linux support: builds with GCC or Clang through CMake, logs a backtrace on crashes, and packages as
+  `Mellangan-<version>-linux.tar.gz` from `dist.ps1` under PowerShell 7.
+
+### Fixed
+
+- Windows releases no longer need `SDL3.dll`: SDL is now linked statically. Before, the game only started where a
+  copy happened to be on PATH, such as from the Vulkan SDK.
+
 ## [0.2.2] - 2026-10-27
 
 ### Changed

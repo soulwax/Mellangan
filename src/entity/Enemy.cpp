@@ -92,9 +92,9 @@ void Enemy::tick() {
 }
 
 void Enemy::separate() {
-    Enemy *near[24];
-    for (int i = 0, count = level->gather(x, y, radius + 16, near, 24); i < count; i++) {
-        Enemy &o = *near[i];
+    Enemy *nearby[24];
+    for (int i = 0, count = level->gather(x, y, radius + 16, nearby, 24); i < count; i++) {
+        Enemy &o = *nearby[i];
         if (&o == this || o.type.floats || (&o < this && o.type.speed > 0)) continue;
         double xd = x - o.x, yd = y - o.y;
         double min = (radius + o.radius) * 0.85, d2 = xd * xd + yd * yd;

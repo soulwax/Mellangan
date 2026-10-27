@@ -105,7 +105,7 @@ bool isDirt(int x, int y) {
     if (!(m->bits & HAS_DIRT)) {
         Structure s;
         bool dirt = structureAt(x, y, s, 1) ? structureDirt(&s, x - s.x, y - s.y) : dirtNoise(x, y, &BIOMES[biomeAt(x, y)]);
-        m->bits |= HAS_DIRT | (dirt ? DIRT : 0);
+        m->bits |= HAS_DIRT | (dirt ? uint32_t(DIRT) : 0u);
     }
     return m->bits & DIRT;
 }

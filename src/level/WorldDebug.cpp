@@ -163,7 +163,8 @@ void Level::renderWorldDebug(Screen &s, int xView, int yView, float xMouse, floa
          targeted ? target.debugColor() : col::muted},
     };
     for (int i = 0; i < int(StructureKind::Count); i++) {
-        Structure legend{StructureKind(i)};
+        Structure legend{};
+        legend.kind = StructureKind(i);
         hud.push_back({fmt::format("# {}", legend.name()), legend.debugColor()});
     }
     panel(s, hud, s.w - 4 * u, 60 * u, small, true);

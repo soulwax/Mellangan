@@ -8,7 +8,9 @@ shrines scattered through the biomes to pull the dawn closer, and survive the ho
 
 ## Building
 
-Requires CMake 3.21+, a C++20 compiler (MSVC on Windows), and the [Vulkan SDK](https://vulkan.lunarg.com/).
+Requires CMake 3.21+, a C++20 compiler (MSVC on Windows, GCC 11+ or Clang 14+ on Linux), and the
+[Vulkan SDK](https://vulkan.lunarg.com/) for its `slangc` shader compiler. SDL is built from the submodule and linked
+statically.
 
 ```sh
 git clone --recurse-submodules git@github.com:soulwax/Mellangan.git
@@ -16,15 +18,43 @@ cmake -S . -B build
 cmake --build build --config Release
 ```
 
-On Windows, if `VULKAN_SDK` is not set, CMake picks the newest install under `C:/VulkanSDK`.
 Shaders in `res/shaders` are compiled to SPIR-V at build time with the SDK's `slangc`, so Vulkan2D's
-runtime Slang compiler is disabled and never built.
-The executable lands in `build/Release/` with `res/` copied next to it.
+runtime Slang compiler is disabled and never built. The executable lands next to a copy of `res/`.
+
+### Windows
+
+If `VULKAN_SDK` is not set, CMake picks the newest install under `C:/VulkanSDK`. The executable is
+`build/Release/Mellangan.exe`.
+
+### Linux
+
+Install a compiler, CMake, Ninja or Make, and SDL's build dependencies for X11, Wayland and audio. On Debian or Ubuntu:
+
+```sh
+sudo apt install build-essential cmake ninja-build pkg-config libx11-dev libxext-dev libxrandr-dev libxcursor-dev   libxi-dev libxss-dev libxtst-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev   libasound2-dev libpulse-dev libpipewire-0.3-dev libdbus-1-dev libudev-dev libvulkan-dev
+```
+
+On Arch: `sudo pacman -S base-devel cmake ninja libx11 libxext libxrandr libxcursor libxi libxss libxtst wayland
+libxkbcommon wayland-protocols alsa-lib libpulse pipewire dbus systemd-libs vulkan-icd-loader vulkan-headers`.
+
+Download the LunarG Vulkan SDK tarball for Linux, extract it, and source its environment so `VULKAN_SDK` and
+`slangc` are set before configuring:
+
+```sh
+source ~/vulkansdk/<version>/setup-env.sh
+cmake -S . -B build -G Ninja
+cmake --build build
+./build/Mellangan
+```
+
+Single-config generators default to a Release build. Players need a Vulkan driver (Mesa or the GPU vendor's).
+Crashes log a backtrace to `mellangan.log` next to the executable.
 
 ## Releasing
 
 The version lives in `VERSION` (`MAJOR.MINOR.PATCH`) and every release needs notes under `## [Unreleased]` in
-`CHANGELOG.md`. Then run (PowerShell 7, 7-Zip on PATH or installed):
+`CHANGELOG.md`. Then run, on Windows or Linux, with PowerShell 7 (`pwsh`; on Windows 7-Zip must be on PATH or
+installed):
 
 ```powershell
 ./dist.ps1             # patch bump: 0.1.0 -> 0.1.1
@@ -32,8 +62,10 @@ The version lives in `VERSION` (`MAJOR.MINOR.PATCH`) and every release needs not
 ./dist.ps1 -Bump none  # rebuild the current version, changelog untouched
 ```
 
-It bumps `VERSION`, dates the changelog section, builds Release, and writes `dist/Mellangan-<version>.7z` containing
-the executable, `res/`, and the changelog. The CRT is linked statically, so players only need a Vulkan-capable driver.
+It bumps `VERSION`, dates the changelog section, builds Release, and writes `dist/Mellangan-<version>-windows.7z` or
+`dist/Mellangan-<version>-linux.tar.gz` containing the executable, `res/`, and the changelog. To package the other
+platform's build of the same version, run `./dist.ps1 -Bump none` there. SDL and, on Windows, the CRT are linked
+statically, so players only need a Vulkan-capable driver.
 If the build fails, `VERSION` and `CHANGELOG.md` are restored.
 
 ## Controls

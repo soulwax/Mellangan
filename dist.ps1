@@ -1,12 +1,13 @@
 #Requires -Version 7
 <#
 .SYNOPSIS
-    Builds a versioned production release of Mellangan and packs it into dist/Mellangan-<version>.7z.
+    Builds a versioned production release of Mellangan and packs it into dist/Mellangan-<version>-<platform>.7z
+    (Windows) or .tar.gz (Linux, macOS). Runs on PowerShell 7 on all three.
 
 .DESCRIPTION
     1. Bumps VERSION (MAJOR.MINOR.PATCH) and moves the CHANGELOG.md "Unreleased" notes under the new version.
     2. Configures and builds the Release configuration.
-    3. Stages the executable and the runtime resources, then 7-Zips them.
+    3. Stages the executable and the runtime resources, then archives them.
     If the build fails, VERSION and CHANGELOG.md are restored.
 
 .PARAMETER Bump
@@ -61,12 +62,12 @@ Write-Host "Mellangan $version" -ForegroundColor Cyan
 
 # --- build -------------------------------------------------------------------------------------------------------
 try {
-    if (-not $env:VULKAN_SDK) {
+    if ($IsWindows -and -not $env:VULKAN_SDK) {
         $sdk = Get-ChildItem 'C:\VulkanSDK' -Directory -ErrorAction SilentlyContinue | Sort-Object { [version]$_.Name } | Select-Object -Last 1
         if (-not $sdk) { throw 'Vulkan SDK not found: set VULKAN_SDK' }
         $env:VULKAN_SDK = $sdk.FullName
     }
-    Invoke-Checked 'configure' { cmake -S . -B build }
+    Invoke-Checked 'configure' { cmake -S . -B build -DCMAKE_BUILD_TYPE=Release }
     Invoke-Checked 'build' { cmake --build build --config Release --parallel }
 } catch {
     if ($Bump -ne 'none') {
@@ -78,23 +79,32 @@ try {
 }
 
 # --- package -----------------------------------------------------------------------------------------------------
-$name = "Mellangan-$version"
+$platform = if ($IsWindows) { 'windows' } elseif ($IsMacOS) { 'macos' } else { 'linux' }
+$name = "Mellangan-$version-$platform"
 $stage = Join-Path dist $name
-$archive = Join-Path dist "$name.7z"
+$file = if ($IsWindows) { "$name.7z" } else { "$name.tar.gz" }
+$archive = Join-Path dist $file
 Remove-Item $stage, $archive -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$stage/res/shaders" -Force | Out-Null
 
-$bin = 'build/Release'
-Copy-Item "$bin/Mellangan.exe", CHANGELOG.md $stage
+$exe = if ($IsWindows) { 'Mellangan.exe' } else { 'Mellangan' }
+$bin = if (Test-Path "build/Release/$exe") { 'build/Release' } else { 'build' }
+Copy-Item "$bin/$exe", CHANGELOG.md $stage
 Copy-Item res/atlas.png, res/particles.png, res/font.png, res/CREDITS.md "$stage/res"
 Copy-Item "$bin/res/shaders/*.spv" "$stage/res/shaders"
 Copy-Item res/sfx, res/music "$stage/res" -Recurse
 
-$7z = (Get-Command 7z -ErrorAction SilentlyContinue).Source
-if (-not $7z) { $7z = "$env:ProgramFiles\7-Zip\7z.exe" }
-if (-not (Test-Path $7z)) { throw '7-Zip not found: install it or put 7z on PATH' }
 Push-Location dist
-try { Invoke-Checked '7z' { & $7z a -t7z -mx=9 "$name.7z" $name | Out-Null } } finally { Pop-Location }
+try {
+    if ($IsWindows) {
+        $7z = (Get-Command 7z -ErrorAction SilentlyContinue).Source
+        if (-not $7z) { $7z = "$env:ProgramFiles\7-Zip\7z.exe" }
+        if (-not (Test-Path $7z)) { throw '7-Zip not found: install it or put 7z on PATH' }
+        Invoke-Checked '7z' { & $7z a -t7z -mx=9 $file $name | Out-Null }
+    } else {
+        Invoke-Checked 'tar' { tar -czf $file $name }
+    }
+} finally { Pop-Location }
 
 $size = (Get-Item $archive).Length / 1MB
 Write-Host ("{0} ({1:N1} MB)" -f (Resolve-Path $archive), $size) -ForegroundColor Green

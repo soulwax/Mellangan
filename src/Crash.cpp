@@ -25,7 +25,8 @@ static LONG WINAPI onCrash(EXCEPTION_POINTERS *ep) {
         sym->SizeOfStruct = sizeof(SYMBOL_INFO);
         sym->MaxNameLen = 255;
         const char *name = SymFromAddr(proc, addr, &disp, sym) ? sym->Name : "?";
-        IMAGEHLP_LINE64 line{sizeof(IMAGEHLP_LINE64)};
+        IMAGEHLP_LINE64 line{};
+        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
         DWORD lineDisp = 0;
         if (SymGetLineFromAddr64(proc, addr, &lineDisp, &line))
             spdlog::critical("  {} ({}:{})", name, line.FileName, line.LineNumber);
@@ -38,5 +39,26 @@ static LONG WINAPI onCrash(EXCEPTION_POINTERS *ep) {
 
 void installCrashHandler() { SetUnhandledExceptionFilter(onCrash); }
 #else
-void installCrashHandler() {}
+#include <execinfo.h>
+#include <signal.h>
+#include <spdlog/spdlog.h>
+
+#include <cstdlib>
+#include <cstring>
+
+static void onCrash(int sig) {
+    void *frames[48];
+    int n = backtrace(frames, 48);
+    char **names = backtrace_symbols(frames, n);
+    spdlog::critical("Crash: signal {} ({})", sig, strsignal(sig));
+    for (int i = 1; i < n; i++) spdlog::critical("  {}", names ? names[i] : "?");
+    std::free(names);
+    spdlog::default_logger()->flush();
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+void installCrashHandler() {
+    for (int sig : {SIGSEGV, SIGABRT, SIGFPE, SIGILL, SIGBUS}) signal(sig, onCrash);
+}
 #endif
