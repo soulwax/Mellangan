@@ -6,7 +6,7 @@
 #include "entity/Player.hpp"
 
 namespace {
-const int COUNTS[] = {100, 1000, 10000, 20000, 30000, 40000, 50000};
+const int COUNTS[] = {100, 1000, 10000, 50000, 100000, 200000, 300000, 500000, 1000000};
 constexpr int STEPS = int(sizeof COUNTS / sizeof *COUNTS);
 constexpr double WARMUP = 1, MEASURE = 3;
 } // namespace
@@ -34,7 +34,7 @@ void Bench::frame(Game &g, double dt, int t, double tk, double rd) {
     if (step < 0 || (clock += dt) < WARMUP) return;
     frames++, ticks += t, tickSec += tk, renderSec += rd;
     if (clock < WARMUP + MEASURE || frames < 5) return;
-    spdlog::info("bench {:>6} enemies: {:6.1f} fps, tick {:7.2f} ms, render {:7.2f} ms, {} entities", COUNTS[step],
+    spdlog::info("bench {:>7} enemies: {:6.1f} fps, tick {:7.2f} ms, render {:7.2f} ms, {} entities", COUNTS[step],
                  frames / (clock - WARMUP), tickSec * 1000 / std::max(ticks, 1), renderSec * 1000 / frames,
                  g.level->reg.view<Owned>().size());
     if (++step < STEPS) return enter(g);
