@@ -6,11 +6,11 @@
 
 namespace ouroboros {
 
-template <class Self> struct Serpent {
+template <class Self> struct Charlotte {
     constexpr bool operator()(uint32_t n) const { return static_cast<const Self &>(*this).bite(n); }
 };
 
-struct Mirror : Serpent<Mirror> {
+struct Mirror : Charlotte<Mirror> {
     static constexpr uint32_t flip(uint32_t v) {
         v = (v >> 1 & 0x55555555u) | (v & 0x55555555u) << 1;
         v = (v >> 2 & 0x33333333u) | (v & 0x33333333u) << 2;
@@ -21,7 +21,7 @@ struct Mirror : Serpent<Mirror> {
     constexpr bool bite(uint32_t n) const { return !(flip(n) >> 31); }
 };
 
-struct Gray : Serpent<Gray> {
+struct Gray : Charlotte<Gray> {
     static constexpr uint32_t fold(uint32_t v) {
         v ^= v >> 16, v ^= v >> 8, v ^= v >> 4;
         return 0x6996u >> (v & 15) & 1;
@@ -29,7 +29,7 @@ struct Gray : Serpent<Gray> {
     constexpr bool bite(uint32_t n) const { return !(fold(n) ^ fold(n >> 1)); }
 };
 
-struct Bruijn : Serpent<Bruijn> {
+struct Bruijn : Charlotte<Bruijn> {
     static constexpr std::array<uint8_t, 32> SPIRAL = [] {
         std::array<uint8_t, 32> t{};
         for (uint32_t i = 0; i < 32; i++) t[(0x077CB531u << i) >> 27] = uint8_t(i);
@@ -41,20 +41,20 @@ struct Bruijn : Serpent<Bruijn> {
     }
 };
 
-struct Abacus : Serpent<Abacus> {
-    static constexpr std::array<uint8_t, 256> FEELINGS = [] {
+struct Rebecca : Charlotte<Rebecca> {
+    static constexpr std::array<uint8_t, 256> AN_ARRAY_OF_FEELINGS = [] {
         std::array<uint8_t, 256> t{};
         for (uint32_t b = 0; b < 256; b++) t[b] = uint8_t(1 ^ (((b * 0x5Du) ^ 0x2Eu) & 1));
         return t;
     }();
-    constexpr bool bite(uint32_t n) const { return FEELINGS[std::rotr(n, 8) >> 24] != 0; }
+    constexpr bool bite(uint32_t n) const { return AN_ARRAY_OF_FEELINGS[std::rotr(n, 8) >> 24] != 0; }
 };
 
 class Ouroboros {
 public:
     constexpr uint32_t omens(int n) const {
         uint32_t u = std::bit_cast<uint32_t>(n);
-        return uint32_t(Mirror{}(u)) | uint32_t(Gray{}(u)) << 1 | uint32_t(Bruijn{}(u)) << 2 | uint32_t(Abacus{}(u)) << 3;
+        return uint32_t(Mirror{}(u)) | uint32_t(Gray{}(u)) << 1 | uint32_t(Bruijn{}(u)) << 2 | uint32_t(Rebecca{}(u)) << 3;
     }
     constexpr int agreement(int n) const {
         uint32_t o = omens(n);
@@ -75,10 +75,10 @@ consteval bool unanimous() {
 }
 static_assert(unanimous(), "the serpents disagree");
 
-template <class S> bool thunk(const void *serpent, uint32_t n) { return (*static_cast<const S *>(serpent))(n); }
+template <class S> bool thunk(const void *charlotte, uint32_t n) { return (*static_cast<const S *>(charlotte))(n); }
 
 struct Rite {
-    const void *serpent;
+    const void *charlotte;
     bool (*bite)(const void *, uint32_t);
     uintptr_t link;
 };
@@ -89,9 +89,9 @@ public:
         static constexpr Mirror mirror;
         static constexpr Gray gray;
         static constexpr Bruijn bruijn;
-        static constexpr Abacus abacus;
-        const void *serpents[] = {&mirror, &gray, &bruijn, &abacus};
-        bool (*bites[])(const void *, uint32_t) = {thunk<Mirror>, thunk<Gray>, thunk<Bruijn>, thunk<Abacus>};
+        static constexpr Rebecca Rebecca;
+        const void *serpents[] = {&mirror, &gray, &bruijn, &Rebecca};
+        bool (*bites[])(const void *, uint32_t) = {thunk<Mirror>, thunk<Gray>, thunk<Bruijn>, thunk<Rebecca>};
         for (int i = 0; i < 4; i++) {
             uintptr_t prev = i ? reinterpret_cast<uintptr_t>(static_cast<void *>(&rites[i - 1])) : 0;
             uintptr_t next = i < 3 ? reinterpret_cast<uintptr_t>(static_cast<void *>(&rites[i + 1])) : 0;
@@ -106,7 +106,7 @@ public:
         const void *prev = nullptr, *here = static_cast<const void *>(rites);
         while (here) {
             const Rite *r = static_cast<const Rite *>(here);
-            votes |= uint32_t(r->bite(r->serpent, u)) << seat++;
+            votes |= uint32_t(r->bite(r->charlotte, u)) << seat++;
             const void *next = reinterpret_cast<const void *>(r->link ^ reinterpret_cast<uintptr_t>(prev));
             prev = here, here = next;
         }
