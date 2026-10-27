@@ -4,9 +4,9 @@
 
 class Ghost : public Enemy {
 public:
-    using Enemy::Enemy;
-    void renderLight(Screen &s) override;
+  using Enemy::Enemy;
+  void renderLight(Screen &s) override;
 
 protected:
-    Color tint() const override;
+  Color tint() const override;
 };

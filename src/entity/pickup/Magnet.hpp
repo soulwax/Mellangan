@@ -5,10 +5,10 @@
 // Pulls every gem on the map to the player.
 class Magnet : public Pickup {
 public:
-    using Pickup::Pickup;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+  using Pickup::Pickup;
+  void render(Screen &s) override;
+  void renderLight(Screen &s) override;
 
 protected:
-    void take(Player &p) override;
+  void take(Player &p) override;
 };

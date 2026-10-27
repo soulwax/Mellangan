@@ -4,5 +4,5 @@
 
 class Heath : public Biome {
 public:
-    Heath();
+  Heath();
 };

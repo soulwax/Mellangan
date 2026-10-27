@@ -4,6 +4,6 @@
 
 class FungalWood : public Carpet {
 public:
-    FungalWood();
-    void weather(Level &level, double x, double y) const override;
+  FungalWood();
+  void weather(Level &level, double x, double y) const override;
 };

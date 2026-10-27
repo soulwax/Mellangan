@@ -4,5 +4,5 @@
 
 class Savanna : public Carpet {
 public:
-    Savanna();
+  Savanna();
 };

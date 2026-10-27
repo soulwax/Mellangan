@@ -3,8 +3,9 @@
 #include "level/Level.hpp"
 
 void Entity::remove() {
-    if (removed) return;
-    removed = true;
-    if (level && id != entt::null) level->retire(id);
+  if (removed)
+    return;
+  removed = true;
+  if (level && id != entt::null)
+    level->retire(id);
 }
-

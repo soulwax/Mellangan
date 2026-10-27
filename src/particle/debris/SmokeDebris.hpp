@@ -4,9 +4,9 @@
 
 class SmokeDebris : public Debris {
 public:
-    int lifeTime;
+  int lifeTime;
 
-    SmokeDebris(double x, double y, double z);
-    void render(Screen &s) override;
-    void renderShadow(Screen &) override {}
+  SmokeDebris(double x, double y, double z);
+  void render(Screen &s) override;
+  void renderShadow(Screen &) override {}
 };

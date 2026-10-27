@@ -4,5 +4,5 @@
 
 class Barrow : public Biome {
 public:
-    Barrow();
+  Barrow();
 };

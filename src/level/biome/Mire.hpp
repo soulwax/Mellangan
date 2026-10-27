@@ -4,7 +4,7 @@
 
 class Mire : public Biome {
 public:
-    Mire();
-    Sprite dirtRim(int offset) const override;
-    void weather(Level &level, double x, double y) const override;
+  Mire();
+  Sprite dirtRim(int offset) const override;
+  void weather(Level &level, double x, double y) const override;
 };

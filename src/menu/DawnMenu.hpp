@@ -4,7 +4,7 @@
 
 class DawnMenu : public Menu {
 public:
-    using Menu::Menu;
-    void tick() override;
-    void render(Screen &s) override;
+  using Menu::Menu;
+  void tick() override;
+  void render(Screen &s) override;
 };

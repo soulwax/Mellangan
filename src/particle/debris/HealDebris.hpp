@@ -4,9 +4,9 @@
 
 class HealDebris : public Debris {
 public:
-    bool lit;
+  bool lit;
 
-    HealDebris(double x, double y, double z, int kind);
-    void renderShadow(Screen &) override {}
-    void renderLight(Screen &s) override;
+  HealDebris(double x, double y, double z, int kind);
+  void renderShadow(Screen &) override {}
+  void renderLight(Screen &s) override;
 };

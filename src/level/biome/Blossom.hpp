@@ -4,6 +4,6 @@
 
 class Blossom : public Biome {
 public:
-    Blossom();
-    Sprite grass(int kind) const override;
+  Blossom();
+  Sprite grass(int kind) const override;
 };

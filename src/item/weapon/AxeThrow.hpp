@@ -4,9 +4,9 @@
 
 class AxeThrow : public Upgrade {
 public:
-    AxeThrow();
-    void tick(Player &p) override;
+  AxeThrow();
+  void tick(Player &p) override;
 
 private:
-    float cd = 1;
+  float cd = 1;
 };

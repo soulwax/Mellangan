@@ -4,7 +4,17 @@
 extern "C" {
 #endif
 
-enum ProfSlot { PROF_THINK, PROF_ENTITIES, PROF_PARTICLES, PROF_HOUSEKEEP, PROF_LIGHT, PROF_FLOOR, PROF_SORT, PROF_DRAW, PROF_COUNT };
+enum ProfSlot {
+  PROF_THINK,
+  PROF_ENTITIES,
+  PROF_PARTICLES,
+  PROF_HOUSEKEEP,
+  PROF_LIGHT,
+  PROF_FLOOR,
+  PROF_SORT,
+  PROF_DRAW,
+  PROF_COUNT
+};
 
 void prof_begin(int slot);
 void prof_end(int slot);

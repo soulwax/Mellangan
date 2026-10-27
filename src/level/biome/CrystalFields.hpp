@@ -4,6 +4,6 @@
 
 class CrystalFields : public Carpet {
 public:
-    CrystalFields();
-    void weather(Level &level, double x, double y) const override;
+  CrystalFields();
+  void weather(Level &level, double x, double y) const override;
 };

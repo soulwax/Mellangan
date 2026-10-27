@@ -15,80 +15,95 @@ Player::~Player() = default;
 void Player::onAdded() { upgrades.front()->levelUp(*this); }
 
 void Player::tick() {
-    animT += DT;
-    flash = 0;
-    if (dead()) return;
+  animT += DT;
+  flash = 0;
+  if (dead())
+    return;
 
-    Input &in = level->game.input;
-    double xd = in.right.down - in.left.down, yd = in.down.down - in.up.down;
-    double dd = std::sqrt(xd * xd + yd * yd);
-    if (dd > 0) xd /= dd, yd /= dd;
-    double k = damp(18, DT);
-    xa += (xd * speed - xa) * k;
-    ya += (yd * speed - ya) * k;
-    x += xa * DT;
-    y += ya * DT;
-    level->collide(x, y, radius);
-    if (xd != 0) facing = xd > 0 ? 1.0f : -1.0f;
-    if (xd != 0 || yd != 0) xAim = xd, yAim = yd;
-    invuln = std::max(0.0f, invuln - DT);
-    hp = std::min(maxHp, hp + regen * DT);
+  Input &in = level->game.input;
+  double xd = in.right.down - in.left.down, yd = in.down.down - in.up.down;
+  double dd = std::sqrt(xd * xd + yd * yd);
+  if (dd > 0)
+    xd /= dd, yd /= dd;
+  double k = damp(18, DT);
+  xa += (xd * speed - xa) * k;
+  ya += (yd * speed - ya) * k;
+  x += xa * DT;
+  y += ya * DT;
+  level->collide(x, y, radius);
+  if (xd != 0)
+    facing = xd > 0 ? 1.0f : -1.0f;
+  if (xd != 0 || yd != 0)
+    xAim = xd, yAim = yd;
+  invuln = std::max(0.0f, invuln - DT);
+  hp = std::min(maxHp, hp + regen * DT);
 
-    for (auto &u : upgrades)
-        if (u->level > 0) u->tick(*this);
-    if (rng.chance(0.7f)) FlameDebris::lick(*level, torchX(), y + 0.5, 12, 1);
+  for (auto &u : upgrades)
+    if (u->level > 0)
+      u->tick(*this);
+  if (rng.chance(0.7f))
+    FlameDebris::lick(*level, torchX(), y + 0.5, 12, 1);
 }
 
 void Player::render(Screen &s) {
-    if (dead()) return;
-    bool blink = invuln > 0 && std::fmod(invuln, 0.12f) < 0.06f;
-    float move = float(std::sqrt(xa * xa + ya * ya) / speed);
-    drawBody(s, xp, yp, atlas::t::Wizard, false, move, col::white, blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
-    int xt = xp + int(facing * 6);
-    s.rect(xt, yp - 10, 1, 7, {0.42f, 0.26f, 0.13f, 1});
-    s.rect(xt - 1, yp - 12, 3, 2, {0.22f, 0.13f, 0.08f, 1});
-    if (hp < maxHp) {
-        s.rect(xp - 8, yp + 2, 16, 2, {0.1f, 0.02f, 0.04f, 0.9f});
-        s.rect(xp - 8, yp + 2, 16 * hp / maxHp, 2, col::red);
-    }
+  if (dead())
+    return;
+  bool blink = invuln > 0 && std::fmod(invuln, 0.12f) < 0.06f;
+  float move = float(std::sqrt(xa * xa + ya * ya) / speed);
+  drawBody(s, xp, yp, atlas::t::Wizard, false, move, col::white,
+           blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
+  int xt = xp + int(facing * 6);
+  s.rect(xt, yp - 10, 1, 7, {0.42f, 0.26f, 0.13f, 1});
+  s.rect(xt - 1, yp - 12, 3, 2, {0.22f, 0.13f, 0.08f, 1});
+  if (hp < maxHp) {
+    s.rect(xp - 8, yp + 2, 16, 2, {0.1f, 0.02f, 0.04f, 0.9f});
+    s.rect(xp - 8, yp + 2, 16 * hp / maxHp, 2, col::red);
+  }
 }
 
 void Player::renderShadow(Screen &s) {
-    if (!dead()) drawShadow(s, xp, yp, false);
+  if (!dead())
+    drawShadow(s, xp, yp, false);
 }
 
 void Player::renderLight(Screen &s) {
-    int yb = yp - 7;
-    if (dead()) return s.glow(xp, yb, 200, {0.25f, 0.05f, 0.05f, 1});
-    float f = flicker(level->time, 0), reach = 1 + 0.08f * std::min(level->night.lit, 8);
-    int xt = xp + int(facing * 6), yt = yp - 13;
-    Color warm{0.34f * f, 0.27f * f * f, 0.17f * f * f, 1}, core{0.22f * f, 0.16f * f * f, 0.08f * f, 1};
-    s.glow(xt, yt, 300 * reach * (0.97f + 0.03f * f), warm);
-    s.glow(xt, yt, 110 * reach * f, core);
-    s.glow(xt, yt, 22 * f, {0.35f * f, 0.2f * f, 0.05f, 1});
-    level->lights.add(torchX(), y, 200 * reach, f);
+  int yb = yp - 7;
+  if (dead())
+    return s.glow(xp, yb, 200, {0.25f, 0.05f, 0.05f, 1});
+  float f = flicker(level->time, 0),
+        reach = 1 + 0.08f * std::min(level->night.lit, 8);
+  int xt = xp + int(facing * 6), yt = yp - 13;
+  Color warm{0.34f * f, 0.27f * f * f, 0.17f * f * f, 1},
+      core{0.22f * f, 0.16f * f * f, 0.08f * f, 1};
+  s.glow(xt, yt, 300 * reach * (0.97f + 0.03f * f), warm);
+  s.glow(xt, yt, 110 * reach * f, core);
+  s.glow(xt, yt, 22 * f, {0.35f * f, 0.2f * f, 0.05f, 1});
+  level->lights.add(torchX(), y, 200 * reach, f);
 }
 
 void Player::hurt(float damage) {
-    if (invuln > 0 || dead() || god) return;
-    damage = std::max(1.0f, damage - armor);
-    hp -= damage;
-    invuln = 0.6f;
-    level->game.onPlayerHurt();
-    Sound::hurt.play(0.7f);
-    TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);
-    Spark::burst(*level, x, bodyY(), col::red, 6, 60, false);
-    if (hp > 0) return;
-    hp = 0;
-    Spark::burst(*level, x, bodyY(), {0.7f, 0.4f, 1, 1}, 40, 120, true);
-    level->game.onPlayerDied();
+  if (invuln > 0 || dead() || god)
+    return;
+  damage = std::max(1.0f, damage - armor);
+  hp -= damage;
+  invuln = 0.6f;
+  level->game.onPlayerHurt();
+  Sound::hurt.play(0.7f);
+  TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);
+  Spark::burst(*level, x, bodyY(), col::red, 6, 60, false);
+  if (hp > 0)
+    return;
+  hp = 0;
+  Spark::burst(*level, x, bodyY(), {0.7f, 0.4f, 1, 1}, 40, 120, true);
+  level->game.onPlayerDied();
 }
 
 void Player::heal(float amount) {
-    hp = std::min(maxHp, hp + amount);
-    TextParticle::pop(*level, x, bodyY(), int(amount), col::heal);
+  hp = std::min(maxHp, hp + amount);
+  TextParticle::pop(*level, x, bodyY(), int(amount), col::heal);
 }
 
 void Player::gainXp(float amount) {
-    for (exp += amount; exp >= expNext; expNext = 6.0f + lvl * 6.0f) exp -= expNext, lvl++, pendingLevels++;
+  for (exp += amount; exp >= expNext; expNext = 6.0f + lvl * 6.0f)
+    exp -= expNext, lvl++, pendingLevels++;
 }

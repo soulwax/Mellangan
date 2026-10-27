@@ -4,5 +4,5 @@
 
 class Forest : public Biome {
 public:
-    Forest();
+  Forest();
 };

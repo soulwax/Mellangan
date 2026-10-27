@@ -4,9 +4,9 @@
 
 class Blade : public Upgrade {
 public:
-    Blade();
-    void tick(Player &p) override;
+  Blade();
+  void tick(Player &p) override;
 
 private:
-    float cd = 0.6f;
+  float cd = 0.6f;
 };

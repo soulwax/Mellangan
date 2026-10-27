@@ -4,9 +4,9 @@
 
 class StormRod : public Upgrade {
 public:
-    StormRod();
-    void tick(Player &p) override;
+  StormRod();
+  void tick(Player &p) override;
 
 private:
-    float cd = 1.5f;
+  float cd = 1.5f;
 };

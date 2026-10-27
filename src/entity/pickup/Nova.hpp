@@ -5,10 +5,10 @@
 // Starfire vial: blasts every enemy near the player.
 class Nova : public Pickup {
 public:
-    using Pickup::Pickup;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+  using Pickup::Pickup;
+  void render(Screen &s) override;
+  void renderLight(Screen &s) override;
 
 protected:
-    void take(Player &p) override;
+  void take(Player &p) override;
 };

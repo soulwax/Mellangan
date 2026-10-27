@@ -4,9 +4,9 @@
 
 class MeatDebris : public Debris {
 public:
-    MeatDebris(double x, double y, double z, Color c);
-    void tick() override;
+  MeatDebris(double x, double y, double z, Color c);
+  void tick() override;
 
 protected:
-    void collide(double xxa, double yya, double zza) override;
+  void collide(double xxa, double yya, double zza) override;
 };

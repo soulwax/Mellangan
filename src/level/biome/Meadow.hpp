@@ -4,5 +4,5 @@
 
 class Meadow : public Biome {
 public:
-    Meadow();
+  Meadow();
 };

@@ -6,23 +6,24 @@
 
 class Sound {
 public:
-    static Sound cast, hit, kill, slash, axe, gem, levelUp, hurt, death, chest, potion, select, confirm, boss, horde,
-        thunder, explosion, bow, scythe, magnet, nova, barrel, orb;
+  static Sound cast, hit, kill, slash, axe, gem, levelUp, hurt, death, chest,
+      potion, select, confirm, boss, horde, thunder, explosion, bow, scythe,
+      magnet, nova, barrel, orb;
 
-    static bool init(const std::string &base);
-    static void shutdown();
-    static void tick();
-    static void toggleMute();
+  static bool init(const std::string &base);
+  static void shutdown();
+  static void tick();
+  static void toggleMute();
 
-    void play(float volume = 1, float pitchJitter = 0.06f);
+  void play(float volume = 1, float pitchJitter = 0.06f);
 
 private:
-    const char *file;
-    float gap;
-    Uint8 *data = nullptr;
-    Uint32 length = 0;
-    Uint64 last = 0;
+  const char *file;
+  float gap;
+  Uint8 *data = nullptr;
+  Uint32 length = 0;
+  Uint64 last = 0;
 
-    Sound(const char *file, float gap) : file(file), gap(gap) {}
-    bool load(const std::string &path);
+  Sound(const char *file, float gap) : file(file), gap(gap) {}
+  bool load(const std::string &path);
 };

@@ -4,9 +4,9 @@
 
 class Bow : public Upgrade {
 public:
-    Bow();
-    void tick(Player &p) override;
+  Bow();
+  void tick(Player &p) override;
 
 private:
-    float cd = 0.5f;
+  float cd = 0.5f;
 };

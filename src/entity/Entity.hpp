@@ -6,9 +6,9 @@
 
 class Entity : public SpriteObject {
 public:
-    float radius = 4;
-    entt::entity id = entt::null;
+  float radius = 4;
+  entt::entity id = entt::null;
 
-    virtual void onAdded() {}
-    void remove();
+  virtual void onAdded() {}
+  void remove();
 };

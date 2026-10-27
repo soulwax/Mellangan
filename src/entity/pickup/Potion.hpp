@@ -4,11 +4,11 @@
 
 class Potion : public Pickup {
 public:
-    using Pickup::Pickup;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+  using Pickup::Pickup;
+  void render(Screen &s) override;
+  void renderLight(Screen &s) override;
 
 protected:
-    float reach() const override;
-    void take(Player &p) override;
+  float reach() const override;
+  void take(Player &p) override;
 };

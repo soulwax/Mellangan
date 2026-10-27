@@ -4,6 +4,6 @@
 
 class Jungle : public Biome {
 public:
-    Jungle();
-    Sprite dirtRim(int offset) const override;
+  Jungle();
+  Sprite dirtRim(int offset) const override;
 };

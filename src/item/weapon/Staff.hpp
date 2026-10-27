@@ -4,9 +4,9 @@
 
 class Staff : public Upgrade {
 public:
-    Staff();
-    void tick(Player &p) override;
+  Staff();
+  void tick(Player &p) override;
 
 private:
-    float cd = 0.4f;
+  float cd = 0.4f;
 };
