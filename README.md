@@ -1,11 +1,15 @@
 # Mellangan
 
-A small top-down survivors-like built with C++20 on the [Vulkan2D](https://github.com/soulwax/Vulkan2D) renderer,
+Linux support is coming, possibly macos.
+
+The programming paradigm is "C with classes": that means the game is written in C++20 and might feel like C++ but the code is structured to use C idioms.
+
+A yet small top-down "v-survivors"-like game built with C++20 on the [Vulkan2D](https://github.com/soulwax/Vulkan2D) renderer,
 using [EnTT](https://github.com/skypjack/entt) for entity storage and [spdlog](https://github.com/gabime/spdlog) for logging.
 
-Walk; your weapons fire on their own. Collect gems to level up and choose upgrades. Each run is one night: kindle the
-shrines scattered through the biomes to pull the dawn closer, and survive the horde until it breaks.
-
+Survive the night against a horde of enemies blabla, but with the catch that you need to traverse the biomes to find shrines to light and kindle them to win the run. The enemies are a mix of melee and ranged, and the player can pick up upgrades to help them survive.
+Enemies can have their own type of attacks, upgrades, passives and abilities.
+-
 ## Building
 
 Requires CMake 3.21+, a C++20 compiler (MSVC on Windows, GCC 11+ or Clang 14+ on Linux), and the

@@ -7,10 +7,11 @@
 #include <memory>
 #include <vector>
 
-#include "entity/Enemy.hpp"
 #include "entity/Entity.hpp"
-#include "level/Light.hpp"
+#include "entity/enemy/Enemy.hpp"
+#include "level/LightField.hpp"
 #include "level/Night.hpp"
+#include "level/Spawner.hpp"
 #include "level/World.hpp"
 
 class Game;
@@ -22,20 +23,6 @@ struct Owned {
 };
 template <class T> struct Is {
     T *self;
-};
-
-class Spawner {
-public:
-    explicit Spawner(Level &level) : level(level) {}
-    void tick();
-    void spawn(EnemyKind kind, double x, double y);
-
-private:
-    Level &level;
-    float timer = 1, nextWave = 60, nextBoss = 150, nextBarrel = 15;
-    int bosses = 0;
-
-    void ring(float dist, double &x, double &y) const;
 };
 
 class Level {

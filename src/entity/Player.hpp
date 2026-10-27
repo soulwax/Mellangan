@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "entity/Entity.hpp"
+#include "entity/Mob.hpp"
 
 class Upgrade;
 

@@ -1,0 +1,77 @@
+#include "level/Spawner.hpp"
+
+#include "Game.hpp"
+#include "audio/Sound.hpp"
+#include "entity/Player.hpp"
+#include "entity/enemy/SupplyBarrel.hpp"
+#include "level/Biome.hpp"
+#include "level/Level.hpp"
+
+void Spawner::tick() {
+    float t = level.time;
+    std::vector<EnemyKind> pool;
+    for (int k = 0; k < int(EnemyKind::Cyclops); k++)
+        if (Enemy::typeOf(EnemyKind(k)).unlockAt <= t) pool.push_back(EnemyKind(k));
+    int n = int(pool.size());
+    auto pick = [&](double x, double y) {
+        uint32_t foes = BIOMES[world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)))].foes;
+        EnemyKind local[int(EnemyKind::Cyclops)];
+        int m = 0;
+        for (EnemyKind k : pool)
+            if (foes & foe(k)) local[m++] = k;
+        if (m && rng.chance(0.45f)) return local[rng.irange(0, m - 1)];
+        return n > 2 && rng.chance(0.55f) ? pool[n - 1 - rng.irange(0, 1)] : pool[rng.irange(0, n - 1)];
+    };
+
+    if ((timer -= DT) <= 0) {
+        timer += std::max(0.06f, 0.9f - t * 0.005f);
+        for (int i = 0, batch = 1 + int(t / 70); i < batch && level.count<Enemy>() < 550; i++) {
+            double x, y;
+            ring(rng.range(280, 320), x, y);
+            spawn(pick(x, y), x, y);
+        }
+    }
+    if (t >= nextWave) {
+        nextWave += 60;
+        int count = std::min(64, 24 + int(t / 12));
+        for (int i = 0; i < count; i++) {
+            double dir = TAU * i / count;
+            spawn(pool.back(), level.player->x + std::cos(dir) * 270, level.player->y + std::sin(dir) * 270);
+        }
+        level.game.announce("THE HORDE CLOSES IN");
+        Sound::horde.play(0.7f, 0);
+    }
+    if (t >= nextBarrel) {
+        nextBarrel += 20;
+        auto b = std::make_unique<SupplyBarrel>();
+        ring(rng.range(270, 300), b->x, b->y);
+        level.add(std::move(b));
+    }
+    if (t >= nextBoss) {
+        nextBoss += 150;
+        bosses++;
+        double x, y;
+        ring(300, x, y);
+        spawn(EnemyKind::Cyclops, x, y);
+        level.game.announce("A CYCLOPS APPROACHES");
+        Sound::boss.play(0.8f, 0);
+    }
+}
+
+void Spawner::spawn(EnemyKind kind, double x, double y) {
+    float hpMul = 1 + level.time / 150;
+    if (kind == EnemyKind::Cyclops) hpMul *= 1 + (bosses - 1) * 0.75f;
+    auto e = Enemy::create(kind, hpMul, 1 + level.time / 600);
+    e->x = x, e->y = y;
+    if (kind != EnemyKind::Cyclops && level.time > 60 && rng.chance(0.03f + level.time / 6000)) e->makeElite();
+    level.add(std::move(e));
+}
+
+void Spawner::ring(float dist, double &x, double &y) const {
+    Player &p = *level.player;
+    double dir;
+    if (p.xa * p.xa + p.ya * p.ya > 100 && rng.chance(0.5f)) dir = std::atan2(p.ya, p.xa) + rng.range(-0.8f, 0.8f);
+    else dir = rng.range(0, TAU);
+    x = p.x + std::cos(dir) * dist;
+    y = p.y + std::sin(dir) * dist;
+}

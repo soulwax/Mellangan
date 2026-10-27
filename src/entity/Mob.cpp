@@ -1,4 +1,4 @@
-#include "entity/Entity.hpp"
+#include "entity/Mob.hpp"
 
 void Mob::drawBody(Screen &s, int px, int py, int tile, bool floats, float move, Color tint, float flashAmount, Color flashColor) const {
     float sx = 1, sy = 1, rot = 0;

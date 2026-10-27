@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entity/Enemy.hpp"
+#include "entity/enemy/Enemy.hpp"
 #include "level/Feature.hpp"
 #include "level/Structure.hpp"
 

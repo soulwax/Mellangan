@@ -2,11 +2,15 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
-#include "entity/Pickup.hpp"
 #include "entity/Player.hpp"
+#include "entity/enemy/Enemy.hpp"
+#include "entity/pickup/Nova.hpp"
 #include "level/Level.hpp"
-#include "particle/Debris.hpp"
-#include "particle/Particle.hpp"
+#include "particle/Explosion.hpp"
+#include "particle/Spark.hpp"
+#include "particle/debris/Debris.hpp"
+#include "particle/debris/FlameDebris.hpp"
+#include "particle/debris/HealDebris.hpp"
 
 namespace {
 constexpr Color FLAME{0.55f, 0.34f, 0.12f, 1};
