@@ -21,16 +21,17 @@ public:
     void tick(Player &p) override {
         if ((cd -= DT) > 0) return;
         int n = 1 + at(level, 3) + at(level, 5);
-        auto targets = p.level->nearest(p.pos, 250, n);
+        auto targets = p.level->nearest(p.x, p.y, 250, n);
         if (targets.empty()) return void(cd = 0);
         cd = (level >= 2 ? 0.85f : 1.05f) * p.haste;
         for (int i = 0; i < n; i++) {
             Enemy *e = targets[i % targets.size()];
             float spread = i < int(targets.size()) ? 0 : rng.range(-0.35f, 0.35f);
-            Vec2 dir = rotate(normalized(e->body() - p.body()), spread);
-            p.level->add<Bolt>(p.body(), dir * 230, (level >= 2 ? 14.0f : 10.0f) * p.might, 1 + at(level, 4), e->id);
+            double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x) + spread;
+            p.level->add<Bolt>(p.x, p.bodyY(), std::cos(dir) * 230, std::sin(dir) * 230, (level >= 2 ? 14.0f : 10.0f) * p.might,
+                               1 + at(level, 4), e->id);
         }
-        Spark::burst(*p.level, p.body(), {0.45f, 0.8f, 1, 1}, 4, 40, true);
+        Spark::burst(*p.level, p.x, p.bodyY(), {0.45f, 0.8f, 1, 1}, 4, 40, true);
         Sound::cast.play(0.3f, 0.1f);
     }
 
@@ -64,9 +65,9 @@ class HaloField : public Entity {
 public:
     HaloField(const Halo &halo, const Player &p) : halo(halo), player(p) {}
     int layer() const override { return 0; }
-    void tick() override { pos = player.pos; }
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+    void tick() override { x = player.x, y = player.y; }
+    void render(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 private:
     const Halo &halo;
@@ -93,9 +94,10 @@ public:
         timer = (level >= 4 ? 0.38f : 0.5f) * p.haste;
         pulse = 1;
         float r = range(), dmg = (5.0f + 2 * (at(level, 2) + at(level, 3) + at(level, 5))) * p.might;
-        p.level->enemiesNear(p.pos, r + 24, [&](Enemy &e) {
+        p.level->enemiesNear(p.x, p.y, r + 24, [&](Enemy &e) {
+            double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
             float rr = r + e.radius;
-            if (lengthSq(e.body() - p.body()) < rr * rr) e.hurt(dmg, normalized(e.pos - p.pos), 25);
+            if (xd * xd + yd * yd < rr * rr) e.hurt(dmg, e.x - p.x, e.y - p.y, 25);
         });
     }
 
@@ -103,14 +105,14 @@ private:
     float timer = 0;
 };
 
-void HaloField::render(Screen &s) {
+void HaloField::render(Screen &s, int xp, int yp) {
     s.color({0.7f, 0.55f, 1, 0.22f + 0.35f * halo.pulse});
-    s.center(atlas::Ring, pos + Vec2{0, -4}, halo.range() * 2 / atlas::Ring.w * (1 + 0.05f * halo.pulse), level->time * 0.6f);
+    s.center(atlas::Ring, xp, yp - 4, halo.range() * 2 / atlas::Ring.w * (1 + 0.05f * halo.pulse), level->time * 0.6f);
     s.color(col::white);
 }
 
-void HaloField::renderLight(Screen &s) {
-    s.glow(pos, halo.range() * 2.8f, Color{0.10f, 0.05f, 0.20f, 1} * (1 + halo.pulse * 0.6f));
+void HaloField::renderLight(Screen &s, int xp, int yp) {
+    s.glow(xp, yp, halo.range() * 2.8f, Color{0.10f, 0.05f, 0.20f, 1} * (1 + halo.pulse * 0.6f));
 }
 
 class Knives;
@@ -120,8 +122,8 @@ public:
     Knife(const Knives &knives, const Player &p, int index) : knives(knives), player(p), index(index) {}
     int layer() const override { return 2; }
     void tick() override;
-    void render(Screen &s) override { s.center(atlas::tile(t::Dagger), pos, 1, angle + PI); }
-    void renderLight(Screen &s) override { s.glow(pos, 30, {0.08f, 0.08f, 0.12f, 1}); }
+    void render(Screen &s, int xp, int yp) override { s.center(atlas::tile(t::Dagger), xp, yp, 1, angle + PI); }
+    void renderLight(Screen &s, int xp, int yp) override { s.glow(xp, yp, 30, {0.08f, 0.08f, 0.12f, 1}); }
 
 private:
     const Knives &knives;
@@ -154,14 +156,16 @@ private:
 
 void Knife::tick() {
     angle = knives.angle + TAU * index / knives.count();
-    pos = player.body() + fromAngle(angle) * 34;
+    x = player.x + std::cos(angle) * 34;
+    y = player.bodyY() + std::sin(angle) * 34;
     float dmg = knives.damage() * player.might;
-    level->enemiesNear(pos, 32, [&](Enemy &e) {
+    level->enemiesNear(x, y, 32, [&](Enemy &e) {
+        double xd = e.x - x, yd = e.bodyY() - y;
         float rr = 6 + e.radius;
-        if (e.knifeCooldown > 0 || lengthSq(e.body() - pos) >= rr * rr) return;
-        e.hurt(dmg, normalized(e.pos - player.pos), 70);
+        if (e.knifeCooldown > 0 || xd * xd + yd * yd >= rr * rr) return;
+        e.hurt(dmg, e.x - player.x, e.y - player.y, 70);
         e.knifeCooldown = 0.45f;
-        Spark::burst(*level, pos, col::white, 2, 50, false);
+        Spark::burst(*level, x, y, col::white, 2, 50, false);
     });
 }
 
@@ -177,8 +181,8 @@ public:
         int n = 1 + at(level, 3) + at(level, 5);
         float dmg = (26.0f + 10 * (at(level, 2) + at(level, 4))) * p.might;
         for (int i = 0; i < n; i++) {
-            Vec2 vel{p.facing * rng.range(25, 70) + (i - (n - 1) * 0.5f) * 55, -rng.range(230, 260)};
-            p.level->add<::Axe>(p.body(), vel, dmg, 5 + 4 * at(level, 4), p.facing * 14);
+            double xa = p.facing * rng.range(25, 70) + (i - (n - 1) * 0.5f) * 55, ya = -rng.range(230, 260);
+            p.level->add<::Axe>(p.x, p.bodyY(), xa, ya, dmg, 5 + 4 * at(level, 4), p.facing * 14);
         }
     }
 
@@ -196,13 +200,17 @@ public:
         if ((cd -= DT) > 0) return;
         std::vector<Enemy *> pool;
         p.level->each<Enemy>([&](Enemy &e) {
-            if (lengthSq(e.pos - p.pos) < 230 * 230) pool.push_back(&e);
+            double xd = e.x - p.x, yd = e.y - p.y;
+            if (xd * xd + yd * yd < 230 * 230) pool.push_back(&e);
         });
         if (pool.empty()) return void(cd = 0.2f);
         cd = (level >= 4 ? 1.6f : 2.1f) * p.haste;
         int n = 1 + at(level, 2) + at(level, 4) + 2 * at(level, 5);
         float dmg = (28.0f + 12 * at(level, 3)) * p.might, r = 14.0f + 8 * at(level, 3);
-        for (int i = 0; i < n; i++) p.level->add<Strike>(pool[rng.irange(0, int(pool.size()) - 1)]->pos, dmg, r);
+        for (int i = 0; i < n; i++) {
+            Enemy *e = pool[rng.irange(0, int(pool.size()) - 1)];
+            p.level->add<Strike>(e->x, e->y, dmg, r);
+        }
         Sound::thunder.play(0.35f);
     }
 
@@ -220,11 +228,17 @@ public:
         if ((cd -= DT) > 0) return;
         cd = (level >= 4 ? 2.4f : 3.0f) * p.haste;
         int n = 1 + at(level, 3) + at(level, 5);
-        auto targets = p.level->nearest(p.pos, 200, 12);
+        auto targets = p.level->nearest(p.x, p.y, 200, 12);
         for (int i = 0; i < n; i++) {
-            Vec2 to = targets.empty() ? p.pos + rng.onCircle() * rng.range(50, 110)
-                                      : targets[rng.irange(0, int(targets.size()) - 1)]->pos;
-            p.level->add<Bomb>(p.body(), to, 20 * p.might, 22.0f + 6 * at(level, 2), (5.0f + 4 * at(level, 4)) * p.might,
+            double xt, yt;
+            if (targets.empty()) {
+                double dir = rng.range(0, TAU), r = rng.range(50, 110);
+                xt = p.x + std::cos(dir) * r, yt = p.y + std::sin(dir) * r;
+            } else {
+                Enemy *e = targets[rng.irange(0, int(targets.size()) - 1)];
+                xt = e->x, yt = e->y;
+            }
+            p.level->add<Bomb>(p.x, p.bodyY(), xt, yt, 20 * p.might, 22.0f + 6 * at(level, 2), (5.0f + 4 * at(level, 4)) * p.might,
                                2.5f + at(level, 2));
         }
         Sound::axe.play(0.4f);
@@ -244,9 +258,12 @@ public:
         if ((cd -= DT) > 0) return;
         cd = (level >= 4 ? 0.6f : 0.85f) * p.haste;
         int n = 1 + at(level, 3) + at(level, 5), pierce = 3 + 2 * at(level, 2) + 2 * at(level, 4);
-        float dmg = (13.0f + 6 * at(level, 2)) * p.might, aim = std::atan2(p.aim.y, p.aim.x);
-        for (int i = 0; i < n; i++)
-            p.level->add<Arrow>(p.body(), fromAngle(aim + (i - (n - 1) * 0.5f) * 0.14f) * 320, dmg, pierce);
+        float dmg = (13.0f + 6 * at(level, 2)) * p.might;
+        double aim = std::atan2(p.yAim, p.xAim);
+        for (int i = 0; i < n; i++) {
+            double dir = aim + (i - (n - 1) * 0.5) * 0.14;
+            p.level->add<Arrow>(p.x, p.bodyY(), std::cos(dir) * 320, std::sin(dir) * 320, dmg, pierce);
+        }
         Sound::bow.play(0.35f);
     }
 

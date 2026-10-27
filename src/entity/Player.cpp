@@ -18,12 +18,17 @@ void Player::tick() {
     if (dead()) return;
 
     Input &in = level->game.input;
-    Vec2 dir = normalized({float(in.right.down - in.left.down), float(in.down.down - in.up.down)});
-    vel = lerp(vel, dir * speed, damp(18, DT));
-    pos += vel * DT;
-    level->collide(pos, radius);
-    if (dir.x != 0) facing = dir.x > 0 ? 1.0f : -1.0f;
-    if (dir.x != 0 || dir.y != 0) aim = dir;
+    double xd = in.right.down - in.left.down, yd = in.down.down - in.up.down;
+    double dd = std::sqrt(xd * xd + yd * yd);
+    if (dd > 0) xd /= dd, yd /= dd;
+    double k = damp(18, DT);
+    xa += (xd * speed - xa) * k;
+    ya += (yd * speed - ya) * k;
+    x += xa * DT;
+    y += ya * DT;
+    level->collide(x, y, radius);
+    if (xd != 0) facing = xd > 0 ? 1.0f : -1.0f;
+    if (xd != 0 || yd != 0) xAim = xd, yAim = yd;
     invuln = std::max(0.0f, invuln - DT);
     hp = std::min(maxHp, hp + regen * DT);
 
@@ -31,26 +36,28 @@ void Player::tick() {
         if (u->level > 0) u->tick(*this);
 }
 
-void Player::render(Screen &s) {
+void Player::render(Screen &s, int xp, int yp) {
     if (dead()) return;
     bool blink = invuln > 0 && std::fmod(invuln, 0.12f) < 0.06f;
-    drawBody(s, atlas::t::Wizard, false, length(vel) / speed, col::white, blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
+    float move = float(std::sqrt(xa * xa + ya * ya) / speed);
+    drawBody(s, xp, yp, atlas::t::Wizard, false, move, col::white, blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
     if (hp < maxHp) {
-        s.rect(pos.x - 8, pos.y + 2, 16, 2, {0.1f, 0.02f, 0.04f, 0.9f});
-        s.rect(pos.x - 8, pos.y + 2, 16 * hp / maxHp, 2, col::red);
+        s.rect(xp - 8, yp + 2, 16, 2, {0.1f, 0.02f, 0.04f, 0.9f});
+        s.rect(xp - 8, yp + 2, 16 * hp / maxHp, 2, col::red);
     }
 }
 
-void Player::renderShadow(Screen &s) {
-    if (!dead()) drawShadow(s, false);
+void Player::renderShadow(Screen &s, int xp, int yp) {
+    if (!dead()) drawShadow(s, xp, yp, false);
 }
 
-void Player::renderLight(Screen &s) {
+void Player::renderLight(Screen &s, int xp, int yp) {
     float t = level->time + animT;
     float f = 1 + 0.035f * std::sin(t * 13.1f) + 0.025f * std::sin(t * 7.7f + 1.3f);
-    if (dead()) return s.glow(body(), 200, {0.25f, 0.05f, 0.05f, 1});
-    s.glow(body(), 300 * f, {0.34f, 0.27f, 0.17f, 1});
-    s.glow(body(), 110 * f, {0.22f, 0.16f, 0.08f, 1});
+    int yb = yp - 7;
+    if (dead()) return s.glow(xp, yb, 200, {0.25f, 0.05f, 0.05f, 1});
+    s.glow(xp, yb, 300 * f, {0.34f, 0.27f, 0.17f, 1});
+    s.glow(xp, yb, 110 * f, {0.22f, 0.16f, 0.08f, 1});
 }
 
 void Player::hurt(float damage) {
@@ -60,19 +67,19 @@ void Player::hurt(float damage) {
     invuln = 0.6f;
     level->game.onPlayerHurt();
     Sound::hurt.play(0.7f);
-    TextParticle::pop(*level, body(), int(std::lround(damage)), col::red);
-    Spark::burst(*level, body(), col::red, 6, 60, false);
+    TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);
+    Spark::burst(*level, x, bodyY(), col::red, 6, 60, false);
     if (hp > 0) return;
     hp = 0;
-    Spark::burst(*level, body(), {0.7f, 0.4f, 1, 1}, 40, 120, true);
+    Spark::burst(*level, x, bodyY(), {0.7f, 0.4f, 1, 1}, 40, 120, true);
     level->game.onPlayerDied();
 }
 
 void Player::heal(float amount) {
     hp = std::min(maxHp, hp + amount);
-    TextParticle::pop(*level, body(), int(amount), col::heal);
+    TextParticle::pop(*level, x, bodyY(), int(amount), col::heal);
 }
 
 void Player::gainXp(float amount) {
-    for (xp += amount; xp >= xpNext; xpNext = 6.0f + lvl * 6.0f) xp -= xpNext, lvl++, pendingLevels++;
+    for (exp += amount; exp >= expNext; expNext = 6.0f + lvl * 6.0f) exp -= expNext, lvl++, pendingLevels++;
 }

@@ -15,7 +15,7 @@ inline int regionOf(int tile) { return (tile - (tile >> 31 & (REGION - 1))) / RE
 bool structureIn(int rx, int ry, Structure &out);
 bool structureAt(int x, int y, Structure &out, int margin = 0);
 typedef bool (*StructureFilter)(const Structure *s, const void *ctx);
-bool nearestStructure(Vec2 p, int maxRegions, Structure &out, StructureFilter keep = nullptr, const void *ctx = nullptr);
+bool nearestStructure(double x, double y, int maxRegions, Structure &out, StructureFilter keep = nullptr, const void *ctx = nullptr);
 
 bool isDirt(int x, int y);
 Sprite groundTile(int x, int y);

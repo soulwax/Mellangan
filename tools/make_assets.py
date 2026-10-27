@@ -29,6 +29,8 @@ def smoothstep(e0, e1, x):
 def field(w, h, fn):
     im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     px = im.load()
+    if px is None:
+        raise RuntimeError("Unable to access image pixels")
     for y in range(h):
         for x in range(w):
             r, g, b, a = fn(x + 0.5, y + 0.5)
@@ -131,6 +133,8 @@ GEM_PALETTES = {
 def gem(palette):
     im = Image.new("RGBA", (10, 10), (0, 0, 0, 0))
     px = im.load()
+    if px is None:
+        raise RuntimeError("Unable to access image pixels")
     for y, row in enumerate(GEM_SHAPE):
         for x, ch in enumerate(row):
             if ch != ".":
@@ -148,6 +152,8 @@ def digits():
     # 3x5 glyphs, white with a baked 1px dark outline, packed in 5x7 cells.
     im = Image.new("RGBA", (50, 7), (0, 0, 0, 0))
     px = im.load()
+    if px is None:
+        raise RuntimeError("Unable to access image pixels")
     for i, bits in enumerate(DIGITS):
         on = {(x, y) for y in range(5) for x in range(3) if bits[y * 3 + x] == "1"}
         for y in range(-1, 6):

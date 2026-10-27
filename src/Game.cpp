@@ -82,7 +82,9 @@ void Game::tick() {
     }
     if (menuChanged) menu = std::move(nextMenu), menuChanged = false;
 
-    camera = lerp(camera, level->player->pos, damp(9, DT));
+    double k = damp(9, DT);
+    xCam += (level->player->x - xCam) * k;
+    yCam += (level->player->y - yCam) * k;
     hurt *= std::exp(-3.5f * DT);
     shake *= std::exp(-10 * DT);
     if (!menu) bannerTime = std::max(0.0f, bannerTime - DT);
@@ -96,9 +98,10 @@ void Game::devTick() {
     if (input.devGod.clicked) p.god = !p.god, spdlog::info("dev: god mode {}", p.god ? "on" : "off");
     if (input.devWorld.clicked) worldDebug = !worldDebug, spdlog::info("dev: world debug {}", worldDebug ? "on" : "off");
     Structure target;
-    if (input.devWarp.clicked && world::nearestStructure(p.pos, 8, target, Level::unvisited, level.get())) {
-        p.pos = target.center();
-        camera = p.pos;
+    if (input.devWarp.clicked && world::nearestStructure(p.x, p.y, 8, target, Level::unvisited, level.get())) {
+        p.x = target.centerX();
+        p.y = target.centerY();
+        xCam = p.x, yCam = p.y;
         spdlog::info("dev: warped to {} at tile ({}, {}), region ({}, {})", target.name(), target.x, target.y, target.rx,
                      target.ry);
     }
@@ -106,7 +109,7 @@ void Game::devTick() {
 
 void Game::newGame() {
     level = std::make_unique<Level>(*this);
-    camera = level->player->pos;
+    xCam = level->player->x, yCam = level->player->y;
     hurt = shake = bannerTime = 0;
     banners.clear();
     setMenu(nullptr);
@@ -132,18 +135,20 @@ void Game::onPlayerDied() {
 
 void Game::render() {
     Player &p = *level->player;
-    Vec2 jitter = shake > 0.05f ? Vec2{rng.range(-1, 1), rng.range(-1, 1)} * shake : Vec2{};
-    screen.offset = {std::floor(camera.x + jitter.x - Screen::W / 2), std::floor(camera.y + jitter.y - Screen::H / 2)};
+    double xj = 0, yj = 0;
+    if (shake > 0.05f) xj = rng.range(-1, 1) * shake, yj = rng.range(-1, 1) * shake;
+    screen.xOffset = int(std::floor(xCam + xj - Screen::W / 2));
+    screen.yOffset = int(std::floor(yCam + yj - Screen::H / 2));
 
     screen.beginLight({0.10f, 0.12f, 0.24f, 1});
     level->renderLight(screen);
     screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
     level->render(screen);
-    view = screen.offset;
+    xView = screen.xOffset, yView = screen.yOffset;
 
     float health = p.hp / p.maxHp;
     screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0});
-    if (worldDebug && dev) level->renderWorldDebug(screen, view, {input.mouseX, input.mouseY});
+    if (worldDebug && dev) level->renderWorldDebug(screen, xView, yView, input.mouseX, input.mouseY);
     if (!menu || menu->showHud()) renderHud();
     if (menu) menu->render(screen);
     if (showFps)
@@ -157,7 +162,7 @@ void Game::renderHud() {
     float u = s.u, small = std::max(1.0f, u - 1), bar = 6 * u, top = bar + 5 * u;
 
     s.rect(0, 0, s.w, bar + 2 * u, col::panel);
-    float fill = (s.w - 2 * u) * clampf(p.xp / p.xpNext, 0, 1);
+    float fill = (s.w - 2 * u) * clampf(p.exp / p.expNext, 0, 1);
     s.rect(u, u, fill, bar, col::xp);
     s.rect(u, u, fill, u, {0.75f, 0.88f, 1, 0.6f});
 
@@ -172,7 +177,7 @@ void Game::renderHud() {
         int row = up->weapon ? 0 : 1;
         float x = 4 * u + slot[row]++ * 20 * u, y = top + row * 24 * u;
         s.rect(x, y, 18 * u, 18 * u, {0.07f, 0.06f, 0.11f, 0.7f});
-        s.sprite(up->icon, {x + u, y + u}, {0, 0}, {u, u});
+        s.sprite(up->icon, x + u, y + u, 0, 0, u, u);
         for (int i = 0; i < up->level; i++) s.rect(x + u + i * 3.4f * u, y + 19 * u, 2 * u, 2 * u, col::gold);
     }
 

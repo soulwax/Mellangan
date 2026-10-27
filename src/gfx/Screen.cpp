@@ -80,7 +80,7 @@ void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
     float fit = std::min(w / W, h / H);
     scale = fit >= 1 ? std::floor(fit) : fit;
     u = std::max(1.0f, std::round(scale * 0.5f));
-    offset = {};
+    xOffset = yOffset = 0;
 
     color(col::black);
     vk2dRendererClear();
@@ -97,87 +97,87 @@ void Screen::color(Color c) {
     vk2dRendererSetColourMod(v);
 }
 
-void Screen::sprite(const Sprite &s, Vec2 at, Vec2 o, Vec2 sc, float rot) {
-    Vec2 p = at - offset - Vec2{o.x * sc.x, o.y * sc.y};
-    vk2dRendererDrawTexture(atlas, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
+void Screen::sprite(const Sprite &s, double x, double y, float xo, float yo, float xs, float ys, float rot) {
+    float xp = float(x - xOffset - xo * xs), yp = float(y - yOffset - yo * ys);
+    vk2dRendererDrawTexture(atlas, xp, yp, xs, ys, rot, xo, yo, s.x, s.y, s.w, s.h);
 }
 
-void Screen::center(const Sprite &s, Vec2 at, float sc, float rot) {
-    sprite(s, at, {s.w * 0.5f, s.h * 0.5f}, {sc, sc}, rot);
+void Screen::center(const Sprite &s, double x, double y, float sc, float rot) {
+    sprite(s, x, y, s.w * 0.5f, s.h * 0.5f, sc, sc, rot);
 }
 
 bool Screen::loadSilhouette(const std::string &path) {
-    int w, h, n;
-    stbi_uc *px = stbi_load(path.c_str(), &w, &h, &n, 4);
+    int iw, ih, n;
+    stbi_uc *px = stbi_load(path.c_str(), &iw, &ih, &n, 4);
     if (!px) return false;
     uint32_t *texel = reinterpret_cast<uint32_t *>(px);
-    for (int i = 0; i < w * h; i++) texel[i] |= 0x00FFFFFFu; // RGBA bytes, little-endian: set R, G, B, keep A
-    silhouetteImg = vk2dImageFromPixels(vk2dRendererGetDevice(), px, w, h, true);
+    for (int i = 0; i < iw * ih; i++) texel[i] |= 0x00FFFFFFu; // RGBA bytes, little-endian: set R, G, B, keep A
+    silhouetteImg = vk2dImageFromPixels(vk2dRendererGetDevice(), px, iw, ih, true);
     stbi_image_free(px);
     if (silhouetteImg) silhouette = vk2dTextureLoadFromImage(silhouetteImg);
     return silhouette != nullptr;
 }
 
-void Screen::flash(const Sprite &s, Vec2 at, Vec2 o, Vec2 sc, float rot, float amount, Color c) {
-    sprite(s, at, o, sc, rot);
+void Screen::flash(const Sprite &s, double x, double y, float xo, float yo, float xs, float ys, float rot, float amount, Color c) {
+    sprite(s, x, y, xo, yo, xs, ys, rot);
     if (amount <= 0) return;
     Color prev = current;
     color({c.r, c.g, c.b, prev.a * std::min(amount, 1.0f)});
-    Vec2 p = at - offset - Vec2{o.x * sc.x, o.y * sc.y};
-    vk2dRendererDrawTexture(silhouette, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
+    float xp = float(x - xOffset - xo * xs), yp = float(y - yOffset - yo * ys);
+    vk2dRendererDrawTexture(silhouette, xp, yp, xs, ys, rot, xo, yo, s.x, s.y, s.w, s.h);
     color(prev);
 }
 
-void Screen::glow(Vec2 at, float size, Color c) {
-    if (lightBudget <= 0 || !visible(at, size * 0.5f)) return;
+void Screen::glow(double x, double y, float size, Color c) {
+    if (lightBudget <= 0 || !visible(x, y, size * 0.5f)) return;
     lightBudget--;
     color(c);
-    center(atlas::Glow, at, size / atlas::Glow.w);
+    center(atlas::Glow, x, y, size / atlas::Glow.w);
 }
 
-void Screen::rect(float x, float y, float rw, float rh, Color c) {
+void Screen::rect(double x, double y, float rw, float rh, Color c) {
     Color prev = current;
     color(c);
     const Sprite &s = atlas::White;
-    vk2dRendererDrawTexture(atlas, x - offset.x, y - offset.y, rw / s.w, rh / s.h, 0, 0, 0, s.x, s.y, s.w, s.h);
+    vk2dRendererDrawTexture(atlas, float(x - xOffset), float(y - yOffset), rw / s.w, rh / s.h, 0, 0, 0, s.x, s.y, s.w, s.h);
     color(prev);
 }
 
-void Screen::frame(float x, float y, float rw, float rh, float t, Color c) {
+void Screen::frame(double x, double y, float rw, float rh, float t, Color c) {
     rect(x, y, rw, t, c);
     rect(x, y + rh - t, rw, t, c);
     rect(x, y + t, t, rh - 2 * t, c);
     rect(x + rw - t, y + t, t, rh - 2 * t, c);
 }
 
-void Screen::line(Vec2 a, Vec2 b, float width, Color c) {
-    Vec2 d = b - a;
+void Screen::line(double x0, double y0, double x1, double y1, float width, Color c) {
+    double xd = x1 - x0, yd = y1 - y0;
     Color prev = current;
     color(c);
     const Sprite &s = atlas::White;
-    sprite(s, a, {0, s.h * 0.5f}, {length(d) / s.w, width / s.h}, std::atan2(d.y, d.x));
+    sprite(s, x0, y0, 0, s.h * 0.5f, float(std::sqrt(xd * xd + yd * yd) / s.w), width / s.h, float(std::atan2(yd, xd)));
     color(prev);
 }
 
-void Screen::number(int n, Vec2 at, Color c) {
+void Screen::number(int n, double x, double y, Color c) {
     std::string s = std::to_string(std::max(n, 0));
-    float x = std::round(at.x - (s.size() * 4 + 1) * 0.5f), y = std::round(at.y - 3);
+    double xp = std::round(x - (s.size() * 4 + 1) * 0.5), yp = std::round(y - 3);
     Color prev = current;
     color(c);
-    for (char ch : s) sprite(atlas::digit(ch - '0'), {x, y}, {0, 0}), x += 4;
+    for (char ch : s) sprite(atlas::digit(ch - '0'), xp, yp, 0, 0), xp += 4;
     color(prev);
 }
 
-void Screen::glyphs(std::string_view s, float x, float y, float size) {
+void Screen::glyphs(std::string_view s, double x, double y, float size) {
     for (unsigned char ch : s) {
         if (ch != ' ')
-            vk2dRendererDrawTexture(font, x - offset.x, y - offset.y, size, size, 0, 0, 0,
+            vk2dRendererDrawTexture(font, float(x - xOffset), float(y - yOffset), size, size, 0, 0, 0,
                                     float(ch % 16 * 8), float(ch / 16 * 16), 8, 16);
         x += 8 * size;
     }
 }
 
-void Screen::text(std::string_view s, float x, float y, float size, Color c) {
+void Screen::text(std::string_view s, double x, double y, float size, Color c) {
     Color prev = current;
     color({0.02f, 0.01f, 0.05f, c.a * 0.85f});
     glyphs(s, x + size, y + size, size);
@@ -186,11 +186,11 @@ void Screen::text(std::string_view s, float x, float y, float size, Color c) {
     color(prev);
 }
 
-void Screen::textCenter(std::string_view s, float cx, float y, float size, Color c) {
+void Screen::textCenter(std::string_view s, double cx, double y, float size, Color c) {
     text(s, std::floor(cx - textWidth(s, size) * 0.5f), y, size, c);
 }
 
-bool Screen::visible(Vec2 p, float m) const {
-    Vec2 v = p - offset;
-    return v.x > -m && v.y > -m && v.x < W + m && v.y < H + m;
+bool Screen::visible(double x, double y, float m) const {
+    double xv = x - xOffset, yv = y - yOffset;
+    return xv > -m && yv > -m && xv < W + m && yv < H + m;
 }

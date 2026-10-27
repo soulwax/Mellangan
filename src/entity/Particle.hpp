@@ -6,7 +6,7 @@ class Particle : public Entity {
 public:
     float life, maxLife;
 
-    explicit Particle(Vec2 at, float life) : life(life), maxLife(life) { pos = at; }
+    Particle(double x, double y, float life) : life(life), maxLife(life) { this->x = x, this->y = y; }
     int layer() const override { return 2; }
     void tick() override {
         if ((life -= DT) <= 0) remove();
@@ -18,19 +18,20 @@ protected:
 
 class Spark : public Particle {
 public:
-    Vec2 vel;
     Color color;
     float size;
     bool glow;
 
-    Spark(Vec2 at, Vec2 vel, Color color, float life, float size, bool glow)
-        : Particle(at, life), vel(vel), color(color), size(size), glow(glow) {}
-    static void burst(Level &level, Vec2 at, Color c, int n, float speed, bool glow);
+    Spark(double x, double y, double xa, double ya, Color color, float life, float size, bool glow)
+        : Particle(x, y, life), color(color), size(size), glow(glow) {
+        this->xa = xa, this->ya = ya;
+    }
+    static void burst(Level &level, double x, double y, Color c, int n, float speed, bool glow);
 
     void onAdded() override;
     void tick() override;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+    void render(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 };
 
 class TextParticle : public Particle {
@@ -38,10 +39,10 @@ public:
     int value;
     Color color;
 
-    TextParticle(Vec2 at, int value, Color color) : Particle(at, 0.8f), value(value), color(color) {}
-    static void pop(Level &level, Vec2 at, int value, Color c);
+    TextParticle(double x, double y, int value, Color color) : Particle(x, y, 0.8f), value(value), color(color) {}
+    static void pop(Level &level, double x, double y, int value, Color c);
 
     void onAdded() override;
     void tick() override;
-    void render(Screen &s) override;
+    void render(Screen &s, int xp, int yp) override;
 };

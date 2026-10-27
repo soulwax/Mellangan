@@ -2,40 +2,44 @@
 
 #include "level/Level.hpp"
 
-void Spark::burst(Level &level, Vec2 at, Color c, int n, float speed, bool glow) {
+void Spark::burst(Level &level, double x, double y, Color c, int n, float speed, bool glow) {
     if (level.count<Spark>() > 700) return;
-    for (int i = 0; i < n; i++)
-        level.add<Spark>(at, rng.onCircle() * rng.range(0.3f, 1) * speed, c, rng.range(0.25f, 0.6f),
-                         rng.range(0.3f, 0.7f), glow && i < 3);
+    for (int i = 0; i < n; i++) {
+        float dir = rng.range(0, TAU), v = rng.range(0.3f, 1) * speed;
+        level.add<Spark>(x, y, std::cos(dir) * v, std::sin(dir) * v, c, rng.range(0.25f, 0.6f), rng.range(0.3f, 0.7f),
+                         glow && i < 3);
+    }
 }
 
 void Spark::onAdded() { level->tag(this); }
 
 void Spark::tick() {
     Particle::tick();
-    vel *= std::exp(-5 * DT);
-    pos += vel * DT;
+    double k = std::exp(-5 * DT);
+    xa *= k, ya *= k;
+    x += xa * DT;
+    y += ya * DT;
 }
 
-void Spark::render(Screen &s) {
+void Spark::render(Screen &s, int xp, int yp) {
     s.color(color.alpha(color.a * frac()));
-    s.center(atlas::Dot, pos, size * (0.5f + 0.5f * frac()));
+    s.center(atlas::Dot, xp, yp, size * (0.5f + 0.5f * frac()));
     s.color(col::white);
 }
 
-void Spark::renderLight(Screen &s) {
-    if (glow) s.glow(pos, 34, color * (0.3f * frac()));
+void Spark::renderLight(Screen &s, int xp, int yp) {
+    if (glow) s.glow(xp, yp, 34, color * (0.3f * frac()));
 }
 
-void TextParticle::pop(Level &level, Vec2 at, int value, Color c) {
-    if (level.count<TextParticle>() < 48) level.add<TextParticle>(at + Vec2{rng.range(-3, 3), -4}, value, c);
+void TextParticle::pop(Level &level, double x, double y, int value, Color c) {
+    if (level.count<TextParticle>() < 48) level.add<TextParticle>(x + rng.range(-3, 3), y - 4, value, c);
 }
 
 void TextParticle::onAdded() { level->tag(this); }
 
 void TextParticle::tick() {
     Particle::tick();
-    pos.y -= 18 * DT * frac();
+    y -= 18 * DT * frac();
 }
 
-void TextParticle::render(Screen &s) { s.number(value, pos, color.alpha(std::min(1.0f, frac() * 3))); }
+void TextParticle::render(Screen &s, int xp, int yp) { s.number(value, xp, yp, color.alpha(std::min(1.0f, frac() * 3))); }

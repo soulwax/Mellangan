@@ -9,22 +9,24 @@
 
 namespace {
 struct View {
-    Vec2 origin, world;
+    float xo, yo;
+    double xw, yw;
     float k;
 
-    Vec2 gui(Vec2 p) const { return origin + (p - world) * k; }
-    Vec2 toWorld(Vec2 g) const { return world + (g - origin) / k; }
-    bool inside(Vec2 g) const {
-        return g.x >= origin.x && g.y >= origin.y && g.x < origin.x + Screen::W * k && g.y < origin.y + Screen::H * k;
-    }
+    float guiX(double x) const { return float(xo + (x - xw) * k); }
+    float guiY(double y) const { return float(yo + (y - yw) * k); }
+    double worldX(float x) const { return xw + (x - xo) / k; }
+    double worldY(float y) const { return yw + (y - yo) / k; }
+    bool inside(float x, float y) const { return x >= xo && y >= yo && x < xo + Screen::W * k && y < yo + Screen::H * k; }
 };
 
-void dashed(Screen &s, Vec2 a, Vec2 b, float width, float dash, float phase, Color c) {
-    float len = length(b - a);
-    Vec2 d = normalized(b - a);
+void dashed(Screen &s, float x0, float y0, float x1, float y1, float width, float dash, float phase, Color c) {
+    float xd = x1 - x0, yd = y1 - y0, len = std::sqrt(xd * xd + yd * yd);
+    if (len < 1e-5f) return;
+    xd /= len, yd /= len;
     for (float t = std::fmod(phase, dash * 2) - dash * 2; t < len; t += dash * 2) {
         float t0 = std::max(t, 0.0f), t1 = std::min(t + dash, len);
-        if (t1 > t0) s.line(a + d * t0, a + d * t1, width, c);
+        if (t1 > t0) s.line(x0 + xd * t0, y0 + yd * t0, x0 + xd * t1, y0 + yd * t1, width, c);
     }
 }
 void brackets(Screen &s, float x, float y, float w, float h, float arm, float t, Color c) {
@@ -44,40 +46,38 @@ void panel(Screen &s, const std::vector<std::pair<std::string, Color>> &lines, f
 
 } // namespace
 
-void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
+void Level::renderWorldDebug(Screen &s, int xView, int yView, float xMouse, float yMouse) {
     float k = s.scale, u = s.u, small = std::max(1.0f, u - 1), t = SDL_GetTicks() / 1000.0f;
-    View v{{std::floor((s.w - Screen::W * k) / 2), std::floor((s.h - Screen::H * k) / 2)}, viewOffset, k};
+    View v{std::floor((s.w - Screen::W * k) / 2), std::floor((s.h - Screen::H * k) / 2), double(xView), double(yView), k};
     constexpr float RP = world::REGION * 16;
 
-    int tx0 = int(std::floor(viewOffset.x / 16)), ty0 = int(std::floor(viewOffset.y / 16));
+    int tx0 = int(std::floor(xView / 16.0)), ty0 = int(std::floor(yView / 16.0));
     int rx0 = world::regionOf(tx0), ry0 = world::regionOf(ty0);
     int rx1 = world::regionOf(tx0 + Screen::W / 16 + 1), ry1 = world::regionOf(ty0 + Screen::H / 16 + 1);
     Color grid{1, 1, 1, 0.16f};
     for (int rx = rx0; rx <= rx1 + 1; rx++) {
-        float gx = v.gui({rx * RP, 0}).x;
-        if (gx >= v.origin.x && gx < v.origin.x + Screen::W * k) s.rect(gx, v.origin.y, 1, Screen::H * k, grid);
+        float gx = v.guiX(rx * RP);
+        if (gx >= v.xo && gx < v.xo + Screen::W * k) s.rect(gx, v.yo, 1, Screen::H * k, grid);
     }
     for (int ry = ry0; ry <= ry1 + 1; ry++) {
-        float gy = v.gui({0, ry * RP}).y;
-        if (gy >= v.origin.y && gy < v.origin.y + Screen::H * k) s.rect(v.origin.x, gy, Screen::W * k, 1, grid);
+        float gy = v.guiY(ry * RP);
+        if (gy >= v.yo && gy < v.yo + Screen::H * k) s.rect(v.xo, gy, Screen::W * k, 1, grid);
     }
     for (int ry = ry0; ry <= ry1; ry++)
         for (int rx = rx0; rx <= rx1; rx++) {
-            Vec2 g = v.gui({rx * RP, ry * RP}) + Vec2{3, 3} * small;
-            if (v.inside(g)) s.text(fmt::format("R {},{}", rx, ry), g.x, g.y, small, grid.alpha(0.45f));
+            float gx = v.guiX(rx * RP) + 3 * small, gy = v.guiY(ry * RP) + 3 * small;
+            if (v.inside(gx, gy)) s.text(fmt::format("R {},{}", rx, ry), gx, gy, small, grid.alpha(0.45f));
         }
-    Vec2 hw = v.toWorld(mouse);
-    int hx = int(std::floor(hw.x / 16)), hy = int(std::floor(hw.y / 16));
-    bool hovering = v.inside(mouse);
+    int hx = int(std::floor(v.worldX(xMouse) / 16)), hy = int(std::floor(v.worldY(yMouse) / 16));
+    bool hovering = v.inside(xMouse, yMouse);
     Structure hovered{};
     bool hoverStructure = hovering && world::structureAt(hx, hy, hovered, 1);
 
     Structure target{};
-    bool targeted = world::nearestStructure(player->pos, 8, target, Level::unvisited, this);
+    bool targeted = world::nearestStructure(player->x, player->y, 8, target, Level::unvisited, this);
 
     auto box = [&](const Structure &st, int margin) {
-        Vec2 a = v.gui({float(st.x - margin) * 16, float(st.y - margin) * 16});
-        return std::array<float, 4>{a.x, a.y, (st.w + margin * 2) * 16 * k, (st.h + margin * 2) * 16 * k};
+        return std::array<float, 4>{v.guiX((st.x - margin) * 16.0), v.guiY((st.y - margin) * 16.0), (st.w + margin * 2) * 16 * k, (st.h + margin * 2) * 16 * k};
     };
 
     int seen = 0;
@@ -86,7 +86,7 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
         for (int rx = rx0 - 1; rx <= rx1 + 1; rx++) {
             if (!world::structureIn(rx, ry, st)) continue;
             auto [x, y, w, h] = box(st, 0);
-            if (x + w < v.origin.x || y + h < v.origin.y || x > v.origin.x + Screen::W * k || y > v.origin.y + Screen::H * k)
+            if (x + w < v.xo || y + h < v.yo || x > v.xo + Screen::W * k || y > v.yo + Screen::H * k)
                 continue;
             seen++;
             bool hot = hoverStructure && hovered.rx == rx && hovered.ry == ry;
@@ -104,29 +104,30 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
         auto [x, y, w, h] = box(target, 1);
         float pulse = (2 + 2 * std::sin(t * 6)) * u;
         brackets(s, x - pulse, y - pulse, w + pulse * 2, h + pulse * 2, 6 * u, u, c);
-        Vec2 from = v.gui(player->body()), to = v.gui(target.center()), mid = v.gui(viewOffset + Vec2{Screen::W, Screen::H} * 0.5f);
-        Vec2 half = Vec2{Screen::W, Screen::H} * (k * 0.5f) - Vec2{14, 14} * u, d = to - mid;
-        float fit = std::min(d.x != 0 ? half.x / std::abs(d.x) : INFINITY, d.y != 0 ? half.y / std::abs(d.y) : INFINITY);
+        float xf = v.guiX(player->x), yf = v.guiY(player->bodyY());
+        float xt = v.guiX(target.centerX()), yt = v.guiY(target.centerY());
+        float xm = v.guiX(xView + Screen::W * 0.5), ym = v.guiY(yView + Screen::H * 0.5);
+        float xh = Screen::W * k * 0.5f - 14 * u, yh = Screen::H * k * 0.5f - 14 * u, xd = xt - xm, yd = yt - ym;
+        float fit = std::min(xd != 0 ? xh / std::abs(xd) : INFINITY, yd != 0 ? yh / std::abs(yd) : INFINITY);
         bool offscreen = fit < 1;
-        Vec2 end = offscreen ? mid + d * fit : to;
-        dashed(s, from, end, u, 4 * u, t * 24 * u, c.alpha(0.75f));
+        float xe = offscreen ? xm + xd * fit : xt, ye = offscreen ? ym + yd * fit : yt;
+        dashed(s, xf, yf, xe, ye, u, 4 * u, t * 24 * u, c.alpha(0.75f));
 
-        float tiles = length(target.center() - player->pos) / 16;
+        double xs = target.centerX() - player->x, ys = target.centerY() - player->y;
+        float tiles = float(std::sqrt(xs * xs + ys * ys) / 16);
         std::string tag = fmt::format("{} {:.0f}t", target.name(), tiles);
         if (offscreen) {
-            Vec2 dir = normalized(d), side = perp(dir);
-            s.line(end, end - dir * 8 * u + side * 5 * u, 2 * u, c);
-            s.line(end, end - dir * 8 * u - side * 5 * u, 2 * u, c);
-            Vec2 at = end - dir * 18 * u;
-            s.textCenter(tag, at.x, at.y - 8 * small, small, c);
+            float dd = std::sqrt(xd * xd + yd * yd), xn = xd / dd, yn = yd / dd;
+            s.line(xe, ye, xe - xn * 8 * u - yn * 5 * u, ye - yn * 8 * u + xn * 5 * u, 2 * u, c);
+            s.line(xe, ye, xe - xn * 8 * u + yn * 5 * u, ye - yn * 8 * u - xn * 5 * u, 2 * u, c);
+            s.textCenter(tag, xe - xn * 18 * u, ye - yn * 18 * u - 8 * small, small, c);
         } else {
-            s.textCenter(tag, to.x, y + h + pulse + 2 * u, small, c);
+            s.textCenter(tag, xt, y + h + pulse + 2 * u, small, c);
         }
     }
 
     if (hovering) {
-        Vec2 g = v.gui({hx * 16.0f, hy * 16.0f});
-        s.frame(g.x, g.y, 16 * k, 16 * k, u, col::white.alpha(0.8f));
+        s.frame(v.guiX(hx * 16.0), v.guiY(hy * 16.0), 16 * k, 16 * k, u, col::white.alpha(0.8f));
         Climate hc = world::climateAt(hx, hy);
         const BiomeDef *hb = &BIOMES[world::biomeOf(hc)];
         std::vector<std::pair<std::string, Color>> info{
@@ -145,16 +146,16 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
         info.push_back({prop ? fmt::format("prop: {} tile{}{}", p.count, p.count > 1 ? "s" : "", p.light.a > 0 ? ", lit" : "")
                              : "no prop",
                         col::muted});
-        float px = mouse.x + 12 * u, py = mouse.y + 12 * u;
-        if (px + 200 * small > s.w) px = mouse.x - 200 * small;
+        float px = xMouse + 12 * u, py = yMouse + 12 * u;
+        if (px + 200 * small > s.w) px = xMouse - 200 * small;
         panel(s, info, px, py, small, false);
     }
 
-    const BiomeDef *pb = &BIOMES[world::biomeAt(int(std::floor(player->pos.x / 16)), int(std::floor(player->pos.y / 16)))];
+    const BiomeDef *pb = &BIOMES[world::biomeAt(int(std::floor(player->x / 16)), int(std::floor(player->y / 16)))];
     std::vector<std::pair<std::string, Color>> hud{
         {"WORLD DEBUG  F8 hide  F9 warp", col::gold},
-        {fmt::format("player tile {},{}  region {},{}", int(std::floor(player->pos.x / 16)), int(std::floor(player->pos.y / 16)),
-                     world::regionOf(int(std::floor(player->pos.x / 16))), world::regionOf(int(std::floor(player->pos.y / 16)))),
+        {fmt::format("player tile {},{}  region {},{}", int(std::floor(player->x / 16)), int(std::floor(player->y / 16)),
+                     world::regionOf(int(std::floor(player->x / 16))), world::regionOf(int(std::floor(player->y / 16)))),
          col::white},
         {fmt::format("biome {}", pb->name), pb->debug},
         {fmt::format("{} structures in view", seen), col::muted},

@@ -54,42 +54,54 @@ void Enemy::onAdded() { level->tag(this); }
 
 void Enemy::tick() {
     Player &p = *level->player;
-    Vec2 to = p.pos - pos;
-    float dist = length(to);
-    Vec2 dir = dist > 0.001f ? to / dist : Vec2{};
+    double xd = p.x - x, yd = p.y - y;
+    double dist = std::sqrt(xd * xd + yd * yd);
+    double xn = 0, yn = 0;
+    if (dist > 0.001) xn = xd / dist, yn = yd / dist;
 
-    pos += (steer(dir) + knock) * DT;
-    knock *= std::exp(-9 * DT);
+    double xs, ys;
+    steer(xn, yn, xs, ys);
+    x += (xs + xa) * DT;
+    y += (ys + ya) * DT;
+    double k = std::exp(-9 * DT);
+    xa *= k, ya *= k;
     flash = std::max(0.0f, flash - DT);
     knifeCooldown -= DT;
     animT += DT;
-    if (std::abs(dir.x) > 0.15f) facing = dir.x < 0 ? -1.0f : 1.0f;
+    if (type.floats) z = 4 - std::sin(animT * 7) * 2;
+    if (std::abs(xn) > 0.15) facing = xn < 0 ? -1.0f : 1.0f;
 
     if (dist > 560) {
-        Vec2 ahead = lengthSq(p.vel) > 100 ? normalized(p.vel) : rng.onCircle();
-        pos = p.pos + rotate(ahead, rng.range(-1, 1)) * rng.range(290, 320);
+        double dir = p.xa * p.xa + p.ya * p.ya > 100 ? std::atan2(p.ya, p.xa) : rng.range(0, TAU);
+        dir += rng.range(-1, 1);
+        double r = rng.range(290, 320);
+        x = p.x + std::cos(dir) * r;
+        y = p.y + std::sin(dir) * r;
         return;
     }
     float reach = type.radius + 5;
     if (dist < reach && !p.dead()) {
-        pos = p.pos - dir * reach;
+        x = p.x - xn * reach;
+        y = p.y - yn * reach;
         p.hurt(type.damage * damageMul);
     }
-    if (!type.floats) separate(), level->collide(pos, radius);
+    if (!type.floats) separate(), level->collide(x, y, radius);
 }
 
 void Enemy::separate() {
     Enemy *near[24];
-    for (int i = 0, count = level->gather(pos, radius + 16, near, 24); i < count; i++) {
+    for (int i = 0, count = level->gather(x, y, radius + 16, near, 24); i < count; i++) {
         Enemy &o = *near[i];
         if (&o == this || o.type.floats) continue;
-        Vec2 d = pos - o.pos;
-        float min = (radius + o.radius) * 0.85f, d2 = lengthSq(d);
-        if (d2 >= min * min || d2 < 1e-6f) continue;
-        float dd = std::sqrt(d2), w = o.type.speed <= 0 ? 1 : o.radius / (radius + o.radius);
-        Vec2 n = d / dd * ((min - dd) * 0.5f);
-        pos += n * w;
-        o.pos -= n * (1 - w);
+        double xd = x - o.x, yd = y - o.y;
+        double min = (radius + o.radius) * 0.85, d2 = xd * xd + yd * yd;
+        if (d2 >= min * min || d2 < 1e-6) continue;
+        double dd = std::sqrt(d2), w = o.type.speed <= 0 ? 1.0 : o.radius / (radius + o.radius);
+        double push = (min - dd) * 0.5 / dd;
+        x += xd * push * w;
+        y += yd * push * w;
+        o.x -= xd * push * (1 - w);
+        o.y -= yd * push * (1 - w);
     }
 }
 
@@ -100,26 +112,31 @@ void Enemy::makeElite() {
     radius *= 1.3f;
 }
 
-void Enemy::render(Screen &s) {
+void Enemy::render(Screen &s, int xp, int yp) {
     Color c = tint();
     if (elite) c = {c.r, c.g * 0.85f, c.b * 0.45f, c.a};
-    drawBody(s, type.tile, type.floats, 1, c, flash > 0 ? 1.0f : 0.0f, col::white);
+    drawBody(s, xp, yp, type.tile, type.floats, 1, c, flash > 0 ? 1.0f : 0.0f, col::white);
 }
 
-void Enemy::renderLight(Screen &s) {
-    if (elite) s.glow(body(), 40 * scale, {0.12f, 0.09f, 0.02f, 1});
+void Enemy::renderLight(Screen &s, int xp, int yp) {
+    if (elite) s.glow(xp, yp - 7 * scale, 40 * scale, {0.12f, 0.09f, 0.02f, 1});
 }
 
-void Enemy::renderShadow(Screen &s) { drawShadow(s, type.floats); }
+void Enemy::renderShadow(Screen &s, int xp, int yp) { drawShadow(s, xp, yp, type.floats); }
 
-void Enemy::hurt(float damage, Vec2 dir, float force) {
+void Enemy::hurt(float damage, double xd, double yd, float force) {
     if (removed) return;
+    double dd = std::sqrt(xd * xd + yd * yd);
+    if (dd > 1e-5) xd /= dd, yd /= dd;
+    else xd = yd = 0;
     bool crit = rng.chance(0.08f + level->player->luck);
     if (crit) damage *= 1.8f;
     hp -= damage;
     flash = 0.1f;
-    knock += dir * (force * type.knockResist * (elite ? 0.5f : 1.0f));
-    TextParticle::pop(*level, body(), int(std::lround(damage)), crit ? col::gold : col::white);
+    float f = force * type.knockResist * (elite ? 0.5f : 1.0f);
+    xa += xd * f;
+    ya += yd * f;
+    TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), crit ? col::gold : col::white);
     Sound::hit.play(0.35f);
     if (hp <= 0) die();
 }
@@ -128,26 +145,39 @@ void Enemy::die() {
     remove();
     level->kills++;
     Sound::kill.play(0.35f, 0.12f);
-    Gem::drop(*level, pos + Vec2{0, -3}, type.xp * (elite ? ELITE_XP : 1));
-    if (elite && rng.chance(0.25f)) level->add<Potion>(pos + Vec2{6, 0});
-    if (rng.chance(1 / 150.0f)) level->add<Potion>(pos);
-    Spark::burst(*level, body(), type.blood, 8, 70, false);
+    Gem::drop(*level, x, y - 3, type.xp * (elite ? ELITE_XP : 1));
+    if (elite && rng.chance(0.25f)) level->add<Potion>(x + 6, y);
+    if (rng.chance(1 / 150.0f)) level->add<Potion>(x, y);
+    Spark::burst(*level, x, bodyY(), type.blood, 8, 70, false);
 }
 
-Vec2 Bat::steer(Vec2 dir) { return dir * type.speed + perp(dir) * (std::sin(animT * 5) * 34); }
+void Bat::steer(double xn, double yn, double &xs, double &ys) {
+    double w = std::sin(animT * 5) * 34;
+    xs = xn * type.speed - yn * w;
+    ys = yn * type.speed + xn * w;
+}
 
-Vec2 Scorpion::steer(Vec2 dir) { return dir * (type.speed * (0.5f + std::max(0.0f, std::sin(animT * 4)) * 1.2f)); }
+void Scorpion::steer(double xn, double yn, double &xs, double &ys) {
+    double v = type.speed * (0.5f + std::max(0.0f, std::sin(animT * 4)) * 1.2f);
+    xs = xn * v;
+    ys = yn * v;
+}
 
-Vec2 Cultist::steer(Vec2 dir) { return dir * type.speed + perp(dir) * (std::cos(animT * 3) * 28); }
+void Cultist::steer(double xn, double yn, double &xs, double &ys) {
+    double w = std::cos(animT * 3) * 28;
+    xs = xn * type.speed - yn * w;
+    ys = yn * type.speed + xn * w;
+}
 
 void Cultist::tick() {
     Enemy::tick();
     if (removed || (castTimer -= DT) > 0) return;
     castTimer = rng.range(2.5f, 4.0f);
     Player &p = *level->player;
-    Vec2 to = p.body() - body();
-    if (p.dead() || lengthSq(to) > 200 * 200) return;
-    level->add<Orb>(body(), normalized(to) * 70, 10 * damageMul);
+    double xd = p.x - x, yd = p.bodyY() - bodyY();
+    double dd = std::sqrt(xd * xd + yd * yd);
+    if (p.dead() || dd > 200 || dd < 1e-5) return;
+    level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul);
     Sound::orb.play(0.3f);
 }
 
@@ -156,39 +186,44 @@ SupplyBarrel::SupplyBarrel() : Enemy(BARREL, 1, 0) {}
 void SupplyBarrel::tick() {
     flash = std::max(0.0f, flash - DT);
     animT += DT;
-    if (lengthSq(level->player->pos - pos) > 700 * 700) remove();
+    double xd = level->player->x - x, yd = level->player->y - y;
+    if (xd * xd + yd * yd > 700 * 700) remove();
 }
 
-void SupplyBarrel::render(Screen &s) {
-    s.flash(atlas::tile(t::Barrel), pos, {8, 16}, {1, 1}, 0, flash > 0 ? 1.0f : 0.0f, col::white);
+void SupplyBarrel::render(Screen &s, int xp, int yp) {
+    s.flash(atlas::tile(t::Barrel), xp, yp, 8, 16, 1, 1, 0, flash > 0 ? 1.0f : 0.0f, col::white);
 }
 
-void SupplyBarrel::renderLight(Screen &s) {
-    s.glow(body(), 50, Color{0.22f, 0.16f, 0.06f, 1} * (0.8f + 0.2f * std::sin(animT * 3)));
+void SupplyBarrel::renderLight(Screen &s, int xp, int yp) {
+    s.glow(xp, yp - 7 * scale, 50, Color{0.22f, 0.16f, 0.06f, 1} * (0.8f + 0.2f * std::sin(animT * 3)));
 }
 
 void SupplyBarrel::die() {
     remove();
     Sound::barrel.play(0.6f);
-    Spark::burst(*level, body(), type.blood, 12, 80, false);
+    Spark::burst(*level, x, bodyY(), type.blood, 12, 80, false);
     float r = rng.unit();
-    if (r < 0.45f) level->add<Potion>(pos);
-    else if (r < 0.8f) level->add<Magnet>(pos);
-    else level->add<Nova>(pos);
+    if (r < 0.45f) level->add<Potion>(x, y);
+    else if (r < 0.8f) level->add<Magnet>(x, y);
+    else level->add<Nova>(x, y);
 }
 
-Vec2 Ghost::steer(Vec2 dir) { return dir * (type.speed * (0.8f + 0.4f * std::sin(animT * 2))); }
-
-void Ghost::renderLight(Screen &s) {
-    Enemy::renderLight(s);
-    s.glow(body(), 40, {0.06f, 0.10f, 0.18f, 1});
+void Ghost::steer(double xn, double yn, double &xs, double &ys) {
+    double v = type.speed * (0.8f + 0.4f * std::sin(animT * 2));
+    xs = xn * v;
+    ys = yn * v;
 }
 
-void Cyclops::renderLight(Screen &s) { s.glow(body(), 130, {0.35f, 0.08f, 0.04f, 1}); }
+void Ghost::renderLight(Screen &s, int xp, int yp) {
+    Enemy::renderLight(s, xp, yp);
+    s.glow(xp, yp - 7 * scale, 40, {0.06f, 0.10f, 0.18f, 1});
+}
+
+void Cyclops::renderLight(Screen &s, int xp, int yp) { s.glow(xp, yp - 7 * scale, 130, {0.35f, 0.08f, 0.04f, 1}); }
 
 void Cyclops::die() {
     Enemy::die();
-    level->add<Chest>(pos);
-    Spark::burst(*level, body(), type.blood, 40, 140, true);
+    level->add<Chest>(x, y);
+    Spark::burst(*level, x, bodyY(), type.blood, 40, 140, true);
     level->game.announce("THE CYCLOPS FALLS");
 }

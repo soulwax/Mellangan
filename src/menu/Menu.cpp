@@ -133,7 +133,7 @@ void LevelUpMenu::render(Screen &s) {
         float box = 24 * u, bx = x + 6 * u, by = y + (h - box) / 2;
         s.rect(bx, by, box, box, {0.16f, 0.14f, 0.22f, in});
         s.color(col::white.alpha(in));
-        s.sprite(up ? up->icon : atlas::tile(atlas::t::PotionRed), {bx + 4 * u, by + 4 * u}, {0, 0}, {u, u});
+        s.sprite(up ? up->icon : atlas::tile(atlas::t::PotionRed), bx + 4 * u, by + 4 * u, 0, 0, u, u);
         s.color(col::white);
 
         float tx = bx + box + 6 * u;

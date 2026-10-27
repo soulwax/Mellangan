@@ -9,28 +9,29 @@ public:
     float t = 0, speed = 0;
     bool magnet = false;
 
-    explicit Pickup(Vec2 at) { pos = at; }
+    Pickup(double x, double y) { this->x = x, this->y = y; }
     int layer() const override { return 0; }
     void tick() override;
 
 protected:
     virtual float reach() const;
     virtual void take(Player &p) = 0;
-    float bob() const { return std::sin(t * 4 + pos.x) * 1.5f; }
 };
 
 class Gem : public Pickup {
 public:
     float value;
-    Vec2 vel;
 
-    Gem(Vec2 at, float value) : Pickup(at), value(value), vel(rng.onCircle() * rng.range(10, 30)) {}
-    static void drop(Level &level, Vec2 at, float value);
+    Gem(double x, double y, float value) : Pickup(x, y), value(value) {
+        float dir = rng.range(0, TAU), v = rng.range(10, 30);
+        xa = std::cos(dir) * v, ya = std::sin(dir) * v;
+    }
+    static void drop(Level &level, double x, double y, float value);
 
     void onAdded() override;
     void tick() override;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+    void render(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 protected:
     void take(Player &p) override;
@@ -43,8 +44,8 @@ private:
 class Potion : public Pickup {
 public:
     using Pickup::Pickup;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+    void render(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 protected:
     float reach() const override;
@@ -55,8 +56,8 @@ protected:
 class Magnet : public Pickup {
 public:
     using Pickup::Pickup;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+    void render(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 protected:
     void take(Player &p) override;
@@ -66,8 +67,8 @@ protected:
 class Nova : public Pickup {
 public:
     using Pickup::Pickup;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+    void render(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 protected:
     void take(Player &p) override;
@@ -76,8 +77,8 @@ protected:
 class Chest : public Pickup {
 public:
     using Pickup::Pickup;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+    void render(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 protected:
     void take(Player &p) override;

@@ -81,14 +81,14 @@ bool structureAt(int x, int y, Structure &out, int margin) {
     return structureIn(regionOf(x), regionOf(y), out) && out.contains(x, y, margin);
 }
 
-bool nearestStructure(Vec2 p, int maxRegions, Structure &out, StructureFilter keep, const void *ctx) {
-    int tx = int(std::floor(p.x / 16)), ty = int(std::floor(p.y / 16)), rx = regionOf(tx), ry = regionOf(ty);
-    float best = INFINITY;
+bool nearestStructure(double x, double y, int maxRegions, Structure &out, StructureFilter keep, const void *ctx) {
+    int tx = int(std::floor(x / 16)), ty = int(std::floor(y / 16)), rx = regionOf(tx), ry = regionOf(ty);
+    double best = INFINITY;
     Structure s;
-    for (int y = ry - maxRegions; y <= ry + maxRegions; y++)
-        for (int x = rx - maxRegions; x <= rx + maxRegions; x++) {
-            if (!structureIn(x, y, s) || s.contains(tx, ty) || (keep && !keep(&s, ctx))) continue;
-            float d = lengthSq(s.center() - p);
+    for (int yr = ry - maxRegions; yr <= ry + maxRegions; yr++)
+        for (int xr = rx - maxRegions; xr <= rx + maxRegions; xr++) {
+            if (!structureIn(xr, yr, s) || s.contains(tx, ty) || (keep && !keep(&s, ctx))) continue;
+            double xd = s.centerX() - x, yd = s.centerY() - y, d = xd * xd + yd * yd;
             if (d < best) best = d, out = s;
         }
     return best < INFINITY;
@@ -142,7 +142,8 @@ Color groundTint(int x, int y) {
 
 bool propAt(int x, int y, Prop &p) {
     p = Prop{};
-    p.pos = {x * 16 + 8.0f, y * 16 + 16.0f};
+    p.x = x * 16 + 8.0;
+    p.y = y * 16 + 16.0;
 
     Structure st;
     if (structureAt(x, y, st, 1)) return structureProp(&st, x - st.x, y - st.y, &p);

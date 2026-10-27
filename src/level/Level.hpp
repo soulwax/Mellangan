@@ -26,14 +26,14 @@ class Spawner {
 public:
     explicit Spawner(Level &level) : level(level) {}
     void tick();
-    void spawn(EnemyKind kind, Vec2 at);
+    void spawn(EnemyKind kind, double x, double y);
 
 private:
     Level &level;
     float timer = 1, nextWave = 60, nextBoss = 150, nextBarrel = 15;
     int bosses = 0;
 
-    Vec2 ring(float dist) const;
+    void ring(float dist, double &x, double &y) const;
 };
 
 class Level {
@@ -66,15 +66,15 @@ public:
         auto v = reg.view<Is<T>>();
         return v.empty() ? nullptr : v.template get<Is<T>>(*v.begin()).self;
     }
-    template <class F> void enemiesNear(Vec2 p, float r, F &&f);
-    int gather(Vec2 p, float r, Enemy **out, int max) const;
-    std::vector<Enemy *> nearest(Vec2 p, float range, int n);
+    template <class F> void enemiesNear(double x, double y, float r, F &&f);
+    int gather(double x, double y, float r, Enemy **out, int max) const;
+    std::vector<Enemy *> nearest(double x, double y, float range, int n);
 
     void tick();
     void render(Screen &s);
     void renderLight(Screen &s);
-    void renderWorldDebug(Screen &s, Vec2 view, Vec2 mouse);
-    void collide(Vec2 &foot, float radius) const;
+    void renderWorldDebug(Screen &s, int xView, int yView, float xMouse, float yMouse);
+    void collide(double &x, double &y, float radius) const;
     bool visited(const Structure &s) const;
     static bool unvisited(const Structure *s, const void *level);
 
@@ -90,7 +90,7 @@ private:
     std::vector<Prop> props;
     std::vector<int> cellStart, cellFill;
     std::vector<Enemy *> cells;
-    Vec2 gridOrigin;
+    double xGrid = 0, yGrid = 0;
     float solids[SOLID_H * SOLID_W]{}; // prop collider radius per tile over the last scatter window
     int solidX = 0, solidY = 0;
     uint64_t visits[256]{};
@@ -102,14 +102,14 @@ private:
     void renderFloor(Screen &s);
     void scatter(Screen &s);
     void queue(Entity *e);
-    int cell(float v, float origin) const { return std::clamp(int(std::floor((v - origin) / CELL)), 0, GRID - 1); }
+    int cell(double v, double origin) const { return std::clamp(int(std::floor((v - origin) / CELL)), 0, GRID - 1); }
 };
 
-template <class F> void Level::enemiesNear(Vec2 p, float r, F &&f) {
-    int x0 = cell(p.x - r, gridOrigin.x), x1 = cell(p.x + r, gridOrigin.x);
-    int y0 = cell(p.y - r, gridOrigin.y), y1 = cell(p.y + r, gridOrigin.y);
-    for (int y = y0; y <= y1; y++)
-        for (int x = x0; x <= x1; x++)
-            for (int c = y * GRID + x, i = cellStart[c]; i < cellStart[c + 1]; i++)
+template <class F> void Level::enemiesNear(double x, double y, float r, F &&f) {
+    int x0 = cell(x - r, xGrid), x1 = cell(x + r, xGrid);
+    int y0 = cell(y - r, yGrid), y1 = cell(y + r, yGrid);
+    for (int yc = y0; yc <= y1; yc++)
+        for (int xc = x0; xc <= x1; xc++)
+            for (int c = yc * GRID + xc, i = cellStart[c]; i < cellStart[c + 1]; i++)
                 if (!cells[i]->removed) f(*cells[i]);
 }

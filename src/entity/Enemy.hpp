@@ -25,14 +25,17 @@ public:
 
     void onAdded() override;
     void tick() override;
-    void render(Screen &s) override;
-    void renderShadow(Screen &s) override;
-    void renderLight(Screen &s) override;
-    void hurt(float damage, Vec2 dir, float force);
+    void render(Screen &s, int xp, int yp) override;
+    void renderShadow(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
+    void hurt(float damage, double xd, double yd, float force);
     void makeElite();
 
 protected:
-    virtual Vec2 steer(Vec2 dir) { return dir * type.speed; }
+    virtual void steer(double xn, double yn, double &xs, double &ys) {
+        xs = xn * type.speed;
+        ys = yn * type.speed;
+    }
     virtual Color tint() const { return col::white; }
     virtual void die();
 
@@ -45,7 +48,7 @@ public:
     using Enemy::Enemy;
 
 protected:
-    Vec2 steer(Vec2 dir) override;
+    void steer(double xn, double yn, double &xs, double &ys) override;
 };
 
 class Scorpion : public Enemy {
@@ -53,7 +56,7 @@ public:
     using Enemy::Enemy;
 
 protected:
-    Vec2 steer(Vec2 dir) override;
+    void steer(double xn, double yn, double &xs, double &ys) override;
 };
 
 class Cultist : public Enemy {
@@ -62,7 +65,7 @@ public:
     void tick() override;
 
 protected:
-    Vec2 steer(Vec2 dir) override;
+    void steer(double xn, double yn, double &xs, double &ys) override;
 
 private:
     float castTimer = 2.5f;
@@ -71,18 +74,18 @@ private:
 class Ghost : public Enemy {
 public:
     using Enemy::Enemy;
-    void renderLight(Screen &s) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 protected:
-    Vec2 steer(Vec2 dir) override;
+    void steer(double xn, double yn, double &xs, double &ys) override;
     Color tint() const override { return col::white.alpha(0.72f); }
 };
 class SupplyBarrel : public Enemy {
 public:
     SupplyBarrel();
     void tick() override;
-    void render(Screen &s) override;
-    void renderLight(Screen &s) override;
+    void render(Screen &s, int xp, int yp) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 protected:
     void die() override;
@@ -91,7 +94,7 @@ protected:
 class Cyclops : public Enemy {
 public:
     using Enemy::Enemy;
-    void renderLight(Screen &s) override;
+    void renderLight(Screen &s, int xp, int yp) override;
 
 protected:
     void die() override;

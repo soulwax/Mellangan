@@ -44,7 +44,8 @@ private:
     float time = 0, hurt = 0, shake = 0, fps = 0, bannerTime = 0;
     std::string banner;
     std::deque<std::string> banners;
-    Vec2 camera, view;
+    double xCam = 0, yCam = 0;
+    int xView = 0, yView = 0;
 
     void tick();
     void devTick();

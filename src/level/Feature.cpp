@@ -13,7 +13,7 @@ Sprite sheet(const Feature *f, int index) { return f->town ? atlas::town(index) 
 
 bool placeStack(const Feature *f, uint32_t, Prop *p) {
     p->add(sheet(f, f->tile));
-    if (f->top >= 0) p->add(sheet(f, f->top), {0, -16});
+    if (f->top >= 0) p->add(sheet(f, f->top), -16);
     p->shadow = f->shadow, p->solid = f->solid, p->light = f->light;
     return true;
 }

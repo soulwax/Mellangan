@@ -6,29 +6,33 @@
 
 namespace {
 
-Vec2 at(const Structure *s, int lx, int ly) { return {(s->x + lx) * 16 + 8.0f, (s->y + ly) * 16 + 12.0f}; }
+double atX(const Structure *s, int lx) { return (s->x + lx) * 16 + 8.0; }
+double atY(const Structure *s, int ly) { return (s->y + ly) * 16 + 12.0; }
 
-void cottage(Level *level, const Structure *s) { level->add<Potion>(at(s, 2, 4)); }
+void cottage(Level *level, const Structure *s) { level->add<Potion>(atX(s, 2), atY(s, 4)); }
 
 void graveyard(Level *level, const Structure *s) {
     int n = 5 + int(level->time / 40);
-    Vec2 c = s->center();
-    for (int i = 0; i < n; i++) level->spawner.spawn(EnemyKind::Ghost, c + fromAngle(TAU * i / n) * 110);
+    for (int i = 0; i < n; i++) {
+        double dir = TAU * i / n;
+        level->spawner.spawn(EnemyKind::Ghost, s->centerX() + std::cos(dir) * 110, s->centerY() + std::sin(dir) * 110);
+    }
     Sound::horde.play(0.5f, 0.1f);
 }
 
-void shrine(Level *level, const Structure *s) { level->add<Nova>(at(s, s->w / 2, s->h / 2 + 1)); }
+void shrine(Level *level, const Structure *s) { level->add<Nova>(atX(s, s->w / 2), atY(s, s->h / 2 + 1)); }
 
 void camp(Level *level, const Structure *s) {
     auto b = std::make_unique<SupplyBarrel>();
-    b->pos = at(s, s->w / 2 + 1, s->h / 2 + 1);
+    b->x = atX(s, s->w / 2 + 1);
+    b->y = atY(s, s->h / 2 + 1);
     level->add(std::move(b));
 }
 
 void ruin(Level *level, const Structure *s) {
-    Vec2 p = at(s, s->w / 2, 2);
-    if (s->seed & 1) level->add<Chest>(p);
-    else level->add<Magnet>(p);
+    double x = atX(s, s->w / 2), y = atY(s, 2);
+    if (s->seed & 1) level->add<Chest>(x, y);
+    else level->add<Magnet>(x, y);
 }
 
 } // namespace

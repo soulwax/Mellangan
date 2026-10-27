@@ -40,9 +40,7 @@ configure_file(src/Version.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Version.
 target_include_directories(Mellangan PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/generated)
 target_link_libraries(Mellangan PRIVATE Vulkan2D SDL3::SDL3 spdlog::spdlog EnTT::EnTT stb_vorbis)
 # Only heavy, stable third-party headers: project headers change often and would invalidate the PCH.
-target_precompile_headers(Mellangan PRIVATE
-        <algorithm> <array> <cmath> <cstdint> <memory> <string> <string_view> <vector>
-        <SDL3/SDL.h> <VK2D/VK2D.h> <entt/entt.hpp> <spdlog/spdlog.h> <spdlog/fmt/fmt.h>)
+target_precompile_headers(Mellangan PRIVATE src/pch.hpp)
 
 if (WIN32)
     target_compile_definitions(Mellangan PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
@@ -50,7 +48,7 @@ if (WIN32)
 endif ()
 if (MSVC)
     # PDBs in every config so crash traces resolve to file:line.
-    target_compile_options(Mellangan PRIVATE /W4 /permissive- /utf-8 /Zi)
+    target_compile_options(Mellangan PRIVATE /W4 /permissive- /utf-8 /Zi /MP)
     target_link_options(Mellangan PRIVATE /DEBUG /OPT:REF /OPT:ICF
             $<$<NOT:$<CONFIG:Debug>>:/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup>)
 else ()

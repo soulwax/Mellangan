@@ -22,7 +22,9 @@ void Bench::enter(Game &g) {
     l.player->god = true;
     for (int i = 0; i < COUNTS[step]; i++) {
         auto e = Enemy::create(EnemyKind(i % int(EnemyKind::Cyclops)), 1e6f, 0);
-        e->pos = l.player->pos + rng.onCircle() * (40 + 500 * std::sqrt(rng.unit()));
+        double dir = rng.range(0, TAU), r = 40 + 500 * std::sqrt(rng.unit());
+        e->x = l.player->x + std::cos(dir) * r;
+        e->y = l.player->y + std::sin(dir) * r;
         l.add(std::move(e));
     }
     frames = ticks = 0, clock = tickSec = renderSec = 0;

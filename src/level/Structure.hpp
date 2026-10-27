@@ -12,7 +12,8 @@ struct Structure {
     bool contains(int tx, int ty, int margin = 0) const {
         return tx >= x - margin && ty >= y - margin && tx < x + w + margin && ty < y + h + margin;
     }
-    Vec2 center() const { return {(x + w * 0.5f) * 16, (y + h * 0.5f) * 16}; }
+    double centerX() const { return (x + w * 0.5) * 16; }
+    double centerY() const { return (y + h * 0.5) * 16; }
     const char *name() const;
     Color debugColor() const;
 };

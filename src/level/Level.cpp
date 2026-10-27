@@ -29,7 +29,7 @@ void radixSort(std::vector<uint64_t> &a, std::vector<uint64_t> &tmp) {
 }
 
 template <class F> void eachVisibleTile(const Screen &s, F &&f, int before = 0, int after = 0) {
-    int x0 = int(std::floor(s.offset.x / 16)) - before, y0 = int(std::floor(s.offset.y / 16)) - before;
+    int x0 = int(std::floor(s.xOffset / 16.0)) - before, y0 = int(std::floor(s.yOffset / 16.0)) - before;
     for (int y = y0; y <= y0 + before + Screen::H / 16 + 1 + after; y++)
         for (int x = x0; x <= x0 + before + Screen::W / 16 + 1 + after; x++) f(x, y);
 }
@@ -89,7 +89,7 @@ bool Level::unvisited(const Structure *s, const void *level) { return !static_ca
 
 void Level::explore() {
     Structure s;
-    int tx = int(std::floor(player->pos.x / 16)), ty = int(std::floor(player->pos.y / 16));
+    int tx = int(std::floor(player->x / 16)), ty = int(std::floor(player->y / 16));
     if (!world::structureAt(tx, ty, s) || visited(s)) return;
     visits[visitCount++ % 256] = structureKey(&s);
     const EncounterDef *e = &ENCOUNTERS[int(s.kind)];
@@ -98,35 +98,36 @@ void Level::explore() {
     spdlog::info("encounter: {} at tile ({}, {})", s.name(), s.x, s.y);
 }
 
-int Level::gather(Vec2 p, float r, Enemy **out, int max) const {
-    int cx = cell(p.x, gridOrigin.x), cy = cell(p.y, gridOrigin.y), n = 0;
-    int x0 = cell(p.x - r, gridOrigin.x), x1 = cell(p.x + r, gridOrigin.x);
-    int y0 = cell(p.y - r, gridOrigin.y), y1 = cell(p.y + r, gridOrigin.y);
+int Level::gather(double x, double y, float r, Enemy **out, int max) const {
+    int cx = cell(x, xGrid), cy = cell(y, yGrid), n = 0;
+    int x0 = cell(x - r, xGrid), x1 = cell(x + r, xGrid);
+    int y0 = cell(y - r, yGrid), y1 = cell(y + r, yGrid);
     for (int ring = 0; ring <= 2; ring++)
-        for (int y = y0; y <= y1; y++)
-            for (int x = x0; x <= x1; x++) {
-                int d = std::max(std::abs(x - cx), std::abs(y - cy));
+        for (int yc = y0; yc <= y1; yc++)
+            for (int xc = x0; xc <= x1; xc++) {
+                int d = std::max(std::abs(xc - cx), std::abs(yc - cy));
                 if (d != ring && !(ring == 2 && d > 2)) continue;
-                for (int c = y * GRID + x, i = cellStart[c]; i < cellStart[c + 1]; i++)
+                for (int c = yc * GRID + xc, i = cellStart[c]; i < cellStart[c + 1]; i++)
                     if (!cells[i]->removed && (out[n++] = cells[i], n == max)) return n;
             }
     return n;
 }
 
 void Level::buildGrid() {
-    gridOrigin = player->pos - Vec2{GRID * CELL * 0.5f, GRID * CELL * 0.5f};
+    xGrid = player->x - GRID * CELL * 0.5;
+    yGrid = player->y - GRID * CELL * 0.5;
     std::fill(cellStart.begin(), cellStart.end(), 0);
-    each<Enemy>([&](Enemy &e) { cellStart[cell(e.pos.y, gridOrigin.y) * GRID + cell(e.pos.x, gridOrigin.x) + 1]++; });
+    each<Enemy>([&](Enemy &e) { cellStart[cell(e.y, yGrid) * GRID + cell(e.x, xGrid) + 1]++; });
     for (int i = 1; i <= GRID * GRID; i++) cellStart[i] += cellStart[i - 1];
     std::copy(cellStart.begin(), cellStart.end() - 1, cellFill.begin());
     cells.resize(cellStart.back());
-    each<Enemy>([&](Enemy &e) { cells[cellFill[cell(e.pos.y, gridOrigin.y) * GRID + cell(e.pos.x, gridOrigin.x)]++] = &e; });
+    each<Enemy>([&](Enemy &e) { cells[cellFill[cell(e.y, yGrid) * GRID + cell(e.x, xGrid)]++] = &e; });
 }
 
-std::vector<Enemy *> Level::nearest(Vec2 p, float range, int n) {
-    std::vector<std::pair<float, Enemy *>> found;
+std::vector<Enemy *> Level::nearest(double x, double y, float range, int n) {
+    std::vector<std::pair<double, Enemy *>> found;
     each<Enemy>([&](Enemy &e) {
-        float d = lengthSq(e.pos - p);
+        double xd = e.x - x, yd = e.y - y, d = xd * xd + yd * yd;
         if (d < range * range) found.emplace_back(d, &e);
     });
     int k = std::min(n, int(found.size()));
@@ -139,11 +140,10 @@ std::vector<Enemy *> Level::nearest(Vec2 p, float range, int n) {
 
 void Level::renderFloor(Screen &s) {
     eachVisibleTile(s, [&](int x, int y) {
-        Vec2 at{x * 16.0f, y * 16.0f};
         float n = world::groundShade(x, y), shade = 0.8f + 0.2f * n;
         Color t = world::groundTint(x, y);
         s.color({shade * t.r, shade * 0.97f * t.g, (shade * 0.93f + 0.04f * (1 - n)) * t.b, 1});
-        s.sprite(world::groundTile(x, y), at, {0, 0});
+        s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
     });
     s.color(col::white);
 }
@@ -151,7 +151,7 @@ void Level::renderFloor(Screen &s) {
 void Level::scatter(Screen &s) {
     props.clear();
     std::fill(std::begin(solids), std::end(solids), 0.0f);
-    solidX = int(std::floor(s.offset.x / 16)) - 3, solidY = int(std::floor(s.offset.y / 16)) - 3;
+    solidX = int(std::floor(s.xOffset / 16.0)) - 3, solidY = int(std::floor(s.yOffset / 16.0)) - 3;
     Prop p;
     eachVisibleTile(s, [&](int x, int y) {
         if (!world::propAt(x, y, p)) return;
@@ -160,17 +160,18 @@ void Level::scatter(Screen &s) {
     }, 3, 2);
 }
 
-void Level::collide(Vec2 &foot, float radius) const {
-    int tx = int(std::floor(foot.x / 16)), ty = int(std::floor((foot.y - 3) / 16));
-    for (int y = ty - 1; y <= ty + 1; y++)
-        for (int x = tx - 1; x <= tx + 1; x++) {
-            int gx = x - solidX, gy = y - solidY;
+void Level::collide(double &x, double &y, float radius) const {
+    int tx = int(std::floor(x / 16)), ty = int(std::floor((y - 3) / 16));
+    for (int yt = ty - 1; yt <= ty + 1; yt++)
+        for (int xt = tx - 1; xt <= tx + 1; xt++) {
+            int gx = xt - solidX, gy = yt - solidY;
             if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H || solids[gy * SOLID_W + gx] <= 0) continue;
-            Vec2 c{x * 16 + 8.0f, y * 16 + 13.0f}, d = foot - c;
-            float min = solids[gy * SOLID_W + gx] + radius, d2 = lengthSq(d);
+            double xc = xt * 16 + 8.0, yc = yt * 16 + 13.0, xd = x - xc, yd = y - yc;
+            double min = solids[gy * SOLID_W + gx] + radius, d2 = xd * xd + yd * yd;
             if (d2 >= min * min) continue;
-            float len = std::sqrt(d2);
-            foot = len > 1e-4f ? c + d / len * min : c + Vec2{0, min};
+            double len = std::sqrt(d2);
+            if (len > 1e-4) x = xc + xd / len * min, y = yc + yd / len * min;
+            else x = xc, y = yc + min;
         }
 }
 
@@ -178,7 +179,7 @@ void Level::render(Screen &s) {
     renderFloor(s);
     drawn.clear(), keys.clear();
     for (auto [id, o] : reg.view<Owned>().each())
-        if (!o.self->removed && s.visible(o.self->pos, 48)) queue(o.self.get());
+        if (!o.self->removed && s.visible(o.self->x, o.self->y, 48)) queue(o.self.get());
     for (Prop &p : props) queue(&p);
     radixSort(keys, keysTmp);
     bool shadows = false;
@@ -193,23 +194,23 @@ void Level::render(Screen &s) {
 }
 
 void Level::queue(Entity *e) {
-    keys.push_back(uint64_t(e->layer()) << 56 | uint64_t(orderedBits(e->pos.y)) << 24 | drawn.size());
+    keys.push_back(uint64_t(e->layer()) << 56 | uint64_t(orderedBits(float(e->y))) << 24 | drawn.size());
     drawn.push_back(e);
 }
 
 void Level::renderLight(Screen &s) {
     scatter(s);
-    player->renderLight(s);
+    static_cast<Entity *>(player)->renderLight(s);
     for (auto [id, o] : reg.view<Owned>().each())
         if (o.self.get() != player && !o.self->removed) o.self->renderLight(s);
     for (Prop &p : props) {
         if (p.light.a <= 0) continue;
         if (p.wisp) {
-            float f = 0.8f + 0.2f * std::sin(time * 2 + p.pos.x * 0.37f);
-            s.glow(p.pos + p.lightOffset + Vec2{0, std::sin(time * 1.7f + p.pos.y) * 2}, p.lightSize, p.light * f);
+            float f = 0.8f + 0.2f * float(std::sin(time * 2 + p.x * 0.37));
+            s.glow(p.x, p.y + p.lightYo + std::sin(time * 1.7 + p.y) * 2, p.lightSize, p.light * f);
         } else {
-            float f = 0.85f + 0.1f * std::sin(time * 11 + p.pos.x) + 0.05f * std::sin(time * 23 + p.pos.y);
-            s.glow(p.pos + p.lightOffset, p.lightSize, p.light * f);
+            float f = 0.85f + 0.1f * float(std::sin(time * 11 + p.x)) + 0.05f * float(std::sin(time * 23 + p.y));
+            s.glow(p.x, p.y + p.lightYo, p.lightSize, p.light * f);
         }
     }
 }
@@ -220,8 +221,8 @@ void Spawner::tick() {
     for (int k = 0; k < int(EnemyKind::Cyclops); k++)
         if (Enemy::typeOf(EnemyKind(k)).unlockAt <= t) pool.push_back(EnemyKind(k));
     int n = int(pool.size());
-    auto pick = [&](Vec2 at) {
-        uint32_t foes = BIOMES[world::biomeAt(int(std::floor(at.x / 16)), int(std::floor(at.y / 16)))].foes;
+    auto pick = [&](double x, double y) {
+        uint32_t foes = BIOMES[world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)))].foes;
         EnemyKind local[int(EnemyKind::Cyclops)];
         int m = 0;
         for (EnemyKind k : pool)
@@ -233,43 +234,52 @@ void Spawner::tick() {
     if ((timer -= DT) <= 0) {
         timer += std::max(0.06f, 0.9f - t * 0.005f);
         for (int i = 0, batch = 1 + int(t / 70); i < batch && level.count<Enemy>() < 550; i++) {
-            Vec2 at = ring(rng.range(280, 320));
-            spawn(pick(at), at);
+            double x, y;
+            ring(rng.range(280, 320), x, y);
+            spawn(pick(x, y), x, y);
         }
     }
     if (t >= nextWave) {
         nextWave += 60;
         int count = std::min(64, 24 + int(t / 12));
-        for (int i = 0; i < count; i++) spawn(pool.back(), level.player->pos + fromAngle(TAU * i / count) * 270);
+        for (int i = 0; i < count; i++) {
+            double dir = TAU * i / count;
+            spawn(pool.back(), level.player->x + std::cos(dir) * 270, level.player->y + std::sin(dir) * 270);
+        }
         level.game.announce("THE HORDE CLOSES IN");
         Sound::horde.play(0.7f, 0);
     }
     if (t >= nextBarrel) {
         nextBarrel += 20;
         auto b = std::make_unique<SupplyBarrel>();
-        b->pos = ring(rng.range(270, 300));
+        ring(rng.range(270, 300), b->x, b->y);
         level.add(std::move(b));
     }
     if (t >= nextBoss) {
         nextBoss += 150;
         bosses++;
-        spawn(EnemyKind::Cyclops, ring(300));
+        double x, y;
+        ring(300, x, y);
+        spawn(EnemyKind::Cyclops, x, y);
         level.game.announce("A CYCLOPS APPROACHES");
         Sound::boss.play(0.8f, 0);
     }
 }
 
-void Spawner::spawn(EnemyKind kind, Vec2 at) {
+void Spawner::spawn(EnemyKind kind, double x, double y) {
     float hpMul = 1 + level.time / 150;
     if (kind == EnemyKind::Cyclops) hpMul *= 1 + (bosses - 1) * 0.75f;
     auto e = Enemy::create(kind, hpMul, 1 + level.time / 600);
-    e->pos = at;
+    e->x = x, e->y = y;
     if (kind != EnemyKind::Cyclops && level.time > 60 && rng.chance(0.03f + level.time / 6000)) e->makeElite();
     level.add(std::move(e));
 }
 
-Vec2 Spawner::ring(float dist) const {
+void Spawner::ring(float dist, double &x, double &y) const {
     Player &p = *level.player;
-    Vec2 dir = lengthSq(p.vel) > 100 && rng.chance(0.5f) ? rotate(normalized(p.vel), rng.range(-0.8f, 0.8f)) : rng.onCircle();
-    return p.pos + dir * dist;
+    double dir;
+    if (p.xa * p.xa + p.ya * p.ya > 100 && rng.chance(0.5f)) dir = std::atan2(p.ya, p.xa) + rng.range(-0.8f, 0.8f);
+    else dir = rng.range(0, TAU);
+    x = p.x + std::cos(dir) * dist;
+    y = p.y + std::sin(dir) * dist;
 }

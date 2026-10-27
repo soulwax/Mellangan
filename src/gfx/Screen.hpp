@@ -34,7 +34,7 @@ class Screen {
 public:
     static constexpr int W = 480, H = 270;
 
-    Vec2 offset;
+    int xOffset = 0, yOffset = 0;
     float w = 1, h = 1, scale = 1, u = 1;
 
     bool load(const std::string &base);
@@ -45,18 +45,18 @@ public:
     void beginGui(SDL_Window *window, const PostFx &fx);
 
     void color(Color c);
-    void sprite(const Sprite &s, Vec2 at, Vec2 origin, Vec2 scale = {1, 1}, float rot = 0);
-    void center(const Sprite &s, Vec2 at, float scale = 1, float rot = 0);
-    void flash(const Sprite &s, Vec2 at, Vec2 origin, Vec2 scale, float rot, float amount, Color c);
-    void glow(Vec2 at, float size, Color c);
-    void rect(float x, float y, float rw, float rh, Color c);
-    void frame(float x, float y, float rw, float rh, float t, Color c);
-    void line(Vec2 a, Vec2 b, float width, Color c);
-    void number(int n, Vec2 at, Color c);
-    void text(std::string_view s, float x, float y, float size, Color c);
-    void textCenter(std::string_view s, float cx, float y, float size, Color c);
+    void sprite(const Sprite &s, double x, double y, float xo, float yo, float xs = 1, float ys = 1, float rot = 0);
+    void center(const Sprite &s, double x, double y, float scale = 1, float rot = 0);
+    void flash(const Sprite &s, double x, double y, float xo, float yo, float xs, float ys, float rot, float amount, Color c);
+    void glow(double x, double y, float size, Color c);
+    void rect(double x, double y, float rw, float rh, Color c);
+    void frame(double x, double y, float rw, float rh, float t, Color c);
+    void line(double x0, double y0, double x1, double y1, float width, Color c);
+    void number(int n, double x, double y, Color c);
+    void text(std::string_view s, double x, double y, float size, Color c);
+    void textCenter(std::string_view s, double cx, double y, float size, Color c);
     static float textWidth(std::string_view s, float size) { return float(s.size()) * 8 * size; }
-    bool visible(Vec2 p, float margin) const;
+    bool visible(double x, double y, float margin) const;
 
 private:
     VK2DTexture atlas = nullptr, silhouette = nullptr, font = nullptr, world = nullptr, light = nullptr;
@@ -65,6 +65,6 @@ private:
     Color current;
     int lightBudget = 0;
 
-    void glyphs(std::string_view s, float x, float y, float size);
+    void glyphs(std::string_view s, double x, double y, float size);
     bool loadSilhouette(const std::string &path);
 };

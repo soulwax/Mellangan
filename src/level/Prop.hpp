@@ -6,20 +6,20 @@ class Prop : public Entity {
 public:
     struct Part {
         Sprite sprite;
-        Vec2 offset;
+        int yo;
     };
     Part parts[3]{};
     int count = 0;
     float shadow = 0, solid = 0, lightSize = 80;
     Color light{0, 0, 0, 0};
-    Vec2 lightOffset{0, -10};
+    int lightYo = -10;
     bool wisp = true;
 
-    void add(const Sprite &s, Vec2 offset = {}) { parts[count++] = {s, offset}; }
-    void render(Screen &s) override {
-        for (int i = 0; i < count; i++) s.sprite(parts[i].sprite, pos + parts[i].offset, {8, 16});
+    void add(const Sprite &s, int yo = 0) { parts[count++] = {s, yo}; }
+    void render(Screen &s, int xp, int yp) override {
+        for (int i = 0; i < count; i++) s.sprite(parts[i].sprite, xp, yp + parts[i].yo, 8, 16);
     }
-    void renderShadow(Screen &s) override {
-        if (shadow > 0) s.sprite(atlas::Shadow, pos + Vec2{0, -1}, {8, 4}, {shadow, 1.2f});
+    void renderShadow(Screen &s, int xp, int yp) override {
+        if (shadow > 0) s.sprite(atlas::Shadow, xp, yp - 1, 8, 4, shadow, 1.2f);
     }
 };
