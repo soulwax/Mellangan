@@ -78,6 +78,7 @@ If the build fails, `VERSION` and `CHANGELOG.md` are restored.
 | --- | --- |
 | WASD / Arrows | Move |
 | 1-3, Arrows + Enter, Mouse | Pick an upgrade |
+| Tab | World map (arrows pan, 1-3 zoom) |
 | Esc / P | Pause |
 | F11 | Fullscreen |
 | F3 | FPS counter |

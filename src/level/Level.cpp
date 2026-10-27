@@ -187,6 +187,9 @@ void Level::weather() {
 }
 
 void Level::explore() {
+  int found = chart.tick(player->x, player->y);
+  if (found >= 0 && chart.discovered > 1)
+    game.announce(Chart::title(BiomeId(found)));
   Structure s;
   int tx = int(std::floor(player->x / 16)),
       ty = int(std::floor(player->y / 16));

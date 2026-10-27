@@ -6,6 +6,21 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-10-27
+
+### Added
+
+- A world map that charts the land as you walk it: a minimap in the corner names the region you stand in, and Tab
+  opens the full map with panning, three zoom levels, every structure you have sighted (shrines you lit in gold, the
+  next shrine pulsing) and a legend of the regions charted so far. Entering a new biome for the first time announces
+  it, and the dawn and death screens count the regions you walked.
+
+### Fixed
+
+- Text and particles drew from the wrong rows of the font and particle sheets: their row lookups had become float
+  divisions and lost their rounding down.
+- Windows builds failed after the include sort put `dbghelp.h` ahead of `windows.h`.
+
 ## [0.2.5] - 2026-10-27
 
 ### Added

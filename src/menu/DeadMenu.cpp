@@ -22,7 +22,8 @@ void DeadMenu::render(Screen &s) {
   s.textCenter("YOU HAVE FALLEN", s.w / 2, y, 3 * u, col::red);
   s.textCenter(fmt::format("Survived {}", clockText(l.time)), s.w / 2,
                y + 64 * u, u, col::white);
-  s.textCenter(fmt::format("Level {}   {} kills", l.player->lvl, l.kills),
+  s.textCenter(fmt::format("Level {}   {} kills   {} regions walked",
+                           l.player->lvl, l.kills, l.chart.discovered),
                s.w / 2, y + 84 * u, u, col::muted);
   if (t > 1 && std::fmod(t, 1.0f) < 0.65f)
     s.textCenter("R / Enter to rise again", s.w / 2, y + 120 * u, u, col::gold);

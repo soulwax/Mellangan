@@ -24,7 +24,7 @@ void TitleMenu::render(Screen &s) {
                col::muted);
   if (std::fmod(t, 1.0f) < 0.65f)
     s.textCenter("PRESS ENTER", s.w / 2, s.h * 0.62f, u, col::white);
-  s.textCenter("WASD/Arrows move   Esc pause   M mute   F11 fullscreen",
+  s.textCenter("WASD/Arrows move   Tab map   Esc pause   M mute   F11 fullscreen",
                s.w / 2, s.h - 30 * small, small, col::muted);
   std::string_view version = "v" MELLANGAN_VERSION;
   s.text(version, s.w - Screen::textWidth(version, small) - 6 * small,

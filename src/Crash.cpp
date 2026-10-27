@@ -1,9 +1,10 @@
 #include "Crash.hpp"
 
 #ifdef _WIN32
+#include <windows.h>
+
 #include <dbghelp.h>
 #include <spdlog/spdlog.h>
-#include <windows.h>
 
 
 static LONG WINAPI onCrash(EXCEPTION_POINTERS *ep) {

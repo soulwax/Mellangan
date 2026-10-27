@@ -9,6 +9,7 @@
 #include "menu/DawnMenu.hpp"
 #include "menu/DeadMenu.hpp"
 #include "menu/LevelUpMenu.hpp"
+#include "menu/MapMenu.hpp"
 #include "menu/PauseMenu.hpp"
 #include "menu/TitleMenu.hpp"
 #include "particle/debris/Debris.hpp"
@@ -98,6 +99,9 @@ void Game::tick() {
   } else if (input.escape.clicked || input.pause.clicked) {
     Sound::select.play(0.5f, 0);
     setMenu(std::make_unique<PauseMenu>(*this));
+  } else if (input.map.clicked) {
+    Sound::select.play(0.5f, 0);
+    setMenu(std::make_unique<MapMenu>(*this));
   } else {
     level->tick();
     if (!menuChanged && level->player->pendingLevels > 0)
@@ -246,6 +250,22 @@ void Game::renderCompass() {
                ye - yn * 20 * u - 8 * small, small, c);
 }
 
+void Game::renderMinimap() {
+  Screen &s = screen;
+  Player &p = *level->player;
+  float u = s.u, small = std::max(1.0f, u - 1), side = 64 * u;
+  float x = s.w - side - 4 * u, y = s.h - side - 6 * u;
+  ChartView v{x,    y, side, side, 2 * u, p.x / (16.0 * Chart::CELL),
+              p.y / (16.0 * Chart::CELL)};
+  Chart::border(s, v, u);
+  level->chart.draw(s, *level, v, time);
+  BiomeId b = world::biomeAt(int(std::floor(p.x / 16)),
+                             int(std::floor(p.y / 16)));
+  std::string_view name = Chart::title(b);
+  s.text(name, s.w - Screen::textWidth(name, small) - 4 * u,
+         y - 2 * u - 16 * small, small, col::muted);
+}
+
 void Game::renderHud() {
   Screen &s = screen;
   Player &p = *level->player;
@@ -272,6 +292,7 @@ void Game::renderHud() {
     s.rect(kx, ky, kw * n.kindling, 4 * u, col::gold);
   }
   renderCompass();
+  renderMinimap();
 
   int slot[2] = {0, 0};
   for (auto &up : p.upgrades) {

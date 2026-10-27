@@ -22,9 +22,10 @@ void DawnMenu::render(Screen &s) {
   s.textCenter("DAWN BREAKS", s.w / 2, y, 3 * u, col::gold);
   s.textCenter(fmt::format("The night ended at {}", clockText(l.time)), s.w / 2,
                y + 64 * u, u, col::white);
-  s.textCenter(fmt::format("{} shrine{} kindled   Level {}   {} kills",
+  s.textCenter(fmt::format("{} shrine{} kindled   Level {}   {} kills   {} "
+                           "regions walked",
                            l.night.lit, l.night.lit == 1 ? "" : "s",
-                           l.player->lvl, l.kills),
+                           l.player->lvl, l.kills, l.chart.discovered),
                s.w / 2, y + 84 * u, u, col::muted);
   if (t > 2 && std::fmod(t, 1.0f) < 0.65f)
     s.textCenter("R / Enter for another night", s.w / 2, y + 120 * u, u,

@@ -30,9 +30,9 @@ void Input::tick() {
   clicks = moves = 0;
 }
 
-std::array<Key *, 20> Input::keys() {
+std::array<Key *, 21> Input::keys() {
   return {&up,   &down,     &left,    &right,   &confirm,  &escape, &pause,
-          &one,  &two,      &three,   &restart, &quit,     &fps,    &fullscreen,
+          &one,  &two,      &three,   &restart, &quit, &map, &fps,    &fullscreen,
           &mute, &devLevel, &devTime, &devGod,  &devWorld, &devWarp};
 }
 
@@ -68,6 +68,8 @@ Key *Input::bind(SDL_Scancode sc) {
     return &restart;
   case SDL_SCANCODE_Q:
     return &quit;
+  case SDL_SCANCODE_TAB:
+    return &map;
   case SDL_SCANCODE_F3:
     return &fps;
   case SDL_SCANCODE_F11:

@@ -111,7 +111,7 @@ void Screen::particle(int icon, double x, double y, Color c) {
   color(c);
   vk2dRendererDrawTexture(particles, float(x - xOffset - 4),
                           float(y - yOffset - 4), 1, 1, 0, 0, 0,
-                          float(icon % 8 * 8), float(icon / 8.0f) * 8, 8, 8);
+                          float(icon % 8 * 8), float(icon / 8 * 8), 8, 8);
   color(col::white);
 }
 
@@ -205,7 +205,7 @@ void Screen::glyphs(std::string_view s, double x, double y, float size) {
     if (ch != ' ')
       vk2dRendererDrawTexture(font, float(x - xOffset), float(y - yOffset),
                               size, size, 0, 0, 0, float(ch % 16 * 8),
-                              float(ch / 16.0f * 16.0f), 8, 16);
+                              float(ch / 16 * 16), 8, 16);
     x += 8 * size;
   }
 }

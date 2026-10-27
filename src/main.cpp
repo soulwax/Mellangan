@@ -8,7 +8,7 @@
 #include "Crash.hpp"
 #include "Game.hpp"
 #include "Version.hpp"
-#include "fun/Ouroboros.hpp"
+#include "other/Ouroboros.hpp"
 
 static void initLogging(const std::string &base) {
   std::vector<spdlog::sink_ptr> sinks{

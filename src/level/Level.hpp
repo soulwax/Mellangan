@@ -9,6 +9,7 @@
 
 #include "entity/Entity.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "level/Chart.hpp"
 #include "level/LightField.hpp"
 #include "level/Night.hpp"
 #include "level/Spawner.hpp"
@@ -36,6 +37,7 @@ public:
   Spawner spawner{*this};
   Night night{*this};
   LightField lights;
+  Chart chart;
   explicit Level(Game &game);
 
   std::vector<std::unique_ptr<SpriteObject>> particles;

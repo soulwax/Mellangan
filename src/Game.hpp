@@ -58,4 +58,5 @@ private:
   void render();
   void renderHud();
   void renderCompass();
+  void renderMinimap();
 };
