@@ -4,9 +4,15 @@
 
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "entity/enemy/Enemy.hpp"
 #include "item/Upgrade.hpp"
-#include "particle/Debris.hpp"
-#include "particle/Particle.hpp"
+#include "menu/DawnMenu.hpp"
+#include "menu/DeadMenu.hpp"
+#include "menu/LevelUpMenu.hpp"
+#include "menu/PauseMenu.hpp"
+#include "menu/TitleMenu.hpp"
+#include "particle/debris/Debris.hpp"
+#include "particle/debris/FlameDebris.hpp"
 
 bool Game::init(SDL_Window *w, const std::string &base) {
     window = w;

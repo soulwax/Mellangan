@@ -16,11 +16,7 @@ public:
     bool wisp = true;
 
     void add(const Sprite &s, int yo = 0) { parts[count++] = {s, yo}; }
-    void render(Screen &s) override {
-        for (int i = 0; i < count; i++) s.sprite(parts[i].sprite, xp, yp + parts[i].yo, 8, 16);
-    }
-    float occlusion(float &width) const override { return shadow > 0 ? (width = shadow, 4 + 12.0f * count) : (width = 0, 0.0f); }
-    void renderShadow(Screen &s) override {
-        if (shadow > 0) s.sprite(atlas::Shadow, xp, yp - 1, 8, 4, shadow, 1.2f);
-    }
+    void render(Screen &s) override;
+    float occlusion(float &width) const override;
+    void renderShadow(Screen &s) override;
 };

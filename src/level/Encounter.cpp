@@ -1,7 +1,10 @@
 #include "level/Encounter.hpp"
 
 #include "audio/Sound.hpp"
-#include "entity/Pickup.hpp"
+#include "entity/enemy/SupplyBarrel.hpp"
+#include "entity/pickup/Chest.hpp"
+#include "entity/pickup/Magnet.hpp"
+#include "entity/pickup/Potion.hpp"
 #include "level/Level.hpp"
 
 namespace {

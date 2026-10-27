@@ -6,6 +6,12 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-27
+
+### Changed
+
+- Split class into their own files and created sensible subfolders for them.
+
 ## [0.2.2] - 2026-10-27
 
 ### Changed

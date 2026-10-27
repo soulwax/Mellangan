@@ -8,7 +8,7 @@
 #include <string>
 
 #include "Bench.hpp"
-#include "Input.hpp"
+#include "input/Input.hpp"
 #include "gfx/Screen.hpp"
 #include "level/Level.hpp"
 #include "menu/Menu.hpp"

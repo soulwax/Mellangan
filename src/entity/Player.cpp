@@ -4,8 +4,9 @@
 #include "audio/Sound.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
-#include "particle/Debris.hpp"
-#include "particle/Particle.hpp"
+#include "particle/Spark.hpp"
+#include "particle/TextParticle.hpp"
+#include "particle/debris/FlameDebris.hpp"
 
 Player::Player() : upgrades(Upgrade::all()) { hp = maxHp = 100; }
 

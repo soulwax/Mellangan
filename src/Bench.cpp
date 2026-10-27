@@ -5,8 +5,10 @@
 #include "Game.hpp"
 #include "Prof.h"
 #include "entity/Player.hpp"
-#include "particle/Debris.hpp"
-#include "particle/Particle.hpp"
+#include "entity/enemy/Enemy.hpp"
+#include "particle/Explosion.hpp"
+#include "particle/Spark.hpp"
+#include "particle/debris/Debris.hpp"
 
 namespace {
 const int COUNTS[] = {100, 1000, 10000, 50000, 100000, 200000, 300000, 500000, 1000000};

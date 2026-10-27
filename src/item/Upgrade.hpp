@@ -28,4 +28,7 @@ public:
     virtual void tick(Player &) {}
 
     static std::vector<std::unique_ptr<Upgrade>> all();
+
+protected:
+    static int at(int lvl, int from) { return lvl >= from ? 1 : 0; }
 };
