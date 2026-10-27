@@ -12,9 +12,10 @@
 #include "input/Input.hpp"
 #include "level/Level.hpp"
 #include "menu/Menu.hpp"
+#include "meta/Codex.hpp"
 
 
-enum class WorldMode { Classic, Random, Custom };
+enum class WorldMode { Classic, Random, Daily, Custom };
 
 struct PastWorld {
   std::string code;
@@ -41,6 +42,9 @@ public:
   WorldMode worldMode = WorldMode::Classic;
   std::string seedCode;
   std::vector<PastWorld> history;
+  Codex codex;
+  float best = 0;
+  bool beatBest = false;
 
   bool init(SDL_Window *window, const std::string &base);
   void shutdown();

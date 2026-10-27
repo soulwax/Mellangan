@@ -1,5 +1,7 @@
 #include "item/Upgrade.hpp"
 
+#include <cstring>
+
 #include "entity/Player.hpp"
 #include "item/Passive.hpp"
 #include "item/relic/Relic.hpp"
@@ -19,6 +21,17 @@ namespace {
 namespace t = atlas::t;
 namespace tt = atlas::tt;
 namespace kt = atlas::kt;
+
+const char *const EVOLUTIONS[][3] = {
+    {"Arcane Staff", "Hourglass Tonic", "Archmage's Staff"},
+    {"Moon Blade", "Ogre Hammer", "Eclipse Blade"},
+    {"Warding Halo", "Iron Buckler", "Sun Ward"},
+    {"Orbiting Knives", "Quicksilver", "Whirling Steel"},
+    {"Hurled Axe", "Heartroot", "Titan's Axe"},
+    {"Storm Rod", "Lucky Key", "Thunder Sceptre"},
+    {"Fire Bomb", "Troll Blood", "Hellfire Flask"},
+    {"Hunter's Bow", "Lodestone", "Windpiercer"},
+    {"Reaper's Scythe", "Ogre Hammer", "Harvest Moon"}};
 
 void phoenix(Player &p) { p.revives++; }
 void grove(Player &p) { p.maxHp += 60, p.hp += 60, p.regen += 1.5f; }
@@ -57,6 +70,10 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
           "Regenerate 0.3 health/second", &Player::regen, 0.3f);
   passive("Lucky Key", atlas::town(tt::Key), "+4% critical hit chance",
           &Player::luck, 0.04f);
+  for (auto &w : u)
+    for (auto &e : EVOLUTIONS)
+      if (std::strcmp(w->name, e[0]) == 0)
+        w->partner = e[1], w->evolvedName = e[2];
   u.push_back(std::make_unique<SunfireCrown>());
   u.push_back(std::make_unique<TempestEye>());
   u.push_back(std::make_unique<Relic>("Phoenix Feather", atlas::kit(kt::Poppies),
@@ -75,4 +92,13 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
                                       "+50% damage, take 2 less per hit",
                                       signet));
   return u;
+}
+
+bool Upgrade::canEvolve(const Player &p) const {
+  if (!partner || evolved || level < MAX_LEVEL)
+    return false;
+  for (auto &u : p.upgrades)
+    if (u->level > 0 && std::strcmp(u->name, partner) == 0)
+      return true;
+  return false;
 }

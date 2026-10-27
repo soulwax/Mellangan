@@ -20,11 +20,11 @@ void Halo::tick(Player &p) {
   pulse *= std::exp(-6 * DT);
   if ((timer -= DT) > 0)
     return;
-  timer = (level >= 4 ? 0.38f : 0.5f) * p.haste;
+  timer = (level >= 4 ? 0.38f : 0.5f) * p.haste * pace;
   pulse = 1;
   float r = range(),
         dmg =
-            (5.0f + 2 * (at(level, 2) + at(level, 3) + at(level, 5))) * p.might;
+            (5.0f + 2 * (at(level, 2) + at(level, 3) + at(level, 5))) * p.might * power;
   p.level->enemiesNear(p.x, p.y, r + 24, [&](Enemy &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
     float rr = r + e.radius;

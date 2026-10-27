@@ -1,9 +1,12 @@
 #include "entity/Player.hpp"
 
+#include <cstring>
+
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
+#include "meta/Starts.hpp"
 #include "particle/Spark.hpp"
 #include "particle/TextParticle.hpp"
 #include "particle/debris/FlameDebris.hpp"
@@ -12,7 +15,17 @@ Player::Player() : upgrades(Upgrade::all()) { hp = maxHp = 100; }
 
 Player::~Player() = default;
 
-void Player::onAdded() { upgrades.front()->levelUp(*this); }
+void Player::onAdded() {
+  const Codex &c = level->game.codex;
+  const Start &s = STARTS[c.start >= 0 && c.start < START_COUNT &&
+                                  STARTS[c.start].met(c)
+                              ? c.start
+                              : 0];
+  for (auto &u : upgrades)
+    if (std::strcmp(u->name, s.weapon) == 0)
+      return u->levelUp(*this);
+  upgrades.front()->levelUp(*this);
+}
 
 void Player::tick() {
   animT += DT;
@@ -26,8 +39,9 @@ void Player::tick() {
   if (dd > 0)
     xd /= dd, yd /= dd;
   double k = damp(18, DT);
-  xa += (xd * speed - xa) * k;
-  ya += (yd * speed - ya) * k;
+  float v = speed * level->step;
+  xa += (xd * v - xa) * k;
+  ya += (yd * v - ya) * k;
   x += xa * DT;
   y += ya * DT;
   level->collide(x, y, radius);

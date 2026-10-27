@@ -10,6 +10,8 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Encounter.hpp"
+#include "level/Flavour.hpp"
+#include "entity/pickup/Chest.hpp"
 
 namespace {
 uint32_t orderedBits(float f) {
@@ -49,6 +51,9 @@ Level::Level(Game &game) : game(game) {
   cellFill.assign(GRID * GRID, 0);
   player = add<Player>();
   flush();
+  Bounty::roll(bounties, 3);
+  if (rng.chance(0.2f))
+    omen = rng.irange(0, OMEN_COUNT - 1);
 }
 
 SpriteObject *Level::spawn(std::unique_ptr<SpriteObject> p) {
@@ -85,7 +90,8 @@ void Level::tick() {
   if (!player->dead() && !night.dawn)
     night.tick();
   if (!player->dead() && !night.dawn)
-    spawner.tick(), explore();
+    spawner.tick(), explore(), hunt();
+  climate();
   weather();
   ambience();
   buildGrid();
@@ -180,6 +186,44 @@ void Level::ambience() {
     }
 }
 
+void Level::climate() {
+  const Flavour &f = FLAVOURS[world::biomeAt(int(std::floor(player->x / 16)),
+                                             int(std::floor(player->y / 16)))];
+  const Omen *o = omen >= 0 ? &OMENS[omen] : nullptr;
+  step = f.step * (o ? o->step : 1);
+  pace = f.foes * (o ? o->foes : 1);
+  xpMul = f.xp * (o ? o->xp : 1);
+  eliteMul = o ? o->elite : 1;
+  kindleRate = o ? o->kindle : 1;
+  if (streak > 0 && (streakTime -= DT) <= 0)
+    streak = 0;
+  if (player->dead())
+    return;
+  player->hp = std::min(player->maxHp, player->hp + f.mend * DT);
+  if (f.burn && (burnTime -= DT) <= 0) {
+    burnTime = 0.6f;
+    enemiesNear(player->x, player->y, 110, [&](Enemy &e) {
+      double xd = e.x - player->x, yd = e.y - player->y;
+      if (xd * xd + yd * yd < 110 * 110)
+        e.hurt(4, xd, yd, 10);
+    });
+  }
+}
+
+void Level::hunt() {
+  if ((bountyTime -= DT) > 0)
+    return;
+  bountyTime = 0.5f;
+  for (Bounty &b : bounties) {
+    if (b.done || b.progress(*this) < b.goal)
+      continue;
+    b.done = true;
+    double dir = std::atan2(player->yAim, player->xAim);
+    add<Chest>(player->x + std::cos(dir) * 40, player->y + std::sin(dir) * 40);
+    game.announce("BOUNTY: " + b.text());
+  }
+}
+
 void Level::weather() {
   BIOMES[world::biomeAt(int(std::floor(player->x / 16)),
                         int(std::floor(player->y / 16)))]
@@ -190,12 +234,16 @@ void Level::explore() {
   int found = chart.tick(player->x, player->y);
   if (found >= 0 && chart.discovered > 1)
     game.announce(Chart::title(BiomeId(found)));
+  if (found >= 0)
+    game.codex.biomes |= 1u << found;
   Structure s;
   int tx = int(std::floor(player->x / 16)),
       ty = int(std::floor(player->y / 16));
   if (!world::structureAt(tx, ty, s) || visited(s))
     return;
   visits[visitCount++ % 256] = structureKey(&s);
+  entered |= 1u << int(s.kind);
+  game.codex.entered[int(s.kind)]++;
   const EncounterDef *e = &ENCOUNTERS[int(s.kind)];
   game.announce(e->banner);
   e->enter(this, &s);

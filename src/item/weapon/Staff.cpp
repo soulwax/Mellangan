@@ -20,14 +20,14 @@ void Staff::tick(Player &p) {
   auto targets = p.level->nearest(p.x, p.y, 250, n);
   if (targets.empty())
     return void(cd = 0);
-  cd = (level >= 2 ? 0.85f : 1.05f) * p.haste;
+  cd = (level >= 2 ? 0.85f : 1.05f) * p.haste * pace;
   for (int i = 0; i < n; i++) {
     Enemy *e = targets[i % targets.size()];
     float spread = i < int(targets.size()) ? 0 : rng.range(-0.35f, 0.35f);
     double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x) + spread;
     p.level
         ->add<Bolt>(p.x, p.bodyY(), std::cos(dir) * 230, std::sin(dir) * 230,
-                    (level >= 2 ? 14.0f : 10.0f) * p.might, 1 + at(level, 4),
+                    (level >= 2 ? 14.0f : 10.0f) * p.might * power, 1 + at(level, 4),
                     e->id)
         ->source = this;
   }

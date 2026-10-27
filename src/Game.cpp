@@ -6,6 +6,7 @@
 #include <cstdio>
 
 #include "audio/Sound.hpp"
+#include "level/Flavour.hpp"
 #include "level/Noise.h"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
@@ -27,6 +28,8 @@ bool Game::init(SDL_Window *w, const std::string &base) {
   if (char *pref = SDL_GetPrefPath("soulwax", "Mellangan"))
     prefPath = pref, SDL_free(pref);
   loadWorld();
+  if (!prefPath.empty() && !bench.enabled)
+    codex.load(prefPath + "codex.txt");
   Sound::init(base);
   toTitle();
   if (bench.enabled)
@@ -40,6 +43,8 @@ void Game::shutdown() {
   nextMenu.reset();
   if (level && !bench.enabled)
     level->chart.save(chartPath);
+  if (!prefPath.empty() && !bench.enabled)
+    codex.save(prefPath + "codex.txt");
   level.reset();
   screen.unload();
   Sound::shutdown();
@@ -126,6 +131,8 @@ void Game::tick() {
   shake *= std::exp(-10 * DT);
   if (!menu)
     bannerTime = std::max(0.0f, bannerTime - DT);
+  if (!menu && best > 0 && !beatBest && level->time > best)
+    beatBest = true, announce("NEW BEST");
   if (bannerTime <= 0 && !banners.empty())
     banner = std::move(banners.front()), banners.pop_front(), bannerTime = 3;
 }
@@ -166,7 +173,9 @@ uint32_t saltOf(const std::string &code) {
 } // namespace
 
 std::string Game::worldName() const {
-  return seedCode.empty() ? std::string("CLASSIC") : seedCode;
+  return worldMode == WorldMode::Classic || seedCode.empty()
+             ? std::string("CLASSIC")
+             : seedCode;
 }
 
 void Game::build() {
@@ -193,6 +202,13 @@ void Game::reseed() {
   }
   if (worldMode == WorldMode::Classic)
     seedCode.clear();
+  if (worldMode == WorldMode::Daily) {
+    SDL_Time now = 0;
+    SDL_DateTime d{};
+    SDL_GetCurrentTime(&now);
+    SDL_TimeToDateTime(now, &d, true);
+    seedCode = fmt::format("D{:04}{:02}{:02}", d.year, d.month, d.day);
+  }
   build();
   saveWorld();
 }
@@ -202,6 +218,13 @@ void Game::newGame(bool reroll) {
     seedCode.clear();
   reseed();
   setMenu(nullptr);
+  best = 0, beatBest = false;
+  if (level->omen >= 0)
+    announce(fmt::format("{}  {}", OMENS[level->omen].name,
+                         OMENS[level->omen].note));
+  for (const PastWorld &w : history)
+    if (w.code == worldName())
+      best = w.best;
   spdlog::info("New run in world {}", worldName());
 }
 
@@ -221,6 +244,8 @@ void Game::loadWorld() {
   std::string s = slurp(prefPath + "world.txt");
   if (s.rfind("random", 0) == 0)
     worldMode = WorldMode::Random;
+  else if (s.rfind("daily", 0) == 0)
+    worldMode = WorldMode::Daily;
   else if (s.rfind("custom ", 0) == 0)
     worldMode = WorldMode::Custom, seedCode = s.substr(7, 12);
   while (!seedCode.empty() && !std::isalnum(uint8_t(seedCode.back())))
@@ -240,11 +265,17 @@ void Game::loadWorld() {
 }
 
 void Game::remember(bool dawn) {
-  if (worldMode == WorldMode::Classic || seedCode.empty() || bench.enabled)
+  if (bench.enabled)
     return;
-  PastWorld w{seedCode, level->time, 1, dawn};
+  codex.runs++, codex.dawns += dawn;
+  codex.bestTime = std::max(codex.bestTime, level->time);
+  codex.bestStreak = std::max(codex.bestStreak, level->bestStreak);
+  if (!prefPath.empty())
+    codex.save(prefPath + "codex.txt");
+  std::string code = worldName();
+  PastWorld w{code, level->time, 1, dawn};
   for (size_t i = 0; i < history.size(); i++)
-    if (history[i].code == seedCode) {
+    if (history[i].code == code) {
       w.best = std::max(w.best, history[i].best);
       w.runs += history[i].runs, w.dawn |= history[i].dawn;
       history.erase(history.begin() + long(i));
@@ -264,7 +295,8 @@ void Game::remember(bool dawn) {
 void Game::saveWorld() const {
   if (prefPath.empty() || bench.enabled)
     return;
-  std::string s = worldMode == WorldMode::Random   ? "random\n"
+  std::string s = worldMode == WorldMode::Random  ? "random\n"
+                  : worldMode == WorldMode::Daily ? "daily\n"
                   : worldMode == WorldMode::Custom ? "custom " + seedCode + "\n"
                                                    : "classic\n";
   SDL_SaveFile((prefPath + "world.txt").c_str(), s.data(), s.size());
@@ -379,7 +411,9 @@ void Game::renderMinimap() {
   level->chart.draw(s, *level, v, time);
   BiomeId b = world::biomeAt(int(std::floor(p.x / 16)),
                              int(std::floor(p.y / 16)));
-  std::string_view name = Chart::title(b);
+  std::string_view name = Chart::title(b), note = FLAVOURS[b].note;
+  s.text(note, s.w - Screen::textWidth(note, small) - 4 * u,
+         y - 4 * u - 32 * small, small, col::gold * 0.8f);
   s.text(name, s.w - Screen::textWidth(name, small) - 4 * u,
          y - 2 * u - 16 * small, small, col::muted);
 }
@@ -399,9 +433,18 @@ void Game::renderHud() {
   s.text(lv, s.w - Screen::textWidth(lv, u) - 4 * u, top, u, col::white);
   s.text(kills, s.w - Screen::textWidth(kills, small) - 4 * u, top + 18 * u,
          small, col::muted);
+  if (level->streak >= 10) {
+    std::string streak = fmt::format("x{} STREAK", level->streak);
+    s.text(streak, s.w - Screen::textWidth(streak, small) - 4 * u,
+           top + 34 * u, small,
+           col::gold.alpha(0.5f + 0.5f * std::min(1.0f, level->streakTime)));
+  }
   Night &n = level->night;
   s.textCenter(fmt::format("DAWN {}", clockText(n.left())), s.w / 2, top,
                std::round(u * 1.5f), col::white);
+  if (level->omen >= 0)
+    s.textCenter(OMENS[level->omen].name, s.w / 2, top + 58 * u, small,
+                 OMENS[level->omen].tint);
   s.textCenter(fmt::format("{} shrine{} lit", n.lit, n.lit == 1 ? "" : "s"),
                s.w / 2, top + 26 * u, small, n.lit ? col::gold : col::muted);
   if (n.kindling > 0) {
@@ -420,8 +463,9 @@ void Game::renderHud() {
     float x = 4 * u + slot[row]++ * 20 * u, y = top + row * 24 * u;
     s.rect(x, y, 18 * u, 18 * u, {0.07f, 0.06f, 0.11f, 0.7f});
     s.sprite(up->icon, x + u, y + u, 0, 0, u, u);
-    if (up->rare) {
-      s.frame(x, y, 18 * u, 18 * u, u, col::gold.alpha(0.8f));
+    if (up->rare || up->evolved) {
+      s.frame(x, y, 18 * u, 18 * u, u,
+              (up->evolved ? col::xp : col::gold).alpha(0.85f));
       continue;
     }
     for (int i = 0; i < up->level; i++)

@@ -23,9 +23,9 @@ void StormRod::tick(Player &p) {
   });
   if (pool.empty())
     return void(cd = 0.2f);
-  cd = (level >= 4 ? 1.6f : 2.1f) * p.haste;
+  cd = (level >= 4 ? 1.6f : 2.1f) * p.haste * pace;
   int n = 1 + at(level, 2) + at(level, 4) + 2 * at(level, 5);
-  float dmg = (28.0f + 12 * at(level, 3)) * p.might,
+  float dmg = (28.0f + 12 * at(level, 3)) * p.might * power,
         r = 14.0f + 8 * at(level, 3);
   for (int i = 0; i < n; i++) {
     Enemy *e = pool[rng.irange(0, int(pool.size()) - 1)];

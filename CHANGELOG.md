@@ -6,6 +6,28 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-28
+
+### Added
+
+- New-best moments: a NEW BEST banner when you outlast your record on a world, and the death screen marks a record and
+  tells you how far away dawn was. Classic runs now count towards the past-worlds list too.
+- Daily world: a fourth world mode gives everyone the same land for the day.
+- Codex (C on the title or pause screen): regions walked, relics found, a bestiary of kills, places entered, and totals
+  for runs, dawns, best time and best streak, kept between launches.
+- Weapon evolutions: a maxed weapon whose partner passive you own evolves at the next chest into a stronger form
+  (double damage, faster), such as the Archmage's Staff, Eclipse Blade or Thunder Sceptre.
+- Bounties: every world rolls three goals (slay a foe type, kindle a shrine in a biome, find a place, walk regions,
+  survive, keep a kill streak), listed on the map. Each pays out a chest, and the same world always has the same ones.
+- Kill streaks: kills within 2.5 seconds of each other chain into a streak worth up to +50% XP, shown on the HUD.
+- Biome flavours: each biome nudges play, shown above the minimap. Mires slow your step, snow slows everyone,
+  crystal fields and barrows give more XP, fungal spores and blossom groves heal, and ash embers scorch nearby foes.
+- Night omens: about one night in five is a Blood Moon (more elites, +50% XP), an Aurora (shrines kindle twice as
+  fast) or a Gale (everyone is swifter), announced at the start.
+- Unlockable starts: begin with the Hunter's Bow, Moon Blade, Fire Bomb, Storm Rod or Reaper's Scythe once you have
+  earned them (see a dawn, slay 1000 foes, find 3 relics, walk 10 regions, a 100 kill streak). Pick with Left/Right
+  on the title.
+
 ## [0.3.0] - 2026-10-28
 
 ### Added

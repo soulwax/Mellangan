@@ -16,9 +16,10 @@ public:
   const char *name;
   Sprite icon;
   std::array<const char *, MAX_LEVEL> desc;
-  bool weapon, rare = false;
+  bool weapon, rare = false, evolved = false;
   int level = 0;
-  float dealt = 0;
+  float dealt = 0, power = 1, pace = 1;
+  const char *partner = nullptr, *evolvedName = nullptr;
 
   Upgrade(const char *name, Sprite icon,
           std::array<const char *, MAX_LEVEL> desc, bool weapon)
@@ -26,6 +27,8 @@ public:
   virtual ~Upgrade() = default;
 
   bool maxed() const { return level >= (rare ? 1 : MAX_LEVEL); }
+  bool canEvolve(const Player &p) const;
+  void evolve() { evolved = true, name = evolvedName, power = 2, pace = 0.7f; }
   virtual void levelUp(Player &) { level++; }
   virtual void tick(Player &) {}
 

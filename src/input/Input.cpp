@@ -9,6 +9,10 @@ void Input::handle(const SDL_Event &e, float density) {
     if (e.key.scancode == SDL_SCANCODE_UP || e.key.scancode == SDL_SCANCODE_DOWN)
       (e.key.scancode == SDL_SCANCODE_UP ? older : newer)
           .toggle(e.type == SDL_EVENT_KEY_DOWN);
+    if (e.key.scancode == SDL_SCANCODE_LEFT ||
+        e.key.scancode == SDL_SCANCODE_RIGHT)
+      (e.key.scancode == SDL_SCANCODE_LEFT ? prior : next)
+          .toggle(e.type == SDL_EVENT_KEY_DOWN);
     break;
   case SDL_EVENT_TEXT_INPUT:
     pending += e.text.text;
@@ -38,9 +42,9 @@ void Input::tick() {
   clicks = moves = 0;
 }
 
-std::array<Key *, 25> Input::keys() {
+std::array<Key *, 28> Input::keys() {
   return {&up,   &down,     &left,    &right,   &confirm,  &escape, &pause,
-          &one,  &two,      &three,   &four, &restart, &quit, &map, &erase, &older, &newer, &fps,    &fullscreen,
+          &one,  &two,      &three,   &four, &restart, &quit, &map, &codex, &erase, &older, &newer, &prior, &next, &fps,    &fullscreen,
           &mute, &devLevel, &devTime, &devGod,  &devWorld, &devWarp};
 }
 
@@ -80,6 +84,8 @@ Key *Input::bind(SDL_Scancode sc) {
     return &quit;
   case SDL_SCANCODE_TAB:
     return &map;
+  case SDL_SCANCODE_C:
+    return &codex;
   case SDL_SCANCODE_BACKSPACE:
     return &erase;
   case SDL_SCANCODE_F3:

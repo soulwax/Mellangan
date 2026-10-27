@@ -6,12 +6,17 @@
 #include "Version.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "menu/CodexMenu.hpp"
+#include "item/Upgrade.hpp"
 #include "menu/Menu.hpp"
+#include "meta/Starts.hpp"
 
 namespace {
-const char *const MODES[3] = {"CLASSIC", "RANDOM", "CUSTOM"};
-const char *const BLURBS[3] = {"the same land every night",
-                               "a new land each run", "type a code to share"};
+const char *const MODES[4] = {"CLASSIC", "RANDOM", "DAILY", "CUSTOM"};
+const char *const BLURBS[4] = {"the same land every night",
+                               "a new land each run",
+                               "one land for everyone today",
+                               "type a code to share"};
 
 bool inside(const SDL_FRect &r, const Input &in) {
   SDL_FPoint m{in.mouseX, in.mouseY};
@@ -33,19 +38,20 @@ bool TitleMenu::typing() const {
 TitleMenu::Layout TitleMenu::layout() const {
   const Screen &s = game.screen;
   float u = s.u, small = std::max(1.0f, u - 1), pad = 8 * u;
-  float w = std::max(200 * u, Screen::textWidth("CLASSIC", small) * 3 + 40 * u);
+  float w = std::max(200 * u, Screen::textWidth("CLASSIC", small) * 4 + 52 * u);
   Layout l{};
   float x = s.w - w - 16 * u, y = s.h * 0.12f + 100 * u, in = x + pad,
         iw = w - 2 * pad;
-  float chip = (iw - 2 * 3 * u) / 3;
-  for (int i = 0; i < 3; i++)
+  float chip = (iw - 3 * 3 * u) / 4;
+  for (int i = 0; i < 4; i++)
     l.chips[i] = {in + i * (chip + 3 * u), y + pad + 14 * u, chip, 16 * u};
   l.seed = {in, y + pad + 56 * u, iw, 18 * u};
-  float ry = l.seed.y + l.seed.h + 30 * u;
+  l.start = {in, l.seed.y + l.seed.h + 22 * u, iw, 20 * u};
+  float ry = l.start.y + l.start.h + 46 * u;
   int n = std::min(int(game.history.size()), 6);
   for (int i = 0; i < 6; i++)
     l.rows[i] = {in, ry + i * 13 * u, iw, 12 * u};
-  float bottom = n ? ry + n * 13 * u : l.seed.y + l.seed.h;
+  float bottom = n ? ry + n * 13 * u : l.start.y + l.start.h;
   l.panel = {x, y, w, bottom + pad - y};
   return l;
 }
@@ -72,10 +78,26 @@ void TitleMenu::recall(int i) {
   pick = i;
   if (!typing())
     SDL_StartTextInput(game.window);
-  game.worldMode = WorldMode::Custom;
-  game.seedCode = game.history[i].code;
+  const std::string &code = game.history[i].code;
+  game.worldMode = code == "CLASSIC" ? WorldMode::Classic : WorldMode::Custom;
+  game.seedCode = code == "CLASSIC" ? "" : code;
+  if (!typing())
+    SDL_StopTextInput(game.window);
   Sound::select.play(0.5f, 0);
   game.reseed();
+}
+
+void TitleMenu::cycle(int dir) {
+  Codex &c = game.codex;
+  for (int i = 1; i <= START_COUNT; i++) {
+    int k = ((c.start + dir * i) % START_COUNT + START_COUNT) % START_COUNT;
+    if (STARTS[k].met(c)) {
+      if (k != c.start)
+        Sound::select.play(0.5f, 0);
+      c.start = k;
+      return;
+    }
+  }
 }
 
 void TitleMenu::tick() {
@@ -93,7 +115,13 @@ void TitleMenu::tick() {
     return;
   }
   if (in.map.clicked)
-    return choose((int(game.worldMode) + 1) % 3);
+    return choose((int(game.worldMode) + 1) % 4);
+  if (!typing() && in.codex.clicked)
+    return game.setMenu(std::make_unique<CodexMenu>(game, false));
+  if (in.prior.clicked)
+    return cycle(-1);
+  if (in.next.clicked)
+    return cycle(1);
   int n = int(game.history.size());
   if (n && in.older.clicked)
     return recall(pick < 0 ? 0 : std::max(0, pick - 1));
@@ -102,12 +130,14 @@ void TitleMenu::tick() {
 
   Layout l = layout();
   if (in.mouseClicked) {
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 4; i++)
       if (inside(l.chips[i], in))
         return choose(i);
     for (int i = 0; i < std::min(n, 6); i++)
       if (inside(l.rows[i], in))
         return recall(i);
+    if (inside(l.start, in))
+      return cycle(1);
     if (game.worldMode == WorldMode::Random && inside(l.seed, in))
       return game.seedCode.clear(), game.reseed();
   }
@@ -134,7 +164,7 @@ void TitleMenu::render(Screen &s) {
                col::muted);
   if (std::fmod(t, 1.0f) < 0.65f)
     s.textCenter("PRESS ENTER", s.w / 2, s.h * 0.62f, u, col::white);
-  s.textCenter("WASD/Arrows move   Tab map   Esc pause   M mute   F11 fullscreen",
+  s.textCenter("WASD/Arrows move   Tab map   C codex   Esc pause   M mute   F11 fullscreen",
                s.w / 2, s.h - 30 * small, small, col::muted);
   std::string_view version = "v" MELLANGAN_VERSION;
   s.text(version, s.w - Screen::textWidth(version, small) - 6 * small,
@@ -149,7 +179,7 @@ void TitleMenu::render(Screen &s) {
   s.text("WORLD", p.x + pad, p.y + pad, small, col::muted);
   s.text("Tab", p.x + p.w - pad - Screen::textWidth("Tab", small), p.y + pad,
          small, col::muted * 0.7f);
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     const SDL_FRect &c = l.chips[i];
     bool on = i == mode;
     s.rect(c.x, c.y, c.w, c.h, on ? col::gold.alpha(0.9f) : col::panel);
@@ -183,6 +213,34 @@ void TitleMenu::render(Screen &s) {
   s.text(hint, f.x + f.w - Screen::textWidth(hint, small) - 6 * u, ty, small,
          col::muted * 0.7f);
 
+  const Codex &cx = game.codex;
+  const SDL_FRect &st = l.start;
+  int open = 0, next = -1;
+  for (int k = 0; k < START_COUNT; k++)
+    if (STARTS[k].met(cx))
+      open++;
+    else if (next < 0)
+      next = k;
+  int at = cx.start >= 0 && cx.start < START_COUNT && STARTS[cx.start].met(cx)
+               ? cx.start
+               : 0;
+  s.text("START WITH", p.x + pad, st.y - 14 * u, small, col::muted);
+  std::string count = fmt::format("{}/{}", open, START_COUNT);
+  s.text(count, p.x + p.w - pad - Screen::textWidth(count, small), st.y - 14 * u,
+         small, col::muted * 0.7f);
+  s.rect(st.x, st.y, st.w, st.h, {0.02f, 0.02f, 0.04f, 0.9f});
+  s.frame(st.x, st.y, st.w, st.h, u, col::muted.alpha(0.25f));
+  for (auto &up : game.level->player->upgrades)
+    if (std::string_view(up->name) == STARTS[at].weapon)
+      s.sprite(up->icon, st.x + 3 * u, st.y + 2 * u, 0, 0, u, u);
+  s.text(STARTS[at].weapon, st.x + 24 * u, st.y + (st.h - 16 * small) / 2,
+         small, col::white);
+  s.text("< >", st.x + st.w - Screen::textWidth("< >", small) - 6 * u,
+         st.y + (st.h - 16 * small) / 2, small, col::muted * 0.7f);
+  if (next >= 0)
+    s.text(fmt::format("next unlock: {}", STARTS[next].need),
+           st.x, st.y + st.h + 3 * u, small, col::muted * 0.6f);
+
   int n = std::min(int(game.history.size()), 6);
   if (!n)
     return;
@@ -193,7 +251,7 @@ void TitleMenu::render(Screen &s) {
   for (int i = 0; i < n; i++) {
     const PastWorld &w = game.history[i];
     const SDL_FRect &r = l.rows[i];
-    bool on = custom && w.code == game.seedCode;
+    bool on = w.code == game.worldName();
     if (on)
       s.rect(r.x - 2 * u, r.y - u, r.w + 4 * u, r.h, col::gold.alpha(0.12f));
     s.text(w.code, r.x, r.y, small, on ? col::gold : col::white * 0.85f);

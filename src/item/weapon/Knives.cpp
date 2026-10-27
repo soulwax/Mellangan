@@ -17,4 +17,4 @@ void Knives::levelUp(Player &p) {
     p.level->add<Knife>(*this, p, spawned++)->source = this;
 }
 
-void Knives::tick(Player &) { angle += (level >= 5 ? 4.6f : 3.4f) * DT; }
+void Knives::tick(Player &) { angle += (level >= 5 ? 4.6f : 3.4f) * DT / pace; }

@@ -9,6 +9,7 @@
 
 #include "entity/Entity.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "level/Bounty.hpp"
 #include "level/Chart.hpp"
 #include "level/LightField.hpp"
 #include "level/Night.hpp"
@@ -33,7 +34,13 @@ public:
   Player *player = nullptr;
   float time = 0;
   uint32_t ticks = 0;
-  int kills = 0;
+  int kills = 0, streak = 0, bestStreak = 0;
+  float streakTime = 0;
+  int slain[int(EnemyKind::Cyclops) + 1]{};
+  uint32_t entered = 0, litBiomes = 0;
+  float pace = 1, step = 1, xpMul = 1, eliteMul = 1, kindleRate = 1;
+  int omen = -1;
+  Bounty bounties[3];
   Spawner spawner{*this};
   Night night{*this};
   LightField lights;
@@ -107,8 +114,12 @@ private:
   uint64_t visits[256]{};
   int visitCount = 0;
 
+  float burnTime = 0, bountyTime = 0;
+
   void flush();
   void explore();
+  void climate();
+  void hunt();
   void weather();
   void ambience();
   void buildGrid();

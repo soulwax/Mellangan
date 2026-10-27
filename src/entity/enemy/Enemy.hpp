@@ -56,6 +56,7 @@ public:
   void hurt(float damage, double xd, double yd, float force,
             Upgrade *source = nullptr);
   const char *name() const;
+  int kind() const;
   void makeElite();
   void think();
   void move();

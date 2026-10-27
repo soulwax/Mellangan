@@ -74,7 +74,7 @@ void Spawner::spawn(EnemyKind kind, double x, double y, bool aware) {
   auto e = Enemy::create(kind, hpMul, 1 + level.time / 600);
   e->x = x, e->y = y, e->aware = aware;
   if (kind != EnemyKind::Cyclops && level.time > 60 &&
-      rng.chance(0.03f + level.time / 6000))
+      rng.chance((0.03f + level.time / 6000) * level.eliteMul))
     e->makeElite();
   level.add(std::move(e));
 }

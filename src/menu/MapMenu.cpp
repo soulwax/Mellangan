@@ -52,6 +52,19 @@ void MapMenu::render(Screen &s) {
   c.draw(s, l, v, t);
 
   float x = v.x + v.w + 2 * pad, y = top, row = 18 * small;
+  s.text("BOUNTIES", x, y, small, col::white);
+  y += row * 1.5f;
+  for (const Bounty &b : l.bounties) {
+    s.rect(x, y + 4 * small, 8 * small, 8 * small,
+           b.done ? col::gold : col::panel);
+    s.frame(x, y + 4 * small, 8 * small, 8 * small, 1, col::muted);
+    s.text(b.text(), x + 12 * small, y, small, b.done ? col::gold : col::white);
+    if (!b.done && b.goal > 1)
+      s.text(fmt::format("{}/{}", std::min(b.progress(l), b.goal), b.goal),
+             x + 12 * small, y + row * 0.8f, small, col::muted);
+    y += row * (b.done || b.goal <= 1 ? 1.2f : 2);
+  }
+  y += row;
   s.text("REGIONS", x, y, small, col::white);
   y += row * 1.5f;
   for (int b = 0; b < BIOME_COUNT; b++) {

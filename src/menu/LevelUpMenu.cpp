@@ -30,7 +30,14 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
     choices.resize(3);
   if (choices.empty())
     choices.push_back(nullptr);
-  if (!relics.empty() && (treasure || rng.chance(0.03f)))
+  std::vector<Upgrade *> ready;
+  for (auto &u : all)
+    if (u->canEvolve(p))
+      ready.push_back(u.get());
+  if (treasure && !ready.empty())
+    evolveSlot = int(choices.size()),
+    choices.push_back(ready[rng.irange(0, int(ready.size()) - 1)]);
+  else if (!relics.empty() && (treasure || rng.chance(0.03f)))
     choices.push_back(relics[rng.irange(0, int(relics.size()) - 1)]);
   Sound::levelUp.play(0.6f, 0);
 }
@@ -77,8 +84,19 @@ void LevelUpMenu::tick() {
 void LevelUpMenu::choose(int i) {
   Player &p = *game.level->player;
   Sound::confirm.play(0.6f, 0);
-  if (Upgrade *u = choices[i]) {
+  if (Upgrade *u = choices[i]; u && i == evolveSlot) {
+    u->evolve();
+    spdlog::info("Level {}: evolved into {}", p.lvl, u->name);
+  } else if (Upgrade *u = choices[i]) {
     u->levelUp(p);
+    int relic = 0;
+    for (auto &up : p.upgrades)
+      if (up->rare && up.get() != u)
+        relic++;
+      else if (up.get() == u)
+        break;
+    if (u->rare)
+      game.codex.relics |= 1u << relic;
     spdlog::info("Level {}: {} -> {}", p.lvl, u->name, u->level);
   } else {
     p.heal(40);
@@ -100,7 +118,8 @@ void LevelUpMenu::render(Screen &s) {
     float x = r[i].x + (1 - in) * 40 * u, y = r[i].y, w = r[i].w, h = r[i].h;
     bool sel = i == selected;
     Upgrade *up = choices[i];
-    bool rare = up && up->rare;
+    bool evolving = i == evolveSlot;
+    bool rare = up && (up->rare || evolving);
     float shine = 0.5f + 0.5f * std::sin(t * 4);
 
     s.rect(x, y, w, h, col::panel.alpha(0.92f * in));
@@ -118,12 +137,16 @@ void LevelUpMenu::render(Screen &s) {
     s.color(col::white);
 
     float tx = bx + box + 6 * u;
-    s.text(up ? up->name : "Roast Feast", tx, y + 5 * u, u,
-           (rare ? col::gold : col::white).alpha(in));
-    s.text(up ? up->desc[up->level] : "Restore 40 health", tx, y + 20 * u,
-           small, col::muted.alpha(in));
+    std::string desc = evolving ? fmt::format("{} evolves: double damage, faster",
+                                              up->name)
+                       : up        ? up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)]
+                                   : "Restore 40 health";
+    s.text(evolving ? up->evolvedName : up ? up->name : "Roast Feast", tx,
+           y + 5 * u, u, (evolving ? col::xp : rare ? col::gold : col::white).alpha(in));
+    s.text(desc, tx, y + 20 * u, small, col::muted.alpha(in));
     if (up) {
-      std::string tag = rare            ? "RELIC"
+      std::string tag = evolving        ? "EVOLVE"
+                        : rare            ? "RELIC"
                         : up->level == 0 ? "NEW!"
                                          : fmt::format("Lv {}", up->level + 1);
       s.text(tag, x + w - Screen::textWidth(tag, small) - 6 * u, y + 5 * u,

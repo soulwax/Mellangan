@@ -9,7 +9,7 @@ void Knife::tick() {
   angle = knives.angle + TAU * index / knives.count();
   x = player.x + std::cos(angle) * 34;
   y = player.bodyY() + std::sin(angle) * 34;
-  float dmg = knives.damage() * player.might;
+  float dmg = knives.damage() * player.might * knives.power;
   level->enemiesNear(x, y, 32, [&](Enemy &e) {
     double xd = e.x - x, yd = e.bodyY() - y;
     float rr = 6 + e.radius;

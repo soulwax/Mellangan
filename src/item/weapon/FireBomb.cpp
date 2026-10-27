@@ -15,7 +15,7 @@ FireBomb::FireBomb()
 void FireBomb::tick(Player &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 2.4f : 3.0f) * p.haste;
+  cd = (level >= 4 ? 2.4f : 3.0f) * p.haste * pace;
   int n = 1 + at(level, 3) + at(level, 5);
   auto targets = p.level->nearest(p.x, p.y, 200, 12);
   for (int i = 0; i < n; i++) {
@@ -28,9 +28,9 @@ void FireBomb::tick(Player &p) {
       xt = e->x, yt = e->y;
     }
     p.level
-        ->add<Bomb>(p.x, p.bodyY(), xt, yt, 20 * p.might,
+        ->add<Bomb>(p.x, p.bodyY(), xt, yt, 20 * p.might * power,
                     22.0f + 6 * at(level, 2),
-                    (5.0f + 4 * at(level, 4)) * p.might, 2.5f + at(level, 2))
+                    (5.0f + 4 * at(level, 4)) * p.might * power, 2.5f + at(level, 2))
         ->source = this;
   }
   Sound::axe.play(0.4f);

@@ -50,7 +50,8 @@ void Night::tick() {
   if (inside)
     current = here;
   kindling =
-      inside ? kindling + DT / KINDLE : std::max(0.0f, kindling - DT / 2);
+      inside ? kindling + DT * level.kindleRate / KINDLE
+             : std::max(0.0f, kindling - DT / 2);
   if (kindling >= 1)
     kindle();
   for (int i = 0; i < lit; i++) {
@@ -72,6 +73,8 @@ void Night::kindle() {
   kindling = 0;
   if (lit < MAX_LIT)
     shrines[lit++] = current;
+  level.litBiomes |= 1u << world::biomeAt(current.x + current.w / 2,
+                                          current.y + current.h / 2);
   double x = current.centerX(), y = current.centerY();
   level.add<Nova>(x, y + 8);
   Spark::burst(level, x, y, col::gold, 20, 160, true);

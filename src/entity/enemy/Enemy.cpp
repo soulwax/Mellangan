@@ -1,5 +1,6 @@
 #include "entity/enemy/Enemy.hpp"
 
+#include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Cyclops.hpp"
@@ -159,8 +160,8 @@ void Enemy::move() {
   if (!plan)
     return;
   const Player &p = *level->player;
-  x += (xWant + xa) * DT;
-  y += (yWant + ya) * DT;
+  x += (xWant * level->pace + xa) * DT;
+  y += (yWant * level->pace + ya) * DT;
   static const double KNOCK_DECAY = std::exp(-9 * DT);
   xa *= KNOCK_DECAY, ya *= KNOCK_DECAY;
   flash = std::max(0.0f, flash - DT);
@@ -262,6 +263,8 @@ const char *Enemy::name() const {
   return NAMES[&type - TYPES];
 }
 
+int Enemy::kind() const { return int(&type - TYPES); }
+
 void Enemy::hurt(float damage, double xd, double yd, float force,
                  Upgrade *source) {
   if (removed)
@@ -292,8 +295,14 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
 void Enemy::die() {
   remove();
   level->kills++;
+  level->slain[kind()]++;
+  level->streak++, level->streakTime = 2.5f;
+  level->bestStreak = std::max(level->bestStreak, level->streak);
+  level->game.codex.slain[kind()]++;
   Sound::kill.play(0.35f, 0.12f);
-  Gem::drop(*level, x, y - 3, type.xp * (elite ? ELITE_XP : 1));
+  Gem::drop(*level, x, y - 3,
+            type.xp * (elite ? ELITE_XP : 1) * level->xpMul *
+                (1 + std::min(level->streak, 100) * 0.005f));
   if (elite && rng.chance(0.25f))
     level->add<Potion>(x + 6, y);
   if (rng.chance(1 / 150.0f))

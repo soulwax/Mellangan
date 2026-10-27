@@ -10,7 +10,7 @@
 class Input {
 public:
   Key up, down, left, right, confirm, escape, pause, one, two, three, four, restart,
-      quit, map, erase, older, newer, fps, fullscreen, mute, devLevel, devTime, devGod, devWorld, devWarp;
+      quit, map, codex, erase, older, newer, prior, next, fps, fullscreen, mute, devLevel, devTime, devGod, devWorld, devWarp;
   float mouseX = 0, mouseY = 0;
   bool mouseClicked = false, mouseMoved = false;
   std::string typed;
@@ -22,6 +22,6 @@ private:
   int clicks = 0, moves = 0;
   std::string pending;
 
-  std::array<Key *, 25> keys();
+  std::array<Key *, 28> keys();
   Key *bind(SDL_Scancode sc);
 };

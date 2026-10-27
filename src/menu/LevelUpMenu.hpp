@@ -21,6 +21,7 @@ private:
   int selected = 0;
 
   bool treasure = false;
+  int evolveSlot = -1;
 
   std::array<SDL_FRect, 4> cards() const;
   void choose(int i);

@@ -15,10 +15,10 @@ Bow::Bow()
 void Bow::tick(Player &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 0.6f : 0.85f) * p.haste;
+  cd = (level >= 4 ? 0.6f : 0.85f) * p.haste * pace;
   int n = 1 + at(level, 3) + at(level, 5),
       pierce = 3 + 2 * at(level, 2) + 2 * at(level, 4);
-  float dmg = (13.0f + 6 * at(level, 2)) * p.might;
+  float dmg = (13.0f + 6 * at(level, 2)) * p.might * power;
   double aim = std::atan2(p.yAim, p.xAim);
   for (int i = 0; i < n; i++) {
     double dir = aim + (i - (n - 1) * 0.5) * 0.14;

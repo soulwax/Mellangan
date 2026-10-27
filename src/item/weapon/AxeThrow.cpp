@@ -14,10 +14,10 @@ AxeThrow::AxeThrow()
 void AxeThrow::tick(Player &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = 2.3f * p.haste;
+  cd = 2.3f * p.haste * pace;
   Sound::axe.play(0.45f);
   int n = 1 + at(level, 3) + at(level, 5);
-  float dmg = (26.0f + 10 * (at(level, 2) + at(level, 4))) * p.might;
+  float dmg = (26.0f + 10 * (at(level, 2) + at(level, 4))) * p.might * power;
   for (int i = 0; i < n; i++) {
     double xa = p.facing * rng.range(25, 70) + (i - (n - 1) * 0.5f) * 55,
            ya = -rng.range(230, 260);

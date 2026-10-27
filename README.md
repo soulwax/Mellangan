@@ -84,6 +84,8 @@ MoltenVK from `$VULKAN_SDK` into `lib/`; players start the game with `Mellangan.
 | 1-4, Arrows + Enter, Mouse | Pick an upgrade (4 for a relic) |
 | Tab | World map (arrows pan, 1-3 zoom); on the title, switch world mode |
 | Up / Down (title) | Recall a past world |
+| Left / Right (title) | Choose an unlocked starting weapon |
+| C (title, pause) | Codex |
 | Esc / P | Pause |
 | F11 | Fullscreen |
 | F3 | FPS counter |
