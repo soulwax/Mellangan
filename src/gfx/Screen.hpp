@@ -59,10 +59,12 @@ public:
     bool visible(Vec2 p, float margin) const;
 
 private:
-    VK2DTexture atlas = nullptr, font = nullptr, world = nullptr, light = nullptr;
-    VK2DShader post = nullptr, flashShader = nullptr;
+    VK2DTexture atlas = nullptr, silhouette = nullptr, font = nullptr, world = nullptr, light = nullptr;
+    VK2DImage silhouetteImg = nullptr;
+    VK2DShader post = nullptr;
     Color current;
     int lightBudget = 0;
 
     void glyphs(std::string_view s, float x, float y, float size);
+    bool loadSilhouette(const std::string &path);
 };

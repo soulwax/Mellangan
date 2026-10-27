@@ -1,3 +1,4 @@
+
 #include <SDL3/SDL.h>
 #include <VK2D/VK2D.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -50,7 +51,10 @@ int main(int argc, char **argv) {
     int code = 0;
     {
         Game game;
-        for (int i = 1; i < argc; i++) game.dev |= std::string_view(argv[i]) == "--dev";
+        for (int i = 1; i < argc; i++) {
+            game.dev |= std::string_view(argv[i]) == "--dev";
+            game.bench.enabled |= std::string_view(argv[i]) == "--bench";
+        }
         if (game.dev) spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world debug, F9 warp to nearest structure");
         if (game.init(window, base)) {
             spdlog::info("Mellangan ready");

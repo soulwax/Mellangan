@@ -12,6 +12,7 @@ bool Game::init(SDL_Window *w, const std::string &base) {
     if (!screen.load(base)) return false;
     Sound::init(base);
     toTitle();
+    if (bench.enabled) bench.start(*this);
     return true;
 }
 
@@ -40,9 +41,14 @@ void Game::run() {
             input.handle(e, SDL_GetWindowPixelDensity(window));
         }
         uint64_t work = SDL_GetPerformanceCounter();
-        for (; acc >= DT; acc -= DT) tick();
+        int ticks = 0;
+        for (; acc >= DT; acc -= DT) tick(), ticks++;
+        uint64_t ticked = SDL_GetPerformanceCounter();
         render();
-        cpuTime += double(SDL_GetPerformanceCounter() - work) / double(SDL_GetPerformanceFrequency());
+        uint64_t done = SDL_GetPerformanceCounter();
+        double freq = double(SDL_GetPerformanceFrequency());
+        cpuTime += double(done - work) / freq;
+        bench.frame(*this, dt, ticks, double(ticked - work) / freq, double(done - ticked) / freq);
         vk2dRendererPresent();
 
         frames++, perfFrames++;

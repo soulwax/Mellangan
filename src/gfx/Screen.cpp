@@ -1,6 +1,7 @@
 #include "gfx/Screen.hpp"
 
 #include <VK2D/Blobs.h>
+#include <VK2D/stb_image.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -13,10 +14,6 @@ struct PostData {
     float time, hurt, lowHealth;
     uint32_t light;
     float resW, resH, vignette, grain;
-};
-
-struct FlashData {
-    float amount, r, g, b;
 };
 
 static VK2DShader loadShader(const std::string &path, uint32_t uniformSize) {
@@ -37,19 +34,19 @@ bool Screen::load(const std::string &base) {
     atlas = vk2dTextureLoad(path("res/atlas.png").c_str());
     font = vk2dTextureLoad(path("res/font.png").c_str());
     post = loadShader(path("res/shaders/post.spv"), sizeof(PostData));
-    flashShader = loadShader(path("res/shaders/flash.spv"), sizeof(FlashData));
+    loadSilhouette(path("res/atlas.png"));
     world = vk2dTextureCreate(W, H);
     light = vk2dTextureCreate(W, H);
-    if (atlas && font && post && flashShader && world && light) return true;
+    if (atlas && silhouette && font && post && world && light) return true;
     spdlog::error("Failed to load resources from {}res: {}", base, vk2dStatusMessage());
     return false;
 }
 
 void Screen::unload() {
-    for (VK2DShader s : {post, flashShader})
-        if (s) vk2dShaderFree(s);
-    for (VK2DTexture t : {atlas, font, world, light})
+    if (post) vk2dShaderFree(post);
+    for (VK2DTexture t : {atlas, silhouette, font, world, light})
         if (t) vk2dTextureFree(t);
+    if (silhouetteImg) vk2dImageFree(silhouetteImg);
 }
 
 void Screen::beginLight(Color ambient) {
@@ -109,11 +106,26 @@ void Screen::center(const Sprite &s, Vec2 at, float sc, float rot) {
     sprite(s, at, {s.w * 0.5f, s.h * 0.5f}, {sc, sc}, rot);
 }
 
+bool Screen::loadSilhouette(const std::string &path) {
+    int w, h, n;
+    stbi_uc *px = stbi_load(path.c_str(), &w, &h, &n, 4);
+    if (!px) return false;
+    uint32_t *texel = reinterpret_cast<uint32_t *>(px);
+    for (int i = 0; i < w * h; i++) texel[i] |= 0x00FFFFFFu; // RGBA bytes, little-endian: set R, G, B, keep A
+    silhouetteImg = vk2dImageFromPixels(vk2dRendererGetDevice(), px, w, h, true);
+    stbi_image_free(px);
+    if (silhouetteImg) silhouette = vk2dTextureLoadFromImage(silhouetteImg);
+    return silhouette != nullptr;
+}
+
 void Screen::flash(const Sprite &s, Vec2 at, Vec2 o, Vec2 sc, float rot, float amount, Color c) {
-    if (amount <= 0) return sprite(s, at, o, sc, rot);
-    FlashData data{amount, c.r, c.g, c.b};
+    sprite(s, at, o, sc, rot);
+    if (amount <= 0) return;
+    Color prev = current;
+    color({c.r, c.g, c.b, prev.a * std::min(amount, 1.0f)});
     Vec2 p = at - offset - Vec2{o.x * sc.x, o.y * sc.y};
-    vk2dRendererDrawShader(flashShader, &data, atlas, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
+    vk2dRendererDrawTexture(silhouette, p.x, p.y, sc.x, sc.y, rot, o.x, o.y, s.x, s.y, s.w, s.h);
+    color(prev);
 }
 
 void Screen::glow(Vec2 at, float size, Color c) {

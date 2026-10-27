@@ -67,6 +67,7 @@ public:
         return v.empty() ? nullptr : v.template get<Is<T>>(*v.begin()).self;
     }
     template <class F> void enemiesNear(Vec2 p, float r, F &&f);
+    int gather(Vec2 p, float r, Enemy **out, int max) const;
     std::vector<Enemy *> nearest(Vec2 p, float range, int n);
 
     void tick();
@@ -84,7 +85,8 @@ private:
 
     std::vector<std::unique_ptr<Entity>> pending;
     std::vector<entt::entity> dead;
-    std::vector<Entity *> sorted;
+    std::vector<Entity *> drawn;
+    std::vector<uint64_t> keys, keysTmp; // draw order: layer | y | index into drawn
     std::vector<Prop> props;
     std::vector<int> cellStart, cellFill;
     std::vector<Enemy *> cells;
@@ -99,6 +101,7 @@ private:
     void buildGrid();
     void renderFloor(Screen &s);
     void scatter(Screen &s);
+    void queue(Entity *e);
     int cell(float v, float origin) const { return std::clamp(int(std::floor((v - origin) / CELL)), 0, GRID - 1); }
 };
 

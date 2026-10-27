@@ -79,16 +79,18 @@ void Enemy::tick() {
 }
 
 void Enemy::separate() {
-    level->enemiesNear(pos, radius + 16, [&](Enemy &o) {
-        if (&o == this || o.type.floats) return;
+    Enemy *near[24];
+    for (int i = 0, count = level->gather(pos, radius + 16, near, 24); i < count; i++) {
+        Enemy &o = *near[i];
+        if (&o == this || o.type.floats) continue;
         Vec2 d = pos - o.pos;
         float min = (radius + o.radius) * 0.85f, d2 = lengthSq(d);
-        if (d2 >= min * min || d2 < 1e-6f) return;
+        if (d2 >= min * min || d2 < 1e-6f) continue;
         float dd = std::sqrt(d2), w = o.type.speed <= 0 ? 1 : o.radius / (radius + o.radius);
         Vec2 n = d / dd * ((min - dd) * 0.5f);
         pos += n * w;
         o.pos -= n * (1 - w);
-    });
+    }
 }
 
 void Enemy::makeElite() {

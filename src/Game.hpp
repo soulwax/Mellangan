@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 
+#include "Bench.hpp"
 #include "Input.hpp"
 #include "gfx/Screen.hpp"
 #include "level/Level.hpp"
@@ -22,6 +23,7 @@ public:
     std::unique_ptr<Level> level;
     std::unique_ptr<Menu> menu;
     bool running = true, dev = false;
+    Bench bench;
 
     bool init(SDL_Window *window, const std::string &base);
     void shutdown();

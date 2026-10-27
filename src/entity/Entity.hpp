@@ -3,6 +3,7 @@
 #include <entt/entity/entity.hpp>
 
 #include "Math.hpp"
+#include "entity/Pool.h"
 #include "gfx/Screen.hpp"
 
 class Level;
@@ -16,6 +17,8 @@ public:
     entt::entity id = entt::null;
 
     virtual ~Entity() = default;
+    static void *operator new(size_t size) { return pool_alloc(size); }
+    static void operator delete(void *p, size_t size) { pool_free(p, size); }
     virtual void onAdded() {}
     virtual void tick() {}
     virtual void render(Screen &) {}

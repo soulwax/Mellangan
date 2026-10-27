@@ -2,12 +2,32 @@
 
 #include <spdlog/spdlog.h>
 
+#include <cstring>
+
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Encounter.hpp"
 
 namespace {
+uint32_t orderedBits(float f) {
+    uint32_t u;
+    std::memcpy(&u, &f, 4);
+    return u ^ (uint32_t(int32_t(u) >> 31) | 0x80000000u);
+}
+
+void radixSort(std::vector<uint64_t> &a, std::vector<uint64_t> &tmp) {
+    static const int SHIFT[3] = {24, 36, 48};
+    tmp.resize(a.size());
+    for (int shift : SHIFT) {
+        uint32_t count[4097] = {};
+        for (uint64_t k : a) count[(k >> shift & 4095) + 1]++;
+        for (int i = 1; i <= 4096; i++) count[i] += count[i - 1];
+        for (uint64_t k : a) tmp[count[k >> shift & 4095]++] = k;
+        a.swap(tmp);
+    }
+}
+
 template <class F> void eachVisibleTile(const Screen &s, F &&f, int before = 0, int after = 0) {
     int x0 = int(std::floor(s.offset.x / 16)) - before, y0 = int(std::floor(s.offset.y / 16)) - before;
     for (int y = y0; y <= y0 + before + Screen::H / 16 + 1 + after; y++)
@@ -78,6 +98,21 @@ void Level::explore() {
     spdlog::info("encounter: {} at tile ({}, {})", s.name(), s.x, s.y);
 }
 
+int Level::gather(Vec2 p, float r, Enemy **out, int max) const {
+    int cx = cell(p.x, gridOrigin.x), cy = cell(p.y, gridOrigin.y), n = 0;
+    int x0 = cell(p.x - r, gridOrigin.x), x1 = cell(p.x + r, gridOrigin.x);
+    int y0 = cell(p.y - r, gridOrigin.y), y1 = cell(p.y + r, gridOrigin.y);
+    for (int ring = 0; ring <= 2; ring++)
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++) {
+                int d = std::max(std::abs(x - cx), std::abs(y - cy));
+                if (d != ring && !(ring == 2 && d > 2)) continue;
+                for (int c = y * GRID + x, i = cellStart[c]; i < cellStart[c + 1]; i++)
+                    if (!cells[i]->removed && (out[n++] = cells[i], n == max)) return n;
+            }
+    return n;
+}
+
 void Level::buildGrid() {
     gridOrigin = player->pos - Vec2{GRID * CELL * 0.5f, GRID * CELL * 0.5f};
     std::fill(cellStart.begin(), cellStart.end(), 0);
@@ -141,23 +176,25 @@ void Level::collide(Vec2 &foot, float radius) const {
 
 void Level::render(Screen &s) {
     renderFloor(s);
-    sorted.clear();
+    drawn.clear(), keys.clear();
     for (auto [id, o] : reg.view<Owned>().each())
-        if (!o.self->removed && s.visible(o.self->pos, 48)) sorted.push_back(o.self.get());
-    for (Prop &p : props) sorted.push_back(&p);
-    std::sort(sorted.begin(), sorted.end(), [](Entity *a, Entity *b) {
-        int la = a->layer(), lb = b->layer();
-        return la != lb ? la < lb : a->pos.y < b->pos.y;
-    });
+        if (!o.self->removed && s.visible(o.self->pos, 48)) queue(o.self.get());
+    for (Prop &p : props) queue(&p);
+    radixSort(keys, keysTmp);
     bool shadows = false;
-    for (Entity *e : sorted) {
-        if (!shadows && e->layer() >= 1) {
+    for (uint64_t k : keys) {
+        if (!shadows && k >> 56 >= 1) {
             shadows = true;
-            for (Entity *m : sorted)
-                if (m->layer() == 1) m->renderShadow(s);
+            for (uint64_t m : keys)
+                if (m >> 56 == 1) drawn[m & 0xFFFFFF]->renderShadow(s);
         }
-        e->render(s);
+        drawn[k & 0xFFFFFF]->render(s);
     }
+}
+
+void Level::queue(Entity *e) {
+    keys.push_back(uint64_t(e->layer()) << 56 | uint64_t(orderedBits(e->pos.y)) << 24 | drawn.size());
+    drawn.push_back(e);
 }
 
 void Level::renderLight(Screen &s) {

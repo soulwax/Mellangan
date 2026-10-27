@@ -45,6 +45,8 @@ If the build fails, `VERSION` and `CHANGELOG.md` are restored.
 | F11 | Fullscreen |
 | F3 | FPS counter |
 
+Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits when it is done).
+
 ## Layout
 
 - `src/entity` – `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, particles
