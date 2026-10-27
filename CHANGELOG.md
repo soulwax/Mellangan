@@ -6,6 +6,12 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Cottages are proper buildings now: three to five tiles wide, one or two storeys, wood or stone walls closed by
+  edge tiles, grey or red roofs with a chimney, and a gable porch over the door. The garden path leads to the door.
+  Designs were proven outside the game with the new `tools/building_preview.py`.
+
 ## [0.2.3] - 2026-10-27
 
 ### Changed

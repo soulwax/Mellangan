@@ -33,8 +33,9 @@ constexpr int Sign = 83, Beehive = 94, Log = 106, Sack = 107;
 constexpr int Bomb = 105, Key = 117, Bow = 118, Arrow = 119, Scythe = 129;
 constexpr int WellRoof = 92, Well = 104; // roof stacks on the well
 constexpr int Path = 43;
-constexpr int GreyRoof = 48, RedRoof = 52;
+constexpr int GreyRoof = 48, RedRoof = 52, RoofChimney = 3, RoofEaves = 12, RoofGable = 15;
 constexpr int WoodWindow = 84, WoodDoor = 85, StoneWindow = 88, StoneDoor = 89;
+constexpr int WoodWallLeft = 72, WoodWall = 73, WoodWallRight = 75, StoneWallLeft = 76, StoneWall = 77, StoneWallRight = 79;
 constexpr int FenceTopLeft = 44, FenceTop = 45, FenceTopRight = 46, FenceLeft = 56, FenceRight = 59;
 constexpr int FenceBottomLeft = 68, FenceBottomRight = 70, FenceEndLeft = 80, FenceRail = 81, FenceEndRight = 82;
 constexpr int PlazaTopLeft = 96; // 3x3 raised stone slab, centre at PlazaTopLeft + 13

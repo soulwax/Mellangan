@@ -99,5 +99,6 @@ Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits w
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
 - `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites
+- `tools/building_preview.py` – composes Tiny Town tile rows into a preview PNG, used to design buildings outside the game
 
 See `res/CREDITS.md` for asset licenses.

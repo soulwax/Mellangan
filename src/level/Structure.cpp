@@ -6,6 +6,25 @@ namespace tt = atlas::tt;
 namespace t = atlas::t;
 
 void sizeSquare(uint32_t, int *w, int *h) { *w = 5, *h = 5; }
+void sizeCottage(uint32_t r, int *w, int *h) { *w = 5 + int((r >> 13) % 3), *h = 5; }
+
+struct House {
+    int width, door, chimney, storeys;
+    bool red, stone, gable, lit;
+};
+
+House houseOf(const Structure *s) {
+    uint32_t k = s->seed;
+    House h{};
+    h.width = s->w - 2;
+    h.red = k & 1, h.stone = k & 2, h.lit = (k >> 5) % 3 != 0;
+    h.storeys = h.width >= 4 && (k >> 9 & 1) ? 2 : 1;
+    h.gable = k >> 10 & 1;
+    h.door = h.width % 2 ? h.width / 2 : 1 + int(k >> 11 & 1);
+    h.chimney = 1 + int((k >> 12) % uint32_t(h.width - 2));
+    if (h.gable && h.chimney == h.door) h.chimney = -1;
+    return h;
+}
 void sizeGraveyard(uint32_t r, int *w, int *h) { *w = 7 + 2 * ((r >> 15) & 1), *h = 6 + ((r >> 16) & 1); }
 void sizeCamp(uint32_t, int *w, int *h) { *w = 7, *h = 7; }
 void sizeRuin(uint32_t r, int *w, int *h) { *w = 6 + ((r >> 15) & 1), *h = 4; }
@@ -21,26 +40,32 @@ bool shrineGround(const Structure *s, int lx, int ly, Sprite *out) {
     *out = atlas::town(tt::PlazaTopLeft + row * 12 + col);
     return true;
 }
-bool cottageGround(const Structure *, int lx, int ly, Sprite *out) {
-    if (lx != 2 || ly < 3) return false;
+bool cottageGround(const Structure *s, int lx, int ly, Sprite *out) {
+    if (ly < 3 || lx != houseOf(s).door + 1) return false;
     *out = atlas::town(tt::Path);
     return true;
 }
 
 bool cottage(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
-    bool red = s->seed & 1, stone = s->seed & 2, lit = (s->seed >> 5) % 3 != 0;
-    if (ly == 2 && lx >= 1 && lx <= 3) {
-        int c = lx - 1, roof = red ? tt::RedRoof : tt::GreyRoof;
-        bool door = c == 1;
-        p->add(atlas::town(door ? (stone ? tt::StoneDoor : tt::WoodDoor) : (stone ? tt::StoneWindow : tt::WoodWindow)));
-        p->add(atlas::town(roof + 12 + c), -16);
-        p->add(atlas::town(door && (s->seed & 4) ? roof + 3 : roof + c), -32);
+    House h = houseOf(s);
+    int c = lx - 1;
+    if (ly == 2 && c >= 0 && c < h.width) {
+        int roof = h.red ? tt::RedRoof : tt::GreyRoof, side = c == 0 ? 0 : c == h.width - 1 ? 2 : 1;
+        int wall[3] = {h.stone ? tt::StoneWallLeft : tt::WoodWallLeft, h.stone ? tt::StoneWall : tt::WoodWall,
+                       h.stone ? tt::StoneWallRight : tt::WoodWallRight};
+        int window = h.stone ? tt::StoneWindow : tt::WoodWindow, doorTile = h.stone ? tt::StoneDoor : tt::WoodDoor;
+        bool inside = side == 1, door = c == h.door;
+        p->add(atlas::town(!inside ? wall[side] : door ? doorTile : window));
+        int yo = -16;
+        if (h.storeys == 2) p->add(atlas::town(inside && c % 2 ? window : wall[side]), yo), yo -= 16;
+        p->add(atlas::town(h.gable && door ? roof + tt::RoofGable : roof + tt::RoofEaves + side), yo);
+        p->add(atlas::town(c == h.chimney ? roof + tt::RoofChimney : roof + side), yo - 16);
         p->shadow = 1.4f, p->solid = 8;
-        if (!door && lit) p->light = {0.34f, 0.2f, 0.06f, 1}, p->lightYo = -8, p->lightSize = 56, p->wisp = false;
+        if (inside && !door && h.lit) p->light = {0.34f, 0.2f, 0.06f, 1}, p->lightYo = -8, p->lightSize = 56, p->wisp = false;
         return true;
     }
     if (lx == 0 && ly == 3) return p->add(atlas::tile(r & 1 ? t::Barrel : t::Crate)), p->shadow = 0.8f, p->solid = 5, true;
-    if (lx == 4 && ly == 3) {
+    if (lx == s->w - 1 && ly == 3) {
         if (s->seed & 8) return p->add(atlas::town(tt::Beehive)), p->shadow = 0.8f, p->solid = 4, true;
         p->add(atlas::town(tt::Well)), p->add(atlas::town(tt::WellRoof), -16), p->shadow = 1.0f, p->solid = 6;
         return true;
@@ -123,7 +148,7 @@ bool inside(const Structure *s, int lx, int ly) { return lx >= 0 && ly >= 0 && l
 } // namespace
 
 const StructureDef STRUCTURES[int(StructureKind::Count)] = {
-    {"COTTAGE", {1.0f, 0.62f, 0.25f, 1}, sizeSquare, nullptr, cottageGround, cottage},
+    {"COTTAGE", {1.0f, 0.62f, 0.25f, 1}, sizeCottage, nullptr, cottageGround, cottage},
     {"GRAVEYARD", {0.62f, 0.55f, 1.0f, 1}, sizeGraveyard, nullptr, nullptr, graveyard},
     {"SHRINE", {0.3f, 0.9f, 1.0f, 1}, sizeSquare, nullptr, shrineGround, shrine},
     {"CAMP", {1.0f, 0.35f, 0.3f, 1}, sizeCamp, campDirt, nullptr, camp},

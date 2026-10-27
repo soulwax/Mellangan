@@ -8,7 +8,7 @@ public:
         Sprite sprite;
         int yo;
     };
-    Part parts[3]{};
+    Part parts[4]{};
     int count = 0;
     float shadow = 0, solid = 0, lightSize = 80;
     Color light{0, 0, 0, 0};
