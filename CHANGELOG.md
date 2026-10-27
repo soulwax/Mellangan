@@ -6,6 +6,17 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-27
+
+### Changed
+
+- Bigger hordes run faster: 30,000 enemies now hold 59 fps (was 41) and 50,000 run at 22 fps (was 4). Removed
+  entities are queued as they die instead of found by scanning everything each tick, each touching pair of enemies is
+  separated once instead of twice, enemies far off screen separate on alternate ticks, the spatial grid computes each
+  enemy's cell once, and off-screen lights are culled before their draw call.
+- `--bench` now also keeps particles at their cap with gore, sparks and explosions, and logs a per-system breakdown
+  (entities, particles, housekeeping, light, floor, sort, draw) from a small C profiler.
+
 ## [0.2.1] - 2026-10-27
 
 ### Changed

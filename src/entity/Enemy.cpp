@@ -64,8 +64,8 @@ void Enemy::tick() {
     steer(xn, yn, xs, ys);
     x += (xs + xa) * DT;
     y += (ys + ya) * DT;
-    double k = std::exp(-9 * DT);
-    xa *= k, ya *= k;
+    static const double KNOCK_DECAY = std::exp(-9 * DT);
+    xa *= KNOCK_DECAY, ya *= KNOCK_DECAY;
     flash = std::max(0.0f, flash - DT);
     knifeCooldown -= DT;
     animT += DT;
@@ -86,19 +86,21 @@ void Enemy::tick() {
         y = p.y - yn * reach;
         p.hurt(type.damage * damageMul);
     }
-    if (!type.floats) separate(), level->collide(x, y, radius);
+    if (type.floats) return;
+    if (dist < 260 || ((uintptr_t(this) >> 5) + level->ticks) & 1) separate();
+    level->collide(x, y, radius);
 }
 
 void Enemy::separate() {
     Enemy *near[24];
     for (int i = 0, count = level->gather(x, y, radius + 16, near, 24); i < count; i++) {
         Enemy &o = *near[i];
-        if (&o == this || o.type.floats) continue;
+        if (&o == this || o.type.floats || (&o < this && o.type.speed > 0)) continue;
         double xd = x - o.x, yd = y - o.y;
         double min = (radius + o.radius) * 0.85, d2 = xd * xd + yd * yd;
         if (d2 >= min * min || d2 < 1e-6) continue;
         double dd = std::sqrt(d2), w = o.type.speed <= 0 ? 1.0 : o.radius / (radius + o.radius);
-        double push = (min - dd) * 0.5 / dd;
+        double push = (min - dd) / dd;
         x += xd * push * w;
         y += yd * push * w;
         o.x -= xd * push * (1 - w);

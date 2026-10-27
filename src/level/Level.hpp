@@ -44,6 +44,7 @@ public:
     entt::registry reg;
     Player *player = nullptr;
     float time = 0;
+    uint32_t ticks = 0;
     int kills = 0;
     Spawner spawner{*this};
     Night night{*this};
@@ -86,6 +87,7 @@ public:
     void renderWorldDebug(Screen &s, int xView, int yView, float xMouse, float yMouse);
     void collide(double &x, double &y, float radius) const;
     bool blocks(double x, double y) const;
+    void retire(entt::entity id) { dead.push_back(id); }
     bool visited(const Structure &s) const;
     static bool unvisited(const Structure *s, const void *level);
 
@@ -99,7 +101,7 @@ private:
     std::vector<SpriteObject *> drawn;
     std::vector<uint64_t> keys, keysTmp;
     std::vector<Prop> props;
-    std::vector<int> cellStart, cellFill;
+    std::vector<int> cellStart, cellFill, cellOf;
     std::vector<Enemy *> cells;
     double xGrid = 0, yGrid = 0;
     float solids[SOLID_H * SOLID_W]{};
