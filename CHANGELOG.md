@@ -6,6 +6,20 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-27
+
+### Added
+
+- Biomes picked from Perlin temperature, moisture and eeriness fields: open meadows, green forests, autumn woods, dry
+  heath and haunted barrows, each with its own trees and props, dirt cover, ground tint and structure mix. Borders
+  are domain-warped so they come out ragged, and the ground tint fades across them.
+- The F8 overlay shows the biome, climate values and clump density under the cursor, and the player's biome.
+
+### Changed
+
+- World generation is split into modules: a pure C Perlin/fBm noise library (`Noise.c`), a biome table, data-driven
+  scatter features and a structure table with per-kind hooks for size, dirt, ground and props.
+
 ## [0.1.1] - 2026-10-27
 
 ### Added
