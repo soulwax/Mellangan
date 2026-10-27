@@ -29,6 +29,6 @@ void Halo::tick(Player &p) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
     float rr = r + e.radius;
     if (xd * xd + yd * yd < rr * rr)
-      e.hurt(dmg, e.x - p.x, e.y - p.y, 25);
+      e.hurt(dmg, e.x - p.x, e.y - p.y, 25, this);
   });
 }

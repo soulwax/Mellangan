@@ -33,8 +33,11 @@ struct Rng {
 
 inline Rng rng;
 
+extern "C" uint32_t noise_salt;
+
 inline uint32_t hash2(int x, int y) {
-  uint32_t h = uint32_t(x) * 0x8DA6B343u ^ uint32_t(y) * 0xD8163841u;
+  uint32_t h = uint32_t(x) * 0x8DA6B343u ^ uint32_t(y) * 0xD8163841u ^
+               noise_salt * 0x9E3779B1u;
   h ^= h >> 13;
   h *= 0x5BD1E995u;
   h ^= h >> 15;

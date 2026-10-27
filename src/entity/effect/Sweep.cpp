@@ -24,7 +24,7 @@ void Sweep::tick() {
         std::find(hits.begin(), hits.end(), e.id) != hits.end())
       return;
     hits.push_back(e.id);
-    e.hurt(damage, e.x - player.x, e.y - player.y, 120);
+    e.hurt(damage, e.x - player.x, e.y - player.y, 120, source);
   });
   if (t >= 1)
     remove();

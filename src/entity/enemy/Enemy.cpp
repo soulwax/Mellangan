@@ -7,6 +7,7 @@
 #include "entity/enemy/ai/Plans.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/pickup/Potion.hpp"
+#include "item/Upgrade.hpp"
 #include "entity/projectile/Orb.hpp"
 #include "level/Level.hpp"
 #include "particle/TextParticle.hpp"
@@ -147,7 +148,8 @@ void Enemy::act() {
          dd = std::sqrt(xd * xd + yd * yd);
   if (p.dead() || dd < 1e-5)
     return;
-  level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul);
+  level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul)
+      ->by = name();
   Sound::orb.play(0.3f);
 }
 
@@ -222,6 +224,7 @@ void Enemy::tick() {
   if (dist < reach && dist > 1e-3 && !p.dead()) {
     x = p.x - xd / dist * reach;
     y = p.y - yd / dist * reach;
+    p.felledBy = name();
     p.hurt(type.damage * damageMul);
   }
 }
@@ -251,7 +254,16 @@ void Enemy::renderLight(Screen &s) {
 
 void Enemy::renderShadow(Screen &s) { drawShadow(s, xp, yp, type.floats); }
 
-void Enemy::hurt(float damage, double xd, double yd, float force) {
+const char *Enemy::name() const {
+  static const char *const NAMES[] = {"a bat",     "a rat",    "a slime",
+                                      "a scorpion", "a spider", "a ghost",
+                                      "a cultist", "a demon",  "a knight",
+                                      "the cyclops"};
+  return NAMES[&type - TYPES];
+}
+
+void Enemy::hurt(float damage, double xd, double yd, float force,
+                 Upgrade *source) {
   if (removed)
     return;
   double dd = std::sqrt(xd * xd + yd * yd);
@@ -262,6 +274,8 @@ void Enemy::hurt(float damage, double xd, double yd, float force) {
   bool crit = rng.chance(0.08f + level->player->luck);
   if (crit)
     damage *= 1.8f;
+  if (source)
+    source->dealt += std::min(damage, std::max(hp, 0.0f));
   hp -= damage;
   flash = 0.1f;
   aware = true;

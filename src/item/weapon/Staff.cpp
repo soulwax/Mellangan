@@ -25,9 +25,11 @@ void Staff::tick(Player &p) {
     Enemy *e = targets[i % targets.size()];
     float spread = i < int(targets.size()) ? 0 : rng.range(-0.35f, 0.35f);
     double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x) + spread;
-    p.level->add<Bolt>(p.x, p.bodyY(), std::cos(dir) * 230, std::sin(dir) * 230,
-                       (level >= 2 ? 14.0f : 10.0f) * p.might, 1 + at(level, 4),
-                       e->id);
+    p.level
+        ->add<Bolt>(p.x, p.bodyY(), std::cos(dir) * 230, std::sin(dir) * 230,
+                    (level >= 2 ? 14.0f : 10.0f) * p.might, 1 + at(level, 4),
+                    e->id)
+        ->source = this;
   }
   Spark::burst(*p.level, p.x, p.bodyY(), {0.45f, 0.8f, 1, 1}, 4, 40, true);
   Sound::cast.play(0.3f, 0.1f);

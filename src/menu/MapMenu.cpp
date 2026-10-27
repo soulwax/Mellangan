@@ -45,6 +45,9 @@ void MapMenu::render(Screen &s) {
 
   s.rect(0, 0, s.w, s.h, {0.02f, 0.02f, 0.05f, 0.88f});
   s.text("WORLD MAP", pad, pad, 2 * u, col::gold);
+  std::string seed = "SEED " + game.worldName();
+  s.text(seed, v.x + v.w - Screen::textWidth(seed, small), pad + 16 * u - 8 * small,
+         small, col::muted);
   Chart::border(s, v, u);
   c.draw(s, l, v, t);
 
@@ -62,7 +65,9 @@ void MapMenu::render(Screen &s) {
            x + 12 * small, y, small, label);
     y += row;
   }
-  y += row;
+  s.rect(x, y + 4 * small, 8 * small, 8 * small, {0.3f, 0.32f, 0.3f, 1});
+  s.text("EARLIER RUNS", x + 12 * small, y, small, col::muted);
+  y += row * 2;
   s.text(fmt::format("{} of {} walked", c.discovered, int(BIOME_COUNT)), x, y,
          small, col::muted);
   y += row;

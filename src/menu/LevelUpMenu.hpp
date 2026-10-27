@@ -20,6 +20,8 @@ private:
       choices; // nullptr: every upgrade is maxed, offer a feast
   int selected = 0;
 
-  std::array<SDL_FRect, 3> cards() const;
+  bool treasure = false;
+
+  std::array<SDL_FRect, 4> cards() const;
   void choose(int i);
 };

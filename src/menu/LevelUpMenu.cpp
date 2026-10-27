@@ -9,13 +9,20 @@
 #include "menu/Menu.hpp"
 
 LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
-  auto &all = game.level->player->upgrades;
+  Player &p = *game.level->player;
+  auto &all = p.upgrades;
+  if (p.pendingTreasures > 0)
+    p.pendingTreasures--, treasure = true;
   int owned[2] = {0, 0};
   for (auto &u : all)
-    if (u->level > 0)
+    if (u->level > 0 && !u->rare)
       owned[u->weapon]++;
+  std::vector<Upgrade *> relics;
   for (auto &u : all)
-    if (!u->maxed() && (u->level > 0 || owned[u->weapon] < Upgrade::SLOTS))
+    if (u->rare && !u->maxed())
+      relics.push_back(u.get());
+    else if (!u->rare && !u->maxed() &&
+             (u->level > 0 || owned[u->weapon] < Upgrade::SLOTS))
       choices.push_back(u.get());
   for (size_t i = choices.size(); i > 1; i--)
     std::swap(choices[i - 1], choices[rng.irange(0, int(i) - 1)]);
@@ -23,15 +30,18 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
     choices.resize(3);
   if (choices.empty())
     choices.push_back(nullptr);
+  if (!relics.empty() && (treasure || rng.chance(0.03f)))
+    choices.push_back(relics[rng.irange(0, int(relics.size()) - 1)]);
   Sound::levelUp.play(0.6f, 0);
 }
 
-std::array<SDL_FRect, 3> LevelUpMenu::cards() const {
+std::array<SDL_FRect, 4> LevelUpMenu::cards() const {
   const Screen &s = game.screen;
+  int n = int(choices.size());
   float u = s.u, w = std::min(s.w * 0.9f, 340 * u), h = 36 * u, gap = 6 * u;
-  float y = s.h * 0.5f - (3 * h + 2 * gap) * 0.5f + 12 * u;
-  std::array<SDL_FRect, 3> r{};
-  for (int i = 0; i < 3; i++)
+  float y = s.h * 0.5f - (n * h + (n - 1) * gap) * 0.5f + 12 * u;
+  std::array<SDL_FRect, 4> r{};
+  for (int i = 0; i < 4; i++)
     r[i] = {(s.w - w) * 0.5f, y + i * (h + gap), w, h};
   return r;
 }
@@ -45,7 +55,7 @@ void LevelUpMenu::tick() {
     selected = (selected + n - 1) % n;
   if (in.down.clicked)
     selected = (selected + 1) % n;
-  Key *keys[] = {&in.one, &in.two, &in.three};
+  Key *keys[] = {&in.one, &in.two, &in.three, &in.four};
   auto r = cards();
   for (int i = 0; i < n; i++) {
     if (keys[i]->clicked)
@@ -81,8 +91,8 @@ void LevelUpMenu::render(Screen &s) {
   float u = s.u, small = std::max(1.0f, u - 1);
   auto r = cards();
   s.rect(0, 0, s.w, s.h, {0, 0, 0, 0.55f});
-  s.textCenter("LEVEL UP!", s.w / 2, r[0].y - 34 * u, 2 * u,
-               col::gold.alpha(0.85f + 0.15f * std::sin(t * 6)));
+  s.textCenter(treasure ? "TREASURE!" : "LEVEL UP!", s.w / 2, r[0].y - 34 * u,
+               2 * u, col::gold.alpha(0.85f + 0.15f * std::sin(t * 6)));
 
   for (int i = 0; i < int(choices.size()); i++) {
     float in = clampf((t - i * 0.06f) / 0.25f, 0, 1);
@@ -90,12 +100,15 @@ void LevelUpMenu::render(Screen &s) {
     float x = r[i].x + (1 - in) * 40 * u, y = r[i].y, w = r[i].w, h = r[i].h;
     bool sel = i == selected;
     Upgrade *up = choices[i];
+    bool rare = up && up->rare;
+    float shine = 0.5f + 0.5f * std::sin(t * 4);
 
     s.rect(x, y, w, h, col::panel.alpha(0.92f * in));
-    if (sel)
-      s.rect(x, y, w, h, col::gold.alpha(0.08f * in));
-    s.frame(x, y, w, h, u,
-            (sel ? col::gold : Color{0.3f, 0.28f, 0.4f, 1}).alpha(in));
+    if (sel || rare)
+      s.rect(x, y, w, h, col::gold.alpha((rare ? 0.06f + 0.06f * shine : 0.08f) * in));
+    s.frame(x, y, w, h, rare ? 2 * u : u,
+            (sel || rare ? col::gold : Color{0.3f, 0.28f, 0.4f, 1})
+                .alpha(rare && !sel ? (0.55f + 0.45f * shine) * in : in));
 
     float box = 24 * u, bx = x + 6 * u, by = y + (h - box) / 2;
     s.rect(bx, by, box, box, {0.16f, 0.14f, 0.22f, in});
@@ -106,17 +119,18 @@ void LevelUpMenu::render(Screen &s) {
 
     float tx = bx + box + 6 * u;
     s.text(up ? up->name : "Roast Feast", tx, y + 5 * u, u,
-           col::white.alpha(in));
+           (rare ? col::gold : col::white).alpha(in));
     s.text(up ? up->desc[up->level] : "Restore 40 health", tx, y + 20 * u,
            small, col::muted.alpha(in));
     if (up) {
-      std::string tag =
-          up->level == 0 ? "NEW!" : fmt::format("Lv {}", up->level + 1);
+      std::string tag = rare            ? "RELIC"
+                        : up->level == 0 ? "NEW!"
+                                         : fmt::format("Lv {}", up->level + 1);
       s.text(tag, x + w - Screen::textWidth(tag, small) - 6 * u, y + 5 * u,
-             small, (up->level == 0 ? col::gold : col::muted).alpha(in));
+             small, (rare || up->level == 0 ? col::gold : col::muted).alpha(in));
     }
   }
   const SDL_FRect &last = r[choices.size() - 1];
-  s.textCenter("1-3 / Arrows + Enter / Click", s.w / 2, last.y + last.h + 8 * u,
-               small, col::muted);
+  s.textCenter(fmt::format("1-{} / Arrows + Enter / Click", choices.size()),
+               s.w / 2, last.y + last.h + 8 * u, small, col::muted);
 }

@@ -6,6 +6,25 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-28
+
+### Added
+
+- Relics: six unique treasures far stronger than ordinary upgrades. Every chest offers one as a gold fourth card,
+  and any level-up has a 3% chance to. The Sunfire Crown flares around you, the Tempest Eye calls three lightning
+  strikes a second, the Phoenix Feather raises you once from death, the Heart of the Grove adds health and
+  regeneration, the Frozen Hourglass speeds every weapon and your step, and the Obsidian Signet adds damage and armour.
+  Each can be taken once per run, takes no upgrade slot, and is framed in gold on the HUD.
+- The world map remembers: land charted in earlier runs shows faded on the minimap and the full map, along with the
+  structures sighted there.
+- The death and dawn screens show who felled you and how much of the damage each weapon dealt.
+- World seeds: a panel on the title screen picks the Classic world, a Random one each run, or a Custom code typed
+  in (letters and digits, up to 12). The land behind the title regenerates as you choose. The code shows on the map,
+  pause, death and dawn screens so worlds can be shared, and every world keeps its own chart.
+- Past worlds: each finished run records its world code with your best time, run count and whether you saw dawn.
+  The six most recent are listed on the title panel; pick one with Up/Down or a click to play the same land again.
+  The choice is remembered between launches.
+
 ## [0.2.6] - 2026-10-27
 
 ### Added

@@ -22,8 +22,10 @@ void Bow::tick(Player &p) {
   double aim = std::atan2(p.yAim, p.xAim);
   for (int i = 0; i < n; i++) {
     double dir = aim + (i - (n - 1) * 0.5) * 0.14;
-    p.level->add<Arrow>(p.x, p.bodyY(), std::cos(dir) * 320,
-                        std::sin(dir) * 320, dmg, pierce);
+    p.level
+        ->add<Arrow>(p.x, p.bodyY(), std::cos(dir) * 320, std::sin(dir) * 320,
+                     dmg, pierce)
+        ->source = this;
   }
   Sound::bow.play(0.35f);
 }

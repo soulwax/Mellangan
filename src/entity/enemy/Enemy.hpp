@@ -53,7 +53,9 @@ public:
     return type.floats ? (width = 0, 0.0f) : Mob::occlusion(width);
   }
   void renderLight(Screen &s) override;
-  void hurt(float damage, double xd, double yd, float force);
+  void hurt(float damage, double xd, double yd, float force,
+            Upgrade *source = nullptr);
+  const char *name() const;
   void makeElite();
   void think();
   void move();

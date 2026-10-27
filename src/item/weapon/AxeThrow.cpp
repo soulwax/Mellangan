@@ -21,7 +21,9 @@ void AxeThrow::tick(Player &p) {
   for (int i = 0; i < n; i++) {
     double xa = p.facing * rng.range(25, 70) + (i - (n - 1) * 0.5f) * 55,
            ya = -rng.range(230, 260);
-    p.level->add<Axe>(p.x, p.bodyY(), xa, ya, dmg, 5 + 4 * at(level, 4),
-                      p.facing * 14);
+    p.level
+        ->add<Axe>(p.x, p.bodyY(), xa, ya, dmg, 5 + 4 * at(level, 4),
+                   p.facing * 14)
+        ->source = this;
   }
 }

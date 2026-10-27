@@ -15,4 +15,5 @@ public:
   virtual void tick() { t += DT; }
   virtual void render(Screen &s) = 0;
   virtual bool showHud() const { return true; }
+  virtual bool typing() const { return false; }
 };

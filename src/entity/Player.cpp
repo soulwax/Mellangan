@@ -93,9 +93,27 @@ void Player::hurt(float damage) {
   Spark::burst(*level, x, bodyY(), col::red, 6, 60, false);
   if (hp > 0)
     return;
+  if (revives > 0)
+    return rise();
   hp = 0;
   Spark::burst(*level, x, bodyY(), {0.7f, 0.4f, 1, 1}, 40, 120, true);
   level->game.onPlayerDied();
+}
+
+void Player::rise() {
+  revives--;
+  hp = maxHp, invuln = 3;
+  level->enemiesNear(x, y, 180, [&](Enemy &e) {
+    double xd = e.x - x, yd = e.y - y;
+    if (xd * xd + yd * yd < 160 * 160)
+      e.hurt(400 * might, xd, yd, 260);
+  });
+  Spark::burst(*level, x, bodyY(), {1, 0.55f, 0.2f, 1}, 60, 240, true);
+  for (int i = 0; i < 10; i++)
+    level->add<FlameDebris>(x, y, 8);
+  level->game.onExplosion();
+  level->game.announce("THE PHOENIX RISES");
+  Sound::nova.play(0.8f, 0);
 }
 
 void Player::heal(float amount) {

@@ -2,9 +2,16 @@
 
 #include <math.h>
 
+uint32_t noise_salt = 0, noise_epoch = 1;
+
+void noise_reseed(uint32_t salt) {
+  noise_salt = salt;
+  noise_epoch++;
+}
+
 uint32_t noise_hash(int32_t x, int32_t y, uint32_t seed) {
   uint32_t h = (uint32_t)x * 0x8DA6B343u ^ (uint32_t)y * 0xD8163841u ^
-               seed * 0xCB1AB31Fu;
+               seed * 0xCB1AB31Fu ^ noise_salt * 0x9E3779B1u;
   h ^= h >> 13;
   h *= 0x5BD1E995u;
   h ^= h >> 15;

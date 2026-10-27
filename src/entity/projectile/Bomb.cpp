@@ -20,11 +20,12 @@ void Bomb::tick() {
     double xd = e.x - x, yd = e.y - y;
     float r = 28 + e.radius;
     if (xd * xd + yd * yd < r * r)
-      e.hurt(damage, xd, yd, 90);
+      e.hurt(damage, xd, yd, 90, source);
   });
   Spark::burst(*level, x, y, {1, 0.55f, 0.2f, 1}, 6, 110, true);
   level->add<Explosion>(x, y, 0);
-  level->add<FirePool>(x, y, poolRadius, poolDamage, poolTime);
+  level->add<FirePool>(x, y, poolRadius, poolDamage, poolTime)->source =
+      source;
   Sound::explosion.play(0.5f);
   level->game.onExplosion();
   remove();

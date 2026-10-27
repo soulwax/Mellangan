@@ -15,8 +15,10 @@ void Scythe::tick(Player &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 2.0f : 2.8f) * p.haste;
-  p.level->add<Sweep>(
-      p, 28.0f + 8 * (at(level, 3) + at(level, 5)),
-      (24.0f + 10 * (at(level, 2) + at(level, 4) + at(level, 5))) * p.might);
+  p.level
+      ->add<Sweep>(
+          p, 28.0f + 8 * (at(level, 3) + at(level, 5)),
+          (24.0f + 10 * (at(level, 2) + at(level, 4) + at(level, 5))) * p.might)
+      ->source = this;
   Sound::scythe.play(0.5f);
 }

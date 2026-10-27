@@ -54,6 +54,7 @@ public:
   void particle(int icon, double x, double y, Color c);
   void rect(double x, double y, float rw, float rh, Color c);
   void frame(double x, double y, float rw, float rh, float t, Color c);
+  void bracket(float x, float y, float w, float h, float u);
   void line(double x0, double y0, double x1, double y1, float width, Color c);
   void number(int n, double x, double y, Color c);
   void text(std::string_view s, double x, double y, float size, Color c);

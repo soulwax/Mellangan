@@ -179,6 +179,16 @@ void Screen::frame(double x, double y, float rw, float rh, float t, Color c) {
   rect(x + rw - t, y + t, t, rh - 2 * t, c);
 }
 
+void Screen::bracket(float x, float y, float w, float h, float u) {
+  float tick = std::min(8 * u, std::min(w, h) * 0.25f);
+  frame(x, y, w, h, u, col::muted.alpha(0.18f));
+  Color c = col::muted.alpha(0.8f);
+  for (int i = 0; i < 4; i++) {
+    rect(i & 1 ? x + w - tick : x, i & 2 ? y + h - u : y, tick, u, c);
+    rect(i & 1 ? x + w - u : x, i & 2 ? y + h - tick : y, u, tick, c);
+  }
+}
+
 void Screen::line(double x0, double y0, double x1, double y1, float width,
                   Color c) {
   double xd = x1 - x0, yd = y1 - y0;

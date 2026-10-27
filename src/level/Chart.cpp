@@ -1,5 +1,7 @@
 #include "level/Chart.hpp"
 
+#include <cstring>
+
 #include "entity/Player.hpp"
 #include "gfx/Screen.hpp"
 #include "level/Level.hpp"
@@ -18,16 +20,8 @@ const char *const TITLES[BIOME_COUNT] = {
 const char *Chart::title(BiomeId b) { return TITLES[b]; }
 
 void Chart::border(Screen &s, const ChartView &v, float u) {
-  float x = v.x - 2 * u, y = v.y - 2 * u, w = v.w + 4 * u, h = v.h + 4 * u;
-  float tick = std::min(8 * u, std::min(w, h) * 0.25f);
   s.rect(v.x, v.y, v.w, v.h, {0.04f, 0.04f, 0.07f, 0.85f});
-  s.frame(x, y, w, h, u, col::muted.alpha(0.18f));
-  Color c = col::muted.alpha(0.8f);
-  for (int i = 0; i < 4; i++) {
-    float cx = i & 1 ? x + w - tick : x, cy = i & 2 ? y + h - u : y;
-    s.rect(cx, cy, tick, u, c);
-    s.rect(i & 1 ? x + w - u : x, i & 2 ? y + h - tick : y, u, tick, c);
-  }
+  s.bracket(v.x - 2 * u, v.y - 2 * u, v.w + 4 * u, v.h + 4 * u, u);
 }
 
 Color Chart::tone(BiomeId b) {
@@ -76,10 +70,11 @@ void Chart::reveal(int cx, int cy) {
       if (!p)
         p = std::make_unique<Page>(), lastKey = ~0ull;
       uint8_t &c = p->cell[(y & (PAGE - 1)) * PAGE + (x & (PAGE - 1))];
-      if (c)
+      if (c & NOW)
         continue;
-      BiomeId b = world::biomeAt(x * CELL + CELL / 2, y * CELL + CELL / 2);
-      c = uint8_t(b + 1), charted++, cells[b]++;
+      BiomeId b = c ? BiomeId((c & BIOME) - 1)
+                    : world::biomeAt(x * CELL + CELL / 2, y * CELL + CELL / 2);
+      c = uint8_t((b + 1) | NOW), charted++, cells[b]++;
     }
 }
 
@@ -134,9 +129,13 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
         float left = v.x + v.w * 0.5f + float(from - v.cx) * v.cell;
         float xa = std::max(left, v.x),
               xb = std::min(left + float(cx - from) * v.cell, right);
-        Color t = tone(BiomeId(run / 2 - 1));
+        int c = run / 2;
+        Color t = tone(BiomeId((c & BIOME) - 1)) * (run & 1 ? 0.7f : 1.0f);
+        if (!(c & NOW))
+          t = {lerpf(t.r, 0.1f, 0.6f), lerpf(t.g, 0.1f, 0.6f),
+               lerpf(t.b, 0.14f, 0.6f), 1};
         if (xb > xa)
-          s.rect(xa, ya, xb - xa, yb - ya, run & 1 ? t * 0.7f : t);
+          s.rect(xa, ya, xb - xa, yb - ya, t);
       }
       run = key, from = cx;
     }
@@ -158,4 +157,58 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
   const Player &p = *level.player;
   marker(s, v, p.x, p.y, dot * 1.2f,
          col::white.alpha(0.7f + 0.3f * std::sin(time * 8)));
+}
+
+namespace {
+constexpr uint32_t MAGIC = 0x3143414Du;
+constexpr size_t PAGE_BYTES = 8 + Chart::PAGE * Chart::PAGE;
+} // namespace
+
+void Chart::load(const std::string &path) {
+  size_t size = 0;
+  uint8_t *data =
+      path.empty() ? nullptr : static_cast<uint8_t *>(SDL_LoadFile(path.c_str(), &size));
+  if (!data)
+    return;
+  uint32_t head[3] = {};
+  if (size >= sizeof head)
+    std::memcpy(head, data, sizeof head);
+  size_t want = sizeof head + head[1] * PAGE_BYTES + head[2] * sizeof(Structure);
+  if (head[0] == MAGIC && size == want) {
+    const uint8_t *at = data + sizeof head;
+    for (uint32_t i = 0; i < head[1]; i++, at += PAGE_BYTES) {
+      int32_t px, py;
+      std::memcpy(&px, at, 4), std::memcpy(&py, at + 4, 4);
+      auto p = std::make_unique<Page>();
+      for (int k = 0; k < PAGE * PAGE; k++)
+        p->cell[k] = at[8 + k] <= BIOME_COUNT ? at[8 + k] : 0;
+      pages[keyOf(px, py)] = std::move(p);
+    }
+    sites.resize(head[2]);
+    std::memcpy(sites.data(), at, head[2] * sizeof(Structure));
+    lastKey = ~0ull;
+  }
+  SDL_free(data);
+}
+
+void Chart::save(const std::string &path) const {
+  if (path.empty() || pages.empty())
+    return;
+  std::vector<uint8_t> out(12 + pages.size() * PAGE_BYTES +
+                           sites.size() * sizeof(Structure));
+  uint32_t head[3] = {MAGIC, uint32_t(pages.size()), uint32_t(sites.size())};
+  std::memcpy(out.data(), head, sizeof head);
+  uint8_t *at = out.data() + sizeof head;
+  for (auto &[key, p] : pages) {
+    int32_t px = int32_t(key >> 32), py = int32_t(uint32_t(key));
+    std::memcpy(at, &px, 4), std::memcpy(at + 4, &py, 4);
+    for (int k = 0; k < PAGE * PAGE; k++)
+      at[8 + k] = p->cell[k] & BIOME;
+    at += PAGE_BYTES;
+  }
+  if (!sites.empty())
+    std::memcpy(at, sites.data(), sites.size() * sizeof(Structure));
+  std::string tmp = path + ".tmp";
+  if (SDL_SaveFile(tmp.c_str(), out.data(), out.size()))
+    SDL_RenamePath(tmp.c_str(), path.c_str());
 }

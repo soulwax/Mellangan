@@ -16,7 +16,7 @@ void Chest::renderLight(Screen &s) {
 }
 
 void Chest::take(Player &p) {
-  p.pendingLevels++;
+  p.pendingLevels++, p.pendingTreasures++;
   Sound::chest.play(0.8f, 0);
   level->game.announce("TREASURE!");
   Spark::burst(*level, x, y, col::gold, 30, 110, true);

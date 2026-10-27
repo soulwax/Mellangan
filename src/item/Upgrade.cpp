@@ -2,6 +2,9 @@
 
 #include "entity/Player.hpp"
 #include "item/Passive.hpp"
+#include "item/relic/Relic.hpp"
+#include "item/relic/SunfireCrown.hpp"
+#include "item/relic/TempestEye.hpp"
 #include "item/weapon/AxeThrow.hpp"
 #include "item/weapon/Blade.hpp"
 #include "item/weapon/Bow.hpp"
@@ -15,6 +18,12 @@
 namespace {
 namespace t = atlas::t;
 namespace tt = atlas::tt;
+namespace kt = atlas::kt;
+
+void phoenix(Player &p) { p.revives++; }
+void grove(Player &p) { p.maxHp += 60, p.hp += 60, p.regen += 1.5f; }
+void frozen(Player &p) { p.haste -= 0.25f, p.speed += 11; }
+void signet(Player &p) { p.might += 0.5f, p.armor += 2; }
 } // namespace
 
 std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
@@ -48,5 +57,22 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
           "Regenerate 0.3 health/second", &Player::regen, 0.3f);
   passive("Lucky Key", atlas::town(tt::Key), "+4% critical hit chance",
           &Player::luck, 0.04f);
+  u.push_back(std::make_unique<SunfireCrown>());
+  u.push_back(std::make_unique<TempestEye>());
+  u.push_back(std::make_unique<Relic>("Phoenix Feather", atlas::kit(kt::Poppies),
+                                      "Rise once from death in a blaze",
+                                      phoenix));
+  u.push_back(std::make_unique<Relic>("Heart of the Grove",
+                                      atlas::kit(kt::Clover),
+                                      "+60 max health, regenerate 1.5/s",
+                                      grove));
+  u.push_back(std::make_unique<Relic>("Frozen Hourglass",
+                                      atlas::kit(kt::IceChunk),
+                                      "-25% weapon cooldowns, +15% speed",
+                                      frozen));
+  u.push_back(std::make_unique<Relic>("Obsidian Signet",
+                                      atlas::kit(kt::Obsidian),
+                                      "+50% damage, take 2 less per hit",
+                                      signet));
   return u;
 }

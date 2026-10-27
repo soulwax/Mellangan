@@ -13,7 +13,7 @@ void Projectile::collide() {
     hits.push_back(e.id);
     double xd, yd;
     push(e, xd, yd);
-    e.hurt(damage, xd, yd, knock);
+    e.hurt(damage, xd, yd, knock, source);
     if (--pierce <= 0)
       spent(), remove();
   });

@@ -6,6 +6,12 @@ void Input::handle(const SDL_Event &e, float density) {
   case SDL_EVENT_KEY_UP:
     if (Key *k = bind(e.key.scancode))
       k->toggle(e.type == SDL_EVENT_KEY_DOWN);
+    if (e.key.scancode == SDL_SCANCODE_UP || e.key.scancode == SDL_SCANCODE_DOWN)
+      (e.key.scancode == SDL_SCANCODE_UP ? older : newer)
+          .toggle(e.type == SDL_EVENT_KEY_DOWN);
+    break;
+  case SDL_EVENT_TEXT_INPUT:
+    pending += e.text.text;
     break;
   case SDL_EVENT_MOUSE_MOTION:
     mouseX = e.motion.x * density, mouseY = e.motion.y * density, moves++;
@@ -27,12 +33,14 @@ void Input::tick() {
   for (Key *k : keys())
     k->tick();
   mouseClicked = clicks > 0, mouseMoved = moves > 0;
+  typed = std::move(pending);
+  pending.clear();
   clicks = moves = 0;
 }
 
-std::array<Key *, 21> Input::keys() {
+std::array<Key *, 25> Input::keys() {
   return {&up,   &down,     &left,    &right,   &confirm,  &escape, &pause,
-          &one,  &two,      &three,   &restart, &quit, &map, &fps,    &fullscreen,
+          &one,  &two,      &three,   &four, &restart, &quit, &map, &erase, &older, &newer, &fps,    &fullscreen,
           &mute, &devLevel, &devTime, &devGod,  &devWorld, &devWarp};
 }
 
@@ -64,12 +72,16 @@ Key *Input::bind(SDL_Scancode sc) {
     return &two;
   case SDL_SCANCODE_3:
     return &three;
+  case SDL_SCANCODE_4:
+    return &four;
   case SDL_SCANCODE_R:
     return &restart;
   case SDL_SCANCODE_Q:
     return &quit;
   case SDL_SCANCODE_TAB:
     return &map;
+  case SDL_SCANCODE_BACKSPACE:
+    return &erase;
   case SDL_SCANCODE_F3:
     return &fps;
   case SDL_SCANCODE_F11:

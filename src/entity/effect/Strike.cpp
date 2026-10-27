@@ -18,7 +18,7 @@ void Strike::tick() {
       double xd = e.x - x, yd = e.bodyY() - y;
       float r = radius + e.radius;
       if (xd * xd + yd * yd < r * r)
-        e.hurt(damage, e.x - x, e.y - y, 50);
+        e.hurt(damage, e.x - x, e.y - y, 50, source);
     });
     Spark::burst(*level, x, y, {0.7f, 0.85f, 1, 1}, 10, 90, true);
   }

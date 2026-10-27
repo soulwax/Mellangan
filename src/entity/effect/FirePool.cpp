@@ -13,7 +13,7 @@ void FirePool::tick() {
       double xd = e.x - x, yd = e.y - y;
       float r = radius + e.radius;
       if (xd * xd + yd * yd < r * r)
-        e.hurt(damage, 0, 0, 0);
+        e.hurt(damage, 0, 0, 0, source);
     });
   }
   if (rng.chance(0.6f) && Spark::alive < 500) {

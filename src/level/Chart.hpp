@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -21,11 +22,14 @@ struct ChartView {
 class Chart {
 public:
   static constexpr int CELL = 4, PAGE = 32, SIGHT = 6;
+  static constexpr uint8_t NOW = 0x80, BIOME = 0x7F;
 
   int charted = 0, discovered = 0;
   int cells[BIOME_COUNT]{};
 
   int tick(double x, double y);
+  void load(const std::string &path);
+  void save(const std::string &path) const;
   int at(int cx, int cy) const;
   bool knows(BiomeId b) const { return seen >> b & 1; }
   void draw(Screen &s, const Level &level, const ChartView &v,

@@ -14,6 +14,15 @@
 #include "menu/Menu.hpp"
 
 
+enum class WorldMode { Classic, Random, Custom };
+
+struct PastWorld {
+  std::string code;
+  float best;
+  int runs;
+  bool dawn;
+};
+
 inline std::string clockText(float t) {
   return fmt::format("{:02}:{:02}", int(t) / 60, int(t) % 60);
 }
@@ -27,6 +36,11 @@ public:
   std::unique_ptr<Menu> menu;
   bool running = true, dev = false;
   Bench bench;
+  static constexpr int HISTORY = 6;
+
+  WorldMode worldMode = WorldMode::Classic;
+  std::string seedCode;
+  std::vector<PastWorld> history;
 
   bool init(SDL_Window *window, const std::string &base);
   void shutdown();
@@ -36,8 +50,10 @@ public:
   void setMenu(std::unique_ptr<Menu> m) {
     nextMenu = std::move(m), menuChanged = true;
   }
-  void newGame();
+  void newGame(bool reroll = true);
   void toTitle();
+  void reseed();
+  std::string worldName() const;
   void announce(std::string text);
   void onPlayerHurt() { hurt = 1, shake = 4; }
   void onExplosion() { shake = std::max(shake, 2.5f); }
@@ -48,13 +64,17 @@ private:
   std::unique_ptr<Menu> nextMenu;
   bool menuChanged = false, showFps = false, worldDebug = false;
   float time = 0, hurt = 0, shake = 0, fps = 0, bannerTime = 0;
-  std::string banner;
+  std::string banner, chartPath, prefPath;
   std::deque<std::string> banners;
   double xCam = 0, yCam = 0;
   int xView = 0, yView = 0;
 
   void tick();
   void devTick();
+  void build();
+  void loadWorld();
+  void saveWorld() const;
+  void remember(bool dawn);
   void render();
   void renderHud();
   void renderCompass();

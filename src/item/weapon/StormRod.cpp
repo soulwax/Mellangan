@@ -29,7 +29,7 @@ void StormRod::tick(Player &p) {
         r = 14.0f + 8 * at(level, 3);
   for (int i = 0; i < n; i++) {
     Enemy *e = pool[rng.irange(0, int(pool.size()) - 1)];
-    p.level->add<Strike>(e->x, e->y, dmg, r);
+    p.level->add<Strike>(e->x, e->y, dmg, r)->source = this;
   }
   Sound::thunder.play(0.35f);
 }

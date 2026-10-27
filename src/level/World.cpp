@@ -38,15 +38,15 @@ enum : uint32_t {
 };
 struct TileMemo {
   int32_t x, y;
-  uint32_t bits;
+  uint32_t bits, epoch;
   float shade, clump;
 };
 TileMemo memo[128 * 64];
 
 TileMemo *memoAt(int x, int y) {
   TileMemo *m = &memo[(x & 127) | (y & 63) << 7];
-  if (m->x != x || m->y != y)
-    m->x = x, m->y = y, m->bits = 0;
+  if (m->epoch != noise_epoch || m->x != x || m->y != y)
+    m->x = x, m->y = y, m->bits = 0, m->epoch = noise_epoch;
   return m;
 }
 
@@ -96,13 +96,14 @@ bool rollStructure(int rx, int ry, Structure *out) {
 bool structureIn(int rx, int ry, Structure &s) {
   struct Slot {
     int rx, ry;
-    bool used, has;
+    uint32_t epoch;
+    bool has;
     Structure s;
   };
   static Slot cache[256];
   Slot *c = &cache[(rx & 15) | (ry & 15) << 4];
-  if (!c->used || c->rx != rx || c->ry != ry)
-    c->rx = rx, c->ry = ry, c->used = true,
+  if (c->epoch != noise_epoch || c->rx != rx || c->ry != ry)
+    c->rx = rx, c->ry = ry, c->epoch = noise_epoch,
     c->has = rollStructure(rx, ry, &c->s);
   if (c->has)
     s = c->s;

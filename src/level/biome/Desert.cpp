@@ -13,13 +13,13 @@ float oasis(int x, int y) {
   struct Slot {
     int x, y;
     float v;
-    bool used;
+    uint32_t epoch;
   };
   static Slot cache[128 * 64];
   Slot *c = &cache[(x & 127) | (y & 63) << 7];
-  if (!c->used || c->x != x || c->y != y)
+  if (c->epoch != noise_epoch || c->x != x || c->y != y)
     *c = {x, y, noise_fbm(x * 0.06f + 300.5f, y * 0.06f - 120.5f, 2, 909),
-          true};
+          noise_epoch};
   return c->v;
 }
 

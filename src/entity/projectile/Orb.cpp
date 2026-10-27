@@ -12,6 +12,7 @@ void Orb::tick() {
   Player &p = *level->player;
   double xd = p.x - x, yd = p.bodyY() - y;
   if (!p.dead() && xd * xd + yd * yd < 7 * 7) {
+    p.felledBy = by;
     p.hurt(damage);
     Spark::burst(*level, x, y, {0.75f, 0.35f, 1, 1}, 6, 50, false);
     remove();

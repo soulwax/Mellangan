@@ -4,6 +4,8 @@
 
 class Orb : public Entity {
 public:
+  const char *by = nullptr;
+
   Orb(double x, double y, double xa, double ya, float damage) : damage(damage) {
     this->x = x, this->y = y;
     this->xa = xa, this->ya = ya;

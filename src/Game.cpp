@@ -2,7 +2,11 @@
 
 #include <spdlog/spdlog.h>
 
+#include <cctype>
+#include <cstdio>
+
 #include "audio/Sound.hpp"
+#include "level/Noise.h"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "item/Upgrade.hpp"
@@ -20,6 +24,9 @@ bool Game::init(SDL_Window *w, const std::string &base) {
   rng.state ^= SDL_GetPerformanceCounter() * 0x2545F4914F6CDD1Dull;
   if (!screen.load(base))
     return false;
+  if (char *pref = SDL_GetPrefPath("soulwax", "Mellangan"))
+    prefPath = pref, SDL_free(pref);
+  loadWorld();
   Sound::init(base);
   toTitle();
   if (bench.enabled)
@@ -31,6 +38,8 @@ void Game::shutdown() {
   vk2dRendererWait();
   menu.reset();
   nextMenu.reset();
+  if (level && !bench.enabled)
+    level->chart.save(chartPath);
   level.reset();
   screen.unload();
   Sound::shutdown();
@@ -86,7 +95,7 @@ void Game::tick() {
   Sound::tick();
   if (input.fps.clicked)
     showFps = !showFps;
-  if (input.mute.clicked)
+  if (input.mute.clicked && !(menu && menu->typing()))
     Sound::toggleMute();
   if (input.fullscreen.clicked)
     SDL_SetWindowFullscreen(
@@ -145,13 +154,120 @@ void Game::devTick() {
   }
 }
 
-void Game::newGame() {
+namespace {
+const char CODE_CHARS[] = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+uint32_t saltOf(const std::string &code) {
+  uint32_t h = 2166136261u;
+  for (char c : code)
+    h = (h ^ uint8_t(c)) * 16777619u;
+  return code.empty() ? 0 : h | 1;
+}
+} // namespace
+
+std::string Game::worldName() const {
+  return seedCode.empty() ? std::string("CLASSIC") : seedCode;
+}
+
+void Game::build() {
+  if (level && !bench.enabled)
+    level->chart.save(chartPath);
+  std::string code = worldMode == WorldMode::Classic ? "" : seedCode;
+  noise_reseed(saltOf(code));
+  chartPath = prefPath.empty() ? ""
+                               : prefPath + (code.empty() ? "chart.bin"
+                                                          : "chart-" + code + ".bin");
   level = std::make_unique<Level>(*this);
+  if (!bench.enabled)
+    level->chart.load(chartPath);
   xCam = level->player->x, yCam = level->player->y;
   hurt = shake = bannerTime = 0;
   banners.clear();
+}
+
+void Game::reseed() {
+  if (worldMode == WorldMode::Random && seedCode.size() != 8) {
+    seedCode.clear();
+    for (int i = 0; i < 8; i++)
+      seedCode += CODE_CHARS[rng.next() % (sizeof CODE_CHARS - 1)];
+  }
+  if (worldMode == WorldMode::Classic)
+    seedCode.clear();
+  build();
+  saveWorld();
+}
+
+void Game::newGame(bool reroll) {
+  if (worldMode == WorldMode::Random && reroll)
+    seedCode.clear();
+  reseed();
   setMenu(nullptr);
-  spdlog::info("New run");
+  spdlog::info("New run in world {}", worldName());
+}
+
+namespace {
+std::string slurp(const std::string &path) {
+  size_t size = 0;
+  char *data = static_cast<char *>(SDL_LoadFile(path.c_str(), &size));
+  std::string s = data ? std::string(data, size) : "";
+  SDL_free(data);
+  return s;
+}
+} // namespace
+
+void Game::loadWorld() {
+  if (prefPath.empty() || bench.enabled)
+    return;
+  std::string s = slurp(prefPath + "world.txt");
+  if (s.rfind("random", 0) == 0)
+    worldMode = WorldMode::Random;
+  else if (s.rfind("custom ", 0) == 0)
+    worldMode = WorldMode::Custom, seedCode = s.substr(7, 12);
+  while (!seedCode.empty() && !std::isalnum(uint8_t(seedCode.back())))
+    seedCode.pop_back();
+  std::string all = slurp(prefPath + "worlds.txt");
+  for (size_t at = 0; at < all.size() && int(history.size()) < HISTORY;) {
+    size_t end = all.find('\n', at);
+    std::string line = all.substr(at, end - at);
+    at = end == std::string::npos ? all.size() : end + 1;
+    char code[16] = {};
+    PastWorld w{};
+    int dawn = 0;
+    if (std::sscanf(line.c_str(), "%15s %f %d %d", code, &w.best, &w.runs,
+                    &dawn) == 4)
+      w.code = code, w.dawn = dawn, history.push_back(w);
+  }
+}
+
+void Game::remember(bool dawn) {
+  if (worldMode == WorldMode::Classic || seedCode.empty() || bench.enabled)
+    return;
+  PastWorld w{seedCode, level->time, 1, dawn};
+  for (size_t i = 0; i < history.size(); i++)
+    if (history[i].code == seedCode) {
+      w.best = std::max(w.best, history[i].best);
+      w.runs += history[i].runs, w.dawn |= history[i].dawn;
+      history.erase(history.begin() + long(i));
+      break;
+    }
+  history.insert(history.begin(), w);
+  while (int(history.size()) > HISTORY) {
+    SDL_RemovePath((prefPath + "chart-" + history.back().code + ".bin").c_str());
+    history.pop_back();
+  }
+  std::string out;
+  for (const PastWorld &p : history)
+    out += fmt::format("{} {:.1f} {} {}\n", p.code, p.best, p.runs, int(p.dawn));
+  SDL_SaveFile((prefPath + "worlds.txt").c_str(), out.data(), out.size());
+}
+
+void Game::saveWorld() const {
+  if (prefPath.empty() || bench.enabled)
+    return;
+  std::string s = worldMode == WorldMode::Random   ? "random\n"
+                  : worldMode == WorldMode::Custom ? "custom " + seedCode + "\n"
+                                                   : "classic\n";
+  SDL_SaveFile((prefPath + "world.txt").c_str(), s.data(), s.size());
 }
 
 void Game::toTitle() {
@@ -167,6 +283,7 @@ void Game::announce(std::string text) {
 void Game::onPlayerDied() {
   Player &p = *level->player;
   Sound::death.play(0.8f, 0);
+  remember(false);
   spdlog::info("Fallen after {} at level {} with {} kills",
                clockText(level->time), p.lvl, level->kills);
   setMenu(std::make_unique<DeadMenu>(*this));
@@ -175,6 +292,7 @@ void Game::onPlayerDied() {
 void Game::onDawn() {
   Player &p = *level->player;
   p.god = true;
+  remember(true);
   level->each<Enemy>([&](Enemy &e) {
     if (Debris::room())
       level->add<FlameDebris>(e.x, e.y, 6);
@@ -302,6 +420,10 @@ void Game::renderHud() {
     float x = 4 * u + slot[row]++ * 20 * u, y = top + row * 24 * u;
     s.rect(x, y, 18 * u, 18 * u, {0.07f, 0.06f, 0.11f, 0.7f});
     s.sprite(up->icon, x + u, y + u, 0, 0, u, u);
+    if (up->rare) {
+      s.frame(x, y, 18 * u, 18 * u, u, col::gold.alpha(0.8f));
+      continue;
+    }
     for (int i = 0; i < up->level; i++)
       s.rect(x + u + i * 3.4f * u, y + 19 * u, 2 * u, 2 * u, col::gold);
   }

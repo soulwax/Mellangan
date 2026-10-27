@@ -27,9 +27,11 @@ void FireBomb::tick(Player &p) {
       Enemy *e = targets[rng.irange(0, int(targets.size()) - 1)];
       xt = e->x, yt = e->y;
     }
-    p.level->add<Bomb>(
-        p.x, p.bodyY(), xt, yt, 20 * p.might, 22.0f + 6 * at(level, 2),
-        (5.0f + 4 * at(level, 4)) * p.might, 2.5f + at(level, 2));
+    p.level
+        ->add<Bomb>(p.x, p.bodyY(), xt, yt, 20 * p.might,
+                    22.0f + 6 * at(level, 2),
+                    (5.0f + 4 * at(level, 4)) * p.might, 2.5f + at(level, 2))
+        ->source = this;
   }
   Sound::axe.play(0.4f);
 }

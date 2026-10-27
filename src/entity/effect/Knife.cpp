@@ -15,7 +15,7 @@ void Knife::tick() {
     float rr = 6 + e.radius;
     if (e.knifeCooldown > 0 || xd * xd + yd * yd >= rr * rr)
       return;
-    e.hurt(dmg, e.x - player.x, e.y - player.y, 70);
+    e.hurt(dmg, e.x - player.x, e.y - player.y, 70, source);
     e.knifeCooldown = 0.45f;
     Spark::burst(*level, x, y, col::white, 2, 50, false);
   });

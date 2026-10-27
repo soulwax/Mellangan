@@ -16,15 +16,16 @@ public:
   const char *name;
   Sprite icon;
   std::array<const char *, MAX_LEVEL> desc;
-  bool weapon;
+  bool weapon, rare = false;
   int level = 0;
+  float dealt = 0;
 
   Upgrade(const char *name, Sprite icon,
           std::array<const char *, MAX_LEVEL> desc, bool weapon)
       : name(name), icon(icon), desc(desc), weapon(weapon) {}
   virtual ~Upgrade() = default;
 
-  bool maxed() const { return level >= MAX_LEVEL; }
+  bool maxed() const { return level >= (rare ? 1 : MAX_LEVEL); }
   virtual void levelUp(Player &) { level++; }
   virtual void tick(Player &) {}
 
