@@ -105,6 +105,10 @@ constexpr int Strawberries = 93;
 constexpr int Pampas = 94;
 constexpr int StoneRing = 95;
 } // namespace kt
+constexpr Sprite carpet(int set, int cell) { return {float(((set % 2) * 12 + cell) * 18 + 1), float(552 + (set / 2) * 18 + 1), 16, 16}; }
+namespace cp {
+constexpr int Straw = 0, Ash = 1, CrystalMoss = 2, Mycelium = 3, Lava = 4;
+} // namespace cp
 constexpr Sprite snowRim(int offset) { return {float(216 + (offset % 12) * 18 + 1), float(336 + (offset / 12) * 18 + 1), 16, 16}; }
 
 constexpr Sprite Glow{0, 200, 64, 64};

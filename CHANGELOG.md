@@ -8,6 +8,11 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
+- Five more biomes built from the sprite kit: the Jungle (jungle trees, tree ferns, bamboo, ivy, muddy ground) in hot,
+  wet climates; the Savanna (straw ground with acacias, baobabs, pampas and wheat) in hot, semi-dry ones; the Ashlands
+  (grey ash, charred trees, obsidian, rising embers and glowing lava pools you have to walk around); the Crystal
+  Fields (lavender crystal moss, crystal spires, amethyst and ice, with drifting sparkles); and the Fungal Wood
+  (purple mycelium, giant mushrooms and glowing caps, with floating spores). That makes fourteen biomes.
 - Desert biome in hot, dry climates: pale dunes with saguaro and barrel cacti, dry scrub and the odd dead tree, and
   green oases with palm-ringed ponds you have to walk around. Sand and water have their own edge sets, so dunes meet
   every neighbouring biome and oasis pools meet their grass along rounded edges.
@@ -34,6 +39,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Changed
 
+- Ground carpets: `tools/make_grounds.py` adds straw, ash, crystal moss, mycelium and lava sets (three fills and a
+  grass-edge set each), and a `Carpet` biome base class lays them with grassy edges against every other biome.
 - Biomes are classes: a `Biome` base holds the data and default ground, and each biome in `src/level/biome/`
   overrides only what makes it different (snowfall, petals, mud, fireflies, dunes and oases).
 - Plants and ground details blend across biome borders over a few tiles, and every dirt, mud, sand and water patch

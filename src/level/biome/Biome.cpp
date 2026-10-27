@@ -7,7 +7,12 @@
 #include "level/biome/Barrow.hpp"
 #include "level/biome/Snow.hpp"
 #include "level/biome/Blossom.hpp"
+#include "level/biome/Ashlands.hpp"
+#include "level/biome/CrystalFields.hpp"
 #include "level/biome/Desert.hpp"
+#include "level/biome/FungalWood.hpp"
+#include "level/biome/Jungle.hpp"
+#include "level/biome/Savanna.hpp"
 #include "level/biome/Mire.hpp"
 #include "level/Noise.h"
 
@@ -30,9 +35,14 @@ const Snow SNOW;
 const Blossom BLOSSOM;
 const Mire MIRE;
 const Desert DESERT;
+const Jungle JUNGLE;
+const Savanna SAVANNA;
+const Ashlands ASHLANDS;
+const CrystalFields CRYSTAL;
+const FungalWood FUNGAL;
 } // namespace
 
-const Biome *const BIOMES[BIOME_COUNT] = {&MEADOW, &FOREST, &AUTUMN, &HEATH, &BARROW, &SNOW, &BLOSSOM, &MIRE, &DESERT};
+const Biome *const BIOMES[BIOME_COUNT] = {&MEADOW, &FOREST, &AUTUMN, &HEATH, &BARROW, &SNOW, &BLOSSOM, &MIRE, &DESERT, &JUNGLE, &SAVANNA, &ASHLANDS, &CRYSTAL, &FUNGAL};
 
 namespace world {
 
@@ -47,10 +57,15 @@ Climate climateAt(int x, int y) {
 }
 
 BiomeId biomeOf(Climate c) {
+    if (c.eerie > 0.14f && c.temp > 0.2f) return BIOME_ASHLANDS;
+    if (c.eerie > 0.21f && c.temp < -0.14f) return BIOME_CRYSTAL;
+    if (c.eerie > 0.14f && c.moist > 0.18f) return BIOME_FUNGAL;
     if (c.eerie > 0.26f) return BIOME_BARROW;
     if (c.temp < -0.24f) return BIOME_SNOW;
+    if (c.temp > 0.15f && c.moist > 0.12f) return BIOME_JUNGLE;
     if (c.temp > 0.1f && c.moist < -0.16f) return BIOME_DESERT;
     if (c.moist < -0.18f) return BIOME_HEATH;
+    if (c.temp > 0.17f && c.moist < -0.06f) return BIOME_SAVANNA;
     if (c.temp > 0.18f && c.moist <= 0.03f) return BIOME_BLOSSOM;
     if (c.moist > 0.24f && c.temp < 0.08f) return BIOME_MIRE;
     if (c.moist > 0.03f) return c.temp > 0.0f ? BIOME_AUTUMN : BIOME_FOREST;
