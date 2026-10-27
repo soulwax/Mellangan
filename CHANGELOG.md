@@ -6,6 +6,31 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-10-27
+
+### Added
+
+- Enemies follow goals from a per-enemy queue: they look out, approach, stalk, follow a pack leader, lunge after a
+  telegraphed wind-up, keep their distance to cast, and hide when looked at. Interrupt goals can jump the queue. Each
+  kind has its own plan: bats flutter in, rats run in packs, slimes wait until they spot you, scorpions dart and nip,
+  spiders stalk until you turn away, ghosts back off while watched, cultists hold casting range, and demons, knights
+  and the cyclops wind up their strikes.
+- Enemy AI runs on worker threads: thinking, moving, separation and collision are parallel passes, and only actions
+  touching shared state stay on the main thread. 10,000 enemies tick in about 2 ms.
+
+- Structures come alive near you: campfires burn and smoke, cottage chimneys smoke, and castle gates burn. Each
+  structure kind can have an ambient hook beside its encounter.
+- The snow biome meets other ground along a grassy snowline instead of a hard tile edge, using a grass-to-snow edge
+  set generated from the dirt-edge tiles. Snowy courtyards and paths are frosted too.
+
+- Snow biome in the coldest climate: snowy ground and frozen earth, frost-laden pines, oaks and bushes, glowing ice
+  crystals, falling snow, and knights, ghosts and bats on the prowl. Its tiles are frosted copies of the Tiny Town
+  ground and trees, generated into a new winter band of the atlas by `tools/make_winter.py`.
+- Castles: four crenellated corner towers joined by curtain walls around a cobbled courtyard, with brick faces,
+  arrow slits and a gatehouse whose portcullis or open arch is flanked by burning braziers. An open gate lets you
+  into the courtyard. They stand mostly in the snow, sometimes on the heath, meadow and autumn woods. Entering one wakes
+  the garrison: knights march out, and a chest waits in the courtyard, or outside a closed portcullis.
+
 ### Changed
 
 - Cottages are proper buildings now: three to five tiles wide, one or two storeys, wood or stone walls closed by

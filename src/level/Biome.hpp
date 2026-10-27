@@ -4,7 +4,7 @@
 #include "level/Feature.hpp"
 #include "level/Structure.hpp"
 
-enum BiomeId { BIOME_MEADOW, BIOME_FOREST, BIOME_AUTUMN, BIOME_HEATH, BIOME_BARROW, BIOME_COUNT };
+enum BiomeId { BIOME_MEADOW, BIOME_FOREST, BIOME_AUTUMN, BIOME_HEATH, BIOME_BARROW, BIOME_SNOW, BIOME_COUNT };
 
 // Low-frequency Perlin fields the biome is picked from, each roughly [-1, 1].
 struct Climate {
@@ -29,6 +29,7 @@ struct BiomeDef {
     int structureWeights[int(StructureKind::Count)];
     uint32_t foes;            // foe() bits the spawner favours here once unlocked
     FeatureSpawn spawns[MAX_SPAWNS]; // rolled in order, ends at the first null feature
+    bool winter = false;
 };
 
 extern const BiomeDef BIOMES[BIOME_COUNT];

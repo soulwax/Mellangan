@@ -7,7 +7,9 @@ namespace t = atlas::t;
 
 constexpr Color NONE{0, 0, 0, 0};
 
-Sprite sheet(const Feature *f, int index) { return f->town ? atlas::town(index) : atlas::tile(index); }
+Sprite sheet(const Feature *f, int index) {
+    return f->winter ? atlas::winter(index) : f->town ? atlas::town(index) : atlas::tile(index);
+}
 
 } // namespace
 
@@ -32,6 +34,9 @@ const Feature autumnOak{"autumn oak", placeStack, tt::AutumnTrunk, tt::AutumnCro
 const Feature pine{"pine", placeStack, tt::Pine, -1, true, 1.0f, 3, NONE};
 const Feature autumnPine{"autumn pine", placeStack, tt::AutumnPine, -1, true, 1.0f, 3, NONE};
 const Feature bush{"bush", placeStack, tt::Bush, -1, true, 0.9f, 4, NONE};
+const Feature snowOak{"snowy oak", placeStack, tt::Trunk, tt::Crown, true, 1.3f, 3, NONE, true};
+const Feature snowPine{"snowy pine", placeStack, tt::Pine, -1, true, 1.0f, 3, NONE, true};
+const Feature snowBush{"snowy bush", placeStack, tt::Bush, -1, true, 0.9f, 4, NONE, true};
 
 const Feature grave{"grave", placeGrave, t::GraveStone, -1, false, 0, 4, {0.07f, 0.15f, 0.32f, 1}};
 const Feature mushrooms{"mushrooms", placeStack, tt::Mushrooms, -1, true, 0, 0, {0.03f, 0.12f, 0.10f, 1}};

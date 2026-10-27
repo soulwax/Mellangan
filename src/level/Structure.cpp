@@ -27,6 +27,40 @@ House houseOf(const Structure *s) {
 }
 void sizeGraveyard(uint32_t r, int *w, int *h) { *w = 7 + 2 * ((r >> 15) & 1), *h = 6 + ((r >> 16) & 1); }
 void sizeCamp(uint32_t, int *w, int *h) { *w = 7, *h = 7; }
+void sizeCastle(uint32_t r, int *w, int *h) { *w = 10 + 2 * int((r >> 13) & 1), *h = 10; }
+
+bool castleCourt(const Structure *s, int lx, int ly) { return lx >= 3 && lx < s->w - 3 && ly >= 3 && ly <= s->h - 2; }
+
+bool castleGround(const Structure *s, int lx, int ly, Sprite *out) {
+    int gate = s->w / 2 - 1;
+    if (!castleCourt(s, lx, ly) && !(ly == s->h - 1 && (lx == gate || lx == gate + 1))) return false;
+    *out = atlas::town(tt::Path);
+    return true;
+}
+
+bool castle(const Structure *s, int lx, int ly, uint32_t, Prop *p) {
+    int w = s->w, back = 2, front = s->h - 2, gate = w / 2 - 1;
+    int side = lx < 3 ? lx : lx >= w - 3 ? lx - (w - 3) : -1;
+    bool arch = s->seed & 1, gateHere = ly == front && (lx == gate || lx == gate + 1);
+    p->shadow = 1.4f, p->solid = 8;
+    if (ly == back || ly == front) {
+        bool slit = side == 1 || (side < 0 && (lx - 3) % 2), lit = slit && ((s->seed >> (lx + ly)) & 2);
+        int yo = 0;
+        if (ly == front) p->add(atlas::town(gateHere ? (arch ? tt::OpenGate : tt::Portcullis) + (lx - gate) : tt::Bricks)), yo = -16;
+        p->add(atlas::town(slit ? tt::ArrowSlit : tt::Bricks), yo);
+        if (side >= 0) p->add(atlas::town(tt::TowerTop + 24 + side), yo - 16), p->add(atlas::town(tt::TowerTop + side), yo - 32);
+        else p->add(atlas::town(tt::WallTop + (lx == 3 ? 0 : lx == w - 4 ? 2 : 1)), yo - 16);
+        if (gateHere) p->light = {0.55f, 0.27f, 0.07f, 1}, p->lightYo = -6, p->lightSize = 90, p->wisp = false;
+        else if (lit) p->light = {0.30f, 0.17f, 0.05f, 1}, p->lightYo = yo - 8, p->lightSize = 48, p->wisp = false;
+        if (gateHere && arch) p->solid = 0;
+        return true;
+    }
+    if (side < 0 || ly <= back || ly >= front - 3) return false;
+    p->add(atlas::town(tt::TowerTop + 12 + side));
+    p->shadow = 0;
+    return true;
+}
+
 void sizeRuin(uint32_t r, int *w, int *h) { *w = 6 + ((r >> 15) & 1), *h = 4; }
 
 bool campDirt(const Structure *s, int lx, int ly) {
@@ -153,6 +187,7 @@ const StructureDef STRUCTURES[int(StructureKind::Count)] = {
     {"SHRINE", {0.3f, 0.9f, 1.0f, 1}, sizeSquare, nullptr, shrineGround, shrine},
     {"CAMP", {1.0f, 0.35f, 0.3f, 1}, sizeCamp, campDirt, nullptr, camp},
     {"RUIN", {0.6f, 0.9f, 0.4f, 1}, sizeRuin, ruinDirt, nullptr, ruin},
+    {"CASTLE", {0.85f, 0.88f, 1.0f, 1}, sizeCastle, nullptr, castleGround, castle},
 };
 
 bool structureDirt(const Structure *s, int lx, int ly) {
@@ -166,6 +201,13 @@ bool structureGround(const Structure *s, int lx, int ly, Sprite *out) {
 bool structureProp(const Structure *s, int lx, int ly, Prop *p) {
     uint32_t r = hash2(int(s->seed) ^ (lx * 92821), ly * 68917 + 5);
     return inside(s, lx, ly) && def(s)->prop(s, lx, ly, r, p);
+}
+
+bool cottageChimney(const Structure *s, int *lx, int *height) {
+    House h = houseOf(s);
+    if (h.chimney < 0) return false;
+    *lx = h.chimney + 1, *height = 16 * (h.storeys + 2);
+    return true;
 }
 
 const char *Structure::name() const { return STRUCTURES[int(kind)].name; }

@@ -89,6 +89,8 @@ Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits w
 - `src/SpriteObject.hpp` – root of everything in the world: position, velocity, pixel position and a sprite
 - `src/entity` – `SpriteObject` → `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, and `Pool.c`
   (slab allocator for entities)
+- `src/entity/enemy/ai` – goal queue AI: `Goal`, the goals (`LookOut`, `Approach`, `Stalk`, `Follow`, `Melee`, `Ranged`,
+  `Hide`) and a plan per enemy kind; `src/Workers` runs it on a thread pool
 - `src/particle` – particles kept outside the registry in `Level::particles`: `Spark` and `TextParticle`, and `Debris` after dittany: blood, meat, smoke, flames, heal crosses and
   the `Explosion` emitter
 - `src/item` – `Upgrade` and its weapons and passives
@@ -99,6 +101,8 @@ Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits w
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
 - `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites
+- `tools/make_winter.py` – adds the frosted winter band to `res/atlas.png` (also run by `make_assets.py`)
+- `tools/footprint_preview.py` – composes a dumped structure footprint (ground and props) into a preview PNG
 - `tools/building_preview.py` – composes Tiny Town tile rows into a preview PNG, used to design buildings outside the game
 
 See `res/CREDITS.md` for asset licenses.

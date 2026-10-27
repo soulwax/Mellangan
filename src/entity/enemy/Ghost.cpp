@@ -2,10 +2,9 @@
 
 #include "entity/enemy/Enemy.hpp"
 
-void Ghost::steer(double xn, double yn, double &xs, double &ys) {
-    double v = type.speed * (0.8f + 0.4f * std::sin(animT * 2));
-    xs = xn * v;
-    ys = yn * v;
+Color Ghost::tint() const {
+    const Goal *g = goals.front();
+    return col::white.alpha(g && g->conceals() ? 0.28f : 0.72f);
 }
 
 void Ghost::renderLight(Screen &s) {

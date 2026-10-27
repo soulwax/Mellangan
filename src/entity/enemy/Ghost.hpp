@@ -8,6 +8,5 @@ public:
     void renderLight(Screen &s) override;
 
 protected:
-    void steer(double xn, double yn, double &xs, double &ys) override;
-    Color tint() const override { return col::white.alpha(0.72f); }
+    Color tint() const override;
 };

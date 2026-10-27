@@ -46,7 +46,8 @@ add_executable(Mellangan ${SOURCES})
 # Generated header so a version bump only recompiles the files that show the version.
 configure_file(src/Version.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Version.hpp @ONLY)
 target_include_directories(Mellangan PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/generated)
-target_link_libraries(Mellangan PRIVATE Vulkan2D SDL3::SDL3 spdlog::spdlog EnTT::EnTT stb_vorbis)
+find_package(Threads REQUIRED)
+target_link_libraries(Mellangan PRIVATE Vulkan2D SDL3::SDL3 spdlog::spdlog EnTT::EnTT stb_vorbis Threads::Threads)
 # Only heavy, stable third-party headers: project headers change often and would invalidate the PCH.
 target_precompile_headers(Mellangan PRIVATE src/pch.hpp)
 

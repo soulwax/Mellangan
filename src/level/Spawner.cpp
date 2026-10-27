@@ -28,7 +28,7 @@ void Spawner::tick() {
         for (int i = 0, batch = 1 + int(t / 70); i < batch && level.count<Enemy>() < 550; i++) {
             double x, y;
             ring(rng.range(280, 320), x, y);
-            spawn(pick(x, y), x, y);
+            spawn(pick(x, y), x, y, false);
         }
     }
     if (t >= nextWave) {
@@ -58,11 +58,11 @@ void Spawner::tick() {
     }
 }
 
-void Spawner::spawn(EnemyKind kind, double x, double y) {
+void Spawner::spawn(EnemyKind kind, double x, double y, bool aware) {
     float hpMul = 1 + level.time / 150;
     if (kind == EnemyKind::Cyclops) hpMul *= 1 + (bosses - 1) * 0.75f;
     auto e = Enemy::create(kind, hpMul, 1 + level.time / 600);
-    e->x = x, e->y = y;
+    e->x = x, e->y = y, e->aware = aware;
     if (kind != EnemyKind::Cyclops && level.time > 60 && rng.chance(0.03f + level.time / 6000)) e->makeElite();
     level.add(std::move(e));
 }

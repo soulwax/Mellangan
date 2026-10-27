@@ -13,6 +13,12 @@ constexpr Sprite town(int index) {
     s.x += 12 * 18;
     return s;
 }
+constexpr Sprite winter(int index) {
+    Sprite s = town(index);
+    s.y += 264;
+    return s;
+}
+constexpr Sprite snowRim(int offset) { return {float(216 + (offset % 12) * 18 + 1), float(336 + (offset / 12) * 18 + 1), 16, 16}; }
 
 constexpr Sprite Glow{0, 200, 64, 64};
 constexpr Sprite Ring{64, 200, 64, 64};
@@ -40,6 +46,7 @@ constexpr int FenceTopLeft = 44, FenceTop = 45, FenceTopRight = 46, FenceLeft = 
 constexpr int FenceBottomLeft = 68, FenceBottomRight = 70, FenceEndLeft = 80, FenceRail = 81, FenceEndRight = 82;
 constexpr int PlazaTopLeft = 96; // 3x3 raised stone slab, centre at PlazaTopLeft + 13
 constexpr int ArchLeft = 113, ArchRight = 114, Bricks = 126;
+constexpr int TowerTop = 96, WallTop = 99, Portcullis = 111, OpenGate = 113, ArrowSlit = 125;
 } // namespace tt
 
 namespace t {

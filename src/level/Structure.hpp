@@ -2,7 +2,7 @@
 
 #include "level/Prop.hpp"
 
-enum class StructureKind { Cottage, Graveyard, Shrine, Camp, Ruin, Count };
+enum class StructureKind { Cottage, Graveyard, Shrine, Camp, Ruin, Castle, Count };
 struct Structure {
     StructureKind kind;
     int x, y, w, h; // footprint in tiles
@@ -30,3 +30,4 @@ extern const StructureDef STRUCTURES[int(StructureKind::Count)];
 bool structureDirt(const Structure *s, int lx, int ly);
 bool structureGround(const Structure *s, int lx, int ly, Sprite *out);
 bool structureProp(const Structure *s, int lx, int ly, Prop *p);
+bool cottageChimney(const Structure *s, int *lx, int *height);

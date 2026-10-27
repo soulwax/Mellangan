@@ -6,9 +6,11 @@
 
 #include "Game.hpp"
 #include "Prof.h"
+#include "Workers.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Encounter.hpp"
+#include "particle/debris/SnowDebris.hpp"
 
 namespace {
 uint32_t orderedBits(float f) {
@@ -76,8 +78,32 @@ void Level::tick() {
     prof_begin(PROF_HOUSEKEEP);
     if (!player->dead() && !night.dawn) night.tick();
     if (!player->dead() && !night.dawn) spawner.tick(), explore();
+    weather();
+    ambience();
     buildGrid();
     prof_end(PROF_HOUSEKEEP);
+    prof_begin(PROF_THINK);
+    thinkers.clear();
+    each<Enemy>([&](Enemy &e) { thinkers.push_back(&e); });
+    Workers &workers = Workers::shared();
+    int n = int(thinkers.size());
+    workers.run(n, 256, [](void *ctx, int begin, int end) {
+        Enemy **list = static_cast<Enemy **>(ctx);
+        for (int i = begin; i < end; i++) list[i]->think();
+    }, thinkers.data());
+    workers.run(n, 256, [](void *ctx, int begin, int end) {
+        Enemy **list = static_cast<Enemy **>(ctx);
+        for (int i = begin; i < end; i++) list[i]->move();
+    }, thinkers.data());
+    workers.run(n, 256, [](void *ctx, int begin, int end) {
+        Enemy **list = static_cast<Enemy **>(ctx);
+        for (int i = begin; i < end; i++) list[i]->push();
+    }, thinkers.data());
+    workers.run(n, 256, [](void *ctx, int begin, int end) {
+        Enemy **list = static_cast<Enemy **>(ctx);
+        for (int i = begin; i < end; i++) list[i]->settle();
+    }, thinkers.data());
+    prof_end(PROF_THINK);
     prof_begin(PROF_ENTITIES);
     for (auto [id, o] : reg.view<Owned>().each())
         if (!o.self->removed) o.self->tick();
@@ -107,6 +133,24 @@ bool Level::visited(const Structure &s) const {
 }
 
 bool Level::unvisited(const Structure *s, const void *level) { return !static_cast<const Level *>(level)->visited(*s); }
+
+void Level::ambience() {
+    int rx = world::regionOf(int(std::floor(player->x / 16))), ry = world::regionOf(int(std::floor(player->y / 16)));
+    Structure s;
+    for (int y = ry - 1; y <= ry + 1; y++)
+        for (int x = rx - 1; x <= rx + 1; x++) {
+            if (!world::structureIn(x, y, s) || !ENCOUNTERS[int(s.kind)].ambient) continue;
+            double xd = s.centerX() - player->x, yd = s.centerY() - player->y;
+            if (xd * xd + yd * yd < 380 * 380) ENCOUNTERS[int(s.kind)].ambient(this, &s);
+        }
+}
+
+void Level::weather() {
+    if (!BIOMES[world::biomeAt(int(std::floor(player->x / 16)), int(std::floor(player->y / 16)))].winter) return;
+    double wind = 0.25 * std::sin(time * 0.3);
+    for (int i = 0; i < 3 && Debris::room(); i++)
+        add<SnowDebris>(player->x + rng.range(-300, 300), player->y + rng.range(-180, 200), rng.range(30, 90), wind);
+}
 
 void Level::explore() {
     Structure s;

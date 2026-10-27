@@ -110,17 +110,27 @@ bool isDirt(int x, int y) {
     return m->bits & DIRT;
 }
 
+bool winterAt(int x, int y) { return BIOMES[biomeAt(x, y)].winter; }
+
 Sprite groundTile(int x, int y) {
     Structure st;
     Sprite out;
-    if (structureAt(x, y, st) && structureGround(&st, x - st.x, y - st.y, &out)) return out;
+    const BiomeDef *b = &BIOMES[biomeAt(x, y)];
+    if (structureAt(x, y, st) && structureGround(&st, x - st.x, y - st.y, &out)) {
+        if (b->winter && out.x >= 216 && out.y < 72) out.y += 264;
+        return out;
+    }
+    Sprite (*sheet)(int) = b->winter ? atlas::winter : atlas::town;
     if (!isDirt(x, y)) {
-        const BiomeDef *b = &BIOMES[biomeAt(x, y)];
+        if (b->winter) {
+            int snow = int(winterAt(x, y - 1)) | winterAt(x, y + 1) << 1 | winterAt(x - 1, y) << 2 | winterAt(x + 1, y) << 3;
+            if (snow != 15) return atlas::snowRim(RIM[snow]);
+        }
         int r = hash2(x, y) % 100;
-        return atlas::town(r < b->flowers ? tt::GrassFlowers : r < b->flowers + b->tufts ? tt::GrassTufts : tt::Grass);
+        return sheet(r < b->flowers ? tt::GrassFlowers : r < b->flowers + b->tufts ? tt::GrassTufts : tt::Grass);
     }
     int mask = int(isDirt(x, y - 1)) | isDirt(x, y + 1) << 1 | isDirt(x - 1, y) << 2 | isDirt(x + 1, y) << 3;
-    return atlas::town(tt::DirtTopLeft + RIM[mask]);
+    return sheet(tt::DirtTopLeft + RIM[mask]);
 }
 
 float groundShade(int x, int y) {

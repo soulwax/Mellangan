@@ -86,6 +86,7 @@ private:
     std::vector<std::unique_ptr<Entity>> pending;
     std::vector<entt::entity> dead;
     std::vector<SpriteObject *> drawn;
+    std::vector<Enemy *> thinkers;
     std::vector<uint64_t> keys, keysTmp;
     std::vector<Prop> props;
     std::vector<int> cellStart, cellFill, cellOf;
@@ -98,6 +99,8 @@ private:
 
     void flush();
     void explore();
+    void weather();
+    void ambience();
     void buildGrid();
     void renderFloor(Screen &s);
     void scatter(Screen &s);

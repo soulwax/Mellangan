@@ -9,6 +9,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from make_winter import add_winter_band
+
 TILE = 16
 CELL = 18  # 1px transparent gutter on each side of every tile, prevents bleeding
 SHEET_COLS, SHEET_ROWS = 12, 11
@@ -194,6 +196,7 @@ def main():
     for im, pos in fx:
         atlas.paste(im, pos)
 
+    atlas = add_winter_band(atlas)
     out = Path(__file__).resolve().parent.parent / "res" / "atlas.png"
     atlas.save(out)
     print(f"wrote {out}")

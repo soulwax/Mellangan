@@ -6,6 +6,8 @@
 #include "entity/pickup/Magnet.hpp"
 #include "entity/pickup/Potion.hpp"
 #include "level/Level.hpp"
+#include "particle/debris/FlameDebris.hpp"
+#include "particle/debris/SmokeDebris.hpp"
 
 namespace {
 
@@ -38,12 +40,51 @@ void ruin(Level *level, const Structure *s) {
     else level->add<Magnet>(x, y);
 }
 
+void castle(Level *level, const Structure *s) {
+    double x = s->centerX(), y = (s->y + s->h) * 16 + 4.0;
+    if (s->seed & 1) level->add<Chest>(x, (s->y + 4) * 16 + 8.0);
+    else level->add<Chest>(x, y);
+    for (int i = 0, n = 3 + int(level->time / 60); i < n; i++) {
+        double a = PI * (0.15 + 0.7 * i / std::max(1, n - 1));
+        level->spawner.spawn(EnemyKind::Knight, x + std::cos(a) * 140, y + std::sin(a) * 120);
+    }
+    Sound::horde.play(0.6f, 0);
+}
+
+void smoke(Level *level, double x, double y, double z) {
+    if (!Debris::room()) return;
+    auto puff = std::make_unique<SmokeDebris>(x, y, z);
+    puff->xa *= 0.15, puff->ya *= 0.05, puff->za = 0.3, puff->life *= 2;
+    level->spawn(std::move(puff));
+}
+
+void hearth(Level *level, const Structure *s) {
+    int lx, height;
+    if (rng.chance(0.12f) && cottageChimney(s, &lx, &height))
+        smoke(level, (s->x + lx) * 16 + 8.0, (s->y + 2) * 16 + 15.0, height + 4);
+}
+
+void campfire(Level *level, const Structure *s) {
+    int c = s->w / 2;
+    double x = (s->x + c) * 16 + 8.0, y = (s->y + c + 1) * 16 + 1.0;
+    for (int i = 0; i < 2; i++) FlameDebris::lick(*level, x + rng.range(-3, 3), y, 5, 1.2f);
+    if (rng.chance(0.15f)) smoke(level, x, y, 14);
+}
+
+void braziers(Level *level, const Structure *s) {
+    int gate = s->w / 2 - 1;
+    double y = (s->y + s->h - 1) * 16 + 4.0;
+    if (rng.chance(0.6f)) FlameDebris::lick(*level, (s->x + gate) * 16 - 2.0, y, 6, 0.8f);
+    if (rng.chance(0.6f)) FlameDebris::lick(*level, (s->x + gate + 2) * 16 + 2.0, y, 6, 0.8f);
+}
+
 } // namespace
 
 const EncounterDef ENCOUNTERS[int(StructureKind::Count)] = {
-    {"A WARM HEARTH", cottage},
-    {"THE DEAD STIR", graveyard},
-    {"STAND AND KINDLE THE SHRINE", shrine},
-    {"AN ABANDONED CAMP", camp},
-    {"SOMETHING GLINTS IN THE RUBBLE", ruin},
+    {"A WARM HEARTH", cottage, hearth},
+    {"THE DEAD STIR", graveyard, nullptr},
+    {"STAND AND KINDLE THE SHRINE", shrine, nullptr},
+    {"AN ABANDONED CAMP", camp, campfire},
+    {"SOMETHING GLINTS IN THE RUBBLE", ruin, nullptr},
+    {"THE GARRISON WAKES", castle, braziers},
 };

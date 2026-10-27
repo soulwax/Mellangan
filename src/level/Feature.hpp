@@ -11,12 +11,13 @@ struct Feature {
     bool town;     // Tiny Town sheet, else Tiny Dungeon
     float shadow, solid; // solid: collider radius at the foot, 0 to walk through
     Color light;
+    bool winter = false;
 };
 
 bool placeStack(const Feature *f, uint32_t roll, Prop *p);
 bool placeGrave(const Feature *f, uint32_t roll, Prop *p);
 
 namespace feature {
-extern const Feature oak, autumnOak, pine, autumnPine, bush;
+extern const Feature oak, autumnOak, pine, autumnPine, bush, snowOak, snowPine, snowBush;
 extern const Feature grave, mushrooms, sprouts, log, beehive, sign, sack, crystal, well, barrel, crate;
 } // namespace feature

@@ -2,11 +2,10 @@
 
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
-#include "entity/enemy/Bat.hpp"
-#include "entity/enemy/Cultist.hpp"
 #include "entity/enemy/Cyclops.hpp"
 #include "entity/enemy/Ghost.hpp"
-#include "entity/enemy/Scorpion.hpp"
+#include "entity/enemy/ai/Plans.hpp"
+#include "entity/projectile/Orb.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/pickup/Potion.hpp"
 #include "level/Level.hpp"
@@ -36,76 +35,142 @@ Enemy::Enemy(const EnemyType &type, float hpMul, float damageMul) : type(type), 
     radius = type.radius;
     scale = type.scale;
     animT = rng.range(0, 10);
+    seed = rng.next() | 1;
+    side = seed & 2 ? 1 : -1;
 }
 
 const EnemyType &Enemy::typeOf(EnemyKind kind) { return TYPES[int(kind)]; }
 
 std::unique_ptr<Enemy> Enemy::create(EnemyKind kind, float hpMul, float damageMul) {
     const EnemyType &t = typeOf(kind);
-    switch (kind) {
-    case EnemyKind::Bat: return std::make_unique<Bat>(t, hpMul, damageMul);
-    case EnemyKind::Scorpion: return std::make_unique<Scorpion>(t, hpMul, damageMul);
-    case EnemyKind::Cultist: return std::make_unique<Cultist>(t, hpMul, damageMul);
-    case EnemyKind::Ghost: return std::make_unique<Ghost>(t, hpMul, damageMul);
-    case EnemyKind::Cyclops: return std::make_unique<Cyclops>(t, hpMul, damageMul);
-    default: return std::make_unique<Enemy>(t, hpMul, damageMul);
+    std::unique_ptr<Enemy> e;
+    if (kind == EnemyKind::Ghost) e = std::make_unique<Ghost>(t, hpMul, damageMul);
+    else if (kind == EnemyKind::Cyclops) e = std::make_unique<Cyclops>(t, hpMul, damageMul);
+    else e = std::make_unique<Enemy>(t, hpMul, damageMul);
+    e->plan = planOf(kind);
+    return e;
+}
+
+float Enemy::roll() {
+    seed ^= seed << 13, seed ^= seed >> 17, seed ^= seed << 5;
+    return float(seed >> 8) / float(1 << 24);
+}
+
+Sense Enemy::sense() const {
+    const Player &p = *level->player;
+    Sense s{p.x - x, p.y - y, 0, 0, 0, false};
+    s.dist = std::sqrt(s.xd * s.xd + s.yd * s.yd);
+    if (s.dist > 0.001) s.xn = s.xd / s.dist, s.yn = s.yd / s.dist;
+    s.seen = s.dist < 300 && -(p.xAim * s.xn + p.yAim * s.yn) > 0.55;
+    return s;
+}
+
+void Enemy::next(const Sense &s) {
+    if (goals.empty())
+        for (int i = 0; i < 6 && plan->steps[i]; i++) goals.push(plan->steps[i]);
+    goalTime = 0;
+    if (const Goal *g = goals.front()) g->start(*this, s);
+}
+
+void Enemy::think() {
+    if (!plan) return void(xWant = yWant = 0);
+    Sense s = sense();
+    for (int i = 0; i < 2 && plan->interrupts[i]; i++) {
+        const Goal *g = plan->interrupts[i];
+        if (goals.front() != g && g->urgent(*this, s)) goals.pushFront(g), goalTime = 0, g->start(*this, s);
     }
+    if (goals.empty()) next(s);
+    double xs = 0, ys = 0;
+    for (int step = 0; step < 4; step++) {
+        const Goal *g = goals.front();
+        if (!g || g->tick(*this, s, xs, ys) == GoalState::Running) break;
+        goals.pop();
+        next(s);
+    }
+    goalTime += DT, cooldown -= DT;
+    xWant = xs, yWant = ys;
+}
+
+void Enemy::adopt() {
+    wantsLeader = false;
+    Enemy *nearby[24];
+    for (int i = 0, n = level->gather(x, y, 140, nearby, 24); i < n; i++) {
+        Enemy *o = nearby[i];
+        if (o != this && &o->type == &type && o->leader == entt::null && o->aware) {
+            leader = o->id;
+            return;
+        }
+    }
+}
+
+void Enemy::act() {
+    if (wantsLeader) adopt();
+    if (!wantsFire) return;
+    wantsFire = false;
+    Player &p = *level->player;
+    double xd = p.x - x, yd = p.bodyY() - bodyY(), dd = std::sqrt(xd * xd + yd * yd);
+    if (p.dead() || dd < 1e-5) return;
+    level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul);
+    Sound::orb.play(0.3f);
 }
 
 void Enemy::onAdded() { level->tag(this); }
 
-void Enemy::tick() {
-    Player &p = *level->player;
-    double xd = p.x - x, yd = p.y - y;
-    double dist = std::sqrt(xd * xd + yd * yd);
-    double xn = 0, yn = 0;
-    if (dist > 0.001) xn = xd / dist, yn = yd / dist;
-
-    double xs, ys;
-    steer(xn, yn, xs, ys);
-    x += (xs + xa) * DT;
-    y += (ys + ya) * DT;
+void Enemy::move() {
+    if (!plan) return;
+    const Player &p = *level->player;
+    x += (xWant + xa) * DT;
+    y += (yWant + ya) * DT;
     static const double KNOCK_DECAY = std::exp(-9 * DT);
     xa *= KNOCK_DECAY, ya *= KNOCK_DECAY;
     flash = std::max(0.0f, flash - DT);
     knifeCooldown -= DT;
     animT += DT;
     if (type.floats) z = 4 - std::sin(animT * 7) * 2;
-    if (std::abs(xn) > 0.15) facing = xn < 0 ? -1.0f : 1.0f;
-
-    if (dist > 560) {
-        double dir = p.xa * p.xa + p.ya * p.ya > 100 ? std::atan2(p.ya, p.xa) : rng.range(0, TAU);
-        dir += rng.range(-1, 1);
-        double r = rng.range(290, 320);
+    double xd = p.x - x, yd = p.y - y;
+    if (std::abs(xWant) > 4) facing = xWant < 0 ? -1.0f : 1.0f;
+    else if (std::abs(xd) > 2) facing = xd < 0 ? -1.0f : 1.0f;
+    if (xd * xd + yd * yd > 560 * 560) {
+        bool running = p.xa * p.xa + p.ya * p.ya > 100;
+        double dir = (running ? std::atan2(p.ya, p.xa) : roll() * TAU) + roll() * 2 - 1, r = 290 + 30 * roll();
         x = p.x + std::cos(dir) * r;
         y = p.y + std::sin(dir) * r;
-        return;
     }
-    float reach = type.radius + 5;
-    if (dist < reach && !p.dead()) {
-        x = p.x - xn * reach;
-        y = p.y - yn * reach;
-        p.hurt(type.damage * damageMul);
-    }
-    if (type.floats) return;
-    if (dist < 260 || ((uintptr_t(this) >> 5) + level->ticks) & 1) separate();
-    level->collide(x, y, radius);
 }
 
-void Enemy::separate() {
+void Enemy::push() {
+    xPush = yPush = 0;
+    if (!plan || type.floats) return;
+    double xd = level->player->x - x, yd = level->player->y - y;
+    if (xd * xd + yd * yd > 260 * 260 && ((uintptr_t(this) >> 5) + level->ticks) & 1) return;
     Enemy *nearby[24];
     for (int i = 0, count = level->gather(x, y, radius + 16, nearby, 24); i < count; i++) {
-        Enemy &o = *nearby[i];
-        if (&o == this || o.type.floats || (&o < this && o.type.speed > 0)) continue;
-        double xd = x - o.x, yd = y - o.y;
-        double min = (radius + o.radius) * 0.85, d2 = xd * xd + yd * yd;
+        const Enemy &o = *nearby[i];
+        if (&o == this || o.type.floats) continue;
+        double ox = x - o.x, oy = y - o.y;
+        double min = (radius + o.radius) * 0.85, d2 = ox * ox + oy * oy;
         if (d2 >= min * min || d2 < 1e-6) continue;
-        double dd = std::sqrt(d2), w = o.type.speed <= 0 ? 1.0 : o.radius / (radius + o.radius);
-        double push = (min - dd) / dd;
-        x += xd * push * w;
-        y += yd * push * w;
-        o.x -= xd * push * (1 - w);
-        o.y -= yd * push * (1 - w);
+        double dd = std::sqrt(d2), share = o.type.speed <= 0 ? 1.0 : o.radius / (radius + o.radius);
+        double k = (min - dd) / dd * share;
+        xPush += ox * k, yPush += oy * k;
+    }
+}
+
+void Enemy::settle() {
+    if (!plan) return;
+    x += xPush, y += yPush;
+    if (!type.floats) level->collide(x, y, radius);
+}
+
+void Enemy::tick() {
+    act();
+    Player &p = *level->player;
+    double xd = p.x - x, yd = p.y - y, dist = std::sqrt(xd * xd + yd * yd);
+    float reach = type.radius + 5;
+    if (dist < reach && dist > 1e-3 && !p.dead()) {
+        x = p.x - xd / dist * reach;
+        y = p.y - yd / dist * reach;
+        p.hurt(type.damage * damageMul);
     }
 }
 
@@ -119,6 +184,8 @@ void Enemy::makeElite() {
 void Enemy::render(Screen &s) {
     Color c = tint();
     if (elite) c = {c.r, c.g * 0.85f, c.b * 0.45f, c.a};
+    if (const Goal *g = goals.front())
+        if (float t = g->tell(*this); t > 0) c = {c.r, c.g * (1 - 0.6f * t), c.b * (1 - 0.6f * t), c.a};
     drawBody(s, xp, yp, type.tile, type.floats, 1, c, flash > 0 ? 1.0f : 0.0f, col::white);
 }
 
@@ -137,6 +204,7 @@ void Enemy::hurt(float damage, double xd, double yd, float force) {
     if (crit) damage *= 1.8f;
     hp -= damage;
     flash = 0.1f;
+    aware = true;
     float f = force * type.knockResist * (elite ? 0.5f : 1.0f);
     xa += xd * f;
     ya += yd * f;

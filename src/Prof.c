@@ -4,7 +4,7 @@
 
 static Uint64 started[PROF_COUNT];
 static double total[PROF_COUNT];
-static const char *NAMES[PROF_COUNT] = {"entities", "particles", "housekeep", "light", "floor", "sort", "draw"};
+static const char *NAMES[PROF_COUNT] = {"think", "entities", "particles", "housekeep", "light", "floor", "sort", "draw"};
 
 void prof_begin(int slot) { started[slot] = SDL_GetPerformanceCounter(); }
 
