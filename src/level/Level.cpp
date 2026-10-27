@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "Game.hpp"
+#include "Prof.h"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Encounter.hpp"
@@ -55,13 +56,18 @@ Entity *Level::add(std::unique_ptr<Entity> e) {
     return pending.back().get();
 }
 
+void Entity::remove() {
+    if (removed) return;
+    removed = true;
+    if (level && id != entt::null) level->retire(id);
+}
+
 void Level::flush() {
-    dead.clear();
-    for (auto [id, o] : reg.view<Owned>().each())
-        if (o.self->removed) dead.push_back(id);
     reg.destroy(dead.begin(), dead.end());
+    dead.clear();
 
     for (size_t i = 0; i < pending.size(); i++) {
+        if (pending[i]->removed) continue;
         std::unique_ptr<Entity> e = std::move(pending[i]);
         Entity *raw = e.get();
         raw->id = reg.create();
@@ -72,19 +78,27 @@ void Level::flush() {
 }
 
 void Level::tick() {
-    time += DT;
+    time += DT, ticks++;
+    prof_begin(PROF_HOUSEKEEP);
     if (!player->dead() && !night.dawn) night.tick();
     if (!player->dead() && !night.dawn) spawner.tick(), explore();
     buildGrid();
+    prof_end(PROF_HOUSEKEEP);
+    prof_begin(PROF_ENTITIES);
     for (auto [id, o] : reg.view<Owned>().each())
         if (!o.self->removed) o.self->tick();
+    prof_end(PROF_ENTITIES);
+    prof_begin(PROF_PARTICLES);
     for (size_t i = 0; i < particles.size(); i++)
         if (!particles[i]->removed) particles[i]->tick();
     size_t alive = 0;
     for (auto &p : particles)
         if (!p->removed) particles[alive++] = std::move(p);
     particles.resize(alive);
+    prof_end(PROF_PARTICLES);
+    prof_begin(PROF_HOUSEKEEP);
     flush();
+    prof_end(PROF_HOUSEKEEP);
 }
 
 namespace {
@@ -112,17 +126,17 @@ void Level::explore() {
 }
 
 int Level::gather(double x, double y, float r, Enemy **out, int max) const {
-    int cx = cell(x, xGrid), cy = cell(y, yGrid), n = 0;
+    int own = cell(y, yGrid) * GRID + cell(x, xGrid), n = 0;
+    for (int i = cellStart[own]; i < cellStart[own + 1]; i++)
+        if (!cells[i]->removed && (out[n++] = cells[i], n == max)) return n;
     int x0 = cell(x - r, xGrid), x1 = cell(x + r, xGrid);
     int y0 = cell(y - r, yGrid), y1 = cell(y + r, yGrid);
-    for (int ring = 0; ring <= 2; ring++)
-        for (int yc = y0; yc <= y1; yc++)
-            for (int xc = x0; xc <= x1; xc++) {
-                int d = std::max(std::abs(xc - cx), std::abs(yc - cy));
-                if (d != ring && !(ring == 2 && d > 2)) continue;
-                for (int c = yc * GRID + xc, i = cellStart[c]; i < cellStart[c + 1]; i++)
-                    if (!cells[i]->removed && (out[n++] = cells[i], n == max)) return n;
-            }
+    for (int yc = y0; yc <= y1; yc++)
+        for (int xc = x0, c = yc * GRID + xc; xc <= x1; xc++, c++) {
+            if (c == own) continue;
+            for (int i = cellStart[c]; i < cellStart[c + 1]; i++)
+                if (!cells[i]->removed && (out[n++] = cells[i], n == max)) return n;
+        }
     return n;
 }
 
@@ -130,11 +144,17 @@ void Level::buildGrid() {
     xGrid = player->x - GRID * CELL * 0.5;
     yGrid = player->y - GRID * CELL * 0.5;
     std::fill(cellStart.begin(), cellStart.end(), 0);
-    each<Enemy>([&](Enemy &e) { cellStart[cell(e.y, yGrid) * GRID + cell(e.x, xGrid) + 1]++; });
+    cellOf.clear();
+    each<Enemy>([&](Enemy &e) {
+        int c = cell(e.y, yGrid) * GRID + cell(e.x, xGrid);
+        cellOf.push_back(c);
+        cellStart[c + 1]++;
+    });
     for (int i = 1; i <= GRID * GRID; i++) cellStart[i] += cellStart[i - 1];
     std::copy(cellStart.begin(), cellStart.end() - 1, cellFill.begin());
     cells.resize(cellStart.back());
-    each<Enemy>([&](Enemy &e) { cells[cellFill[cell(e.y, yGrid) * GRID + cell(e.x, xGrid)]++] = &e; });
+    size_t k = 0;
+    each<Enemy>([&](Enemy &e) { cells[cellFill[cellOf[k++]]++] = &e; });
 }
 
 std::vector<Enemy *> Level::nearest(double x, double y, float range, int n) {
@@ -202,7 +222,10 @@ bool Level::blocks(double x, double y) const {
 }
 
 void Level::render(Screen &s) {
+    prof_begin(PROF_FLOOR);
     renderFloor(s);
+    prof_end(PROF_FLOOR);
+    prof_begin(PROF_SORT);
     drawn.clear(), keys.clear();
     for (auto [id, o] : reg.view<Owned>().each())
         if (!o.self->removed && s.visible(o.self->x, o.self->y, 48)) queue(o.self.get());
@@ -210,6 +233,8 @@ void Level::render(Screen &s) {
         if (!p->removed && s.visible(p->x, p->y, 48)) queue(p.get());
     for (Prop &p : props) queue(&p);
     radixSort(keys, keysTmp);
+    prof_end(PROF_SORT);
+    prof_begin(PROF_DRAW);
     bool shadows = false;
     for (uint64_t k : keys) {
         if (!shadows && k >> 56 >= 1) {
@@ -224,6 +249,7 @@ void Level::render(Screen &s) {
         }
         drawn[k & 0xFFFFFF]->draw(s);
     }
+    prof_end(PROF_DRAW);
 }
 
 void Level::queue(SpriteObject *e) {
@@ -232,14 +258,15 @@ void Level::queue(SpriteObject *e) {
 }
 
 void Level::renderLight(Screen &s) {
+    prof_begin(PROF_LIGHT);
     scatter(s);
     lights.clear();
     player->drawLight(s);
     night.renderLight(s);
     for (auto [id, o] : reg.view<Owned>().each())
-        if (o.self.get() != player && !o.self->removed) o.self->drawLight(s);
+        if (o.self.get() != player && !o.self->removed && s.visible(o.self->x, o.self->y, 160)) o.self->drawLight(s);
     for (auto &p : particles)
-        if (!p->removed) p->drawLight(s);
+        if (!p->removed && s.visible(p->x, p->y, 60)) p->drawLight(s);
     for (Prop &p : props) {
         if (p.light.a <= 0) continue;
         if (p.wisp) {
@@ -251,6 +278,7 @@ void Level::renderLight(Screen &s) {
             lights.add(p.x, p.y + p.lightYo + 6, p.lightSize * 0.9f, f);
         }
     }
+    prof_end(PROF_LIGHT);
 }
 
 void Spawner::tick() {

@@ -10,6 +10,7 @@ public:
     entt::entity id = entt::null;
 
     virtual void onAdded() {}
+    void remove();
 };
 
 class Mob : public Entity {
