@@ -41,5 +41,3 @@ Thumbs.db
 dist/
 dist-log.txt
 CHANGELOG.md
-
-/tools/**/*.*
