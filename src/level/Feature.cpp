@@ -47,6 +47,9 @@ const Feature dryBush{"dry bush", placeStack, atlas::fl::Straw, -1, true, 0.9f, 
 const Feature deadPine{"dead pine", placeStack, atlas::fl::DeadPine, -1, true, 1.0f, 3, NONE, false, atlas::flora};
 const Feature spiritPine{"spirit pine", placeStack, atlas::fl::SpiritPine, -1, true, 1.0f, 3, {0.04f, 0.16f, 0.17f, 1}, false, atlas::flora};
 const Feature mossPine{"moss pine", placeStack, atlas::fl::MossPine, -1, true, 1.0f, 3, NONE, false, atlas::flora};
+const Feature cactus{"cactus", placeStack, atlas::fl::Cactus, -1, true, 0.8f, 3, NONE, false, atlas::flora};
+const Feature barrelCactus{"barrel cactus", placeStack, atlas::fl::BarrelCactus, -1, true, 0.8f, 4, NONE, false, atlas::flora};
+const Feature palm{"palm", placeStack, atlas::fl::PalmLow, atlas::fl::PalmHigh, true, 1.3f, 3, NONE, false, atlas::flora};
 const Feature willow{"willow", placeStack, atlas::fl::WillowLow, atlas::fl::WillowHigh, true, 1.3f, 3, NONE, false, atlas::flora};
 const Feature reeds{"reeds", placeStack, atlas::fl::Reeds, -1, true, 0.4f, 0, NONE, false, atlas::flora};
 const Feature toadstools{"toadstools", placeStack, atlas::fl::Toadstools, -1, true, 0, 0, {0.12f, 0.04f, 0.2f, 1}, false, atlas::flora};

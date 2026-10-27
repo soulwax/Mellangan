@@ -21,6 +21,6 @@ bool placeGrave(const Feature *f, uint32_t roll, Prop *p);
 namespace feature {
 extern const Feature oak, autumnOak, pine, autumnPine, bush, snowOak, snowPine, snowBush;
 extern const Feature pinkOak, whiteOak, lilac, berryBush, dryBush, deadPine, spiritPine, mossPine, blueShrooms;
-extern const Feature willow, reeds, toadstools;
+extern const Feature willow, reeds, toadstools, cactus, barrelCactus, palm;
 extern const Feature grave, mushrooms, sprouts, log, beehive, sign, sack, crystal, well, barrel, crate;
 } // namespace feature

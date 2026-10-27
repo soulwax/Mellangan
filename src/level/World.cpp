@@ -22,7 +22,7 @@ bool dirtNoise(int x, int y, const Biome *b) { return noise_fbm(x * 0.11f - 200.
 // Per-tile memo of everything noise-derived. bits holds the biome in its low 3 bits plus has/value flags, so one
 // direct-mapped slot answers biome, dirt, shade and clump. Indexed by the low coordinate bits: any 128x64-tile
 // window maps without collisions, which covers the view, its margins and the tint's +-3 taps.
-enum : uint32_t { BIOME_BITS = 7, HAS_BIOME = 1 << 3, HAS_DIRT = 1 << 4, DIRT = 1 << 5, HAS_SHADE = 1 << 6, HAS_CLUMP = 1 << 7 };
+enum : uint32_t { BIOME_BITS = 15, HAS_BIOME = 1 << 4, HAS_DIRT = 1 << 5, DIRT = 1 << 6, HAS_SHADE = 1 << 7, HAS_CLUMP = 1 << 8 };
 struct TileMemo {
     int32_t x, y;
     uint32_t bits;
@@ -116,6 +116,8 @@ bool isDirt(int x, int y) {
     return m->bits & DIRT;
 }
 
+int rim(int mask) { return RIM[mask & 15]; }
+
 bool winterAt(int x, int y) { return BIOMES[biomeAt(x, y)]->winter(); }
 
 const Biome *blendedBiome(int x, int y) {
@@ -131,6 +133,7 @@ Sprite groundTile(int x, int y) {
     const Biome *b = BIOMES[biomeAt(x, y)];
     if (structureAt(x, y, st) && structureGround(&st, x - st.x, y - st.y, &out)) return b->frost(out);
     if (!isDirt(x, y)) {
+        if (b->ground(x, y, &out)) return out;
         if (b->winter()) {
             int snow = int(winterAt(x, y - 1)) | winterAt(x, y + 1) << 1 | winterAt(x - 1, y) << 2 | winterAt(x + 1, y) << 3;
             if (snow != 15) return atlas::snowRim(RIM[snow]);
@@ -169,8 +172,9 @@ bool propAt(int x, int y, Prop &p) {
     if (structureAt(x, y, st, 1)) return structureProp(&st, x - st.x, y - st.y, &p);
     if ((std::abs(x) < 4 && std::abs(y) < 4) || isDirt(x, y)) return false;
 
-    const Biome *b = blendedBiome(x, y);
     uint32_t h = hash2(x * 7 + 3, y * 13 + 1);
+    if (int own = BIOMES[biomeAt(x, y)]->place(x, y, h, p); own >= 0) return own;
+    const Biome *b = blendedBiome(x, y);
     int r = (h >> 4) % 1000;
     TileMemo *m = memoAt(x, y);
     if (!(m->bits & HAS_CLUMP)) m->bits |= HAS_CLUMP, m->clump = clumpAt(x, y);

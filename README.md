@@ -101,6 +101,7 @@ Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits w
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
 - `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites
+- `tools/make_flora.py`, `tools/make_desert.py` – add the recoloured and hand-drawn plants, mud, sand and water tiles to `res/atlas.png`
 - `tools/make_winter.py` – adds the frosted winter band to `res/atlas.png` (also run by `make_assets.py`)
 - `tools/footprint_preview.py` – composes a dumped structure footprint (ground and props) into a preview PNG
 - `tools/building_preview.py` – composes Tiny Town tile rows into a preview PNG, used to design buildings outside the game

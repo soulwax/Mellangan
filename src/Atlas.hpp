@@ -23,8 +23,11 @@ namespace fl {
 constexpr int PinkLow = 0, PinkHigh = 1, WhiteLow = 2, WhiteHigh = 3, Lilac = 4, Berries = 5, Straw = 6;
 constexpr int DeadPine = 7, SpiritPine = 8, MossPine = 9, BlueShrooms = 10, Petals = 11, PetalTufts = 12;
 constexpr int WillowLow = 13, WillowHigh = 14, Reeds = 15, Toadstools = 16;
+constexpr int Sand = 17, SandSpeck = 18, Cactus = 19, PalmLow = 20, PalmHigh = 21, SandPebbles = 22, BarrelCactus = 23;
 } // namespace fl
 constexpr Sprite mudRim(int offset) { return {float(216 + (offset % 12) * 18 + 1), float(426 + (offset / 12) * 18 + 1), 16, 16}; }
+constexpr Sprite sandRim(int offset) { return {float(216 + (3 + offset % 12) * 18 + 1), float(426 + (offset / 12) * 18 + 1), 16, 16}; }
+constexpr Sprite waterRim(int offset) { return {float(216 + (6 + offset % 12) * 18 + 1), float(426 + (offset / 12) * 18 + 1), 16, 16}; }
 constexpr Sprite snowRim(int offset) { return {float(216 + (offset % 12) * 18 + 1), float(336 + (offset / 12) * 18 + 1), 16, 16}; }
 
 constexpr Sprite Glow{0, 200, 64, 64};

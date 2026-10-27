@@ -7,6 +7,7 @@
 #include "level/biome/Barrow.hpp"
 #include "level/biome/Snow.hpp"
 #include "level/biome/Blossom.hpp"
+#include "level/biome/Desert.hpp"
 #include "level/biome/Mire.hpp"
 #include "level/Noise.h"
 
@@ -28,9 +29,10 @@ const Barrow BARROW;
 const Snow SNOW;
 const Blossom BLOSSOM;
 const Mire MIRE;
+const Desert DESERT;
 } // namespace
 
-const Biome *const BIOMES[BIOME_COUNT] = {&MEADOW, &FOREST, &AUTUMN, &HEATH, &BARROW, &SNOW, &BLOSSOM, &MIRE};
+const Biome *const BIOMES[BIOME_COUNT] = {&MEADOW, &FOREST, &AUTUMN, &HEATH, &BARROW, &SNOW, &BLOSSOM, &MIRE, &DESERT};
 
 namespace world {
 
@@ -47,6 +49,7 @@ Climate climateAt(int x, int y) {
 BiomeId biomeOf(Climate c) {
     if (c.eerie > 0.26f) return BIOME_BARROW;
     if (c.temp < -0.24f) return BIOME_SNOW;
+    if (c.temp > 0.1f && c.moist < -0.16f) return BIOME_DESERT;
     if (c.moist < -0.18f) return BIOME_HEATH;
     if (c.temp > 0.18f && c.moist <= 0.03f) return BIOME_BLOSSOM;
     if (c.moist > 0.24f && c.temp < 0.08f) return BIOME_MIRE;

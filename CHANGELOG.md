@@ -6,6 +6,26 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Desert biome in hot, dry climates: pale dunes with saguaro and barrel cacti, dry scrub and the odd dead tree, and
+  green oases with palm-ringed ponds you have to walk around. Sand and water have their own edge sets, so dunes meet
+  every neighbouring biome and oasis pools meet their grass along rounded edges.
+- Mire biome in the wettest woods: olive willows, reed beds, glowing purple toadstools, mud patches with their own
+  edges, and fireflies drifting over the swamp.
+- Blossom Grove biome in warm, mild climates: pink and white blossom trees, lilac and berry bushes, beehives and
+  petal-strewn grass.
+- More varied flora everywhere: moss pines and glowing mushrooms in forests, dry bushes and dead pines on heath and in
+  autumn woods, dead and spirit pines in barrows. The new plants are recoloured or drawn into the atlas by
+  `tools/make_flora.py` and `tools/make_desert.py`.
+
+### Changed
+
+- Biomes are classes: a `Biome` base holds the data and default ground, and each biome in `src/level/biome/`
+  overrides only what makes it different (snowfall, petals, mud, fireflies, dunes and oases).
+- Plants and ground details blend across biome borders over a few tiles, and every dirt, mud, sand and water patch
+  draws with proper edges.
+
 ## [0.2.4] - 2026-10-27
 
 ### Added

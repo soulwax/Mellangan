@@ -6,7 +6,7 @@
 
 class Level;
 
-enum BiomeId { BIOME_MEADOW, BIOME_FOREST, BIOME_AUTUMN, BIOME_HEATH, BIOME_BARROW, BIOME_SNOW, BIOME_BLOSSOM, BIOME_MIRE, BIOME_COUNT };
+enum BiomeId { BIOME_MEADOW, BIOME_FOREST, BIOME_AUTUMN, BIOME_HEATH, BIOME_BARROW, BIOME_SNOW, BIOME_BLOSSOM, BIOME_MIRE, BIOME_DESERT, BIOME_COUNT };
 
 struct Climate {
     float temp, moist, eerie;
@@ -41,6 +41,8 @@ public:
     virtual Sprite dirtRim(int offset) const;
     virtual Sprite frost(Sprite ground) const { return ground; }
     virtual void weather(Level &, double, double) const {}
+    virtual bool ground(int, int, Sprite *) const { return false; }
+    virtual int place(int, int, uint32_t, Prop &) const { return -1; }
 };
 
 extern const Biome *const BIOMES[BIOME_COUNT];
@@ -51,5 +53,6 @@ Climate climateAt(int x, int y);
 BiomeId biomeOf(Climate c);
 BiomeId biomeAt(int x, int y);
 float clumpAt(int x, int y);
+int rim(int mask);
 
 } // namespace world
