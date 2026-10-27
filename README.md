@@ -72,6 +72,10 @@ platform's build of the same version, run `./dist.ps1 -Bump none` there. SDL and
 statically, so players only need a Vulkan-capable driver.
 If the build fails, `VERSION` and `CHANGELOG.md` are restored.
 
+On Linux and macOS, `./dist.sh` does the same in bash (`./dist.sh minor`, `./dist.sh none`) and writes
+`dist/Mellangan-<version>-<linux|macos>.tar.gz` with a `.sha256` beside it. On macOS it bundles the Vulkan loader and
+MoltenVK from `$VULKAN_SDK` into `lib/`; players start the game with `Mellangan.command`.
+
 ## Controls
 
 | Key | Action |
