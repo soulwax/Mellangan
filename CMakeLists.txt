@@ -5,6 +5,8 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS VERSION)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Static CRT everywhere so a release needs no VC++ redistributable.
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -28,7 +30,10 @@ add_subdirectory(extern/entt)
 add_library(stb_vorbis STATIC extern/stb/stb_vorbis.c)
 target_include_directories(stb_vorbis PUBLIC extern/stb)
 
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.hpp)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.hpp src/*.c src/*.h)
+file(GLOB_RECURSE C_SOURCES CONFIGURE_DEPENDS src/*.c)
+# The precompiled header is C++ only.
+set_source_files_properties(${C_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 add_executable(Mellangan ${SOURCES})
 # Generated header so a version bump only recompiles the files that show the version.
 configure_file(src/Version.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Version.hpp @ONLY)

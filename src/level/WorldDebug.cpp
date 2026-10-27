@@ -127,11 +127,13 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
     if (hovering) {
         Vec2 g = v.gui({hx * 16.0f, hy * 16.0f});
         s.frame(g.x, g.y, 16 * k, 16 * k, u, col::white.alpha(0.8f));
+        Climate hc = world::climateAt(hx, hy);
+        const BiomeDef *hb = &BIOMES[world::biomeOf(hc)];
         std::vector<std::pair<std::string, Color>> info{
             {fmt::format("tile {},{}  region {},{}", hx, hy, world::regionOf(hx), world::regionOf(hy)), col::white},
-            {fmt::format("forest {:.2f}  yard {:.2f}  {}", world::forestAt(hx, hy), world::yardAt(hx, hy),
-                         world::isDirt(hx, hy) ? "dirt" : "grass"),
-             col::muted},
+            {fmt::format("{}  clump {:.2f}  {}", hb->name, world::clumpAt(hx, hy), world::isDirt(hx, hy) ? "dirt" : "grass"),
+             hb->debug},
+            {fmt::format("temp {:.2f}  moist {:.2f}  eerie {:.2f}", hc.temp, hc.moist, hc.eerie), col::muted},
         };
         Prop p;
         bool prop = world::propAt(hx, hy, p);
@@ -148,11 +150,13 @@ void Level::renderWorldDebug(Screen &s, Vec2 viewOffset, Vec2 mouse) {
         panel(s, info, px, py, small, false);
     }
 
+    const BiomeDef *pb = &BIOMES[world::biomeAt(int(std::floor(player->pos.x / 16)), int(std::floor(player->pos.y / 16)))];
     std::vector<std::pair<std::string, Color>> hud{
         {"WORLD DEBUG  F8 hide  F9 warp", col::gold},
         {fmt::format("player tile {},{}  region {},{}", int(std::floor(player->pos.x / 16)), int(std::floor(player->pos.y / 16)),
                      world::regionOf(int(std::floor(player->pos.x / 16))), world::regionOf(int(std::floor(player->pos.y / 16)))),
          col::white},
+        {fmt::format("biome {}", pb->name), pb->debug},
         {fmt::format("{} structures in view", seen), col::muted},
         {targeted ? fmt::format("target {} at {},{}", target.name(), target.x, target.y) : "no structure within 8 regions",
          targeted ? target.debugColor() : col::muted},

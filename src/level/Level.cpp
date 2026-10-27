@@ -81,7 +81,8 @@ void Level::renderFloor(Screen &s) {
     eachVisibleTile(s, [&](int x, int y) {
         Vec2 at{x * 16.0f, y * 16.0f};
         float n = world::groundShade(x, y), shade = 0.8f + 0.2f * n;
-        s.color({shade, shade * 0.97f, shade * 0.93f + 0.04f * (1 - n), 1});
+        Color t = world::groundTint(x, y);
+        s.color({shade * t.r, shade * 0.97f * t.g, (shade * 0.93f + 0.04f * (1 - n)) * t.b, 1});
         s.sprite(world::groundTile(x, y), at, {0, 0});
     });
     s.color(col::white);
