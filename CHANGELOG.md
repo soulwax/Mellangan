@@ -6,6 +6,18 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-27
+
+### Added
+
+- `--bench` runs a stress benchmark: fresh runs with 100, 1,000, 10,000, 20,000, 30,000, 40,000 and 50,000
+  enemies, logging fps, tick and render cost for each, then quits.
+
+### Changed
+
+- Huge hordes playable
+- The depth sort is a three-pass radix sort over packed layer and y keys, and entities are allocated from a C slab
+
 ## [0.1.3] - 2026-10-27
 
 ### Added
