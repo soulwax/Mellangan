@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-28
+
 ### Changed
 
 - Smoother terrain: Perlin noise uses sixteen evenly spread gradient directions instead of eight axis-biased ones,
