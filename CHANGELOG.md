@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.7] - 2026-10-29
+
 ### Added
 
 - Centered lean level-up cards with procedural category icons and tier-colored borders:
