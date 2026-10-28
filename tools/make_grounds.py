@@ -112,7 +112,7 @@ def preview(atlas, path, zoom=4):
         for c in range(12):
             x, y = slot(i, c)
             img.paste(atlas.crop((x, y, x + 16, y + 16)), (c * 18 + 1, i * 18 + 1))
-    img.resize((img.width * zoom, img.height * zoom), Image.NEAREST).save(path)
+    img.resize((img.width * zoom, img.height * zoom), Image.Resampling.NEAREST).save(path)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
 #include "Test.hpp"
 
 #include <cassert>
-#include <chrono>
 #include <cstring>
 #include <iostream>
 #include <thread>

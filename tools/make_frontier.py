@@ -205,7 +205,8 @@ def timber(c):
     c.rect(2, 3, 4, 15, BARK)
     c.rect(11, 3, 13, 15, BARK)
     for x in range(1, 15):
-        c.put(x, 2, BARK[2]), c.put(x, 3, BARK[1])
+        c.put(x, 2, BARK[2])
+        c.put(x, 3, BARK[1])
     c.line(5, 4, 10, 9, BARK[0])
 
 
@@ -221,7 +222,9 @@ def wolf(c, pal, eye, mane=None):
     c.ellipse(12.5, 7, 2.8, 2.3, pal, seed=92)
     c.rect(14, 7, 15, 8, pal)
     c.put(15, 7, OUTLINE_DARK)
-    c.put(11, 4, pal[1]), c.put(12, 4, pal[2]), c.put(11, 3, pal[2])
+    c.put(11, 4, pal[1])
+    c.put(12, 4, pal[2])
+    c.put(11, 3, pal[2])
     c.put(13, 6, eye)
 
 
@@ -233,7 +236,8 @@ def burrower(c):
     c.ellipse(8, 3.6, 2, 1.4, GLOOM, seed=95)
     for x, y in ((6, 3), (10, 3), (7, 5), (9, 5)):
         c.put(x, y, BONE[2])
-    c.line(4, 2, 5, 4, WORM[0]), c.line(12, 2, 11, 4, WORM[0])
+    c.line(4, 2, 5, 4, WORM[0])
+    c.line(12, 2, 11, 4, WORM[0])
 
 
 def mound(c):
@@ -256,14 +260,18 @@ def necromancer(c):
 
 
 def skeleton(c):
-    c.line(6, 11, 5, 15, BONE[1]), c.line(10, 11, 11, 15, BONE[1])
+    c.line(6, 11, 5, 15, BONE[1]) 
+    c.line(10, 11, 11, 15, BONE[1])
     c.line(8, 6, 8, 11, BONE[1])
     for y in (8, 10):
         c.line(5, y, 11, y, BONE[2 if y == 8 else 1])
-    c.line(5, 7, 3, 11, BONE[1]), c.line(11, 7, 13, 11, BONE[1])
+    c.line(5, 7, 3, 11, BONE[1])
+    c.line(11, 7, 13, 11, BONE[1])
     c.rect(6, 11, 10, 11, BONE)
     c.ellipse(8, 4, 3.2, 2.9, BONE, seed=100)
-    c.put(7, 4, OUTLINE_DARK), c.put(9, 4, OUTLINE_DARK), c.put(8, 6, OUTLINE_DARK)
+    c.put(7, 4, OUTLINE_DARK)
+    c.put(9, 4, OUTLINE_DARK)
+    c.put(8, 6, OUTLINE_DARK)
 
 
 def thief(c):
