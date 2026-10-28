@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-28
+
 ### Added
 
 - Classes: a class screen after the title shows eight heroes on pedestals, the chosen one lit and raised, with its
