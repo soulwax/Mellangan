@@ -483,7 +483,7 @@ void Game::renderHud() {
     float box = 22 * u, bx = 4 * u, by = hy - box - 8 * u;
     float wait = p.skillTime / std::max(0.01f, h->cooldown * p.haste);
     s.rect(bx, by, box, box, col::panel);
-    s.sprite(atlas::tile(h->tile), bx + 3 * u, by + 3 * u, 0, 0, u, u);
+    s.sprite(h->sprite(), bx + 3 * u, by + 3 * u, 0, 0, u, u);
     if (wait > 0)
       s.rect(bx, by, box, box * wait, {0.02f, 0.02f, 0.05f, 0.7f});
     s.frame(bx, by, box, box, u,
