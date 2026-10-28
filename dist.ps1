@@ -88,7 +88,7 @@ Remove-Item $stage, $archive -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$stage/res/shaders" -Force | Out-Null
 
 $exe = if ($IsWindows) { 'Mellangan.exe' } else { 'Mellangan' }
-$bin = if (Test-Path "build/Release/$exe") { 'build/Release' } else { 'build' }
+$bin = if (Test-Path "build/app/Release/$exe") { 'build/app/Release' } elseif (Test-Path "build/bin/Release/$exe") { 'build/bin/Release' } elseif (Test-Path "build/Release/$exe") { 'build/Release' } else { 'build' }
 Copy-Item "$bin/$exe", CHANGELOG.md $stage
 Copy-Item res/atlas.png, res/particles.png, res/font.png, res/CREDITS.md "$stage/res"
 Copy-Item "$bin/res/shaders/*.spv" "$stage/res/shaders"

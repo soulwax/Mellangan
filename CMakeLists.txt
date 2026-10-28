@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/app")
 # Static CRT everywhere so a release needs no VC++ redistributable.
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 get_property(_multi GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -42,6 +43,12 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.hpp src/*.c src/*.h)
 file(GLOB_RECURSE C_SOURCES CONFIGURE_DEPENDS src/*.c)
 # The precompiled header is C++ only.
 set_source_files_properties(${C_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+
+if (WIN32)
+    configure_file(res/Mellangan.rc.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Mellangan.rc @ONLY)
+    list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/generated/Mellangan.rc)
+endif ()
+
 add_executable(Mellangan ${SOURCES})
 # Generated header so a version bump only recompiles the files that show the version.
 configure_file(src/Version.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Version.hpp @ONLY)
@@ -53,13 +60,13 @@ target_precompile_headers(Mellangan PRIVATE src/pch.hpp)
 
 if (WIN32)
     target_compile_definitions(Mellangan PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
-    target_link_libraries(Mellangan PRIVATE dbghelp)
 endif ()
 if (MSVC)
     # PDBs in every config so crash traces resolve to file:line.
     target_compile_options(Mellangan PRIVATE /W4 /permissive- /utf-8 /Zi /MP)
     target_link_options(Mellangan PRIVATE /DEBUG /OPT:REF /OPT:ICF
-            $<$<NOT:$<CONFIG:Debug>>:/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup>)
+            $<$<NOT:$<CONFIG:Debug>>:/SUBSYSTEM:WINDOWS>
+            "/MANIFESTINPUT:${CMAKE_CURRENT_SOURCE_DIR}/res/Mellangan.manifest")
 else ()
     target_compile_options(Mellangan PRIVATE -Wall -Wextra)
 endif ()

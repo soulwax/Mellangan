@@ -96,3 +96,11 @@ int main(int argc, char **argv) {
   spdlog::info("Bye");
   return code;
 }
+
+#if defined(_WIN32)
+#include <windows.h>
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+  return main(__argc, __argv);
+}
+#endif
+
