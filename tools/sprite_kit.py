@@ -18,6 +18,44 @@ class Canvas:
         if 0 <= x < self.w and 0 <= y < self.h:
             self.px[(x, y)] = c
 
+    def paint(self, points, c):
+        for x, y in points:
+            self.put(x, y, c)
+
+    def cluster(self, x, y, rows, c):
+        points = set()
+        for dy, row in enumerate(rows):
+            for dx, mark in enumerate(row):
+                if mark != ".":
+                    points.add((x + dx, y + dy))
+        self.paint(points, c)
+        return points
+
+    def contour(self, points, c=OUTLINE):
+        points = set(points)
+        edge = set()
+        for x, y in points:
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                n = x + dx, y + dy
+                if n not in points:
+                    edge.add(n)
+        self.paint(edge, c)
+        return edge
+
+    def shadow(self, points, c):
+        self.paint(points, c)
+
+    def highlight(self, points, c):
+        self.paint(points, c)
+
+    def material(self, points, dark, light, seed, density=0.2):
+        for x, y in sorted(set(points)):
+            roll = _hash(x, y, seed)
+            if roll < density * 0.45:
+                self.put(x, y, light)
+            elif roll > 1 - density * 0.55:
+                self.put(x, y, dark)
+
     def ellipse(self, cx, cy, rx, ry, pal, light=LIGHT, dither=0.0, seed=0):
         for y in range(int(cy - ry) - 1, int(cy + ry) + 2):
             for x in range(int(cx - rx) - 1, int(cx + rx) + 2):

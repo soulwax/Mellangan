@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import sys
 
 from PIL import Image
@@ -138,6 +139,27 @@ def validate(atlas):
     return errors
 
 
+def validate_cpp_layout(path):
+    source = "".join(Path(path).read_text(encoding="utf-8").split())
+    expected = {
+        "expansion": ("(index%24)*18+1", "624+(index/24)*18+1"),
+        "biomeProp": ("(index%24)*18+1", "660+(index/24)*18+1"),
+        "biomeGround": ("((set%2)*12+cell)*18+1", "696+(set/2)*18+1"),
+    }
+    errors = []
+    for name, terms in expected.items():
+        match = re.search(rf"constexprSprite{name}\([^)]*\)\{{(.*?)\}}", source)
+        if not match:
+            errors.append(f"missing C++ atlas accessor {name}")
+            continue
+        for term in terms:
+            if term not in match.group(1):
+                errors.append(f"C++ atlas accessor {name} does not contain {term}")
+    if "constexprintMireLeech=0,RicochetSling=14;" not in source:
+        errors.append("C++ expansion sprite IDs do not match the generator allocation")
+    return errors
+
+
 def main():
     prepare = "--prepare" in sys.argv[1:]
     args = [arg for arg in sys.argv[1:] if arg != "--prepare"]
@@ -147,6 +169,8 @@ def main():
         atlas = extend(atlas)
         atlas.save(path)
     errors = validate(atlas)
+    errors += validate_cpp_layout(Path(__file__).resolve().parent.parent /
+                                  "src" / "Atlas.hpp")
     if errors:
         for error in errors:
             print(f"error: {error}")

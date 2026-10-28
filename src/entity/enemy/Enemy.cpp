@@ -9,6 +9,7 @@
 #include "entity/enemy/Ghost.hpp"
 #include "entity/enemy/Necromancer.hpp"
 #include "entity/enemy/Thief.hpp"
+#include "entity/enemy/ExpansionEnemy.hpp"
 #include "entity/enemy/Wolf.hpp"
 #include "entity/enemy/ai/Plans.hpp"
 #include "entity/pickup/Gem.hpp"
@@ -68,6 +69,16 @@ const EnemyType TYPES[] = {
      atlas::frontier},
     {fr::Thief, 36, 68, 0, 7, 1.0f, 10, 0.9f, {0.95f, 0.8f, 0.3f, 1}, false, 90,
      atlas::frontier},
+    {0,22,42,4,6,1,3,1,{0.7f,0.3f,0.5f,1},false,35,atlas::expansion},
+    {1,32,30,3,6,1,4,1,{0.5f,0.9f,0.5f,1},true,55,atlas::expansion},
+    {2,38,50,10,6,1,4,0.8f,{0.5f,0.8f,0.9f,1},false,75,atlas::expansion},
+    {3,28,48,8,6,1,3,1,{0.7f,0.5f,0.3f,1},true,65,atlas::expansion},
+    {4,26,33,4,5,1,4,1,{0.5f,0.8f,1,1},true,80,atlas::expansion},
+    {5,100,25,14,9,1.3f,8,0.3f,{0.6f,0.8f,0.9f,1},false,130,atlas::expansion},
+    {6,18,38,4,5,1,3,1,{0.6f,0.8f,0.3f,1},false,50,atlas::expansion},
+    {7,130,24,12,10,1.3f,9,0.3f,{0.6f,0.4f,0.7f,1},false,150,atlas::expansion},
+    {8,36,45,7,6,1,5,0.8f,{1,0.4f,0.2f,1},false,110,atlas::expansion},
+    {9,160,22,16,10,1.4f,12,0.25f,{0.7f,0.3f,0.1f,1},false,190,atlas::expansion},
 };
 constexpr int ELITE_XP = 6;
 } // namespace
@@ -88,7 +99,9 @@ std::unique_ptr<Enemy> Enemy::create(EnemyKind kind, float hpMul,
                                      float damageMul) {
   const EnemyType &t = typeOf(kind);
   std::unique_ptr<Enemy> e;
-  if (kind == EnemyKind::Ghost)
+  if (kind >= EnemyKind::MireLeech)
+    e = std::make_unique<ExpansionEnemy>(t,hpMul,damageMul,int(kind)-int(EnemyKind::MireLeech));
+  else if (kind == EnemyKind::Ghost)
     e = std::make_unique<Ghost>(t, hpMul, damageMul);
   else if (kind == EnemyKind::Cyclops)
     e = std::make_unique<Cyclops>(t, hpMul, damageMul);
@@ -198,6 +211,7 @@ void Enemy::move() {
     frenzy = std::max(0.0f, frenzy - DT);
     spdMul = 1.35f;
   }
+  spdMul *= status.movement();
   x += (xWant * level->pace * spdMul + xa) * DT;
   y += (yWant * level->pace * spdMul + ya) * DT;
   static const double KNOCK_DECAY = std::exp(-9 * DT);
@@ -256,6 +270,12 @@ void Enemy::settle() {
 }
 
 void Enemy::tick() {
+  status.tick(DT, [&](float damage, Upgrade *src) {
+    hurt(damage, 0, 0, 0, src, true);
+    return !removed;
+  });
+  if (removed)
+    return;
   act();
   Player &p = *level->player;
   double xd = p.x - x, yd = p.y - y, dist = std::sqrt(xd * xd + yd * yd);
@@ -304,7 +324,9 @@ const char *Enemy::name() const {
       "a cultist",      "a demon",         "a knight",
       "the cyclops",    "a wolf",          "an alpha wolf",
       "a burrower",     "a necromancer",   "a skeleton",
-      "a treasure thief"
+      "a treasure thief", "a mire leech", "a bog lantern", "a glass mantis",
+      "a dust vulture", "a frost wisp", "an iceback", "a sporeling",
+      "a mycelial brute", "an ember imp", "a cinder golem"
   };
   return NAMES[&type - TYPES];
 }
@@ -312,7 +334,7 @@ const char *Enemy::name() const {
 int Enemy::kind() const { return int(&type - TYPES); }
 
 void Enemy::hurt(float damage, double xd, double yd, float force,
-                 Upgrade *src) {
+                 Upgrade *src, bool periodic) {
   if (removed)
     return;
   double dd = std::sqrt(xd * xd + yd * yd);
@@ -320,7 +342,9 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
     xd /= dd, yd /= dd;
   else
     xd = yd = 0;
-  bool crit = rng.chance(0.08f + level->player->luck);
+  if (!periodic)
+    damage *= status.incoming();
+  bool crit = !periodic && rng.chance(0.08f + level->player->luck);
   if (crit)
     damage *= level->player->hero ? level->player->hero->edge() : 1.8f;
   if (src)
@@ -343,6 +367,7 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
 }
 
 void Enemy::die() {
+  status.clear();
   remove();
   level->kills++;
   level->slain[kind()]++;

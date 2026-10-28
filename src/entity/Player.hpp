@@ -33,7 +33,7 @@ public:
   void renderShadow(Screen &s) override;
   void renderLight(Screen &s) override;
 
-  void hurt(float damage);
+  void hurt(float damage, bool periodic = false);
   void rise();
   void cast();
   void heal(float amount);

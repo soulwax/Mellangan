@@ -22,6 +22,16 @@ enum class EnemyKind {
   Necromancer,
   Skeleton,
   Thief,
+  MireLeech,
+  BogLantern,
+  GlassMantis,
+  DustVulture,
+  FrostWisp,
+  Iceback,
+  Sporeling,
+  MycelialBrute,
+  EmberImp,
+  CinderGolem,
   Count
 };
 
@@ -63,7 +73,7 @@ public:
   }
   void renderLight(Screen &s) override;
   void hurt(float damage, double xd, double yd, float force,
-            Upgrade *src = nullptr);
+            Upgrade *src = nullptr, bool periodic = false);
   const char *name() const;
   int kind() const;
   bool is(EnemyKind k) const { return kind() == int(k); }

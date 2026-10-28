@@ -29,12 +29,13 @@ public:
   virtual float wisdom() const { return 1; }
   virtual float devotion() const { return 1; }
   virtual float edge() const { return 1.8f; }
+  virtual Sprite sprite() const { return atlas::tile(tile); }
   virtual void slay(Player &, Enemy &) const {}
 
   bool favours(const char *upgrade) const;
 };
 
-constexpr int HERO_COUNT = 8;
+constexpr int HERO_COUNT = 12;
 extern const Hero *const HEROES[HERO_COUNT];
 
 const Hero &heroOf(const Codex &c);

@@ -16,7 +16,9 @@ const EnemyType BARREL{t::Barrel, 12,  0, 0, 6, 1, 0, 0, {0.6f, 0.4f, 0.25f, 1},
                        false,     1e9f};
 } // namespace
 
-SupplyBarrel::SupplyBarrel() : Enemy(BARREL, 1, 0) {}
+SupplyBarrel::SupplyBarrel() : Enemy(BARREL, 1, 0) {
+  status.immune = (1u << int(StatusKind::Count)) - 1;
+}
 
 void SupplyBarrel::tick() {
   flash = std::max(0.0f, flash - DT);

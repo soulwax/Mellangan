@@ -70,6 +70,7 @@ void Night::tick() {
 }
 
 void Night::kindle() {
+  offering = true;
   kindling = 0;
   if (lit < MAX_LIT)
     shrines[lit++] = current;

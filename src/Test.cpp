@@ -15,9 +15,12 @@
 #include "entity/pickup/Gem.hpp"
 #include "entity/projectile/ChakramDisc.hpp"
 #include "level/Level.hpp"
+#include "item/Upgrade.hpp"
 #include "particle/Spark.hpp"
 #include "particle/TextParticle.hpp"
 #include "particle/debris/Debris.hpp"
+#include "ExpansionEnemyTest.hpp"
+#include "ExpansionTest.hpp"
 
 static void testPoolAllocAndFree() {
   void *ptrs[1024]; // 8kB total storage
@@ -58,6 +61,85 @@ static void testPoolConcurrency() {
   }
   for (auto &w : workers)
     w.join();
+}
+
+static void testStatuses() {
+  Status s;
+  Upgrade strong("Strong", atlas::White, {}, true);
+  Upgrade weak("Weak", atlas::White, {}, true);
+  assert(s.apply(StatusKind::Poison, 1.0f, 8, &strong));
+  assert(s.apply(StatusKind::Poison, 2.0f, 2, &weak));
+  float total = 0;
+  for (int i = 0; i < 8; i++)
+    s.tick(0.25f, [&](float damage, Upgrade *src) {
+      assert(src == &strong);
+      total += damage;
+      return true;
+    });
+  assert(std::abs(total - 16) < 0.001f);
+  assert(s.power(StatusKind::Poison) == 0);
+  assert(s.effects[int(StatusKind::Poison)].source == nullptr);
+  assert(s.apply(StatusKind::Burn, 2, 2, &weak));
+  assert(s.apply(StatusKind::Burn, 1, 8, &strong));
+  assert(s.effects[int(StatusKind::Burn)].source == &strong);
+  s.clear();
+  assert(s.apply(StatusKind::Chill, 1, 10));
+  assert(std::abs(s.movement() - 0.35f) < 0.001f);
+  s.immune = 1u << int(StatusKind::Burn);
+  assert(!s.apply(StatusKind::Burn, 2, 5));
+  assert(!s.apply(StatusKind::Poison, -1, 5));
+  assert(s.apply(StatusKind::Marked, 1, 0.25f));
+  assert(std::abs(s.incoming() - 1.25f) < 0.001f);
+  assert(s.apply(StatusKind::Poison, 0.25f, 8, &strong));
+  total = 0;
+  s.tick(0.5f, [&](float damage, Upgrade *) {
+    total += damage;
+    return true;
+  });
+  assert(std::abs(total - 2) < 0.001f);
+  s.apply(StatusKind::Poison, 2, 8, &strong);
+  s.tick(0.5f, [](float, Upgrade *) { return false; });
+  for (const auto &effect : s.effects)
+    assert(effect.time == 0 && effect.source == nullptr);
+}
+
+static void testStatusDamage() {
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  auto enemy = Enemy::create(EnemyKind::Rat, 1, 1);
+  Enemy *e = enemy.get();
+  level.add(std::move(enemy));
+  Upgrade &weapon = *p.upgrades.front();
+  float before = weapon.dealt;
+  int kills = level.kills;
+  e->afflict(StatusKind::Burn, 2, 20, &weapon);
+  for (int i = 0; i < 40 && !e->removed; i++)
+    e->tick();
+  assert(e->removed && level.kills == kills + 1);
+  assert(std::abs(weapon.dealt - before - 9) < 0.001f);
+  assert(e->status.power(StatusKind::Burn) == 0);
+  assert(!e->afflict(StatusKind::Poison, 2, 4));
+  auto marked = Enemy::create(EnemyKind::Knight, 1, 1);
+  Enemy *target = marked.get();
+  level.add(std::move(marked));
+  p.luck = -1;
+  target->afflict(StatusKind::Marked, 2, 0.25f);
+  target->hurt(20, 0, 0, 0, &weapon);
+  assert(std::abs(target->hp - 95) < 0.001f);
+  target->hurt(10, 0, 0, 0, &weapon, true);
+  assert(std::abs(target->hp - 85) < 0.001f);
+  p.afflict(StatusKind::Poison, 2, 4);
+  float hp = p.hp;
+  for (int i = 0; i < 40; i++)
+    p.tick();
+  assert(p.hp == hp);
+  p.revives = 1;
+  p.rise();
+  assert(p.status.power(StatusKind::Poison) == 0);
+  game.level.reset();
 }
 
 static void testLevelLifecycleAndSimulation() {
@@ -108,6 +190,12 @@ int runTests() {
   std::cout << "[TEST] Pool alloc/free & edge cases: PASS" << std::endl;
   testPoolConcurrency();
   std::cout << "[TEST] Pool multithreaded concurrency: PASS" << std::endl;
+  testStatuses();
+  testStatusDamage();
+  testExpansionEnemies();
+  testExpansionContent();
+  std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"
+            << std::endl;
   testLevelLifecycleAndSimulation();
   std::cout << "[TEST] Level lifecycle, multithreaded AI & entity cleanup: PASS"
             << std::endl;

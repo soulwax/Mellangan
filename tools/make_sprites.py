@@ -56,6 +56,10 @@ def birch(c, leaves):
     c.ellipse(8, 9, 6.5, 7, leaves, dither=0.18, seed=1)
     c.ellipse(4.5, 14, 3, 3, leaves, seed=2)
     c.ellipse(11.5, 13, 3, 3.5, leaves, seed=3)
+    c.cluster(3, 5, (".##", "###", ".#."), leaves[2])
+    c.cluster(9, 8, ("##.", "###", ".#."), leaves[0])
+    c.material(((x, y) for y in range(13, 32) for x in range(7, 10)),
+               CHAR[0], PALE[2], 91, 0.16)
 
 
 def cypress(c):
@@ -198,6 +202,10 @@ def cattails(c):
 
 def boulder(c, pal, top=None):
     c.ellipse(8, 11, 6.5, 4.8, pal, dither=0.15, seed=13)
+    c.cluster(3, 11, ("##.", ".##", "..#"), pal[0])
+    c.cluster(6, 7, (".###", "##.."), pal[2])
+    c.material(((x, y) for y in range(8, 14) for x in range(3, 14)),
+               pal[0], pal[2], 92, 0.08)
     if top:
         c.ellipse(7, 8, 5, 2, top, seed=14)
 

@@ -6,9 +6,41 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-10-28
+
 ### Added
 
-- Reserved and validated fixed 16 x 16 atlas bands for the planned monsters, biomes, classes, weapons, relics, and effects.
+- 10 new monsters with telegraphed combat behaviors and status interactions:
+  - **Mire Leech** (Mire & Wetlands): latches on at close range, draining health until broken off.
+  - **Bog Lantern** (Mire & Floodplains): lures with ambient glow, then bursts into an expanding marked ring.
+  - **Glass Mantis** (Desert & Glass Desert): lines up a swift telegraphed dash across the sands.
+  - **Dust Vulture** (Badlands & Desert): circles overhead out of reach before diving in for a strike.
+  - **Frost Wisp** (Snow & Taiga): leaves a trail of slowing frost patches on the ground.
+  - **Iceback** (Snow & Taiga): winds up a heavy charging ram that chills on contact.
+  - **Sporeling** (Fungal Wood & Overgrowth): releases a lingering poisonous spore cloud on approach.
+  - **Mycelial Brute** (Fungal Wood): pulses a cleansing heal that purges burn and poison from nearby allies.
+  - **Ember Imp** (Ashlands & Ember Fen): darts rapidly, leaving scorch patches in its wake.
+  - **Cinder Golem** (Ashlands): erupts into an expansive fiery hazard upon destruction.
+- 10 new mechanically distinct biomes reaching a total of 26:
+  - **Salt Flats**, **Floodplain**, **Moonlit Grove**, **Sunken Ruins**, **Ember Fen**, **Amber Woods**, **Storm Steppe**, **Glass Desert**, **Hollow Caverns**, and **Starfall Basin**.
+  - 30 new characteristic props, regional ground carpets, and dedicated structure weighting per biome.
+- Four new character classes reaching a total of 12:
+  - **Warden**, **Tinkerer**, **Oracle**, and **Corsair**, each with unique starting equipment, active skills, passive traits, and unlock requirements.
+- Eight new weapons reaching a total of 36:
+  - **Ricochet Sling**, **Harpoon**, **Ground Sigil**, **Boomerang**, **Mortar**, **Thorn Lash**, **Prism Beam**, and **Spirit Swarm**, each with five upgrade tiers.
+- Eight new run-changing relics reaching a total of 14:
+  - **Carnage Bell**, **Last Bastion**, **Pilgrim Compass**, **Plague Seed**, **Recall Mirror**, **Weather Vane**, **Hunter's Writ**, and **Mercy Locket**.
+- Interactive shrine offerings: kindling now offers meaningful choices between run blessings and voluntary sacrifices.
+- Dynamic biome events and risk/reward encounter structures (ambush caches, guarded altars, roaming caravans, corrupted springs).
+- Reserved and validated fixed 16 x 16 atlas bands for expansion actors, props, ground sets, and UI icons.
+- Higher-fidelity pixel-art painter primitives with deterministic outline, cluster, shadow, and highlight tools (`tools/sprite_kit.py`).
+- Deterministic asset-pipeline verification script (`tools/make_expansion.py`, `tools/atlas_layout.py`).
+- Headless expansion test suite verifying reachability of all 26 biomes, 26 monsters, 36 weapons, 14 relics, 12 classes, shrine choices, and Codex persistence (`--test`).
+
+### Gameplay
+
+- Added shared burn, chill, poison, and marked status effects with duration refresh, potency caps, immunity flags, weapon damage attribution, and cleanup on death or revival.
+- Frost Nova now slows enemies by 35% for two seconds; fire pools leave a short burn after enemies move away.
 
 ## [0.4.4] - 2026-10-28
 

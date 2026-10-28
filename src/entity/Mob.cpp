@@ -10,6 +10,14 @@ void Mob::drawBody(Screen &s, int px, int py, Sprite body, bool floats, float mo
     rot = std::sin(animT * 7) * 0.08f * move;
   }
   s.color(tint);
+  if (status.power(StatusKind::Burn) > 0)
+    s.color({tint.r, tint.g * 0.65f, tint.b * 0.45f, tint.a});
+  else if (status.power(StatusKind::Poison) > 0)
+    s.color({tint.r * 0.65f, tint.g, tint.b * 0.6f, tint.a});
+  else if (status.power(StatusKind::Chill) > 0)
+    s.color({tint.r * 0.65f, tint.g * 0.85f, tint.b, tint.a});
+  else if (status.power(StatusKind::Marked) > 0)
+    s.color({tint.r, tint.g * 0.65f, tint.b, tint.a});
   s.flash(body, px, py, 8, 16, sx * scale * facing, sy * scale,
           rot, flashAmount, flashColor);
   s.color(col::white);

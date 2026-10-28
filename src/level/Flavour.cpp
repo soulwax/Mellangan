@@ -17,6 +17,16 @@ const Flavour FLAVOURS[BIOME_COUNT] = {
     {1, 1, 1, 0.8f, false, "spores heal"},
     {1, 1.06f, 1.2f, 0, false, "+20% xp, scorched ground"},
     {0.96f, 0.88f, 1, 0, false, "deep needles slow all"},
+    {1.1f,1.1f,1,0,false,"brittle salt, swift pursuit"},
+    {0.8f,0.75f,1.1f,0,false,"water slows both sides"},
+    {1,0.9f,1,0.5f,false,"moonlight restores health"},
+    {1,1,1.3f,0,false,"ruins reward exploration"},
+    {0.9f,1,1,0,true,"embers scour the fen"},
+    {1.05f,1,1.15f,0,false,"amber paths reward movement"},
+    {1.15f,1.15f,1,0,false,"storm winds hasten all"},
+    {0.95f,0.85f,1.2f,0,false,"glass impedes pursuers"},
+    {0.9f,1,1.35f,0,false,"close quarters, rich rewards"},
+    {1,1.05f,1.25f,0,false,"falling stars mark prey"},
 };
 
 const Omen OMENS[OMEN_COUNT] = {

@@ -7,10 +7,12 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <unordered_set>
 
 #include "entity/Entity.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "level/Bounty.hpp"
+#include "level/BiomeEvents.hpp"
 #include "level/Chart.hpp"
 #include "level/LightField.hpp"
 #include "level/Night.hpp"
@@ -46,6 +48,7 @@ public:
   Night night{*this};
   LightField lights;
   Chart chart;
+  BiomeEvents events;
   explicit Level(Game &game);
 
   std::vector<std::unique_ptr<SpriteObject>> particles;
@@ -115,8 +118,7 @@ private:
   double xGrid = 0, yGrid = 0;
   float solids[SOLID_H * SOLID_W]{};
   int solidX = 0, solidY = 0;
-  uint64_t visits[256]{};
-  int visitCount = 0;
+  std::unordered_set<uint64_t> visits;
 
   float burnTime = 0, bountyTime = 0;
 

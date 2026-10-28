@@ -11,4 +11,6 @@ public:
 
 private:
   bool fromPause;
+  int page = 0;
+  void turn(int direction);
 };

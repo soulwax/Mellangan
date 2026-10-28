@@ -21,6 +21,17 @@ void Spawner::tick() {
     uint32_t foes =
         BIOMES[world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)))]
             ->foes;
+    BiomeId region=world::biomeAt(int(std::floor(x/16)),int(std::floor(y/16)));
+    if (region==BIOME_MIRE)
+      foes|=foe(EnemyKind::MireLeech)|foe(EnemyKind::BogLantern);
+    if (region==BIOME_DESERT || region==BIOME_BADLANDS)
+      foes|=foe(EnemyKind::GlassMantis)|foe(EnemyKind::DustVulture);
+    if (region==BIOME_SNOW || region==BIOME_TAIGA)
+      foes|=foe(EnemyKind::FrostWisp)|foe(EnemyKind::Iceback);
+    if (region==BIOME_FUNGAL)
+      foes|=foe(EnemyKind::Sporeling)|foe(EnemyKind::MycelialBrute);
+    if (region==BIOME_ASHLANDS)
+      foes|=foe(EnemyKind::EmberImp)|foe(EnemyKind::CinderGolem);
     EnemyKind local[int(EnemyKind::Count)];
     int m = 0;
     for (EnemyKind k : pool)

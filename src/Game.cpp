@@ -17,6 +17,7 @@
 #include "menu/LevelUpMenu.hpp"
 #include "menu/MapMenu.hpp"
 #include "menu/PauseMenu.hpp"
+#include "menu/ShrineMenu.hpp"
 #include "menu/TitleMenu.hpp"
 #include "particle/debris/Debris.hpp"
 #include "particle/debris/FlameDebris.hpp"
@@ -121,7 +122,9 @@ void Game::tick() {
     if (input.confirm.clicked)
       level->player->cast();
     level->tick();
-    if (!menuChanged && level->player->pendingLevels > 0)
+    if (!menuChanged && level->night.offering)
+      setMenu(std::make_unique<ShrineMenu>(*this));
+    else if (!menuChanged && level->player->pendingLevels > 0)
       setMenu(std::make_unique<LevelUpMenu>(*this));
   }
   if (menuChanged)

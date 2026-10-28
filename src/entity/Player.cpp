@@ -30,13 +30,21 @@ void Player::tick() {
   if (dead())
     return;
 
+  status.tick(DT, [&](float damage, Upgrade *) {
+    felledBy = "a lingering affliction";
+    hurt(damage, true);
+    return !dead();
+  });
+  if (dead())
+    return;
+
   Input &in = level->game.input;
   double xd = in.right.down - in.left.down, yd = in.down.down - in.up.down;
   double dd = std::sqrt(xd * xd + yd * yd);
   if (dd > 0)
     xd /= dd, yd /= dd;
   double k = damp(18, DT);
-  float v = speed * level->step;
+  float v = speed * level->step * status.movement();
   xa += (xd * v - xa) * k;
   ya += (yd * v - ya) * k;
   x += xa * DT;
@@ -64,7 +72,7 @@ void Player::render(Screen &s) {
     return;
   bool blink = invuln > 0 && std::fmod(invuln, 0.12f) < 0.06f;
   float move = float(std::sqrt(xa * xa + ya * ya) / speed);
-  drawBody(s, xp, yp, atlas::tile(tile), false, move, col::white,
+  drawBody(s, xp, yp, hero ? hero->sprite() : atlas::tile(tile), false, move, col::white,
            blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
   int xt = xp + int(facing * 6);
   s.rect(xt, yp - 10, 1, 7, {0.42f, 0.26f, 0.13f, 1});
@@ -95,17 +103,20 @@ void Player::renderLight(Screen &s) {
   level->lights.add(torchX(), y, 200 * reach, f);
 }
 
-void Player::hurt(float damage) {
-  if (invuln > 0 || dead() || god)
+void Player::hurt(float damage, bool periodic) {
+  if ((!periodic && invuln > 0) || dead() || god)
     return;
+  if (!periodic)
+    damage *= status.incoming();
   if (hero && (damage = hero->guard(*this, damage)) <= 0)
     return;
   for (auto &up : upgrades)
     if (up->level > 0 && (damage = up->guard(*this, damage)) <= 0)
       return;
-  damage = std::max(1.0f, damage - armor);
+  damage = std::max(periodic ? 0.1f : 1.0f, damage - armor);
   hp -= damage;
-  invuln = 0.6f;
+  if (!periodic)
+    invuln = 0.6f;
   level->game.onPlayerHurt();
   Sound::hurt.play(0.7f);
   TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);
@@ -115,6 +126,7 @@ void Player::hurt(float damage) {
   if (revives > 0)
     return rise();
   hp = 0;
+  status.clear();
   Spark::burst(*level, x, bodyY(), {0.7f, 0.4f, 1, 1}, 40, 120, true);
   level->game.onPlayerDied();
 }
@@ -130,6 +142,7 @@ void Player::cast() {
 }
 
 void Player::rise() {
+  status.clear();
   revives--;
   hp = maxHp, invuln = 3;
   level->enemiesNear(x, y, 180, [&](Enemy &e) {

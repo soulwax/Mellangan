@@ -57,7 +57,7 @@ const char *const SIGILS[8][13] = {
 };
 
 void sigil(Screen &s, int hero, float x, float y, float r, Color c, float t) {
-  const char *const *art = SIGILS[std::clamp(hero, 0, 7)];
+  const char *const *art = SIGILS[hero % 8];
   float cell = std::max(1.0f, std::floor(r * 2 / 13));
   float x0 = std::floor(x - cell * 6.5f), y0 = std::floor(y - cell * 6.5f);
   Color light{lerpf(c.r, 1, 0.55f), lerpf(c.g, 1, 0.55f), lerpf(c.b, 1, 0.55f), c.a};
@@ -129,9 +129,9 @@ ClassMenu::ClassMenu(Game &game) : Menu(game) {
 
 SDL_FRect ClassMenu::slot(int i) const {
   const Screen &s = game.screen;
-  float u = s.u, w = std::min(s.w * 0.54f, 640 * u), step = w / HERO_COUNT;
-  float x = s.w * 0.69f - w / 2 + step * i;
-  return {x, s.h * 0.44f, step, s.h * 0.34f};
+  float u = s.u, w = std::min(s.w * 0.54f, 640 * u), step = w / 6;
+  float x = s.w * 0.69f - w / 2 + step * (i % 6);
+  return {x, s.h * (i < 6 ? 0.25f : 0.53f), step, s.h * 0.25f};
 }
 
 void ClassMenu::choose(int i) {
@@ -206,7 +206,7 @@ void ClassMenu::render(Screen &s) {
     bool open = k.met(c), on = i == pick;
     float g = grow[i], cx = r.x + r.w / 2, foot = r.y + r.h * 0.72f;
     float scale = (3 + 2.5f * g) * u * 0.5f + u;
-    Sprite body = atlas::tile(k.tile);
+    Sprite body = k.sprite();
 
     if (on && open) {
       float pulse = 0.75f + 0.25f * std::sin(t * 3);

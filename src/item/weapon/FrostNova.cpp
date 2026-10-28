@@ -7,7 +7,7 @@
 
 FrostNova::FrostNova()
     : Upgrade("Frost Nova", atlas::kit(atlas::kt::FrozenShrub),
-              {"Bursts of frost blast foes away", "+8 damage", "Wider burst",
+              {"Frost blasts slow foes by 35% for 2s", "+8 damage", "Wider burst",
                "Faster bursts", "+8 damage, wider burst"},
               true) {
   owner = "MAGE";
@@ -22,8 +22,10 @@ void FrostNova::tick(Player &p) {
   p.level->enemiesNear(p.x, p.y, r + 24, [&](Enemy &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
     float rr = r + e.radius;
-    if (xd * xd + yd * yd < rr * rr)
+    if (xd * xd + yd * yd < rr * rr) {
+      e.afflict(StatusKind::Chill, 2.0f, 0.35f, this);
       e.hurt(dmg, xd, yd, 180, this);
+    }
   });
   Spark::burst(*p.level, p.x, p.bodyY(), {0.6f, 0.85f, 1, 1}, 24, r * 2.2f,
                true);

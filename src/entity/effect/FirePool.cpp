@@ -12,8 +12,10 @@ void FirePool::tick() {
     level->enemiesNear(x, y, radius + 24, [&](Enemy &e) {
       double xd = e.x - x, yd = e.y - y;
       float r = radius + e.radius;
-      if (xd * xd + yd * yd < r * r)
+      if (xd * xd + yd * yd < r * r) {
+        e.afflict(StatusKind::Burn, 1.2f, damage * 0.4f, source);
         e.hurt(damage, 0, 0, 0, source);
+      }
     });
   }
   if (rng.chance(0.6f) && Spark::alive < 500) {

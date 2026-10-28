@@ -43,6 +43,8 @@
 #include "item/weapon/Scythe.hpp"
 #include "item/weapon/Staff.hpp"
 #include "item/weapon/StormRod.hpp"
+#include "item/weapon/ExpansionWeapons.hpp"
+#include "item/relic/ExpansionRelics.hpp"
 
 namespace {
 namespace t = atlas::t;
@@ -169,6 +171,10 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
                                       atlas::kit(kt::Obsidian),
                                       "+50% damage, take 2 less per hit",
                                       signet));
+  for (int i=0;i<8;i++)
+    u.push_back(std::make_unique<ExpansionWeapon>(i));
+  for (int i=0;i<8;i++)
+    u.push_back(std::make_unique<ExpansionRelic>(i));
   return u;
 }
 

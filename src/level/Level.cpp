@@ -10,6 +10,7 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Encounter.hpp"
+#include "level/ExpansionEncounter.hpp"
 #include "level/Flavour.hpp"
 #include "hero/Hero.hpp"
 #include "entity/pickup/Chest.hpp"
@@ -101,6 +102,8 @@ void Level::tick() {
   weather();
   ambience();
   buildGrid();
+  if (!player->dead() && !night.dawn)
+    events.tick(*this);
   prof_end(PROF_HOUSEKEEP);
   prof_begin(PROF_THINK);
   thinkers.clear();
@@ -167,11 +170,7 @@ uint64_t structureKey(const Structure *s) {
 } // namespace
 
 bool Level::visited(const Structure &s) const {
-  uint64_t key = structureKey(&s);
-  for (int i = 0, n = std::min(visitCount, 256); i < n; i++)
-    if (visits[i] == key)
-      return true;
-  return false;
+  return visits.contains(structureKey(&s));
 }
 
 bool Level::unvisited(const Structure *s, const void *level) {
@@ -247,12 +246,14 @@ void Level::explore() {
       ty = int(std::floor(player->y / 16));
   if (!world::structureAt(tx, ty, s) || visited(s))
     return;
-  visits[visitCount++ % 256] = structureKey(&s);
+  visits.insert(structureKey(&s));
   entered |= 1u << int(s.kind);
   game.codex.entered[int(s.kind)]++;
   const EncounterDef *e = &ENCOUNTERS[int(s.kind)];
-  game.announce(e->banner);
-  e->enter(this, &s);
+  if (!expansionEncounter(*this,s)) {
+    game.announce(e->banner);
+    e->enter(this, &s);
+  }
   spdlog::info("encounter: {} at tile ({}, {})", s.name(), s.x, s.y);
 }
 
@@ -380,6 +381,7 @@ bool Level::blocks(double x, double y) const {
 void Level::render(Screen &s) {
   prof_begin(PROF_FLOOR);
   renderFloor(s);
+  events.render(s,*this);
   prof_end(PROF_FLOOR);
   prof_begin(PROF_SORT);
   drawn.clear(), keys.clear();

@@ -29,16 +29,16 @@ bool dirtNoise(int x, int y, const Biome *b) {
 // maps without collisions, which covers the view, its margins and the tint's
 // +-3 taps.
 enum : uint32_t {
-  BIOME_BITS = 15,
-  HAS_BIOME = 1 << 4,
-  HAS_DIRT = 1 << 5,
-  DIRT = 1 << 6,
-  HAS_SHADE = 1 << 7,
-  HAS_CLUMP = 1 << 8,
-  HAS_RAW = 1 << 9,
-  HAS_RAW_DIRT = 1 << 10,
-  RAW_DIRT = 1 << 11,
-  RAW_SHIFT = 12
+  BIOME_BITS = 31,
+  HAS_BIOME = 1 << 5,
+  HAS_DIRT = 1 << 6,
+  DIRT = 1 << 7,
+  HAS_SHADE = 1 << 8,
+  HAS_CLUMP = 1 << 9,
+  HAS_RAW = 1 << 10,
+  HAS_RAW_DIRT = 1 << 11,
+  RAW_DIRT = 1 << 12,
+  RAW_SHIFT = 13
 };
 struct TileMemo {
   int32_t x, y;

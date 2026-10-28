@@ -17,6 +17,7 @@
 #include "level/biome/Savanna.hpp"
 #include "level/biome/Snow.hpp"
 #include "level/biome/Taiga.hpp"
+#include "level/biome/ExpansionBiome.hpp"
 
 namespace tt = atlas::tt;
 
@@ -51,7 +52,10 @@ const Taiga TAIGA;
 const Biome *const BIOMES[BIOME_COUNT] = {
     &MEADOW,  &FOREST, &AUTUMN,   &HEATH,  &BARROW,  &SNOW,
     &BLOSSOM, &MIRE,   &DESERT,   &JUNGLE, &SAVANNA, &ASHLANDS,
-    &CRYSTAL, &FUNGAL, &BADLANDS, &TAIGA};
+    &CRYSTAL, &FUNGAL, &BADLANDS, &TAIGA,
+    expansionBiome(0),expansionBiome(1),expansionBiome(2),expansionBiome(3),
+    expansionBiome(4),expansionBiome(5),expansionBiome(6),expansionBiome(7),
+    expansionBiome(8),expansionBiome(9)};
 
 namespace world {
 
@@ -68,6 +72,11 @@ Climate climateAt(int x, int y) {
 }
 
 BiomeId biomeOf(Climate c) {
+  if (c.eerie > -0.18f && c.eerie < -0.08f) {
+    int band=c.temp < -0.2f ? 0 : c.temp < -0.07f ? 1 :
+             c.temp < 0.07f ? 2 : c.temp < 0.2f ? 3 : 4;
+    return BiomeId(BIOME_SALT+band*2+(c.moist>0 ? 1 : 0));
+  }
   if (c.eerie > 0.14f && c.temp > 0.2f)
     return BIOME_ASHLANDS;
   if (c.eerie > 0.21f && c.temp < -0.14f)

@@ -81,6 +81,11 @@ MoltenVK from `$VULKAN_SDK` into `lib/`; players start the game with `Mellangan.
 
 ## Controls
 
+Combat supports four timed afflictions. Burn and poison deal damage every half second; chill slows movement;
+marked increases damage from direct hits. Reapplying a status keeps its strongest potency and extends its
+remaining duration when the new application lasts longer. Frost Nova chills enemies by 35% for two seconds,
+and fire pools leave a short burn when enemies move away. Afflictions clear on death or revival.
+
 | Key | Action |
 | --- | --- |
 | WASD / Arrows | Move |

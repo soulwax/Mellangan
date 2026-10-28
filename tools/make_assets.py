@@ -1,21 +1,25 @@
 """Builds res/atlas.png from Kenney's Tiny Dungeon and Tiny Town sheets plus procedurally drawn FX sprites.
 
 Usage: uv run --with pillow tools/make_assets.py "<path to Kenney Game Assets All-in-1>"
+Verify: uv run --with pillow==13.0.0 tools/make_assets.py --verify "<path>"
 The layout here must stay in sync with src/Atlas.hpp.
 """
+import io
+import hashlib
 import math
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, __version__ as PILLOW_VERSION
 
+from atlas_layout import validate, validate_cpp_layout
 from make_desert import add_desert
+from make_expansion import add_expansion
 from make_flora import add_flora_band
 from make_frontier import add_frontier
 from make_grounds import add_grounds
 from make_sprites import add_sprites
 from make_winter import add_winter_band
-from atlas_layout import extend, validate
 
 TILE = 16
 CELL = 18  # 1px transparent gutter on each side of every tile, prevents bleeding
@@ -23,6 +27,15 @@ SHEET_COLS, SHEET_ROWS = 12, 11
 FX_Y = SHEET_ROWS * CELL + 2  # 200
 SHEETS = ["Tiny Dungeon", "Tiny Town"]  # side by side, each SHEET_COLS * CELL wide
 ATLAS_W, ATLAS_H = len(SHEETS) * SHEET_COLS * CELL, 264
+PIPELINE = (
+    ("winter", (432, 390), add_winter_band),
+    ("flora", (432, 480), add_flora_band),
+    ("desert", (432, 480), add_desert),
+    ("sprite kit", (432, 552), add_sprites),
+    ("grounds", (432, 624), add_grounds),
+    ("frontier", (432, 624), add_frontier),
+    ("expansion", (432, 786), add_expansion),
+)
 
 
 def clamp01(v):
@@ -174,12 +187,13 @@ def digits():
     return im
 
 
-def main():
-    if len(sys.argv) != 2:
-        sys.exit(__doc__)
+def build(source):
     atlas = Image.new("RGBA", (ATLAS_W, ATLAS_H), (0, 0, 0, 0))
     for i, name in enumerate(SHEETS):
-        sheet = Image.open(Path(sys.argv[1]) / "2D assets" / name / "Tilemap" / "tilemap_packed.png").convert("RGBA")
+        sheet = Image.open(source / "2D assets" / name / "Tilemap" /
+                           "tilemap_packed.png").convert("RGBA")
+        if sheet.width < SHEET_COLS * TILE or sheet.height < SHEET_ROWS * TILE:
+            raise ValueError(f"{name} source is {sheet.width}x{sheet.height}, expected at least 192x176")
         ox = i * SHEET_COLS * CELL
         for r in range(SHEET_ROWS):
             for c in range(SHEET_COLS):
@@ -202,13 +216,58 @@ def main():
     for im, pos in fx:
         atlas.paste(im, pos)
 
-    atlas = extend(add_frontier(add_grounds(add_sprites(add_desert(add_flora_band(add_winter_band(atlas)))))))
+    for name, size, step in PIPELINE:
+        atlas = step(atlas)
+        if atlas.size != size:
+            raise RuntimeError(f"{name} produced {atlas.width}x{atlas.height}, expected {size[0]}x{size[1]}")
     errors = validate(atlas)
     if errors:
         raise RuntimeError("invalid atlas layout:\n" + "\n".join(errors))
+    return atlas
+
+
+def encode(atlas):
+    out = io.BytesIO()
+    atlas.save(out, format="PNG", compress_level=9)
+    return out.getvalue()
+
+
+def main():
+    verify = "--verify" in sys.argv[1:]
+    args = [arg for arg in sys.argv[1:] if arg != "--verify"]
+    if len(args) != 1:
+        sys.exit(__doc__)
+    source = Path(args[0])
+    root = Path(__file__).resolve().parent.parent
+    if verify and PILLOW_VERSION != "13.0.0":
+        raise RuntimeError(f"verification requires Pillow 13.0.0, found {PILLOW_VERSION}")
+    inputs = []
+    for name in SHEETS:
+        path = source / "2D assets" / name / "Tilemap" / "tilemap_packed.png"
+        inputs.append((name, hashlib.sha256(path.read_bytes()).hexdigest()))
+    cpp_errors = validate_cpp_layout(root / "src" / "Atlas.hpp")
+    if cpp_errors:
+        raise RuntimeError("atlas lookup mismatch:\n" + "\n".join(cpp_errors))
+    first_image = build(source)
+    first = encode(first_image)
+    if verify:
+        second_image = build(source)
+        if first_image.mode != second_image.mode or first_image.size != second_image.size or first_image.tobytes() != second_image.tobytes():
+            raise RuntimeError("asset pipeline produced different RGBA pixels on its second run")
+        first = encode(first_image)
+        second = encode(second_image)
+        if first != second:
+            raise RuntimeError("asset pipeline produced different PNG bytes on its second run")
     out = Path(__file__).resolve().parent.parent / "res" / "atlas.png"
-    atlas.save(out)
-    print(f"wrote {out}")
+    out.write_bytes(first)
+    message = f"wrote {out}"
+    if verify:
+        rgba_hash = hashlib.sha256(first_image.tobytes()).hexdigest()
+        png_hash = hashlib.sha256(first).hexdigest()
+        source_hashes = ", ".join(f"{name} {digest}" for name, digest in inputs)
+        message += (f"; reproducible with Pillow {PILLOW_VERSION}; inputs {source_hashes}; "
+                    f"rgba {rgba_hash}; png {png_hash}")
+    print(message)
 
 
 if __name__ == "__main__":

@@ -61,6 +61,16 @@ const Plan PLANS[] = {
     {{&SUMMON_RANGE, &RAISE, &CAST}, {&FALTER}},
     {{&CHARGE, &NIP}, {&FALTER}},
     {{&ESCAPE}, {}},
+    {{&CHARGE}, {}},
+    {{&CASTING_RANGE}, {}},
+    {{&CLOSE}, {}},
+    {{&FLANK}, {}},
+    {{&OOZE}, {}},
+    {{&LUMBER}, {}},
+    {{&CHARGE}, {}},
+    {{&MARCH}, {}},
+    {{&SCUTTLE}, {}},
+    {{&LUMBER}, {}},
 };
 
 } // namespace

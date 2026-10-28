@@ -162,6 +162,9 @@ constexpr Sprite expansion(int index) {
   return {float((index % 24) * 18 + 1), float(624 + (index / 24) * 18 + 1), 16,
           16};
 }
+namespace ex {
+constexpr int MireLeech = 0, RicochetSling = 14;
+}
 constexpr Sprite biomeProp(int index) {
   return {float((index % 24) * 18 + 1), float(660 + (index / 24) * 18 + 1), 16,
           16};

@@ -13,6 +13,7 @@ public:
   int lit = 0;
   float kindling = 0;
   bool dawn = false, hasBeacon = false;
+  bool offering = false;
   Structure beacon{};
 
   explicit Night(Level &level) : level(level) {}
