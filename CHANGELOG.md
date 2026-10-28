@@ -20,6 +20,18 @@ All notable changes to Mellangan are documented here. The format follows
 - Resolved false-positive antivirus heuristic triggers by omitting debug stream tables from Release builds, disabling Windows unhandled exception filters, and embedding application UAC manifest.
 
 
+### Added
+
+- Elevated handcrafted 16x16 pixel-art character sprites and class sigils:
+  - Four expansion heroes (Warden, Tinkerer, Oracle, Corsair) with distinctive silhouettes, 3-tone lighting, and custom class sigils.
+  - Nine expansion monsters (Bog Lantern, Glass Mantis, Dust Vulture, Frost Wisp, Iceback, Sporeling, Mycelial Brute, Ember Imp, Cinder Golem) with cohesive contours and material highlights.
+  - Updated HUD skill display to render each hero's unique sprite.
+
+### Fixed
+
+- Resolved false-positive antivirus heuristic triggers by omitting debug stream tables from Release builds, disabling Windows unhandled exception filters, and embedding application UAC manifest.
+
+
 ## [0.4.5] - 2026-10-28
 
 ### Added
