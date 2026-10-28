@@ -10,10 +10,10 @@
 namespace {
 
 const char *const TITLES[BIOME_COUNT] = {
-    "THE MEADOWS",    "THE GREENWOOD", "THE AUTUMN WOODS", "THE HEATH",
-    "THE BARROWS",    "THE SNOWFIELDS", "THE BLOSSOM GROVE", "THE MIRE",
-    "THE DESERT",     "THE JUNGLE",    "THE SAVANNA",      "THE ASHLANDS",
-    "CRYSTAL FIELDS", "THE FUNGAL WOOD"};
+    "THE MEADOWS",    "THE GREENWOOD",   "THE AUTUMN WOODS",  "THE HEATH",
+    "THE BARROWS",    "THE SNOWFIELDS",  "THE BLOSSOM GROVE", "THE MIRE",
+    "THE DESERT",     "THE JUNGLE",      "THE SAVANNA",       "THE ASHLANDS",
+    "CRYSTAL FIELDS", "THE FUNGAL WOOD", "THE BADLANDS",      "THE TAIGA"};
 
 } // namespace
 
@@ -51,8 +51,7 @@ int Chart::tick(double x, double y) {
   int cx = cellOf(x), cy = cellOf(y);
   if (cx != xLast || cy != yLast)
     reveal(cx, cy), survey(cx, cy), xLast = cx, yLast = cy;
-  BiomeId b =
-      world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)));
+  BiomeId b = world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)));
   if (knows(b))
     return -1;
   seen |= 1u << b, discovered++;
@@ -160,20 +159,22 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
 }
 
 namespace {
-constexpr uint32_t MAGIC = 0x3243414Du;
+constexpr uint32_t MAGIC = 0x3343414Du;
 constexpr size_t PAGE_BYTES = 8 + Chart::PAGE * Chart::PAGE;
 } // namespace
 
 void Chart::load(const std::string &path) {
   size_t size = 0;
   uint8_t *data =
-      path.empty() ? nullptr : static_cast<uint8_t *>(SDL_LoadFile(path.c_str(), &size));
+      path.empty() ? nullptr
+                   : static_cast<uint8_t *>(SDL_LoadFile(path.c_str(), &size));
   if (!data)
     return;
   uint32_t head[3] = {};
   if (size >= sizeof head)
     std::memcpy(head, data, sizeof head);
-  size_t want = sizeof head + head[1] * PAGE_BYTES + head[2] * sizeof(Structure);
+  size_t want =
+      sizeof head + head[1] * PAGE_BYTES + head[2] * sizeof(Structure);
   if (head[0] == MAGIC && size == want) {
     const uint8_t *at = data + sizeof head;
     for (uint32_t i = 0; i < head[1]; i++, at += PAGE_BYTES) {

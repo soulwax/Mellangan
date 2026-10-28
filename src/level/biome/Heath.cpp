@@ -10,7 +10,7 @@ Heath::Heath()
              0,
              35,
              45,
-             {10, 0, 15, 30, 45, 15},
+             {10, 0, 15, 30, 45, 15, 20, 5},
              foe(EnemyKind::Rat) | foe(EnemyKind::Scorpion),
              {{&f::dryBush, 10, 90},
               {&f::bush, 6, 50},

@@ -4,6 +4,9 @@ Linux support is coming, possibly macos.
 
 The programming paradigm is "C with classes": that means the game is written in C++20 and might feel like C++ but the code is structured to use C idioms.
 
+The name was a random headbash against the keyboard and stands for: nothing
+
+
 A yet small top-down "v-survivors"-like game built with C++20 on the [Vulkan2D](https://github.com/soulwax/Vulkan2D) renderer,
 using [EnTT](https://github.com/skypjack/entt) for entity storage and [spdlog](https://github.com/gabime/spdlog) for logging.
 

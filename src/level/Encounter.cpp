@@ -1,11 +1,13 @@
 #include "level/Encounter.hpp"
 
 #include "audio/Sound.hpp"
+#include "entity/Player.hpp"
 #include "entity/enemy/SupplyBarrel.hpp"
 #include "entity/pickup/Chest.hpp"
 #include "entity/pickup/Magnet.hpp"
 #include "entity/pickup/Potion.hpp"
 #include "level/Level.hpp"
+#include "particle/Spark.hpp"
 #include "particle/debris/FlameDebris.hpp"
 #include "particle/debris/SmokeDebris.hpp"
 
@@ -59,6 +61,36 @@ void castle(Level *level, const Structure *s) {
   Sound::horde.play(0.6f, 0);
 }
 
+void stones(Level *level, const Structure *s) {
+  Player &p = *level->player;
+  p.heal(p.maxHp);
+  for (int i = 0; i < 40; i++) {
+    float a = TAU * i / 40;
+    level->add<Spark>(s->centerX(), s->centerY(), std::cos(a) * 90,
+                      std::sin(a) * 90, Color{0.5f, 0.95f, 1, 1}, 0.7f, 0.5f,
+                      false);
+  }
+  Sound::levelUp.play(0.5f, 0);
+}
+
+void mine(Level *level, const Structure *s) {
+  double x = (s->x + 3) * 16 + 8.0, y = (s->y + 2) * 16 + 4.0;
+  level->add<Chest>((s->x + 3) * 16 + 8.0, (s->y + 5) * 16 + 8.0);
+  for (int i = 0, n = 4 + int(level->time / 45); i < n; i++)
+    level->spawner.spawn(i % 3 ? EnemyKind::Spider : EnemyKind::Bat,
+                         x + rng.range(-10, 10), y + rng.range(-4, 4));
+  Sound::horde.play(0.5f, 0.1f);
+}
+
+void hum(Level *level, const Structure *s) {
+  if (Spark::alive > 500 || !rng.chance(0.25f))
+    return;
+  level->add<Spark>(s->centerX() + rng.range(-6, 6), s->centerY() - 6,
+                    rng.range(-3, 3), rng.range(-24, -12),
+                    Color{0.5f, 0.95f, 1, 1}, rng.range(0.6f, 1.2f), 0.3f,
+                    true);
+}
+
 void smoke(Level *level, double x, double y, double z) {
   if (!Debris::room())
     return;
@@ -100,4 +132,6 @@ const EncounterDef ENCOUNTERS[int(StructureKind::Count)] = {
     {"AN ABANDONED CAMP", camp, campfire},
     {"SOMETHING GLINTS IN THE RUBBLE", ruin, nullptr},
     {"THE GARRISON WAKES", castle, braziers},
+    {"THE STONES HUM", stones, hum},
+    {"SOMETHING STIRS BELOW", mine, nullptr},
 };

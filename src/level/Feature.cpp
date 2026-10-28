@@ -499,6 +499,86 @@ const Feature blueShrooms{"blue mushrooms",
                           false,
                           atlas::flora};
 
+const Feature mesa{
+    "mesa", placeStack, atlas::fr::MesaLow, atlas::fr::MesaHigh, true, 1.5f, 7,
+    NONE,   false,      atlas::frontier};
+const Feature hoodoo{"hoodoo",
+                     placeStack,
+                     atlas::fr::HoodooLow,
+                     atlas::fr::HoodooHigh,
+                     true,
+                     1.1f,
+                     4,
+                     NONE,
+                     false,
+                     atlas::frontier};
+const Feature juniper{"juniper",
+                      placeStack,
+                      atlas::fr::JuniperLow,
+                      atlas::fr::JuniperHigh,
+                      true,
+                      1.2f,
+                      3,
+                      NONE,
+                      false,
+                      atlas::frontier};
+const Feature taigaSpruce{"taiga spruce",
+                          placeStack,
+                          atlas::fr::TaigaSpruceLow,
+                          atlas::fr::TaigaSpruceHigh,
+                          true,
+                          1.2f,
+                          3,
+                          NONE,
+                          false,
+                          atlas::frontier};
+const Feature larch{"larch",
+                    placeStack,
+                    atlas::fr::LarchLow,
+                    atlas::fr::LarchHigh,
+                    true,
+                    1.2f,
+                    3,
+                    NONE,
+                    false,
+                    atlas::frontier};
+const Feature runeStone{"rune stone",
+                        placeStack,
+                        atlas::fr::RuneStoneLow,
+                        atlas::fr::RuneStoneHigh,
+                        true,
+                        1.2f,
+                        5,
+                        {0.05f, 0.2f, 0.26f, 1},
+                        false,
+                        atlas::frontier};
+const Feature ocotillo{
+    "ocotillo", placeStack, atlas::fr::Ocotillo, -1, true, 0.6f, 3,
+    NONE,       false,      atlas::frontier};
+const Feature redRocks{
+    "red rocks", placeStack, atlas::fr::RedRocks, -1, true, 1.0f, 6,
+    NONE,        false,      atlas::frontier};
+const Feature ribs{"ribs", placeStack, atlas::fr::Ribs, -1, true, 0, 0,
+                   NONE,   false,      atlas::frontier};
+const Feature clayTuft{
+    "clay tuft", placeStack, atlas::fr::ClayTuft, -1, true, 0, 0,
+    NONE,        false,      atlas::frontier};
+const Feature lingonberry{
+    "lingonberry", placeStack, atlas::fr::Lingonberry, -1, true, 0.8f, 4,
+    NONE,          false,      atlas::frontier};
+const Feature lichenRock{
+    "lichen rock", placeStack, atlas::fr::LichenRock, -1, true, 1.0f, 6,
+    NONE,          false,      atlas::frontier};
+const Feature cottonGrass{
+    "cotton grass", placeStack, atlas::fr::CottonGrass, -1, true, 0, 0,
+    NONE,           false,      atlas::frontier};
+const Feature needleTuft{
+    "needle tuft", placeStack, atlas::fr::NeedleTuft, -1, true, 0, 0,
+    NONE,          false,      atlas::frontier};
+const Feature shelfStump{
+    "shelf stump", placeStack, atlas::fr::ShelfStump, -1, true, 0.8f, 4,
+    NONE,          false,      atlas::frontier};
+
 const Feature grave{"grave", placeGrave, t::GraveStone,           -1, false,
                     0,       4,          {0.07f, 0.15f, 0.32f, 1}};
 const Feature mushrooms{

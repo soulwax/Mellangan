@@ -49,7 +49,7 @@ Desert::Desert()
              0,
              0,
              45,
-             {0, 5, 20, 35, 40, 0},
+             {0, 5, 20, 35, 40, 0, 0, 20},
              foe(EnemyKind::Scorpion) | foe(EnemyKind::Rat) |
                  foe(EnemyKind::Demon),
              {{&f::cactus, 10, 50},

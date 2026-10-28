@@ -9,6 +9,8 @@ enum class StructureKind {
   Camp,
   Ruin,
   Castle,
+  Stones,
+  Mine,
   Count
 };
 struct Structure {

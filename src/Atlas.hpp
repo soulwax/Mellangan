@@ -128,8 +128,29 @@ constexpr Sprite carpet(int set, int cell) {
           float(552 + (set / 2) * 18 + 1), 16, 16};
 }
 namespace cp {
-constexpr int Straw = 0, Ash = 1, CrystalMoss = 2, Mycelium = 3, Lava = 4;
+constexpr int Straw = 0, Ash = 1, CrystalMoss = 2, Mycelium = 3, Lava = 4,
+              RedClay = 5, Needles = 6;
 } // namespace cp
+constexpr Sprite frontier(int index) {
+  return {float((index % 12) * 18 + 1), float(270 + (index / 12) * 18 + 1), 16,
+          16};
+}
+namespace fr {
+constexpr int MesaHigh = 0, MesaLow = 12;
+constexpr int HoodooHigh = 1, HoodooLow = 13;
+constexpr int JuniperHigh = 2, JuniperLow = 14;
+constexpr int TaigaSpruceHigh = 3, TaigaSpruceLow = 15;
+constexpr int LarchHigh = 4, LarchLow = 16;
+constexpr int RuneStoneHigh = 5, RuneStoneLow = 17;
+constexpr int MineLeftHigh = 6, MineLeftLow = 18;
+constexpr int MineMouthHigh = 7, MineMouthLow = 19;
+constexpr int MineRightHigh = 8, MineRightLow = 20;
+constexpr int Ocotillo = 9, RedRocks = 10, Ribs = 11, ClayTuft = 21;
+constexpr int Lingonberry = 22, LichenRock = 23, CottonGrass = 24,
+              NeedleTuft = 25, ShelfStump = 26;
+constexpr int ToppledStone = 27, Altar = 28, MineCart = 29, OrePile = 30,
+              LanternPost = 31, Timber = 32, RailAcross = 33, RailDown = 34;
+} // namespace fr
 constexpr Sprite snowRim(int offset) {
   return {float(216 + (offset % 12) * 18 + 1),
           float(336 + (offset / 12) * 18 + 1), 16, 16};

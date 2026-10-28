@@ -4,6 +4,7 @@ namespace {
 
 namespace tt = atlas::tt;
 namespace t = atlas::t;
+namespace fr = atlas::fr;
 
 void sizeSquare(uint32_t, int *w, int *h) { *w = 5, *h = 5; }
 void sizeCottage(uint32_t r, int *w, int *h) {
@@ -250,6 +251,81 @@ bool ruin(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
   return false;
 }
 
+void sizeStones(uint32_t, int *w, int *h) { *w = 7, *h = 7; }
+void sizeMine(uint32_t, int *w, int *h) { *w = 7, *h = 6; }
+
+const int RING[8][2] = {{3, 0}, {5, 1}, {6, 3}, {5, 5},
+                        {3, 6}, {1, 5}, {0, 3}, {1, 1}};
+
+bool stonesDirt(const Structure *, int lx, int ly) {
+  int dx = lx - 3, dy = ly - 3;
+  return dx * dx + dy * dy <= 5;
+}
+
+bool stones(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
+  if (lx == 3 && ly == 3) {
+    p->add(atlas::frontier(fr::Altar)), p->shadow = 0.9f, p->solid = 6;
+    p->light = {0.06f, 0.26f, 0.34f, 1}, p->lightSize = 120, p->lightYo = -8;
+    return true;
+  }
+  for (int i = 0; i < 8; i++) {
+    if (RING[i][0] != lx || RING[i][1] != ly)
+      continue;
+    if ((s->seed >> (i * 2) & 3) == 0)
+      return p->add(atlas::frontier(fr::ToppledStone)), p->shadow = 0.8f,
+                                                        p->solid = 5, true;
+    p->add(atlas::frontier(fr::RuneStoneLow));
+    p->add(atlas::frontier(fr::RuneStoneHigh), -16);
+    p->shadow = 1.2f, p->solid = 5;
+    if (r % 3 == 0)
+      p->light = {0.04f, 0.16f, 0.22f, 1}, p->lightSize = 60, p->lightYo = -18;
+    return true;
+  }
+  return false;
+}
+
+bool mineDirt(const Structure *, int, int ly) { return ly >= 1; }
+
+bool mineGround(const Structure *, int lx, int ly, Sprite *out) {
+  if (lx != 3 || ly < 2)
+    return false;
+  *out = atlas::frontier(fr::RailDown);
+  return true;
+}
+
+bool mine(const Structure *s, int lx, int ly, uint32_t r, Prop *p) {
+  static const int MOUTH[3][2] = {{fr::MineLeftLow, fr::MineLeftHigh},
+                                  {fr::MineMouthLow, fr::MineMouthHigh},
+                                  {fr::MineRightLow, fr::MineRightHigh}};
+  if (ly == 1 && lx >= 2 && lx <= 4) {
+    p->add(atlas::frontier(MOUTH[lx - 2][0]));
+    p->add(atlas::frontier(MOUTH[lx - 2][1]), -16);
+    p->shadow = 1.4f, p->solid = 8;
+    if (lx == 2)
+      p->light = {0.45f, 0.24f, 0.06f, 1}, p->lightSize = 70, p->lightYo = -14,
+      p->wisp = false;
+    return true;
+  }
+  if (lx == 3 && ly == 4)
+    return p->add(atlas::frontier(fr::MineCart)), p->shadow = 0.8f,
+                                                  p->solid = 5, true;
+  if (lx == 5 && ly == 2) {
+    p->add(atlas::frontier(fr::LanternPost)), p->shadow = 0.6f, p->solid = 3;
+    p->light = {0.5f, 0.28f, 0.07f, 1}, p->lightSize = 90, p->lightYo = -6,
+    p->wisp = false;
+    return true;
+  }
+  if ((lx == 1 && ly == 3) || (lx == 5 && ly == 4 && (r & 1)))
+    return p->add(atlas::frontier(fr::OrePile)), p->shadow = 0.8f, p->solid = 5,
+                                                 true;
+  if (lx == 1 && ly == 5 && (s->seed & 2))
+    return p->add(atlas::frontier(fr::Timber)), p->shadow = 0.8f, true;
+  if (lx == 6 && ly == 3)
+    return p->add(atlas::tile(r & 2 ? t::Crate : t::Barrel)),
+           p->shadow = 0.8f, p->solid = 5, true;
+  return false;
+}
+
 const StructureDef *def(const Structure *s) {
   return &STRUCTURES[int(s->kind)];
 }
@@ -286,6 +362,13 @@ const StructureDef STRUCTURES[int(StructureKind::Count)] = {
      nullptr,
      castleGround,
      castle},
+    {"STONES",
+     {0.45f, 0.95f, 0.85f, 1},
+     sizeStones,
+     stonesDirt,
+     nullptr,
+     stones},
+    {"MINE", {0.95f, 0.8f, 0.3f, 1}, sizeMine, mineDirt, mineGround, mine},
 };
 
 bool structureDirt(const Structure *s, int lx, int ly) {

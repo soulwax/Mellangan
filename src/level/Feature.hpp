@@ -35,6 +35,9 @@ extern const Feature birch, frostBirch, cypress, acacia, baobab, mushroomTree,
     tallGrass, dryGrass, heather, thornbush, sunflower, tulips, lavender, wheat,
     cattails, daisies, boulder, mossyBoulder, snowyBoulder, sandstone, iceChunk,
     obsidian, pebbles, sandTuft, frostTuft, ashTuft, bogTuft, bloomTuft;
+extern const Feature mesa, hoodoo, juniper, taigaSpruce, larch, runeStone,
+    ocotillo, redRocks, ribs, clayTuft, lingonberry, lichenRock, cottonGrass,
+    needleTuft, shelfStump;
 extern const Feature grave, mushrooms, sprouts, log, beehive, sign, sack,
     crystal, well, barrel, crate;
 } // namespace feature

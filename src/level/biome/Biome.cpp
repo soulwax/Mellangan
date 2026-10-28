@@ -3,6 +3,7 @@
 #include "level/Noise.h"
 #include "level/biome/Ashlands.hpp"
 #include "level/biome/Autumn.hpp"
+#include "level/biome/Badlands.hpp"
 #include "level/biome/Barrow.hpp"
 #include "level/biome/Blossom.hpp"
 #include "level/biome/CrystalFields.hpp"
@@ -15,7 +16,7 @@
 #include "level/biome/Mire.hpp"
 #include "level/biome/Savanna.hpp"
 #include "level/biome/Snow.hpp"
-
+#include "level/biome/Taiga.hpp"
 
 namespace tt = atlas::tt;
 
@@ -43,11 +44,14 @@ const Savanna SAVANNA;
 const Ashlands ASHLANDS;
 const CrystalFields CRYSTAL;
 const FungalWood FUNGAL;
+const Badlands BADLANDS;
+const Taiga TAIGA;
 } // namespace
 
 const Biome *const BIOMES[BIOME_COUNT] = {
-    &MEADOW, &FOREST, &AUTUMN, &HEATH,   &BARROW,   &SNOW,    &BLOSSOM,
-    &MIRE,   &DESERT, &JUNGLE, &SAVANNA, &ASHLANDS, &CRYSTAL, &FUNGAL};
+    &MEADOW,  &FOREST, &AUTUMN,   &HEATH,  &BARROW,  &SNOW,
+    &BLOSSOM, &MIRE,   &DESERT,   &JUNGLE, &SAVANNA, &ASHLANDS,
+    &CRYSTAL, &FUNGAL, &BADLANDS, &TAIGA};
 
 namespace world {
 
@@ -72,10 +76,14 @@ BiomeId biomeOf(Climate c) {
     return BIOME_FUNGAL;
   if (c.eerie > 0.26f)
     return BIOME_BARROW;
+  if (c.temp < -0.12f && c.temp > -0.38f && c.moist > 0.08f && c.moist < 0.26f)
+    return BIOME_TAIGA;
   if (c.temp < -0.24f)
     return BIOME_SNOW;
   if (c.temp > 0.15f && c.moist > 0.12f)
     return BIOME_JUNGLE;
+  if (c.temp > 0.0f && c.temp < 0.3f && c.moist < -0.1f && c.eerie < -0.14f)
+    return BIOME_BADLANDS;
   if (c.temp > 0.1f && c.moist < -0.16f)
     return BIOME_DESERT;
   if (c.moist < -0.18f)

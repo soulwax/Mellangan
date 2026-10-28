@@ -6,6 +6,30 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-28
+
+### Added
+
+- Badlands: red clay plains with banded mesas, hoodoos, twisted junipers, ocotillo and bleached ribs, where dry, warm
+  land runs mundane. Scorpions, rats and cyclopes roam it, and it pays +20% experience.
+- Taiga: cold, wet spruce forest on needle litter with golden larch stands, lichen rocks, shelf-fungus stumps,
+  lingonberries and cotton grass. Its deep needles slow everyone a little.
+- Standing stones: a ring of rune stones around a glowing altar. Entering one restores you to full health, and the
+  altar keeps humming with rising sparks.
+- Abandoned mines: a timber-framed shaft in a rock face with rails, an ore cart, ore piles and a lantern. Entering
+  wakes spiders and bats from the dark and leaves a chest by the tracks. Mines favour the badlands and deserts.
+- `tools/make_frontier.py` paints the new art into a free atlas region; `make_grounds.py` adds red clay and needle
+  ground sets.
+
+### Fixed
+
+- The codex reads each saved row on its own, so adding places no longer shifts the shrine count into them.
+
+### Changed
+
+- Biome shares shift to make room (meadow, greenwood, desert and snowfields give the most), so saved map charts from
+  earlier versions are discarded once.
+
 ## [0.4.2] - 2026-10-28
 
 ### Changed

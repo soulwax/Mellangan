@@ -1,4 +1,4 @@
-"""Adds carpet ground sets to res/atlas.png: straw, ash, crystal moss, mycelium, and lava pools.
+"""Adds carpet ground sets to res/atlas.png: straw, ash, crystal moss, mycelium, lava pools, red clay and needles.
 
 Usage: uv run --with pillow tools/make_grounds.py [--preview out.png]
 make_assets.py calls add_grounds() too, after make_sprites. Layout must match src/Atlas.hpp (atlas::carpet).
@@ -16,6 +16,8 @@ ASH = ((70, 66, 70), (98, 94, 98), (128, 122, 124))
 MOSS = ((126, 116, 170), (160, 150, 206), (196, 188, 236))
 MYCELIUM = ((110, 84, 110), (146, 114, 140), (180, 150, 170))
 LAVA = ((150, 40, 20), (220, 90, 30), (255, 186, 70))
+CLAY = ((150, 70, 46), (184, 98, 62), (212, 134, 88))
+NEEDLES = ((96, 82, 52), (124, 106, 66), (154, 136, 86))
 
 SETS = [
     ("straw", STRAW, None),
@@ -23,6 +25,11 @@ SETS = [
     ("crystal moss", MOSS, (200, 250, 255)),
     ("mycelium", MYCELIUM, (240, 190, 220)),
 ]
+EXTRA = [
+    ("red clay", CLAY, (236, 196, 120)),
+    ("needles", NEEDLES, (200, 52, 52)),
+]
+ALL = SETS + [("lava", LAVA, None)] + EXTRA
 
 
 def lerp(a, b, t):
@@ -84,11 +91,10 @@ def slot(set_index, cell):
 
 
 def add_grounds(atlas):
-    out = Image.new("RGBA", (atlas.width, max(atlas.height, GROUND_Y + 3 * CELL)), (0, 0, 0, 0))
+    out = Image.new("RGBA", (atlas.width, max(atlas.height, GROUND_Y + (len(ALL) + 1) // 2 * CELL)), (0, 0, 0, 0))
     out.paste(atlas.crop((0, 0, atlas.width, min(atlas.height, GROUND_Y))), (0, 0))
-    sets = SETS + [("lava", LAVA, None)]
-    for i, (_, pal, accent) in enumerate(sets):
-        lava = i == len(SETS)
+    for i, (name, pal, accent) in enumerate(ALL):
+        lava = name == "lava"
         if not lava:
             for k, src in enumerate((0, 1, 2)):
                 out.paste(remap(town(atlas, src), fill(pal, accent)), slot(i, k))
@@ -100,7 +106,7 @@ def add_grounds(atlas):
 
 
 def preview(atlas, path, zoom=4):
-    names = [s[0] for s in SETS] + ["lava"]
+    names = [s[0] for s in ALL]
     img = Image.new("RGBA", (12 * 18, len(names) * 18), (40, 40, 60, 255))
     for i in range(len(names)):
         for c in range(12):

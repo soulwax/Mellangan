@@ -14,7 +14,7 @@ Ashlands::Ashlands()
               0,
               0,
               45,
-              {0, 10, 20, 10, 60, 0},
+              {0, 10, 20, 10, 60, 0, 0, 20},
               foe(EnemyKind::Demon) | foe(EnemyKind::Cultist) |
                   foe(EnemyKind::Bat),
               {{&f::charredTree, 8, 80},

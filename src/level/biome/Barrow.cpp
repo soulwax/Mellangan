@@ -10,7 +10,7 @@ Barrow::Barrow()
              0,
              12,
              55,
-             {0, 65, 25, 0, 10},
+             {0, 65, 25, 0, 10, 0, 20},
              foe(EnemyKind::Bat) | foe(EnemyKind::Ghost) |
                  foe(EnemyKind::Cultist),
              {{&f::grave, 8, 90},

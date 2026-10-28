@@ -5,6 +5,7 @@
 
 #include <bit>
 #include <cstdio>
+#include <cstring>
 
 int Codex::kills() const {
   int n = 0;
@@ -28,12 +29,18 @@ void Codex::load(const std::string &path) {
                   &dawns, &bestStreak, &start, &bestTime, &used) < 7)
     return;
   at += used;
-  for (int &k : slain)
-    if (std::sscanf(at, "%d%n", &k, &used) == 1)
-      at += used;
-  for (int &k : entered)
-    if (std::sscanf(at, "%d%n", &k, &used) == 1)
-      at += used;
+  auto row = [&](int *out, int n) {
+    if (*at == '\n')
+      at++;
+    const char *end = std::strchr(at, '\n');
+    std::string line(at, end ? end : at + std::strlen(at));
+    const char *p = line.c_str();
+    for (int i = 0; i < n && std::sscanf(p, "%d%n", &out[i], &used) == 1; i++)
+      p += used;
+    at = end ? end : at + line.size();
+  };
+  row(slain, KINDS);
+  row(entered, SITES);
   std::sscanf(at, "%d", &shrines);
 }
 

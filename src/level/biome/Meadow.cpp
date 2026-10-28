@@ -11,7 +11,7 @@ Meadow::Meadow()
            6,
            22,
            55,
-           {50, 10, 15, 15, 10, 5},
+           {50, 10, 15, 15, 10, 5, 8},
            foe(EnemyKind::Rat) | foe(EnemyKind::Slime) | foe(EnemyKind::Knight),
            {{&f::oak, 4, 110},
             {&f::bush, 4, 60},
