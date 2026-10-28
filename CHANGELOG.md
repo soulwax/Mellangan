@@ -6,19 +6,15 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.4.6] - 2026-10-28
-
 ### Added
 
-- Elevated handcrafted 16x16 pixel-art character sprites and class sigils:
-  - Four expansion heroes (Warden, Tinkerer, Oracle, Corsair) with distinctive silhouettes, 3-tone lighting, and custom class sigils.
-  - Nine expansion monsters (Bog Lantern, Glass Mantis, Dust Vulture, Frost Wisp, Iceback, Sporeling, Mycelial Brute, Ember Imp, Cinder Golem) with cohesive contours and material highlights.
-  - Updated HUD skill display to render each hero's unique sprite.
+- Centered lean level-up cards with procedural category icons and tier-colored borders:
+  - Procedural 11x11 symbol matrices for weapons, passives, relics, evolutions, class upgrades, and vitality hearts.
+  - Progression tier border styling (orange relic, gray tier 1, white tier 2, green tier 3, blue tier 4, purple tier 5+).
+  - Shimmering animated silver filigree perimeter with traveling glints for hero class upgrades.
+  - Post-processing pause shader effect with frosted slate-blue desaturation and radial vignette.
 
-### Fixed
-
-- Resolved false-positive antivirus heuristic triggers by omitting debug stream tables from Release builds, disabling Windows unhandled exception filters, and embedding application UAC manifest.
-
+## [0.4.6] - 2026-10-28
 
 ### Added
 

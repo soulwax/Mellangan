@@ -7,4 +7,5 @@ public:
   using Menu::Menu;
   void tick() override;
   void render(Screen &s) override;
+  float pauseEffect() const override { return 1.0f; }
 };

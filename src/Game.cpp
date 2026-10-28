@@ -359,7 +359,8 @@ void Game::render() {
   xView = screen.xOffset, yView = screen.yOffset;
 
   float health = p.hp / p.maxHp;
-  screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0});
+  float pause = menu ? menu->pauseEffect() : 0.0f;
+  screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0, pause});
   if (worldDebug && dev)
     level->renderWorldDebug(screen, xView, yView, input.mouseX, input.mouseY);
   if (!menu || menu->showHud())

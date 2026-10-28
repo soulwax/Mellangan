@@ -11,6 +11,180 @@
 #include "item/Upgrade.hpp"
 #include "menu/Menu.hpp"
 
+namespace {
+const char *const TYPE_SYMBOLS[6][11] = {
+    {"#.........#",
+     ".#.......#.",
+     "..#.....#..",
+     "...#...#...",
+     "....#.#....",
+     ".....#.....",
+     "...#####...",
+     "..#..#..#..",
+     ".#...#...#.",
+     "#....#....#",
+     "..........."},
+    {"...........",
+     ".####.####.",
+     "#++++#++++#",
+     "#++++#++++#",
+     "#++++#++++#",
+     "#++++#++++#",
+     "#.---+---.#",
+     "..#--+--#..",
+     "...#---#...",
+     "....###....",
+     ".....#....."},
+    {"...........",
+     ".#...#...#.",
+     ".#...#...#.",
+     ".##..#..##.",
+     "#++#+#+#++#",
+     "#+++++++++#",
+     "#+#+#*#+#+#",
+     "#+++++++++#",
+     ".#########.",
+     "...........",
+     "..........."},
+    {".....#.....",
+     "....#+#....",
+     "...#+++#...",
+     "..#++-++#..",
+     ".#+--#--+#.",
+     "....#+#....",
+     "...#+++#...",
+     "..#++-++#..",
+     ".#+--#--+#.",
+     "..#--#--#..",
+     "..........."},
+    {".....#.....",
+     "....#+#....",
+     "...#+++#...",
+     "..#+++++#..",
+     ".#+++++++#.",
+     "##+++*+++##",
+     ".#+++++++#.",
+     "..#+++++#..",
+     "...#+++#...",
+     "....#+#....",
+     ".....#....."},
+    {"...........",
+     ".###...###.",
+     "#+++#.#+++#",
+     "#++++#++++#",
+     "#+++++++++#",
+     ".#+++++++#.",
+     "..#+++++#..",
+     "...#+++#...",
+     "....#+#....",
+     ".....#.....",
+     "..........."}
+};
+
+struct UpgradeStyle {
+  int symbol;
+  Color tierColor;
+  bool isClass;
+  const char *tierLabel;
+};
+
+UpgradeStyle getUpgradeStyle(const Upgrade *up, const Player &p, bool evolving) {
+  if (!up)
+    return {5, {0.32f, 0.90f, 0.48f, 1.0f}, false, "HEAL"};
+
+  bool isClass = p.hero && ((up->owner && std::strcmp(up->owner, p.hero->name) == 0) ||
+                            (p.hero->weapon && std::strcmp(p.hero->weapon, up->name) == 0));
+
+  if (up->rare)
+    return {2, {1.0f, 0.58f, 0.16f, 1.0f}, isClass, "RELIC"};
+
+  int nextTier = evolving ? 5 : up->level + 1;
+  Color col;
+  const char *label = "TIER 1";
+
+  if (nextTier <= 1) {
+    col = {0.68f, 0.70f, 0.76f, 1.0f};
+    label = "TIER 1";
+  } else if (nextTier == 2) {
+    col = {0.96f, 0.97f, 1.0f, 1.0f};
+    label = "TIER 2";
+  } else if (nextTier == 3) {
+    col = {0.28f, 0.88f, 0.42f, 1.0f};
+    label = "TIER 3";
+  } else if (nextTier == 4) {
+    col = {0.26f, 0.64f, 0.98f, 1.0f};
+    label = "TIER 4";
+  } else {
+    col = {0.78f, 0.38f, 0.98f, 1.0f};
+    label = evolving ? "EVOLVE" : "TIER 5";
+  }
+
+  int symbol = evolving ? 3 : isClass ? 4 : up->weapon ? 0 : 1;
+  return {symbol, col, isClass, label};
+}
+
+void renderSymbol(Screen &s, int index, float x, float y, float cell, Color c, float t) {
+  if (index < 0 || index >= 6)
+    return;
+  const char *const *rows = TYPE_SYMBOLS[index];
+  Color light{lerpf(c.r, 1, 0.6f), lerpf(c.g, 1, 0.6f), lerpf(c.b, 1, 0.6f), c.a};
+  Color dim = c * 0.55f;
+  Color shadow{0.02f, 0.02f, 0.04f, 0.75f * c.a};
+  for (int pass = 0; pass < 2; pass++) {
+    for (int r = 0; r < 11; r++) {
+      for (int col = 0; col < 11; col++) {
+        char k = rows[r][col];
+        if (k == '.')
+          continue;
+        float px = x + col * cell, py = y + r * cell;
+        if (pass == 0) {
+          if (cell > 1)
+            s.rect(px + cell, py + cell, cell, cell, shadow);
+          continue;
+        }
+        Color ink = k == '+' ? light : k == '-' ? dim : c;
+        if (k == '*')
+          ink = light.alpha(c.a * (0.4f + 0.6f * std::abs(std::sin(t * 3.0f + r + col))));
+        s.rect(px, py, cell, cell, ink);
+      }
+    }
+  }
+}
+
+void renderSilverThread(Screen &s, float x, float y, float w, float h, float u, float in, float t, int index) {
+  float ix = x + 2.0f * u, iy = y + 2.0f * u, iw = w - 4.0f * u, ih = h - 4.0f * u;
+  Color base{0.78f, 0.82f, 0.92f, 0.60f * in};
+  Color gleam{0.96f, 0.98f, 1.0f, in};
+
+  s.line(ix + 6 * u, iy, ix + iw - 6 * u, iy, u, base);
+  s.line(ix + 6 * u, iy + ih, ix + iw - 6 * u, iy + ih, u, base);
+  s.line(ix, iy + 4 * u, ix, iy + ih - 4 * u, u, base);
+  s.line(ix + iw, iy + 4 * u, ix + iw, iy + ih - 4 * u, u, base);
+
+  s.line(ix, iy + 4 * u, ix + 6 * u, iy, u, base);
+  s.rect(ix + 2 * u, iy + 2 * u, u, u, gleam);
+  s.line(ix + iw - 6 * u, iy, ix + iw, iy + 4 * u, u, base);
+  s.rect(ix + iw - 3 * u, iy + 2 * u, u, u, gleam);
+  s.line(ix, iy + ih - 4 * u, ix + 6 * u, iy + ih, u, base);
+  s.rect(ix + 2 * u, iy + ih - 3 * u, u, u, gleam);
+  s.line(ix + iw - 6 * u, iy + ih, ix + iw, iy + ih - 4 * u, u, base);
+  s.rect(ix + iw - 3 * u, iy + ih - 3 * u, u, u, gleam);
+
+  float phase = t * 0.42f + index * 0.22f;
+  float pulse = phase - std::floor(phase);
+  float gxTop = ix + 8 * u + pulse * (iw - 16 * u);
+  float glowLen = 6 * u;
+  s.line(gxTop - glowLen, iy, gxTop + glowLen, iy, u,
+         gleam.alpha((0.65f + 0.35f * std::sin(t * 6.0f)) * in));
+  s.rect(gxTop - 0.5f * u, iy - 0.5f * u, 2 * u, 2 * u, col::white.alpha(in));
+
+  float gxBot = ix + iw - 8 * u - pulse * (iw - 16 * u);
+  s.line(gxBot - glowLen, iy + ih, gxBot + glowLen, iy + ih, u,
+         gleam.alpha((0.65f + 0.35f * std::sin(t * 6.0f + 3.14f)) * in));
+  s.rect(gxBot - 0.5f * u, iy + ih - 0.5f * u, 2 * u, 2 * u, col::white.alpha(in));
+}
+}
+
 LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
   Player &p = *game.level->player;
   auto &all = p.upgrades;
@@ -61,8 +235,8 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
 std::array<SDL_FRect, 4> LevelUpMenu::cards() const {
   const Screen &s = game.screen;
   int n = int(choices.size());
-  float u = s.u, w = std::min(s.w * 0.9f, 340 * u), h = 36 * u, gap = 6 * u;
-  float y = s.h * 0.5f - (n * h + (n - 1) * gap) * 0.5f + 12 * u;
+  float u = s.u, w = std::min(s.w * 0.82f, 276 * u), h = 24 * u, gap = 5 * u;
+  float y = s.h * 0.5f - (n * h + (n - 1) * gap) * 0.5f + 8 * u;
   std::array<SDL_FRect, 4> r{};
   for (int i = 0; i < 4; i++)
     r[i] = {(s.w - w) * 0.5f, y + i * (h + gap), w, h};
@@ -100,20 +274,21 @@ void LevelUpMenu::tick() {
 void LevelUpMenu::choose(int i) {
   Player &p = *game.level->player;
   Sound::confirm.play(0.6f, 0);
-  if (Upgrade *u = choices[i]; u && i == evolveSlot) {
-    u->evolve();
-    spdlog::info("Level {}: evolved into {}", p.lvl, u->name);
-  } else if (Upgrade *u = choices[i]) {
-    u->levelUp(p);
+  Upgrade *choice = choices[i];
+  if (choice && i == evolveSlot) {
+    choice->evolve();
+    spdlog::info("Level {}: evolved into {}", p.lvl, choice->name);
+  } else if (choice) {
+    choice->levelUp(p);
     int relic = 0;
     for (auto &up : p.upgrades)
-      if (up->rare && up.get() != u)
+      if (up->rare && up.get() != choice)
         relic++;
-      else if (up.get() == u)
+      else if (up.get() == choice)
         break;
-    if (u->rare)
+    if (choice->rare)
       game.codex.relics |= 1u << relic;
-    spdlog::info("Level {}: {} -> {}", p.lvl, u->name, u->level);
+    spdlog::info("Level {}: {} -> {}", p.lvl, choice->name, choice->level);
   } else {
     p.heal(40);
   }
@@ -125,62 +300,101 @@ void LevelUpMenu::render(Screen &s) {
   const Player &p = *game.level->player;
   float u = s.u, small = std::max(1.0f, u - 1);
   auto r = cards();
-  s.rect(0, 0, s.w, s.h, {0, 0, 0, 0.55f});
-  s.textCenter(treasure ? "TREASURE!" : "LEVEL UP!", s.w / 2, r[0].y - 34 * u,
-               2 * u, col::gold.alpha(0.85f + 0.15f * std::sin(t * 6)));
+  s.textCenter(treasure ? "TREASURE!" : "LEVEL UP!", s.w / 2, r[0].y - 20 * u,
+               1.6f * u, col::gold.alpha(0.9f + 0.1f * std::sin(t * 5)));
 
   for (int i = 0; i < int(choices.size()); i++) {
-    float in = clampf((t - i * 0.06f) / 0.25f, 0, 1);
+    float in = clampf((t - i * 0.05f) / 0.22f, 0, 1);
     in = 1 - (1 - in) * (1 - in) * (1 - in);
-    float x = r[i].x + (1 - in) * 40 * u, y = r[i].y, w = r[i].w, h = r[i].h;
+    float x = r[i].x + (1 - in) * 32 * u, y = r[i].y, w = r[i].w, h = r[i].h;
     bool sel = i == selected;
     Upgrade *up = choices[i];
     bool evolving = i == evolveSlot;
-    bool kin = up && up->owner && p.hero;
-    Color tint = kin ? p.hero->tint : col::gold;
-    bool rare = up && (up->rare || evolving);
-    float shine = 0.5f + 0.5f * std::sin(t * 4);
+    UpgradeStyle style = getUpgradeStyle(up, p, evolving);
+    Color tierCol = style.tierColor;
 
-    s.rect(x, y, w, h, col::panel.alpha(0.92f * in));
-    if (sel || rare)
-      s.rect(x, y, w, h, col::gold.alpha((rare ? 0.06f + 0.06f * shine : 0.08f) * in));
-    s.frame(x, y, w, h, rare ? 2 * u : u,
-            (sel || rare ? col::gold : Color{0.3f, 0.28f, 0.4f, 1})
-                .alpha(rare && !sel ? (0.55f + 0.45f * shine) * in : in));
+    s.rect(x, y, w, h, col::panel.alpha(0.88f * in));
+    if (sel)
+      s.rect(x, y, w, h, tierCol.alpha(0.12f * in));
+    s.frame(x, y, w, h, sel ? 2 * u : u, tierCol.alpha((sel ? 1.0f : 0.65f) * in));
+    if (sel) {
+      float tickLen = 6 * u;
+      s.line(x, y, x + tickLen, y, u, col::white.alpha(in));
+      s.line(x, y, x, y + tickLen, u, col::white.alpha(in));
+      s.line(x + w, y, x + w - tickLen, y, u, col::white.alpha(in));
+      s.line(x + w, y, x + w, y + tickLen, u, col::white.alpha(in));
+      s.line(x, y + h, x + tickLen, y + h, u, col::white.alpha(in));
+      s.line(x, y + h, x, y + h - tickLen, u, col::white.alpha(in));
+      s.line(x + w, y + h, x + w - tickLen, y + h, u, col::white.alpha(in));
+      s.line(x + w, y + h, x + w, y + h - tickLen, u, col::white.alpha(in));
+    }
 
-    float box = 24 * u, bx = x + 6 * u, by = y + (h - box) / 2;
-    s.rect(bx, by, box, box, {0.16f, 0.14f, 0.22f, in});
+    if (style.isClass)
+      renderSilverThread(s, x, y, w, h, u, in, t, i);
+
+    float badgeSize = 16 * u;
+    float bx = x + 4 * u, by = y + (h - badgeSize) * 0.5f;
+    s.rect(bx, by, badgeSize, badgeSize,
+           {tierCol.r * 0.16f, tierCol.g * 0.16f, tierCol.b * 0.16f, 0.9f * in});
+    s.frame(bx, by, badgeSize, badgeSize, u, tierCol.alpha(0.8f * in));
+    if (style.isClass)
+      s.frame(bx - u, by - u, badgeSize + 2 * u, badgeSize + 2 * u, u,
+              Color{0.95f, 0.98f, 1.0f, (0.45f + 0.35f * std::sin(t * 4.0f)) * in});
+
+    renderSymbol(s, style.symbol, bx + (badgeSize - 11 * u) * 0.5f,
+                 by + (badgeSize - 11 * u) * 0.5f, u, tierCol.alpha(in), t);
+
+    float iconX = bx + badgeSize + 4 * u;
+    float iconY = y + (h - 16 * u) * 0.5f;
     s.color(col::white.alpha(in));
-    s.sprite(up ? up->icon : atlas::tile(atlas::t::PotionRed), bx + 4 * u,
-             by + 4 * u, 0, 0, u, u);
+    s.sprite(up ? up->icon : atlas::tile(atlas::t::PotionRed), iconX, iconY, 0, 0,
+             u, u);
     s.color(col::white);
 
-    float tx = bx + box + 6 * u;
-    std::string desc = evolving ? fmt::format("{} evolves: double damage, faster",
-                                              up->name)
-                       : up        ? up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)]
-                                   : "Restore 40 health";
-    s.text(evolving ? up->evolvedName : up ? up->name : "Roast Feast", tx,
-           y + 5 * u, u,
-           (evolving ? col::xp
-            : rare   ? col::gold
-            : kin    ? tint
-                     : col::white)
-               .alpha(in));
-    s.text(desc, tx, y + 20 * u, small, col::muted.alpha(in));
-    if (up) {
-      std::string tag = evolving        ? "EVOLVE"
-                        : rare            ? "RELIC"
-                        : kin && up->level == 0 ? std::string(p.hero->name)
-                        : up->level == 0 ? "NEW!"
-                                         : fmt::format("Lv {}", up->level + 1);
-      s.text(tag, x + w - Screen::textWidth(tag, small) - 6 * u, y + 5 * u,
-             small,
-             (kin ? tint : rare || up->level == 0 ? col::gold : col::muted)
-                 .alpha(in));
+    float tx = iconX + 16 * u + 5 * u;
+    const char *name = evolving ? up->evolvedName : up ? up->name : "Roast Feast";
+    std::string desc = evolving
+                           ? fmt::format("{} evolves: double damage, faster", up->name)
+                       : up ? up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)]
+                            : "Restore 40 health";
+
+    s.text(name, tx, y + 3.5f * u, u, (sel ? col::white : tierCol).alpha(in));
+
+    float tagX = tx + Screen::textWidth(name, u) + 5 * u;
+    if (style.isClass) {
+      const char *cName = p.hero ? p.hero->name : "CLASS";
+      s.text(cName, tagX, y + 4.5f * u, small,
+             Color{0.90f, 0.94f, 1.0f, in});
+      tagX += Screen::textWidth(cName, small) + 5 * u;
     }
+
+    if (evolving) {
+      s.text("EVOLVE", tagX, y + 4.5f * u, small, col::xp.alpha(in));
+    } else if (up && up->rare) {
+      s.text("RELIC", tagX, y + 4.5f * u, small, tierCol.alpha(in));
+    } else if (up && up->level == 0) {
+      s.text("TIER 1 (NEW)", tagX, y + 4.5f * u, small, tierCol.alpha(in));
+    } else if (up) {
+      for (int lvl = 0; lvl < Upgrade::MAX_LEVEL; lvl++) {
+        bool lit = lvl <= up->level;
+        s.rect(tagX + lvl * 4 * u, y + 5 * u, 2.5f * u, 2.5f * u,
+               (lit ? tierCol : Color{0.25f, 0.22f, 0.32f, 1}).alpha(in));
+      }
+      s.text(fmt::format("T{}", up->level + 1), tagX + Upgrade::MAX_LEVEL * 4 * u + 3 * u,
+             y + 4.5f * u, small, tierCol.alpha(in));
+    }
+
+    s.text(desc, tx, y + 13.5f * u, small,
+           (sel ? col::white * 0.9f : col::muted).alpha(in));
+
+    float kx = x + w - 21 * u, ky = y + (h - 14 * u) * 0.5f;
+    s.rect(kx, ky, 17 * u, 14 * u, {0.10f, 0.08f, 0.15f, 0.8f * in});
+    s.frame(kx, ky, 17 * u, 14 * u, u,
+            (sel ? tierCol : col::muted * 0.45f).alpha(in));
+    s.textCenter(std::to_string(i + 1), kx + 8.5f * u, ky + 4 * small, small,
+                 (sel ? col::white : col::muted).alpha(in));
   }
   const SDL_FRect &last = r[choices.size() - 1];
   s.textCenter(fmt::format("1-{} / Arrows + Enter / Click", choices.size()),
-               s.w / 2, last.y + last.h + 8 * u, small, col::muted);
+               s.w / 2, last.y + last.h + 8 * u, small, col::muted * 0.75f);
 }

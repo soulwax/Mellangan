@@ -23,6 +23,8 @@ struct PostData
     float2 resolution; // world target size in pixels
     float vignette;
     float grain;
+    float pause;
+    float3 _pad;
 };
 [[vk::binding(3, 3)]]
 ConstantBuffer<PostData> post;
@@ -89,6 +91,19 @@ float4 PixelShader(float2 uv)
     float pulse = 0.6 + 0.4 * sin(post.time * 7.0);
     col = lerp(col, float3(0.5, 0.02, 0.06), edge * post.lowHealth * pulse * 0.65);
     col += float3(0.4, 0.03, 0.05) * post.hurt * edge;
+
+    if (post.pause > 0.001)
+    {
+        float p = saturate(post.pause);
+        float blurDist = 1.8 * p;
+        float3 blur = (litAt(uv + float2(blurDist, 0.0)) + litAt(uv - float2(blurDist, 0.0)) +
+                       litAt(uv + float2(0.0, blurDist)) + litAt(uv - float2(0.0, blurDist))) * 0.25;
+        blur = aces(blur * 1.15);
+        float blurLuma = dot(blur, float3(0.2126, 0.7152, 0.0722));
+        float3 frozen = float3(blurLuma, blurLuma, blurLuma) * float3(0.55, 0.58, 0.72);
+        col = lerp(col, frozen, p * 0.75);
+        col *= (1.0 - smoothstep(0.35, 1.05, dist) * (0.45 * p));
+    }
 
     col += (hash(floor(uv) + frac(post.time * 7.31) * 113.0) - 0.5) * post.grain;
 

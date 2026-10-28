@@ -15,6 +15,7 @@ struct PostData {
   float time, hurt, lowHealth;
   uint32_t light;
   float resW, resH, vignette, grain;
+  float pause, pad0, pad1, pad2;
 };
 
 static VK2DShader loadShader(const std::string &path, uint32_t uniformSize) {
@@ -96,7 +97,8 @@ void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
   color(col::white);
 
   PostData data{fx.time,  fx.hurt,  fx.lowHealth, vk2dTextureGetID(light),
-                float(W), float(H), 0.85f,        0.02f};
+                float(W), float(H), 0.85f,        0.02f,
+                fx.pause, 0,        0,            0};
   vk2dRendererDrawShader(post, &data, world, std::floor((w - W * scale) / 2),
                          std::floor((h - H * scale) / 2), scale, scale, 0, 0, 0,
                          0, 0, W, H);

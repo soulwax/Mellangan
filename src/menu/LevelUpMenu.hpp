@@ -14,6 +14,7 @@ public:
   explicit LevelUpMenu(Game &game);
   void tick() override;
   void render(Screen &s) override;
+  float pauseEffect() const override { return 1.0f; }
 
 private:
   std::vector<Upgrade *>
