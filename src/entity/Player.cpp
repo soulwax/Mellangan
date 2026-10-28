@@ -6,7 +6,7 @@
 #include "audio/Sound.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
-#include "meta/Starts.hpp"
+#include "hero/Hero.hpp"
 #include "particle/Spark.hpp"
 #include "particle/TextParticle.hpp"
 #include "particle/debris/FlameDebris.hpp"
@@ -16,13 +16,10 @@ Player::Player() : upgrades(Upgrade::all()) { hp = maxHp = 100; }
 Player::~Player() = default;
 
 void Player::onAdded() {
-  const Codex &c = level->game.codex;
-  const Start &s = STARTS[c.start >= 0 && c.start < START_COUNT &&
-                                  STARTS[c.start].met(c)
-                              ? c.start
-                              : 0];
+  hero = &heroOf(level->game.codex);
+  hero->equip(*this);
   for (auto &u : upgrades)
-    if (std::strcmp(u->name, s.weapon) == 0)
+    if (std::strcmp(u->name, hero->weapon) == 0)
       return u->levelUp(*this);
   upgrades.front()->levelUp(*this);
 }
@@ -50,6 +47,8 @@ void Player::tick() {
   if (xd != 0 || yd != 0)
     xAim = xd, yAim = yd;
   invuln = std::max(0.0f, invuln - DT);
+  if (hero)
+    hero->tick(*this);
   hp = std::min(maxHp, hp + regen * DT);
 
   for (auto &u : upgrades)
@@ -64,7 +63,7 @@ void Player::render(Screen &s) {
     return;
   bool blink = invuln > 0 && std::fmod(invuln, 0.12f) < 0.06f;
   float move = float(std::sqrt(xa * xa + ya * ya) / speed);
-  drawBody(s, xp, yp, atlas::t::Wizard, false, move, col::white,
+  drawBody(s, xp, yp, tile, false, move, col::white,
            blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
   int xt = xp + int(facing * 6);
   s.rect(xt, yp - 10, 1, 7, {0.42f, 0.26f, 0.13f, 1});
@@ -97,6 +96,8 @@ void Player::renderLight(Screen &s) {
 
 void Player::hurt(float damage) {
   if (invuln > 0 || dead() || god)
+    return;
+  if (hero && (damage = hero->guard(*this, damage)) <= 0)
     return;
   damage = std::max(1.0f, damage - armor);
   hp -= damage;
@@ -136,6 +137,8 @@ void Player::heal(float amount) {
 }
 
 void Player::gainXp(float amount) {
+  if (hero)
+    amount *= hero->wisdom();
   for (exp += amount; exp >= expNext; expNext = 6.0f + lvl * 6.0f)
     exp -= expNext, lvl++, pendingLevels++;
 }

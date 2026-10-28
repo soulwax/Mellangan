@@ -8,6 +8,7 @@
 #include "entity/enemy/ai/Plans.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/pickup/Potion.hpp"
+#include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
 #include "entity/projectile/Orb.hpp"
 #include "level/Level.hpp"
@@ -299,6 +300,8 @@ void Enemy::die() {
   level->streak++, level->streakTime = 2.5f;
   level->bestStreak = std::max(level->bestStreak, level->streak);
   level->game.codex.slain[kind()]++;
+  if (Player *p = level->player; p->hero)
+    p->hero->slay(*p, *this);
   Sound::kill.play(0.35f, 0.12f);
   Gem::drop(*level, x, y - 3,
             type.xp * (elite ? ELITE_XP : 1) * level->xpMul *

@@ -6,10 +6,10 @@
 #include "Version.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "menu/ClassMenu.hpp"
 #include "menu/CodexMenu.hpp"
 #include "item/Upgrade.hpp"
 #include "menu/Menu.hpp"
-#include "meta/Starts.hpp"
 
 namespace {
 const char *const MODES[4] = {"CLASSIC", "RANDOM", "DAILY", "CUSTOM"};
@@ -46,12 +46,11 @@ TitleMenu::Layout TitleMenu::layout() const {
   for (int i = 0; i < 4; i++)
     l.chips[i] = {in + i * (chip + 3 * u), y + pad + 14 * u, chip, 16 * u};
   l.seed = {in, y + pad + 56 * u, iw, 18 * u};
-  l.start = {in, l.seed.y + l.seed.h + 22 * u, iw, 20 * u};
-  float ry = l.start.y + l.start.h + 46 * u;
+  float ry = l.seed.y + l.seed.h + 30 * u;
   int n = std::min(int(game.history.size()), 6);
   for (int i = 0; i < 6; i++)
     l.rows[i] = {in, ry + i * 13 * u, iw, 12 * u};
-  float bottom = n ? ry + n * 13 * u : l.start.y + l.start.h;
+  float bottom = n ? ry + n * 13 * u : l.seed.y + l.seed.h;
   l.panel = {x, y, w, bottom + pad - y};
   return l;
 }
@@ -87,26 +86,13 @@ void TitleMenu::recall(int i) {
   game.reseed();
 }
 
-void TitleMenu::cycle(int dir) {
-  Codex &c = game.codex;
-  for (int i = 1; i <= START_COUNT; i++) {
-    int k = ((c.start + dir * i) % START_COUNT + START_COUNT) % START_COUNT;
-    if (STARTS[k].met(c)) {
-      if (k != c.start)
-        Sound::select.play(0.5f, 0);
-      c.start = k;
-      return;
-    }
-  }
-}
-
 void TitleMenu::tick() {
   Menu::tick();
   game.level->player->animT += DT;
   Input &in = game.input;
   if (in.confirm.clicked) {
     Sound::confirm.play(0.6f, 0);
-    return game.newGame(false);
+    return game.setMenu(std::make_unique<ClassMenu>(game));
   }
   if (in.escape.clicked) {
     if (typing())
@@ -118,10 +104,6 @@ void TitleMenu::tick() {
     return choose((int(game.worldMode) + 1) % 4);
   if (!typing() && in.codex.clicked)
     return game.setMenu(std::make_unique<CodexMenu>(game, false));
-  if (in.prior.clicked)
-    return cycle(-1);
-  if (in.next.clicked)
-    return cycle(1);
   int n = int(game.history.size());
   if (n && in.older.clicked)
     return recall(pick < 0 ? 0 : std::max(0, pick - 1));
@@ -136,8 +118,6 @@ void TitleMenu::tick() {
     for (int i = 0; i < std::min(n, 6); i++)
       if (inside(l.rows[i], in))
         return recall(i);
-    if (inside(l.start, in))
-      return cycle(1);
     if (game.worldMode == WorldMode::Random && inside(l.seed, in))
       return game.seedCode.clear(), game.reseed();
   }
@@ -212,34 +192,6 @@ void TitleMenu::render(Screen &s) {
                                                              : "";
   s.text(hint, f.x + f.w - Screen::textWidth(hint, small) - 6 * u, ty, small,
          col::muted * 0.7f);
-
-  const Codex &cx = game.codex;
-  const SDL_FRect &st = l.start;
-  int open = 0, next = -1;
-  for (int k = 0; k < START_COUNT; k++)
-    if (STARTS[k].met(cx))
-      open++;
-    else if (next < 0)
-      next = k;
-  int at = cx.start >= 0 && cx.start < START_COUNT && STARTS[cx.start].met(cx)
-               ? cx.start
-               : 0;
-  s.text("START WITH", p.x + pad, st.y - 14 * u, small, col::muted);
-  std::string count = fmt::format("{}/{}", open, START_COUNT);
-  s.text(count, p.x + p.w - pad - Screen::textWidth(count, small), st.y - 14 * u,
-         small, col::muted * 0.7f);
-  s.rect(st.x, st.y, st.w, st.h, {0.02f, 0.02f, 0.04f, 0.9f});
-  s.frame(st.x, st.y, st.w, st.h, u, col::muted.alpha(0.25f));
-  for (auto &up : game.level->player->upgrades)
-    if (std::string_view(up->name) == STARTS[at].weapon)
-      s.sprite(up->icon, st.x + 3 * u, st.y + 2 * u, 0, 0, u, u);
-  s.text(STARTS[at].weapon, st.x + 24 * u, st.y + (st.h - 16 * small) / 2,
-         small, col::white);
-  s.text("< >", st.x + st.w - Screen::textWidth("< >", small) - 6 * u,
-         st.y + (st.h - 16 * small) / 2, small, col::muted * 0.7f);
-  if (next >= 0)
-    s.text(fmt::format("next unlock: {}", STARTS[next].need),
-           st.x, st.y + st.h + 3 * u, small, col::muted * 0.6f);
 
   int n = std::min(int(game.history.size()), 6);
   if (!n)

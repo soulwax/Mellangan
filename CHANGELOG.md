@@ -6,6 +6,19 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Classes: a class screen after the title shows six heroes on pedestals, the chosen one lit and raised, with its
+  signature weapon, trait and stat bars beside it. The Mage (+15% experience), Ranger (dodges 15% of blows), Knight
+  (a bulwark halves one blow every 6 seconds), Alchemist (fallen foes may leave potions), Stormcaller (every 20th kill
+  calls lightning) and Reaper (every kill mends health) each have their own sprite and stats, and unlock through the
+  old starting-weapon milestones. Locked classes stand in shadow with their requirement.
+
+### Changed
+
+- Each class is a `Hero` subclass in `src/hero/`, overriding only the hooks that make it different (equip, tick,
+  guard, wisdom, slay). The starting-weapon row on the title panel is gone.
+
 ## [0.3.1] - 2026-10-28
 
 ### Added

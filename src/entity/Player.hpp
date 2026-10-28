@@ -7,6 +7,8 @@
 
 class Upgrade;
 
+class Hero;
+
 class Player : public Mob {
 public:
   double xAim = 1, yAim = 0;
@@ -17,6 +19,9 @@ public:
   float speed = 74, might = 1, haste = 1, magnet = 28, armor = 0, regen = 0,
         luck = 0;
   bool god = false;
+  int tile = atlas::t::Wizard, heroCount = 0;
+  float heroTimer = 0;
+  const Hero *hero = nullptr;
   std::vector<std::unique_ptr<Upgrade>> upgrades;
 
   Player();
