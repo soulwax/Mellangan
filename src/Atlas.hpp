@@ -151,7 +151,7 @@ constexpr int Lingonberry = 22, LichenRock = 23, CottonGrass = 24,
 constexpr int ToppledStone = 27, Altar = 28, MineCart = 29, OrePile = 30,
               LanternPost = 31, Timber = 32, RailAcross = 33, RailDown = 34;
 constexpr int Wolf = 35, Alpha = 36, Burrower = 37, Mound = 38, Necromancer = 39,
-              Skeleton = 40, Thief = 41;
+              Skeleton = 40, Thief = 41, Chakram = 42, Glaive = 43, Censer = 44;
 } // namespace fr
 constexpr Sprite snowRim(int offset) {
   return {float(216 + (offset % 12) * 18 + 1),

@@ -34,7 +34,10 @@
 #include "item/weapon/AxeThrow.hpp"
 #include "item/weapon/Blade.hpp"
 #include "item/weapon/Bow.hpp"
+#include "item/weapon/Censer.hpp"
+#include "item/weapon/Chakram.hpp"
 #include "item/weapon/FireBomb.hpp"
+#include "item/weapon/Glaive.hpp"
 #include "item/weapon/Halo.hpp"
 #include "item/weapon/Knives.hpp"
 #include "item/weapon/Scythe.hpp"
@@ -55,7 +58,10 @@ const char *const EVOLUTIONS[][3] = {
     {"Storm Rod", "Lucky Key", "Thunder Sceptre"},
     {"Fire Bomb", "Troll Blood", "Hellfire Flask"},
     {"Hunter's Bow", "Lodestone", "Windpiercer"},
-    {"Reaper's Scythe", "Ogre Hammer", "Harvest Moon"}};
+    {"Reaper's Scythe", "Ogre Hammer", "Harvest Moon"},
+    {"Chakram", "Quicksilver", "Moon Chakram"},
+    {"Glaive", "Iron Buckler", "Dragonslayer Glaive"},
+    {"Censer", "Troll Blood", "Sanctified Thurible"}};
 
 void phoenix(Player &p) { p.revives++; }
 void grove(Player &p) { p.maxHp += 60, p.hp += 60, p.regen += 1.5f; }
@@ -118,6 +124,9 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   u.push_back(std::make_unique<Harvest>());
   u.push_back(std::make_unique<Beacon>());
   u.push_back(std::make_unique<Riposte>());
+  u.push_back(std::make_unique<Chakram>());
+  u.push_back(std::make_unique<Glaive>());
+  u.push_back(std::make_unique<Censer>());
   auto kin = [&](const char *owner, const char *name, Sprite icon,
                  const char *desc, float Player::*stat, float amount) {
     passive(name, icon, desc, stat, amount);

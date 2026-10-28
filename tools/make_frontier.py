@@ -278,6 +278,36 @@ def thief(c):
     c.put(12, 9, GOLD[2]), c.put(11, 11, GOLD[1])
 
 
+def chakram(c):
+    c.ellipse(7.5, 7.5, 6.0, 6.0, IRON, seed=110)
+    c.ellipse(7.5, 7.5, 3.8, 3.8, GLOOM, seed=111)
+    c.ellipse(7.5, 7.5, 2.0, 2.0, GOLD, seed=112)
+    c.put(7, 7, RUNE), c.put(8, 8, RUNE)
+    for x, y in ((2, 7), (13, 7), (7, 2), (7, 13)):
+        c.put(x, y, FROST[2])
+
+
+def glaive(c):
+    c.line(2, 14, 10, 6, BARK[1])
+    c.line(1, 15, 3, 13, BARK[0])
+    c.line(9, 5, 14, 2, IRON[2])
+    c.line(8, 6, 13, 1, IRON[1])
+    c.line(10, 6, 15, 3, IRON[0])
+    c.put(14, 1, (240, 240, 255)), c.put(15, 2, (240, 240, 255))
+    c.put(8, 7, (210, 45, 45)), c.put(9, 7, (220, 50, 50)), c.put(8, 8, (160, 25, 25))
+
+
+def censer(c):
+    c.line(7, 1, 7, 5, GOLD[1])
+    c.line(5, 5, 10, 5, GOLD[2])
+    c.ellipse(7.5, 9.5, 4.2, 3.8, GOLD, seed=113)
+    c.rect(5, 7, 10, 8, GOLD)
+    for x in (5, 7, 9):
+        c.put(x, 9, (255, 150, 30))
+    c.put(6, 6, (200, 200, 220)), c.put(8, 5, (220, 220, 240)), c.put(7, 3, (240, 240, 250))
+    c.put(7, 13, GOLD[0]), c.put(7, 14, GOLD[1])
+
+
 def needle_tuft(c):
     tuft(c, ((70, 64, 40), (100, 92, 56), (130, 122, 76)))
 
@@ -345,6 +375,12 @@ MOBS = [
     ("thief", thief),
 ]
 
+WEAPONS = [
+    ("chakram", chakram),
+    ("glaive", glaive),
+    ("censer", censer),
+]
+
 BARE = {"clay tuft", "needle tuft"}
 
 
@@ -359,7 +395,7 @@ def layout():
         col += w
     free = [row * COLS + c for row in (0, 1) for c in range(col, COLS)] + list(range(2 * COLS, ROWS * COLS))
     items = ([(n, f, "single") for n, f in SINGLES] + [(n, f, "ground") for n, f in GROUNDS] +
-             [(n, f, "single") for n, f in MOBS])
+             [(n, f, "single") for n, f in MOBS] + [(n, f, "single") for n, f in WEAPONS])
     assert len(items) <= len(free)
     for k, (name, fn, kind) in enumerate(items):
         slots.append((name, fn, kind, free[k], -1))
