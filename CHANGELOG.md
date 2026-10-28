@@ -6,6 +6,16 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Smoother terrain: Perlin noise uses sixteen evenly spread gradient directions instead of eight axis-biased ones,
+  the climate is warped by a broad two-scale field instead of a fine ripple, and biomes pass through a 3x3 majority
+  filter, so borders flow in long curves without one-tile spurs or pits. Dirt, carpet, sand, water and lava patches
+  share one smoothing rule (a tile needs a full 2x2 block to stand, and a gap with three solid neighbours is filled),
+  which removes the notches and stray tiles that made rims look rough. Ground tint now blends bilinearly across a
+  four-tile lattice instead of stepping.
+- Worlds are shaped differently as a result, so saved map charts from earlier versions are discarded once.
+
 ## [0.4.1] - 2026-10-28
 
 ### Changed

@@ -23,6 +23,9 @@ bool nearestStructure(double x, double y, int maxRegions, Structure &out,
                       StructureFilter keep = nullptr,
                       const void *ctx = nullptr);
 
+typedef bool (*PatchTest)(int x, int y, const void *ctx);
+bool smoothPatch(PatchTest test, const void *ctx, int x, int y);
+
 bool isDirt(int x, int y);
 Sprite groundTile(int x, int y);
 float groundShade(int x, int y);

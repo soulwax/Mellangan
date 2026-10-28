@@ -1,20 +1,26 @@
 #include "level/biome/Carpet.hpp"
 
+#include "level/World.hpp"
+
 namespace {
 
 bool own(int x, int y, BiomeId id) { return world::biomeAt(x, y) == id; }
 
+struct Probe {
+  bool (*test)(int, int, BiomeId);
+  BiomeId id;
+};
+
+bool probe(int x, int y, const void *ctx) {
+  const Probe *p = static_cast<const Probe *>(ctx);
+  return p->test(x, y, p->id);
+}
+
 } // namespace
 
 bool blockOf(bool (*test)(int, int, BiomeId), BiomeId id, int x, int y) {
-  if (!test(x, y, id))
-    return false;
-  for (int dy = -1; dy <= 0; dy++)
-    for (int dx = -1; dx <= 0; dx++)
-      if (test(x + dx, y + dy, id) && test(x + dx + 1, y + dy, id) &&
-          test(x + dx, y + dy + 1, id) && test(x + dx + 1, y + dy + 1, id))
-        return true;
-  return false;
+  Probe p{test, id};
+  return world::smoothPatch(probe, &p, x, y);
 }
 
 bool Carpet::covered(int x, int y) const { return blockOf(own, self, x, y); }

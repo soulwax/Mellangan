@@ -52,8 +52,10 @@ const Biome *const BIOMES[BIOME_COUNT] = {
 namespace world {
 
 Climate climateAt(int x, int y) {
-  float wx = x + noise_perlin(x * 0.21f + 11.3f, y * 0.21f - 4.1f, 701) * 2.5f;
-  float wy = y + noise_perlin(x * 0.21f - 7.7f, y * 0.21f + 9.2f, 702) * 2.5f;
+  float wx = x + noise_fbm(x * 0.045f + 11.3f, y * 0.045f - 4.1f, 2, 701) * 5 +
+             noise_perlin(x * 0.23f + 3.1f, y * 0.23f - 8.7f, 703) * 0.9f;
+  float wy = y + noise_fbm(x * 0.045f - 7.7f, y * 0.045f + 9.2f, 2, 702) * 5 +
+             noise_perlin(x * 0.23f - 5.3f, y * 0.23f + 2.9f, 704) * 0.9f;
   Climate c;
   c.temp = noise_fbm(wx * 0.011f, wy * 0.011f, 3, 101);
   c.moist = noise_fbm(wx * 0.013f + 40.5f, wy * 0.013f, 3, 202);

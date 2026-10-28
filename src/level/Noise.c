@@ -20,13 +20,14 @@ uint32_t noise_hash(int32_t x, int32_t y, uint32_t seed) {
 
 static float fade(float t) { return t * t * t * (t * (t * 6 - 15) + 10); }
 
-static const float GRAD[8][2] = {
-    {1, 1},           {-1, 1},           {1, -1},          {-1, -1},
-    {1.41421356f, 0}, {-1.41421356f, 0}, {0, 1.41421356f}, {0, -1.41421356f},
-};
+static const float GRAD[16][2] = {
+    {1.414214f, 0.000000f}, {1.306563f, 0.541196f}, {1.000000f, 1.000000f}, {0.541196f, 1.306563f},
+    {0.000000f, 1.414214f}, {-0.541196f, 1.306563f}, {-1.000000f, 1.000000f}, {-1.306563f, 0.541196f},
+    {-1.414214f, 0.000000f}, {-1.306563f, -0.541196f}, {-1.000000f, -1.000000f}, {-0.541196f, -1.306563f},
+    {0.000000f, -1.414214f}, {0.541196f, -1.306563f}, {1.000000f, -1.000000f}, {1.306563f, -0.541196f}};
 
 static float grad(int32_t ix, int32_t iy, uint32_t seed, float dx, float dy) {
-  const float *g = GRAD[noise_hash(ix, iy, seed) >> 29];
+  const float *g = GRAD[noise_hash(ix, iy, seed) >> 28];
   return g[0] * dx + g[1] * dy;
 }
 

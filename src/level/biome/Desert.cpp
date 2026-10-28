@@ -1,6 +1,7 @@
 #include "level/biome/Desert.hpp"
 
 #include "level/Noise.h"
+#include "level/World.hpp"
 
 namespace f = feature;
 namespace fl = atlas::fl;
@@ -27,15 +28,12 @@ bool desert(int x, int y) { return world::biomeAt(x, y) == BIOME_DESERT; }
 bool pool(int x, int y) { return desert(x, y) && oasis(x, y) > WATER; }
 bool dune(int x, int y) { return desert(x, y) && oasis(x, y) <= GREEN; }
 
+bool call(int x, int y, const void *f) {
+  return reinterpret_cast<bool (*)(int, int)>(const_cast<void *>(f))(x, y);
+}
+
 bool block(bool (*f)(int, int), int x, int y) {
-  if (!f(x, y))
-    return false;
-  for (int dy = -1; dy <= 0; dy++)
-    for (int dx = -1; dx <= 0; dx++)
-      if (f(x + dx, y + dy) && f(x + dx + 1, y + dy) && f(x + dx, y + dy + 1) &&
-          f(x + dx + 1, y + dy + 1))
-        return true;
-  return false;
+  return world::smoothPatch(call, reinterpret_cast<const void *>(f), x, y);
 }
 
 bool wet(int x, int y) { return block(pool, x, y); }

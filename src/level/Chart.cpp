@@ -160,7 +160,7 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
 }
 
 namespace {
-constexpr uint32_t MAGIC = 0x3143414Du;
+constexpr uint32_t MAGIC = 0x3243414Du;
 constexpr size_t PAGE_BYTES = 8 + Chart::PAGE * Chart::PAGE;
 } // namespace
 

@@ -34,7 +34,11 @@ enum : uint32_t {
   HAS_DIRT = 1 << 5,
   DIRT = 1 << 6,
   HAS_SHADE = 1 << 7,
-  HAS_CLUMP = 1 << 8
+  HAS_CLUMP = 1 << 8,
+  HAS_RAW = 1 << 9,
+  HAS_RAW_DIRT = 1 << 10,
+  RAW_DIRT = 1 << 11,
+  RAW_SHIFT = 12
 };
 struct TileMemo {
   int32_t x, y;
@@ -50,14 +54,24 @@ TileMemo *memoAt(int x, int y) {
   return m;
 }
 
-bool patchDirt(int x, int y) {
-  if (!dirtNoise(x, y, BIOMES[biomeAt(x, y)]))
-    return false;
-  return dirtNoise(x - 1, y, BIOMES[biomeAt(x - 1, y)]) ||
-         dirtNoise(x + 1, y, BIOMES[biomeAt(x + 1, y)]) ||
-         dirtNoise(x, y - 1, BIOMES[biomeAt(x, y - 1)]) ||
-         dirtNoise(x, y + 1, BIOMES[biomeAt(x, y + 1)]);
+BiomeId rawBiome(int x, int y) {
+  TileMemo *m = memoAt(x, y);
+  if (!(m->bits & HAS_RAW))
+    m->bits |= HAS_RAW | uint32_t(biomeOf(climateAt(x, y))) << RAW_SHIFT;
+  return BiomeId(m->bits >> RAW_SHIFT & BIOME_BITS);
 }
+
+bool rawDirt(int x, int y) {
+  TileMemo *m = memoAt(x, y);
+  if (!(m->bits & HAS_RAW_DIRT))
+    m->bits |= HAS_RAW_DIRT |
+               (dirtNoise(x, y, BIOMES[biomeAt(x, y)]) ? uint32_t(RAW_DIRT) : 0u);
+  return m->bits & RAW_DIRT;
+}
+
+bool rawDirtAt(int x, int y, const void *) { return rawDirt(x, y); }
+
+bool patchDirt(int x, int y) { return smoothPatch(rawDirtAt, nullptr, x, y); }
 
 // Dirt rim tile offset from a 4-bit neighbour mask (n, s, w, e): a lone side
 // picks that edge, both or neither the middle.
@@ -135,9 +149,38 @@ bool nearestStructure(double x, double y, int maxRegions, Structure &out,
 
 BiomeId biomeAt(int x, int y) {
   TileMemo *m = memoAt(x, y);
-  if (!(m->bits & HAS_BIOME))
-    m->bits |= HAS_BIOME | uint32_t(biomeOf(climateAt(x, y)));
+  if (!(m->bits & HAS_BIOME)) {
+    uint8_t votes[BIOME_COUNT]{};
+    BiomeId own = rawBiome(x, y), best = own;
+    for (int dy = -1; dy <= 1; dy++)
+      for (int dx = -1; dx <= 1; dx++) {
+        BiomeId b = rawBiome(x + dx, y + dy);
+        if (++votes[b] > votes[best] || (b == own && votes[b] == votes[best]))
+          best = b;
+      }
+    m = memoAt(x, y);
+    m->bits |= HAS_BIOME | uint32_t(best);
+  }
   return BiomeId(m->bits & BIOME_BITS);
+}
+
+bool solidCore(PatchTest test, const void *ctx, int x, int y) {
+  if (!test(x, y, ctx))
+    return false;
+  for (int dy = -1; dy <= 0; dy++)
+    for (int dx = -1; dx <= 0; dx++)
+      if (test(x + dx, y + dy, ctx) && test(x + dx + 1, y + dy, ctx) &&
+          test(x + dx, y + dy + 1, ctx) && test(x + dx + 1, y + dy + 1, ctx))
+        return true;
+  return false;
+}
+
+bool smoothPatch(PatchTest test, const void *ctx, int x, int y) {
+  if (solidCore(test, ctx, x, y))
+    return true;
+  int n = solidCore(test, ctx, x, y - 1) + solidCore(test, ctx, x, y + 1) +
+          solidCore(test, ctx, x - 1, y) + solidCore(test, ctx, x + 1, y);
+  return n >= 3;
 }
 
 bool isDirt(int x, int y) {
@@ -197,16 +240,18 @@ float groundShade(int x, int y) {
 }
 
 Color groundTint(int x, int y) {
-  // Average a plus of samples so tints fade across a few tiles instead of
-  // stepping at the border.
-  static const int OFFSETS[5][2] = {{0, 0}, {-3, 0}, {3, 0}, {0, -3}, {0, 3}};
-  Color c{0, 0, 0, 1};
-  for (int i = 0; i < 5; i++) {
-    const Color *t =
-        &BIOMES[biomeAt(x + OFFSETS[i][0], y + OFFSETS[i][1])]->tint;
-    c.r += t->r * 0.2f, c.g += t->g * 0.2f, c.b += t->b * 0.2f;
-  }
-  return c;
+  int gx = x >> 2, gy = y >> 2;
+  float fx = ((x & 3) + 0.5f) / 4, fy = ((y & 3) + 0.5f) / 4;
+  fx = fx * fx * (3 - 2 * fx), fy = fy * fy * (3 - 2 * fy);
+  const Color &a = BIOMES[biomeAt(gx * 4, gy * 4)]->tint,
+              &b = BIOMES[biomeAt(gx * 4 + 4, gy * 4)]->tint,
+              &c = BIOMES[biomeAt(gx * 4, gy * 4 + 4)]->tint,
+              &d = BIOMES[biomeAt(gx * 4 + 4, gy * 4 + 4)]->tint;
+  auto mix = [&](float Color::*k) {
+    float top = lerpf(a.*k, b.*k, fx), bottom = lerpf(c.*k, d.*k, fx);
+    return lerpf(top, bottom, fy);
+  };
+  return {mix(&Color::r), mix(&Color::g), mix(&Color::b), 1};
 }
 
 bool propAt(int x, int y, Prop &p) {
