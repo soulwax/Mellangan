@@ -66,7 +66,7 @@ class Canvas:
                 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                     n = (x + dx, y + dy)
                     if 0 <= n[0] < self.w and 0 <= n[1] < self.h and n not in self.px:
-                        p[n] = (*OUTLINE, 255)
+                        img.putpixel(n, (*OUTLINE, 255))
         return img
 
 

@@ -158,6 +158,19 @@ constexpr Sprite snowRim(int offset) {
           float(336 + (offset / 12) * 18 + 1), 16, 16};
 }
 
+constexpr Sprite expansion(int index) {
+  return {float((index % 24) * 18 + 1), float(624 + (index / 24) * 18 + 1), 16,
+          16};
+}
+constexpr Sprite biomeProp(int index) {
+  return {float((index % 24) * 18 + 1), float(660 + (index / 24) * 18 + 1), 16,
+          16};
+}
+constexpr Sprite biomeGround(int set, int cell) {
+  return {float(((set % 2) * 12 + cell) * 18 + 1),
+          float(696 + (set / 2) * 18 + 1), 16, 16};
+}
+
 constexpr Sprite Glow{0, 200, 64, 64};
 constexpr Sprite Ring{64, 200, 64, 64};
 constexpr Sprite Slash{128, 200, 24, 48};

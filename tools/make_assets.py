@@ -15,6 +15,7 @@ from make_frontier import add_frontier
 from make_grounds import add_grounds
 from make_sprites import add_sprites
 from make_winter import add_winter_band
+from atlas_layout import extend, validate
 
 TILE = 16
 CELL = 18  # 1px transparent gutter on each side of every tile, prevents bleeding
@@ -201,7 +202,10 @@ def main():
     for im, pos in fx:
         atlas.paste(im, pos)
 
-    atlas = add_frontier(add_grounds(add_sprites(add_desert(add_flora_band(add_winter_band(atlas))))))
+    atlas = extend(add_frontier(add_grounds(add_sprites(add_desert(add_flora_band(add_winter_band(atlas)))))))
+    errors = validate(atlas)
+    if errors:
+        raise RuntimeError("invalid atlas layout:\n" + "\n".join(errors))
     out = Path(__file__).resolve().parent.parent / "res" / "atlas.png"
     atlas.save(out)
     print(f"wrote {out}")

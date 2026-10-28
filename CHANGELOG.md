@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Reserved and validated fixed 16 x 16 atlas bands for the planned monsters, biomes, classes, weapons, relics, and effects.
+
 ## [0.4.4] - 2026-10-28
 
 ### Added
