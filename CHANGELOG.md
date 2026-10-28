@@ -16,6 +16,11 @@ All notable changes to Mellangan are documented here. The format follows
   four-tile lattice instead of stepping.
 - Worlds are shaped differently as a result, so saved map charts from earlier versions are discarded once.
 
+### Fixed
+
+- Enemies no longer stop dropping gems once 450 lie uncollected on the map: the cap that silently merged new drops
+  into a gem far away is gone. Uncollected gems more than 300 tiles from the player are cleared instead.
+
 ## [0.4.1] - 2026-10-28
 
 ### Changed

@@ -7,10 +7,6 @@
 #include "particle/Spark.hpp"
 
 void Gem::drop(Level &level, double x, double y, float value) {
-  if (level.count<Gem>() > 450) {
-    if (Gem *g = level.any<Gem>())
-      return void(g->value += value);
-  }
   level.add<Gem>(x, y, value);
 }
 
@@ -21,6 +17,9 @@ void Gem::tick() {
   y += ya * DT;
   double k = std::exp(-5 * DT);
   xa *= k, ya *= k;
+  const Player &p = *level->player;
+  if (!magnet && (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) > 4800.0 * 4800)
+    return remove();
   Pickup::tick();
 }
 
