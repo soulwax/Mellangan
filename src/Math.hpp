@@ -15,7 +15,7 @@ inline float clampf(float v, float lo, float hi) {
 inline float damp(float rate, float dt) { return 1.0f - std::exp(-rate * dt); }
 
 struct Rng {
-  uint64_t state = 0x9E3779B97F4A7C15ull;
+  uint64_t state = 0x9E3779B97F4A7C15ull ^ (uint64_t)(uintptr_t)&state;
 
   uint32_t next() {
     state ^= state << 13;
@@ -31,7 +31,7 @@ struct Rng {
   bool chance(float p) { return unit() < p; }
 };
 
-inline Rng rng;
+inline thread_local Rng rng;
 
 extern "C" uint32_t noise_salt;
 
