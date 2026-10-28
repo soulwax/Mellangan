@@ -277,7 +277,7 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
     xd = yd = 0;
   bool crit = rng.chance(0.08f + level->player->luck);
   if (crit)
-    damage *= 1.8f;
+    damage *= level->player->hero ? level->player->hero->edge() : 1.8f;
   if (source)
     source->dealt += std::min(damage, std::max(hp, 0.0f));
   hp -= damage;

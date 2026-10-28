@@ -47,6 +47,7 @@ void Player::tick() {
   if (xd != 0 || yd != 0)
     xAim = xd, yAim = yd;
   invuln = std::max(0.0f, invuln - DT);
+  skillTime = std::max(0.0f, skillTime - DT);
   if (hero)
     hero->tick(*this);
   hp = std::min(maxHp, hp + regen * DT);
@@ -113,6 +114,13 @@ void Player::hurt(float damage) {
   hp = 0;
   Spark::burst(*level, x, bodyY(), {0.7f, 0.4f, 1, 1}, 40, 120, true);
   level->game.onPlayerDied();
+}
+
+void Player::cast() {
+  if (!hero || dead() || skillTime > 0)
+    return;
+  hero->cast(*this);
+  skillTime = hero->cooldown * haste;
 }
 
 void Player::rise() {

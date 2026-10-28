@@ -19,7 +19,7 @@ public:
   bool weapon, rare = false, evolved = false;
   int level = 0;
   float dealt = 0, power = 1, pace = 1;
-  const char *partner = nullptr, *evolvedName = nullptr;
+  const char *partner = nullptr, *evolvedName = nullptr, *owner = nullptr;
 
   Upgrade(const char *name, Sprite icon,
           std::array<const char *, MAX_LEVEL> desc, bool weapon)

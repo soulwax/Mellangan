@@ -2,9 +2,12 @@
 
 #include <spdlog/spdlog.h>
 
+#include <cstring>
+
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
 #include "menu/Menu.hpp"
 
@@ -22,12 +25,25 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
     if (u->rare && !u->maxed())
       relics.push_back(u.get());
     else if (!u->rare && !u->maxed() &&
-             (u->level > 0 || owned[u->weapon] < Upgrade::SLOTS))
+             (u->level > 0 || owned[u->weapon] < Upgrade::SLOTS) &&
+             (!u->owner || (p.hero && std::strcmp(u->owner, p.hero->name) == 0)))
       choices.push_back(u.get());
-  for (size_t i = choices.size(); i > 1; i--)
-    std::swap(choices[i - 1], choices[rng.irange(0, int(i) - 1)]);
-  if (choices.size() > 3)
-    choices.resize(3);
+  std::vector<Upgrade *> pool;
+  pool.swap(choices);
+  auto weight = [&](const Upgrade *u) {
+    return u->owner ? 4 : p.hero && p.hero->favours(u->name) ? 2 : 1;
+  };
+  while (!pool.empty() && choices.size() < 3) {
+    int total = 0;
+    for (Upgrade *u : pool)
+      total += weight(u);
+    int r = rng.irange(0, total - 1);
+    size_t k = 0;
+    while ((r -= weight(pool[k])) >= 0)
+      k++;
+    choices.push_back(pool[k]);
+    pool.erase(pool.begin() + long(k));
+  }
   if (choices.empty())
     choices.push_back(nullptr);
   std::vector<Upgrade *> ready;
@@ -106,6 +122,7 @@ void LevelUpMenu::choose(int i) {
 }
 
 void LevelUpMenu::render(Screen &s) {
+  const Player &p = *game.level->player;
   float u = s.u, small = std::max(1.0f, u - 1);
   auto r = cards();
   s.rect(0, 0, s.w, s.h, {0, 0, 0, 0.55f});
@@ -119,6 +136,8 @@ void LevelUpMenu::render(Screen &s) {
     bool sel = i == selected;
     Upgrade *up = choices[i];
     bool evolving = i == evolveSlot;
+    bool kin = up && up->owner && p.hero;
+    Color tint = kin ? p.hero->tint : col::gold;
     bool rare = up && (up->rare || evolving);
     float shine = 0.5f + 0.5f * std::sin(t * 4);
 
@@ -142,15 +161,23 @@ void LevelUpMenu::render(Screen &s) {
                        : up        ? up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)]
                                    : "Restore 40 health";
     s.text(evolving ? up->evolvedName : up ? up->name : "Roast Feast", tx,
-           y + 5 * u, u, (evolving ? col::xp : rare ? col::gold : col::white).alpha(in));
+           y + 5 * u, u,
+           (evolving ? col::xp
+            : rare   ? col::gold
+            : kin    ? tint
+                     : col::white)
+               .alpha(in));
     s.text(desc, tx, y + 20 * u, small, col::muted.alpha(in));
     if (up) {
       std::string tag = evolving        ? "EVOLVE"
                         : rare            ? "RELIC"
+                        : kin && up->level == 0 ? std::string(p.hero->name)
                         : up->level == 0 ? "NEW!"
                                          : fmt::format("Lv {}", up->level + 1);
       s.text(tag, x + w - Screen::textWidth(tag, small) - 6 * u, y + 5 * u,
-             small, (rare || up->level == 0 ? col::gold : col::muted).alpha(in));
+             small,
+             (kin ? tint : rare || up->level == 0 ? col::gold : col::muted)
+                 .alpha(in));
     }
   }
   const SDL_FRect &last = r[choices.size() - 1];

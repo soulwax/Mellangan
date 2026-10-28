@@ -5,6 +5,14 @@
 #include "entity/Player.hpp"
 #include "item/Passive.hpp"
 #include "item/relic/Relic.hpp"
+#include "item/weapon/FrostNova.hpp"
+#include "item/weapon/Radiance.hpp"
+#include "item/weapon/WhirlingEdge.hpp"
+#include "item/weapon/PiercingShot.hpp"
+#include "item/weapon/Judgement.hpp"
+#include "item/weapon/AcidFlask.hpp"
+#include "item/weapon/ChainLightning.hpp"
+#include "item/weapon/WraithBolts.hpp"
 #include "item/relic/SunfireCrown.hpp"
 #include "item/relic/TempestEye.hpp"
 #include "item/weapon/AxeThrow.hpp"
@@ -70,6 +78,35 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
           "Regenerate 0.3 health/second", &Player::regen, 0.3f);
   passive("Lucky Key", atlas::town(tt::Key), "+4% critical hit chance",
           &Player::luck, 0.04f);
+  u.push_back(std::make_unique<FrostNova>());
+  u.push_back(std::make_unique<PiercingShot>());
+  u.push_back(std::make_unique<Judgement>());
+  u.push_back(std::make_unique<AcidFlask>());
+  u.push_back(std::make_unique<ChainLightning>());
+  u.push_back(std::make_unique<WraithBolts>());
+  u.push_back(std::make_unique<Radiance>());
+  u.push_back(std::make_unique<WhirlingEdge>());
+  auto kin = [&](const char *owner, const char *name, Sprite icon,
+                 const char *desc, float Player::*stat, float amount) {
+    passive(name, icon, desc, stat, amount);
+    u.back()->owner = owner;
+  };
+  kin("MAGE", "Arcane Mind", atlas::tile(128), "-6% weapon cooldowns",
+      &Player::haste, -0.06f);
+  kin("RANGER", "Fleet Foot", atlas::kit(kt::Fern), "+8% movement speed",
+      &Player::speed, 6);
+  kin("KNIGHT", "Oathbound", atlas::tile(74), "+25 max health",
+      &Player::maxHp, 25);
+  kin("ALCHEMIST", "Distillation", atlas::kit(kt::Glowshrooms),
+      "Regenerate 0.4 health/second", &Player::regen, 0.4f);
+  kin("STORMCALLER", "Conduit", atlas::kit(kt::Lavender),
+      "+5% critical hit chance", &Player::luck, 0.05f);
+  kin("REAPER", "Bloodlust", atlas::kit(kt::Roses), "+8% damage",
+      &Player::might, 0.08f);
+  kin("PRIESTESS", "Grace", atlas::kit(kt::CallaLilies),
+      "Take 0.5 less damage per hit", &Player::armor, 0.5f);
+  kin("DUELIST", "Keen Eye", atlas::kit(kt::Snowdrops),
+      "+5% critical hit chance", &Player::luck, 0.05f);
   for (auto &w : u)
     for (auto &e : EVOLUTIONS)
       if (std::strcmp(w->name, e[0]) == 0)

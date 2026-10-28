@@ -73,6 +73,7 @@ void Night::kindle() {
   kindling = 0;
   if (lit < MAX_LIT)
     shrines[lit++] = current;
+  level.game.codex.shrines++;
   level.litBiomes |= 1u << world::biomeAt(current.x + current.w / 2,
                                           current.y + current.h / 2);
   double x = current.centerX(), y = current.centerY();

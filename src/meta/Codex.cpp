@@ -34,6 +34,7 @@ void Codex::load(const std::string &path) {
   for (int &k : entered)
     if (std::sscanf(at, "%d%n", &k, &used) == 1)
       at += used;
+  std::sscanf(at, "%d", &shrines);
 }
 
 void Codex::save(const std::string &path) const {
@@ -44,6 +45,6 @@ void Codex::save(const std::string &path) const {
   out += "\n";
   for (int k : entered)
     out += fmt::format("{} ", k);
-  out += "\n";
+  out += fmt::format("\n{}\n", shrines);
   SDL_SaveFile(path.c_str(), out.data(), out.size());
 }

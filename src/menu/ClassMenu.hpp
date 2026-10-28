@@ -14,6 +14,7 @@ public:
 
 private:
   int pick = 0;
+  float since = 0;
   float grow[HERO_COUNT]{};
 
   SDL_FRect slot(int i) const;

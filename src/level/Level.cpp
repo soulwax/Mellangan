@@ -11,6 +11,7 @@
 #include "entity/Player.hpp"
 #include "level/Encounter.hpp"
 #include "level/Flavour.hpp"
+#include "hero/Hero.hpp"
 #include "entity/pickup/Chest.hpp"
 
 namespace {
@@ -194,7 +195,7 @@ void Level::climate() {
   pace = f.foes * (o ? o->foes : 1);
   xpMul = f.xp * (o ? o->xp : 1);
   eliteMul = o ? o->elite : 1;
-  kindleRate = o ? o->kindle : 1;
+  kindleRate = (o ? o->kindle : 1) * (player->hero ? player->hero->devotion() : 1);
   if (streak > 0 && (streakTime -= DT) <= 0)
     streak = 0;
   if (player->dead())

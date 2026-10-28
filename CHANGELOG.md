@@ -13,6 +13,18 @@ All notable changes to Mellangan are documented here. The format follows
   (a bulwark halves one blow every 6 seconds), Alchemist (fallen foes may leave potions), Stormcaller (every 20th kill
   calls lightning) and Reaper (every kill mends health) each have their own sprite and stats, and unlock through the
   old starting-weapon milestones. Locked classes stand in shadow with their requirement.
+- Class kits: every class has a signature skill on Space with a cooldown shown on the HUD (Mage Blink, Ranger
+  Volley, Knight Rally, Alchemist Elixir, Stormcaller Thunderclap, Reaper Death's Embrace), two class-only upgrades
+  in its level-ups (Frost Nova and Arcane Mind; Piercing Shot and Fleet Foot; Judgement and Oathbound; Acid Flask and
+  Distillation; Chain Lightning and Conduit; Wraith Bolts and Bloodlust), and three favoured staples it is offered
+  more often. Class upgrades and the class screen wear the class colour.
+- Two heroines join the Alchemist: the Priestess (shrines kindle 30% faster; Sanctuary heals and drives foes back;
+  Radiance and Grace; unlocked by kindling 10 shrines) and the Duelist (critical hits strike far harder; Dance of
+  Blades dashes and cuts both ways; Whirling Edge and Keen Eye; unlocked by surviving 10 minutes). The codex now
+  counts shrines kindled.
+- The class screen comes alive: a near-opaque backdrop with a vignette, a compact panel with the class's strengths
+  and weaknesses as tinted chips, and the chosen hero in an attack stance (wind-up, lunge, weapon swing) inside a
+  pulsing aura, with spinning rune circles, rising motes and a spell burst at the strike.
 
 ### Changed
 

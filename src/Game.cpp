@@ -6,6 +6,7 @@
 #include <cstdio>
 
 #include "audio/Sound.hpp"
+#include "hero/Hero.hpp"
 #include "level/Flavour.hpp"
 #include "level/Noise.h"
 #include "entity/Player.hpp"
@@ -117,6 +118,8 @@ void Game::tick() {
     Sound::select.play(0.5f, 0);
     setMenu(std::make_unique<MapMenu>(*this));
   } else {
+    if (input.confirm.clicked)
+      level->player->cast();
     level->tick();
     if (!menuChanged && level->player->pendingLevels > 0)
       setMenu(std::make_unique<LevelUpMenu>(*this));
@@ -473,6 +476,22 @@ void Game::renderHud() {
   }
 
   float hw = 80 * u, hy = s.h - 12 * u;
+  if (const Hero *h = p.hero) {
+    float box = 22 * u, bx = 4 * u, by = hy - box - 8 * u;
+    float wait = p.skillTime / std::max(0.01f, h->cooldown * p.haste);
+    s.rect(bx, by, box, box, col::panel);
+    s.sprite(atlas::tile(h->tile), bx + 3 * u, by + 3 * u, 0, 0, u, u);
+    if (wait > 0)
+      s.rect(bx, by, box, box * wait, {0.02f, 0.02f, 0.05f, 0.7f});
+    s.frame(bx, by, box, box, u,
+            wait > 0 ? col::muted.alpha(0.4f) : h->tint.alpha(0.9f));
+    s.text(h->skill, bx + box + 5 * u, by + 2 * u, small,
+           wait > 0 ? col::muted : h->tint);
+    s.text(wait > 0 ? fmt::format("{:.0f}s", std::ceil(p.skillTime))
+                    : std::string("SPACE"),
+           bx + box + 5 * u, by + 2 * u + 16 * small, small,
+           col::muted * 0.8f);
+  }
   s.rect(4 * u, hy, hw, 6 * u, col::panel);
   s.rect(5 * u, hy + u, (hw - 2 * u) * clampf(p.hp / p.maxHp, 0, 1), 4 * u,
          col::red);

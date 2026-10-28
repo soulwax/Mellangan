@@ -20,7 +20,7 @@ public:
         luck = 0;
   bool god = false;
   int tile = atlas::t::Wizard, heroCount = 0;
-  float heroTimer = 0;
+  float heroTimer = 0, skillTime = 0;
   const Hero *hero = nullptr;
   std::vector<std::unique_ptr<Upgrade>> upgrades;
 
@@ -35,6 +35,7 @@ public:
 
   void hurt(float damage);
   void rise();
+  void cast();
   void heal(float amount);
   void gainXp(float amount);
   bool dead() const { return hp <= 0; }
