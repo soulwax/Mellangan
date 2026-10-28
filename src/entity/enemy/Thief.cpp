@@ -12,7 +12,6 @@ void Thief::render(Screen &s) {
   if (const Goal *g = goals.front()) {
     float t = g->tell(*this);
     if (t > 0) {
-      // swirl, escape portal
       s.color(Color{0.4f, 0.9f, 1.0f, t * 0.75f});
       s.center(atlas::Ring, xp, yp - 4, 24.0f / atlas::Ring.w, animT * 5.0f);
       s.color(Color{1.0f, 0.85f, 0.3f, t * 0.65f});

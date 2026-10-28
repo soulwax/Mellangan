@@ -22,12 +22,12 @@ void ChakramDisc::tick() {
 
   if (age > 0.35f) {
     if (age - DT <= 0.35f)
-      hits.clear(); // enable re-hitting enemies on the return path
+      hits.clear();
     if (d > 1e-3) {
       xa += (toX / d) * 780 * DT;
       ya += (toY / d) * 780 * DT;
     }
-    if (d < 16 && age > 0.5f)
+    if (d < 20 && age > 0.45f)
       return remove();
   }
   x += xa * DT;

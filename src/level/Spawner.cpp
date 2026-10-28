@@ -78,8 +78,8 @@ void Spawner::spawn(EnemyKind kind, double x, double y, bool aware) {
   if (kind != EnemyKind::Cyclops && level.time > 60 &&
       rng.chance((0.03f + level.time / 6000) * level.eliteMul))
     e->makeElite();
-  entt::entity alphaId = e->id;
-  level.add(std::move(e));
+  Entity *added = level.add(std::move(e));
+  entt::entity alphaId = added->id;
 
   if (kind == EnemyKind::Alpha) {
     int packSize = rng.irange(2, 4);

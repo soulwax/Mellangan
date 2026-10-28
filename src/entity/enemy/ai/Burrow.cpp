@@ -18,15 +18,22 @@ void Burrow::start(Enemy &e, const Sense &s) const {
 GoalState Burrow::tick(Enemy &e, const Sense &s, double &xs, double &ys) const {
   e.aware = true;
   if (e.buried) {
-    if (e.goalTime < travel && s.dist > 30) {
-      double spd = e.type.speed * 1.35;
-      xs = s.xn * spd;
-      ys = s.yn * spd;
-      e.xMark = e.x + s.xd;
-      e.yMark = e.y + s.yd;
-      if (e.level->ticks % 5 == 0 && Debris::room())
-        e.level->add<SmokeDebris>(e.x, e.y, 1);
-      return GoalState::Running;
+    if (e.goalTime < travel) {
+      if (s.dist <= 30) {
+        e.goalTime = travel;
+        Player &p = *e.level->player;
+        e.xMark = p.x;
+        e.yMark = p.bodyY();
+      } else {
+        double spd = e.type.speed * 1.35;
+        xs = s.xn * spd;
+        ys = s.yn * spd;
+        e.xMark = e.x + s.xd;
+        e.yMark = e.y + s.yd;
+        if (e.level->ticks % 5 == 0 && Debris::room())
+          e.level->add<SmokeDebris>(e.x, e.y, 1);
+        return GoalState::Running;
+      }
     }
     xs = ys = 0;
     if (e.goalTime >= travel + warn) {
@@ -46,10 +53,8 @@ GoalState Burrow::tick(Enemy &e, const Sense &s, double &xs, double &ys) const {
     return GoalState::Running;
   }
 
-  if (e.goalTime >= travel + warn + surface) {
-    e.buried = true;
+  if (e.goalTime >= travel + warn + surface)
     return GoalState::Done;
-  }
   xs = s.xn * e.type.speed * 0.4;
   ys = s.yn * e.type.speed * 0.4;
   return GoalState::Running;

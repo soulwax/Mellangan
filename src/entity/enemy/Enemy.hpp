@@ -63,7 +63,7 @@ public:
   }
   void renderLight(Screen &s) override;
   void hurt(float damage, double xd, double yd, float force,
-            Upgrade *source = nullptr);
+            Upgrade *src = nullptr);
   const char *name() const;
   int kind() const;
   bool is(EnemyKind k) const { return kind() == int(k); }

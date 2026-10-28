@@ -11,13 +11,11 @@ GoalState Escape::tick(Enemy &e, const Sense &s, double &xs, double &ys) const {
   e.aware = true;
   e.age += DT;
 
-  // run away from player
   double spd = e.type.speed;
   double weave = std::sin(e.animT * 9) * 22;
   xs = -s.xn * spd + s.yn * weave;
   ys = -s.yn * spd - s.xn * weave;
 
-  // leve a spark trail
   if (e.level->ticks % 6 == 0)
     Spark::burst(*e.level, e.x, e.bodyY(), col::gold, 2, 20, false);
 
@@ -27,7 +25,6 @@ GoalState Escape::tick(Enemy &e, const Sense &s, double &xs, double &ys) const {
   }
 
   if (e.age >= duration) {
-    // Escaped into portal
     Sound::nova.play(0.45f, 0.4f);
     Spark::burst(*e.level, e.x, e.bodyY(), col::gold, 30, 120, true);
     e.remove();

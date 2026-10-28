@@ -5,14 +5,13 @@
 #include "level/Level.hpp"
 #include "particle/Spark.hpp"
 
-GoalState Howl::tick(Enemy &e, const Sense &s, double &xs, double &ys) const {
+GoalState Howl::tick(Enemy &e, const Sense &, double &xs, double &ys) const {
   if (e.cooldown > 0)
     return GoalState::Done;
   xs = ys = 0;
   if (e.goalTime < windup)
     return GoalState::Running;
 
-  // The alpha howls!
   Sound::horde.play(0.45f, 0.35f);
   Spark::burst(*e.level, e.x, e.bodyY(), col::gold, 16, 75, true);
   e.frenzy = 6.0f;

@@ -16,7 +16,6 @@ void AlphaWolf::renderLight(Screen &s) {
 void AlphaWolf::die() {
   Enemy::die();
   Sound::horde.play(0.4f, 0.3f);
-  // scatter when alpha falls
   level->enemiesNear(x, y, 320, [](Enemy &o) {
     if (o.is(EnemyKind::Wolf)) {
       o.faltered = true;

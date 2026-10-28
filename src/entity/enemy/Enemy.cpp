@@ -312,7 +312,7 @@ const char *Enemy::name() const {
 int Enemy::kind() const { return int(&type - TYPES); }
 
 void Enemy::hurt(float damage, double xd, double yd, float force,
-                 Upgrade *source) {
+                 Upgrade *src) {
   if (removed)
     return;
   double dd = std::sqrt(xd * xd + yd * yd);
@@ -323,8 +323,8 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   bool crit = rng.chance(0.08f + level->player->luck);
   if (crit)
     damage *= level->player->hero ? level->player->hero->edge() : 1.8f;
-  if (source)
-    source->dealt += std::min(damage, std::max(hp, 0.0f));
+  if (src)
+    src->dealt += std::min(damage, std::max(hp, 0.0f));
   hp -= damage;
   flash = 0.1f;
   aware = true;

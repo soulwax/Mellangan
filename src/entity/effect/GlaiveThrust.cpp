@@ -31,7 +31,6 @@ void GlaiveThrust::tick() {
     level->enemiesNear((sx + ex) * 0.5, (sy + ey) * 0.5, reach * 0.6f + 16, [&](Enemy &e) {
       if (std::find(hits.begin(), hits.end(), e.id) != hits.end())
         return;
-      // Distance from point e to segment (sx, sy)-(ex, ey)
       double vx = ex - sx, vy = ey - sy;
       double wx = e.x - sx, wy = e.bodyY() - sy;
       double c1 = wx * vx + wy * vy;
@@ -68,5 +67,10 @@ void GlaiveThrust::render(Screen &s) {
 
 void GlaiveThrust::renderLight(Screen &s) {
   s.glow(xp, yp, 45, {0.25f, 0.2f, 0.1f, 1});
+  if (doubleEnded) {
+    float ext = std::sin(std::min(t, 1.0f) * PI) * reach;
+    s.glow(player.x - dx * ext * 0.85, player.bodyY() - dy * ext * 0.85, 38,
+           {0.25f, 0.2f, 0.1f, 1});
+  }
 }
 

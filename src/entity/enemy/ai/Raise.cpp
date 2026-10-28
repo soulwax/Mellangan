@@ -14,7 +14,6 @@ GoalState Raise::tick(Enemy &e, const Sense &, double &xs, double &ys) const {
   if (e.goalTime < windup)
     return GoalState::Running;
 
-  // raise 2 skellymen near the mancer
   Sound::orb.play(0.4f, -0.2f);
   for (int i = 0; i < 2; i++) {
     double a = e.roll() * 6.2831853;

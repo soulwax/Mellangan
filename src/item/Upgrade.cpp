@@ -61,7 +61,7 @@ const char *const EVOLUTIONS[][3] = {
     {"Reaper's Scythe", "Ogre Hammer", "Harvest Moon"},
     {"Chakram", "Quicksilver", "Moon Chakram"},
     {"Glaive", "Iron Buckler", "Dragonslayer Glaive"},
-    {"Censer", "Troll Blood", "Sanctified Thurible"}};
+    {"Censer", "Heartroot", "Sanctified Thurible"}};
 
 void phoenix(Player &p) { p.revives++; }
 void grove(Player &p) { p.maxHp += 60, p.hp += 60, p.regen += 1.5f; }

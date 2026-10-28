@@ -4,7 +4,10 @@
 
 class Burrower : public Enemy {
 public:
-  using Enemy::Enemy;
+  Burrower(const EnemyType &type, float hpMul, float damageMul)
+      : Enemy(type, hpMul, damageMul) {
+    buried = true;
+  }
   void render(Screen &s) override;
   void renderShadow(Screen &s) override;
   void renderLight(Screen &s) override;

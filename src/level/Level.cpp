@@ -65,6 +65,7 @@ SpriteObject *Level::spawn(std::unique_ptr<SpriteObject> p) {
 
 Entity *Level::add(std::unique_ptr<Entity> e) {
   e->level = this;
+  e->id = reg.create();
   pending.push_back(std::move(e));
   return pending.back().get();
 }
@@ -74,11 +75,13 @@ void Level::flush() {
   dead.clear();
 
   for (size_t i = 0; i < pending.size(); i++) {
-    if (pending[i]->removed)
+    if (pending[i]->removed) {
+      if (reg.valid(pending[i]->id))
+        reg.destroy(pending[i]->id);
       continue;
+    }
     std::unique_ptr<Entity> e = std::move(pending[i]);
     Entity *raw = e.get();
-    raw->id = reg.create();
     reg.emplace<Owned>(raw->id, std::move(e));
     raw->onAdded();
   }
