@@ -15,6 +15,13 @@ All notable changes to Mellangan are documented here. The format follows
   - Right-anchored tier progression tags and hero class labels beside shortcut badges for clean visual breathing room.
   - Enhanced procedural category symbol badges with proportional spacing.
 
+### Fixed
+
+- Refined level-up card proportions and typography layout:
+  - Relaxed card dimensions and line spacing to resolve text squashing between titles and descriptions.
+  - Right-anchored tier progression tags and hero class labels beside shortcut badges for clean visual breathing room.
+  - Enhanced procedural category symbol badges with proportional spacing.
+
 ## [0.4.7] - 2026-10-29
 
 ### Added
