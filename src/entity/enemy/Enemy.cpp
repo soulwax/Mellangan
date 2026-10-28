@@ -87,7 +87,9 @@ float Enemy::roll() {
 
 Sense Enemy::sense() const {
   const Player &p = *level->player;
-  Sense s{p.x - x, p.y - y, 0, 0, 0, false};
+  double rx = p.x - x, ry = p.y - y, raw = std::sqrt(rx * rx + ry * ry);
+  double lead = std::min(0.7, raw / std::max(20.0, double(type.speed))) * 0.6;
+  Sense s{rx + p.xa * lead, ry + p.ya * lead, 0, 0, 0, false};
   s.dist = std::sqrt(s.xd * s.xd + s.yd * s.yd);
   if (s.dist > 0.001)
     s.xn = s.xd / s.dist, s.yn = s.yd / s.dist;
@@ -147,7 +149,9 @@ void Enemy::act() {
   wantsFire = false;
   Player &p = *level->player;
   double xd = p.x - x, yd = p.bodyY() - bodyY(),
-         dd = std::sqrt(xd * xd + yd * yd);
+         dd = std::sqrt(xd * xd + yd * yd), lead = dd / 70 * 0.7;
+  xd += p.xa * lead, yd += p.ya * lead;
+  dd = std::sqrt(xd * xd + yd * yd);
   if (p.dead() || dd < 1e-5)
     return;
   level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul)
@@ -283,6 +287,10 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   hp -= damage;
   flash = 0.1f;
   aware = true;
+  if (!alarmed) {
+    alarmed = true;
+    level->enemiesNear(x, y, 90, [](Enemy &o) { o.aware = true; });
+  }
   float f = force * type.knockResist * (elite ? 0.5f : 1.0f);
   xa += xd * f;
   ya += yd * f;
@@ -300,8 +308,12 @@ void Enemy::die() {
   level->streak++, level->streakTime = 2.5f;
   level->bestStreak = std::max(level->bestStreak, level->streak);
   level->game.codex.slain[kind()]++;
-  if (Player *p = level->player; p->hero)
+  if (Player *p = level->player; p->hero) {
     p->hero->slay(*p, *this);
+    for (auto &up : p->upgrades)
+      if (up->level > 0)
+        up->slay(*p, *this);
+  }
   Sound::kill.play(0.35f, 0.12f);
   Gem::drop(*level, x, y - 3,
             type.xp * (elite ? ELITE_XP : 1) * level->xpMul *

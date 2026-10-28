@@ -38,7 +38,8 @@ public:
          side = 1;
   entt::entity leader = entt::null;
   uint32_t seed;
-  bool aware = true, wantsFire = false, wantsLeader = false;
+  bool aware = true, wantsFire = false, wantsLeader = false, faltered = false,
+       alarmed = false;
 
   Enemy(const EnemyType &type, float hpMul, float damageMul);
   static const EnemyType &typeOf(EnemyKind kind);

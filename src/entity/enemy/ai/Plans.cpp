@@ -1,6 +1,7 @@
 #include "entity/enemy/ai/Plans.hpp"
 
 #include "entity/enemy/ai/Approach.hpp"
+#include "entity/enemy/ai/Falter.hpp"
 #include "entity/enemy/ai/Follow.hpp"
 #include "entity/enemy/ai/Hide.hpp"
 #include "entity/enemy/ai/LookOut.hpp"
@@ -29,17 +30,18 @@ const Melee BITE{0.25f, 0.22f, 3.0, 1.2f};
 const Melee CLEAVE{0.4f, 0.25f, 3.4, 1.6f};
 const Melee SLAM{0.6f, 0.3f, 3.2, 2.4f};
 const Ranged CAST{150, 210};
+const Falter FALTER{0.3f};
 
 const Plan PLANS[] = {
     {{&FLUTTER}, {}},
-    {{&PACK, &CHARGE}, {}},
+    {{&PACK, &CHARGE}, {&FALTER}},
     {{&WATCH, &OOZE}, {}},
-    {{&SCUTTLE, &NIP}, {}},
-    {{&STALK, &CLOSE, &BITE}, {}},
+    {{&SCUTTLE, &NIP}, {&FALTER}},
+    {{&STALK, &CLOSE, &BITE}, {&FALTER}},
     {{&OOZE}, {&HIDE}},
-    {{&CASTING_RANGE, &CAST}, {}},
-    {{&MARCH, &CLEAVE}, {}},
-    {{&GUARD, &MARCH, &CLEAVE}, {}},
+    {{&CASTING_RANGE, &CAST}, {&FALTER}},
+    {{&MARCH, &CLEAVE}, {&FALTER}},
+    {{&GUARD, &MARCH, &CLEAVE}, {&FALTER}},
     {{&LUMBER, &SLAM}, {}},
 };
 

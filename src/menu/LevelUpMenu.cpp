@@ -31,7 +31,7 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
   std::vector<Upgrade *> pool;
   pool.swap(choices);
   auto weight = [&](const Upgrade *u) {
-    return u->owner ? 4 : p.hero && p.hero->favours(u->name) ? 2 : 1;
+    return u->owner ? 3 : p.hero && p.hero->favours(u->name) ? 2 : 1;
   };
   while (!pool.empty() && choices.size() < 3) {
     int total = 0;

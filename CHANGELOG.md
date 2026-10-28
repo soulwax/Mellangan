@@ -8,8 +8,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
-- Classes: a class screen after the title shows six heroes on pedestals, the chosen one lit and raised, with its
-  signature weapon, trait and stat bars beside it. The Mage (+15% experience), Ranger (dodges 15% of blows), Knight
+- Classes: a class screen after the title shows eight heroes on pedestals, the chosen one lit and raised, with its
+  signature weapon, trait, skill and strengths beside it. The Mage (+15% experience), Ranger (dodges 15% of blows), Knight
   (a bulwark halves one blow every 6 seconds), Alchemist (fallen foes may leave potions), Stormcaller (every 20th kill
   calls lightning) and Reaper (every kill mends health) each have their own sprite and stats, and unlock through the
   old starting-weapon milestones. Locked classes stand in shadow with their requirement.
@@ -30,6 +30,24 @@ All notable changes to Mellangan are documented here. The format follows
 
 - Each class is a `Hero` subclass in `src/hero/`, overriding only the hooks that make it different (equip, tick,
   guard, wisdom, slay). The starting-weapon row on the title panel is gone.
+
+- Deeper class kits: each class gains a second ability and a talent that hooks into its play. Mage: Meteor and
+  Echoing Blink (Blink detonates and recharges faster). Ranger: Scattershot and Second Wind (kills may reset Volley).
+  Knight: Crusader Strike and Retribution (blows against you strike back). Alchemist: Transmute (foes turned to gold
+  drop rich gems) and Volatile Mix (fallen foes may explode). Stormcaller: Static Field and Overcharge (Thunderclap
+  calls more bolts). Reaper: Soul Siphon and Harvest (kills shorten Death's Embrace). Priestess: Aegis and Beacon
+  (Sanctuary heals and burns more). Duelist: Flurry and Riposte (parry and cut back). Upgrades can now react to
+  kills, incoming blows and the class skill.
+- Smarter monsters: they lead their chase towards where you are heading, fan out instead of trailing in one line,
+  cultists aim their orbs ahead of you, a wounded foe wakes its neighbours, and most foes break off to regroup once
+  when badly hurt.
+
+### Fixed
+
+- Passive upgrades (Heartroot, Ogre Hammer, Hourglass Tonic and the rest, and the class passives) could apply no
+  bonus at all, or scramble a stat, in Windows builds: MSVC laid out their stat pointer differently depending on
+  whether the player type was complete, so two parts of the game disagreed about where the bonus was stored.
+
 
 ## [0.3.1] - 2026-10-28
 

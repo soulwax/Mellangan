@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
 
 class Passive : public Upgrade {

@@ -5,6 +5,22 @@
 #include "entity/Player.hpp"
 #include "item/Passive.hpp"
 #include "item/relic/Relic.hpp"
+#include "item/weapon/Meteor.hpp"
+#include "item/weapon/Scattershot.hpp"
+#include "item/weapon/CrusaderStrike.hpp"
+#include "item/weapon/Transmute.hpp"
+#include "item/weapon/StaticField.hpp"
+#include "item/weapon/SoulSiphon.hpp"
+#include "item/weapon/Aegis.hpp"
+#include "item/weapon/Flurry.hpp"
+#include "item/talent/EchoingBlink.hpp"
+#include "item/talent/SecondWind.hpp"
+#include "item/talent/Retribution.hpp"
+#include "item/talent/VolatileMix.hpp"
+#include "item/talent/Overcharge.hpp"
+#include "item/talent/Harvest.hpp"
+#include "item/talent/Beacon.hpp"
+#include "item/talent/Riposte.hpp"
 #include "item/weapon/FrostNova.hpp"
 #include "item/weapon/Radiance.hpp"
 #include "item/weapon/WhirlingEdge.hpp"
@@ -86,6 +102,22 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   u.push_back(std::make_unique<WraithBolts>());
   u.push_back(std::make_unique<Radiance>());
   u.push_back(std::make_unique<WhirlingEdge>());
+  u.push_back(std::make_unique<Meteor>());
+  u.push_back(std::make_unique<Scattershot>());
+  u.push_back(std::make_unique<CrusaderStrike>());
+  u.push_back(std::make_unique<Transmute>());
+  u.push_back(std::make_unique<StaticField>());
+  u.push_back(std::make_unique<SoulSiphon>());
+  u.push_back(std::make_unique<Aegis>());
+  u.push_back(std::make_unique<Flurry>());
+  u.push_back(std::make_unique<EchoingBlink>());
+  u.push_back(std::make_unique<SecondWind>());
+  u.push_back(std::make_unique<Retribution>());
+  u.push_back(std::make_unique<VolatileMix>());
+  u.push_back(std::make_unique<Overcharge>());
+  u.push_back(std::make_unique<Harvest>());
+  u.push_back(std::make_unique<Beacon>());
+  u.push_back(std::make_unique<Riposte>());
   auto kin = [&](const char *owner, const char *name, Sprite icon,
                  const char *desc, float Player::*stat, float amount) {
     passive(name, icon, desc, stat, amount);

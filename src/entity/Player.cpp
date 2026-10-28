@@ -100,6 +100,9 @@ void Player::hurt(float damage) {
     return;
   if (hero && (damage = hero->guard(*this, damage)) <= 0)
     return;
+  for (auto &up : upgrades)
+    if (up->level > 0 && (damage = up->guard(*this, damage)) <= 0)
+      return;
   damage = std::max(1.0f, damage - armor);
   hp -= damage;
   invuln = 0.6f;
@@ -121,6 +124,9 @@ void Player::cast() {
     return;
   hero->cast(*this);
   skillTime = hero->cooldown * haste;
+  for (auto &up : upgrades)
+    if (up->level > 0)
+      up->cast(*this);
 }
 
 void Player::rise() {

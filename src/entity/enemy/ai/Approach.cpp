@@ -12,6 +12,10 @@ GoalState Approach::tick(Enemy &e, const Sense &s, double &xs,
       e.type.speed *
       (gait.base + gait.pulse * (gait.rectified ? std::max(0.0, wave) : wave));
   double w = std::sin(e.animT * gait.weaveRate) * gait.weave;
-  xs = s.xn * v - s.yn * w, ys = s.yn * v + s.xn * w;
+  double spread = (int(e.seed >> 3 & 7) - 3.5) * 0.14 *
+                  std::clamp((s.dist - 50) / 160, 0.0, 1.0);
+  double xn = s.xn * std::cos(spread) - s.yn * std::sin(spread),
+         yn = s.yn * std::cos(spread) + s.xn * std::sin(spread);
+  xs = xn * v - yn * w, ys = yn * v + xn * w;
   return GoalState::Running;
 }

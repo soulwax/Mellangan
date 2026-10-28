@@ -6,6 +6,7 @@
 
 #include "Atlas.hpp"
 
+class Enemy;
 class Player;
 
 class Upgrade {
@@ -31,6 +32,9 @@ public:
   void evolve() { evolved = true, name = evolvedName, power = 2, pace = 0.7f; }
   virtual void levelUp(Player &) { level++; }
   virtual void tick(Player &) {}
+  virtual void slay(Player &, Enemy &) {}
+  virtual float guard(Player &, float damage) { return damage; }
+  virtual void cast(Player &) {}
 
   static std::vector<std::unique_ptr<Upgrade>> all();
 
