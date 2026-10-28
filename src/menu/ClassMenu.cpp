@@ -45,6 +45,79 @@ float ease(float x) {
 
 float fract(float x) { return x - std::floor(x); }
 
+const char *const SIGILS[8][13] = {
+    {"......#......", "......#...*..", ".....#+#.***.", ".....#+#..*..", "....#+++#....", "..##+++++##..", "##+++++++++##", "..##+++++##..", "....#+++#....", ".....#+#.....", ".....#+#.....", "......#......", "......#......"},
+    {".............", ".............", "........#....", "........##...", "#..#....#+#..", "##.##...#++#.", "+#++#####+++#", "##.##...#++#.", "#..#....#+#..", "........##...", "........#....", ".............", "............."},
+    {"#############", "#-----+-----#", "#-----+-----#", "#-----+-----#", "#++++++++++*#", "#-----+-----#", "#-----+-----#", ".#----+----#.", ".#----+----#.", "..#---+---#..", "...#--+--#...", "....#-+-#....", "......#......"},
+    {"....#####....", ".....#.#.....", ".....#.#.....", ".....#*#.....", "....#...#....", "...#.....#...", "..#.......#..", ".#+++++++++#.", "#+++-+++*+++#", "#+++++++-+++#", "#+*+++++++++#", ".#+++++++++#.", "..#########.."},
+    {".......####..", "......#++#...", ".....#++#....", "....#++#.....", "...#++######.", "..#+++++++#..", ".######++#...", "......#+#....", ".....#+#.....", "....#*#......", "...##........", "..#..........", "............."},
+    {".....######..", "...##++++++#.", "..#++####++#.", ".#+##....#+#.", "#+#......#+#.", "#*.......#+#.", "#........#+#.", ".........#+#.", ".........#+#.", ".........#+#.", ".........#+#.", "........##+#.", ".........###."},
+    {"......*......", "..*...#...*..", "...#.....#...", ".....###.....", "....#+++#....", "...#+++++#...", "*#.#++-++#.#*", "...#+++++#...", "....#+++#....", ".....###.....", "...#.....#...", "..*...#...*..", "......*......"},
+    {"#...........#", "+#.........#+", ".+#.......#+.", "..+#.....#+..", "...+#...#+...", "....+#.#+....", "......*......", "....+#.#+....", "...+#...#+...", "..##.....##..", ".####...####.", "..#.......#..", ".#.........#."}
+};
+
+void sigil(Screen &s, int hero, float x, float y, float r, Color c, float t) {
+  const char *const *art = SIGILS[std::clamp(hero, 0, 7)];
+  float cell = std::max(1.0f, std::floor(r * 2 / 13));
+  float x0 = std::floor(x - cell * 6.5f), y0 = std::floor(y - cell * 6.5f);
+  Color light{lerpf(c.r, 1, 0.55f), lerpf(c.g, 1, 0.55f), lerpf(c.b, 1, 0.55f), c.a};
+  Color dim = c * 0.55f, shadow{0.01f, 0.01f, 0.03f, 0.7f * c.a};
+  for (int pass = 0; pass < 2; pass++)
+    for (int row = 0; row < 13; row++)
+      for (int col = 0; col < 13; col++) {
+        char k = art[row][col];
+        if (k == '.')
+          continue;
+        float px = x0 + col * cell, py = y0 + row * cell;
+        if (pass == 0) {
+          if (cell > 1)
+            s.rect(px + cell, py + cell, cell, cell, shadow);
+          continue;
+        }
+        Color ink = k == '+' ? light : k == '-' ? dim : c;
+        if (k == '*')
+          ink = light.alpha(c.a * (0.35f + 0.65f * std::abs(std::sin(
+                                                    t * 2.2f + row * 0.7f + col))));
+        s.rect(px, py, cell, cell, ink);
+      }
+  if (hero == 3)
+    for (int i = 0; i < 3; i++) {
+      float b = fract(t * 0.6f + i * 0.33f);
+      s.rect(x0 + (5 + i) * cell, y0 + (2 - b * 4) * cell, cell, cell,
+             light.alpha(c.a * (1 - b)));
+    }
+}
+
+float wrap(Screen &s, std::string_view text, float x, float y, float w,
+           float size, float line, Color c, bool draw) {
+  std::string row;
+  size_t at = 0;
+  while (at <= text.size()) {
+    size_t end = text.find(' ', at);
+    std::string_view word = text.substr(at, end == std::string_view::npos
+                                                ? std::string_view::npos
+                                                : end - at);
+    std::string next = row.empty() ? std::string(word)
+                                   : row + " " + std::string(word);
+    if (!row.empty() && Screen::textWidth(next, size) > w) {
+      if (draw)
+        s.text(row, x, y, size, c);
+      y += line, row = std::string(word);
+    } else {
+      row = next;
+    }
+    if (end == std::string_view::npos)
+      break;
+    at = end + 1;
+  }
+  if (!row.empty()) {
+    if (draw)
+      s.text(row, x, y, size, c);
+    y += line;
+  }
+  return y;
+}
+
 } // namespace
 
 ClassMenu::ClassMenu(Game &game) : Menu(game) {
@@ -199,71 +272,125 @@ void ClassMenu::render(Screen &s) {
                  label.alpha(in));
   }
 
-  float x = s.w * 0.05f, y = s.h * 0.14f, w = std::min(s.w * 0.3f, 300 * u);
-  std::vector<Chip> traits = chips(h);
-  int rows = 1;
-  for (float cx = x; const Chip &k : traits) {
-    float cw = Screen::textWidth(k.text, small) + 8 * u;
-    if (cx + cw > x + w)
-      cx = x, rows++;
-    cx += cw + 4 * u;
-  }
-  float pad = 10 * u,
-        tall = openPick ? 190 * u + rows * (16 * small + 4 * u) : 135 * u;
-  s.rect(x - pad, y - pad, w + 2 * pad, tall, {0.03f, 0.025f, 0.06f, 0.94f * in});
-  s.bracket(x - pad, y - pad, w + 2 * pad, tall, u);
+  float x = s.w * 0.045f, top = s.h * 0.07f, w = std::min(s.w * 0.34f, 340 * u);
+  float pad = 12 * u, line = 13 * u, body = u, gut = 22 * u;
   Color tint = openPick ? h.tint : col::muted;
-  float big = std::min(3 * u, std::floor(w / Screen::textWidth(h.name, 1)));
-  s.text(h.name, x, y, big, tint.alpha(in));
-  y += 16 * big + 2 * u;
-  s.text(h.title, x, y, small, col::muted.alpha(in));
-  y += 18 * u;
-  s.rect(x, y, w, u, tint.alpha(0.5f * in));
-  y += 9 * u;
-  if (!openPick) {
-    s.text("LOCKED", x, y, u, col::red.alpha(in));
-    s.text(fmt::format("to unlock: {}", h.need), x, y + 22 * u, small,
-           col::muted.alpha(in));
-  } else {
-    float row = 16 * small + 3 * u, line = 18 * u;
-    for (auto &up : game.level->player->upgrades)
-      if (std::string_view(up->name) == h.weapon)
-        s.sprite(up->icon, x, y - 2 * u, 0, 0, u, u);
-    s.text(h.weapon, x + 20 * u, y, small, col::white.alpha(in));
-    y += line;
-    s.text(h.trait, x, y, small, col::muted.alpha(in));
-    y += row * 1.6f;
-    s.text(h.skill, x, y, small, tint.alpha(in));
-    s.text("SPACE", x + w - Screen::textWidth("SPACE", small), y, small,
-           col::muted.alpha(in));
-    y += row;
-    s.text(h.skillDesc, x, y, small, col::white.alpha(0.85f * in));
-    y += row * 1.6f;
-    float kx = x;
+  const std::vector<Chip> traits = chips(h);
+  auto card = [&](bool draw) {
+    float y = top;
+    float big = std::min(2 * u, std::floor((w - 46 * u) / Screen::textWidth(h.name, 1)));
+    float band = 8 * big + 12 * u;
+    if (draw) {
+      s.rect(x, y, w, band, tint.alpha(0.12f * in));
+      for (int k = 0; k < 6; k++)
+        sigil(s, pick, x + w - 18 * u - k * 34 * u, y + band / 2, 11 * u,
+              tint.alpha(0.07f * in), t);
+      sigil(s, pick, x + 21 * u, y + band / 2, 14 * u,
+            (openPick ? tint : col::muted * 0.6f).alpha(in), t);
+      s.text(h.name, x + 42 * u, y + band / 2 - 8 * big, big, tint.alpha(in));
+      s.rect(x, y + band, w, u, tint.alpha(0.7f * in));
+    }
+    y += band + 8 * u;
+    float cx = x + pad, cw = w - 2 * pad;
+    y = wrap(s, h.title, cx, y, cw, body, line, tint.alpha(0.75f * in), draw) +
+        6 * u;
+    if (!openPick) {
+      if (draw)
+        s.text("LOCKED", cx, y, body, col::red.alpha(in));
+      y += line + 4 * u;
+      y = wrap(s, fmt::format("Unlock: {}", h.need), cx, y, cw, body, line,
+               col::white.alpha(0.85f * in), draw);
+      return y + pad - top;
+    }
+    auto label = [&](const char *text) {
+      if (draw) {
+        s.text(text, cx, y, small, tint.alpha(0.85f * in));
+        s.rect(cx + Screen::textWidth(text, small) + 6 * u, y + 8 * small,
+               cw - Screen::textWidth(text, small) - 6 * u, 1,
+               tint.alpha(0.25f * in));
+      }
+      y += 12 * u;
+    };
+    auto icon = [&](std::string_view name, float iy) {
+      for (auto &up : game.level->player->upgrades)
+        if (std::string_view(up->name) == name && draw)
+          s.sprite(up->icon, cx, iy - u, 0, 0, u, u);
+    };
+
+    label("WEAPON");
+    icon(h.weapon, y);
+    if (draw)
+      s.text(h.weapon, cx + gut, y, body, col::white.alpha(in));
+    y += line + 6 * u;
+    label("TRAIT");
+    if (draw)
+      sigil(s, pick, cx + 8 * u, y + 7 * u, 7 * u, tint.alpha(in), t);
+    y = wrap(s, h.trait, cx + gut, y, cw - gut, body, line,
+             col::white.alpha(0.85f * in), draw) + 6 * u;
+
+    label("SKILL");
+    float key = Screen::textWidth("SPACE", small) + 8 * u;
+    if (draw) {
+      s.rect(cx + cw - key, y - u, key, 14 * u, tint.alpha(0.15f * in));
+      s.frame(cx + cw - key, y - u, key, 14 * u, 1, tint.alpha(0.7f * in));
+      s.text("SPACE", cx + cw - key + 4 * u, y + u, small, tint.alpha(in));
+      s.text(h.skill, cx, y, body, tint.alpha(in));
+    }
+    y += line + 2 * u;
+    y = wrap(s, h.skillDesc, cx, y, cw, body, line,
+             col::white.alpha(0.85f * in), draw) + 6 * u;
+
+    label("ARSENAL");
     for (auto &up : game.level->player->upgrades)
       if (up->owner && std::string_view(up->owner) == h.name) {
-        s.sprite(up->icon, kx, y - 2 * u, 0, 0, u, u);
-        s.text(up->name, kx + 19 * u, y, small, tint.alpha(in));
-        kx += 19 * u + Screen::textWidth(up->name, small) + 10 * u;
+        if (draw) {
+          s.sprite(up->icon, cx, y - u, 0, 0, u, u);
+          s.text(up->name, cx + gut, y, body,
+                 (up->weapon ? col::white : tint).alpha(in));
+          if (!up->weapon)
+            s.text("talent", cx + cw - Screen::textWidth("talent", small),
+                   y + 3 * u, small, col::muted.alpha(in));
+        }
+        y += line;
       }
-    y += line;
-    s.text(fmt::format("favours {}, {}, {}", h.affinity[0], h.affinity[1],
-                       h.affinity[2]),
-           x, y, small, col::muted.alpha(0.8f * in));
-    y += row * 1.6f;
-    float cx = x;
+    y += 6 * u;
+
+    label("NATURE");
+    float chipX = cx;
     for (const Chip &k : traits) {
-      float cw = Screen::textWidth(k.text, small) + 8 * u;
-      if (cx + cw > x + w)
-        cx = x, y += 16 * small + 4 * u;
+      float kw = Screen::textWidth(k.text, small) + 10 * u;
+      if (chipX + kw > cx + cw)
+        chipX = cx, y += 15 * u;
       Color ink = k.good ? tint : col::red * 0.9f;
-      s.rect(cx, y, cw, 16 * small, ink.alpha(0.14f * in));
-      s.frame(cx, y, cw, 16 * small, 1, ink.alpha(0.5f * in));
-      s.text(k.text, cx + 4 * u, y, small, ink.alpha(in));
-      cx += cw + 4 * u;
+      if (draw) {
+        s.rect(chipX, y, kw, 12 * u, ink.alpha(0.18f * in));
+        s.rect(chipX, y, 2 * u, 12 * u, ink.alpha(in));
+        s.text(k.text, chipX + 6 * u, y + 2 * u, small, ink.alpha(in));
+      }
+      chipX += kw + 5 * u;
     }
-  }
+    y += 15 * u;
+    float fx = cx;
+    if (draw)
+      s.text("favours", fx, y + 3 * u, small, col::muted.alpha(in));
+    fx += Screen::textWidth("favours ", small) + 4 * u;
+    for (int k = 0; k < 3 && draw; k++)
+      for (auto &up : game.level->player->upgrades)
+        if (std::string_view(up->name) == h.affinity[k])
+          s.sprite(up->icon, fx + k * 20 * u, y, 0, 0, u, u);
+    y += 18 * u;
+    return y + pad - top;
+  };
+
+  float tall = card(false);
+  s.rect(x, top, w, tall, {0.03f, 0.025f, 0.06f, 0.95f * in});
+  s.frame(x, top, w, tall, u, tint.alpha(0.35f * in));
+  for (int k = 2; k < 4; k++)
+    sigil(s, pick, k & 1 ? x + w - 9 * u : x + 9 * u,
+          k & 2 ? top + tall - 9 * u : top + 9 * u, 7 * u,
+          tint.alpha(0.8f * in), t);
+  card(true);
 
   s.textCenter("Left/Right choose   Enter begin   Esc back", s.w * 0.69f,
-               s.h - 30 * small, small, col::muted.alpha(in));
+               s.h - 22 * u, u, col::muted.alpha(in));
 }

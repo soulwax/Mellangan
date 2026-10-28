@@ -6,6 +6,16 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-28
+
+### Changed
+
+- The class screen's info card is rebuilt: larger text that wraps cleanly, the same clear order for every class
+  (weapon, trait, skill with its key, arsenal with talents marked, nature, favoured upgrades), and a style of its own
+  per class: a pixel-art sigil with highlights, shading and twinkling accents (Mage star, Ranger arrow, Knight shield, Alchemist flask with rising bubbles,
+  Stormcaller bolt, Reaper crescent, Priestess sun, Duelist crossed blades) heads the card, patterns its banner,
+  marks the trait and guards its corners, all in the class colour.
+
 ## [0.4.0] - 2026-10-28
 
 ### Added
