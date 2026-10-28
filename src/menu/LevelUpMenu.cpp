@@ -235,8 +235,8 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
 std::array<SDL_FRect, 4> LevelUpMenu::cards() const {
   const Screen &s = game.screen;
   int n = int(choices.size());
-  float u = s.u, w = std::min(s.w * 0.82f, 276 * u), h = 24 * u, gap = 5 * u;
-  float y = s.h * 0.5f - (n * h + (n - 1) * gap) * 0.5f + 8 * u;
+  float u = s.u, w = std::min(s.w * 0.88f, 320 * u), h = 34 * u, gap = 6 * u;
+  float y = s.h * 0.5f - (n * h + (n - 1) * gap) * 0.5f + 10 * u;
   std::array<SDL_FRect, 4> r{};
   for (int i = 0; i < 4; i++)
     r[i] = {(s.w - w) * 0.5f, y + i * (h + gap), w, h};
@@ -300,8 +300,8 @@ void LevelUpMenu::render(Screen &s) {
   const Player &p = *game.level->player;
   float u = s.u, small = std::max(1.0f, u - 1);
   auto r = cards();
-  s.textCenter(treasure ? "TREASURE!" : "LEVEL UP!", s.w / 2, r[0].y - 20 * u,
-               1.6f * u, col::gold.alpha(0.9f + 0.1f * std::sin(t * 5)));
+  s.textCenter(treasure ? "TREASURE!" : "LEVEL UP!", s.w / 2, r[0].y - 28 * u,
+               2 * u, col::gold.alpha(0.88f + 0.12f * std::sin(t * 5)));
 
   for (int i = 0; i < int(choices.size()); i++) {
     float in = clampf((t - i * 0.05f) / 0.22f, 0, 1);
@@ -313,12 +313,12 @@ void LevelUpMenu::render(Screen &s) {
     UpgradeStyle style = getUpgradeStyle(up, p, evolving);
     Color tierCol = style.tierColor;
 
-    s.rect(x, y, w, h, col::panel.alpha(0.88f * in));
+    s.rect(x, y, w, h, col::panel.alpha(0.92f * in));
     if (sel)
       s.rect(x, y, w, h, tierCol.alpha(0.12f * in));
     s.frame(x, y, w, h, sel ? 2 * u : u, tierCol.alpha((sel ? 1.0f : 0.65f) * in));
     if (sel) {
-      float tickLen = 6 * u;
+      float tickLen = 7 * u;
       s.line(x, y, x + tickLen, y, u, col::white.alpha(in));
       s.line(x, y, x, y + tickLen, u, col::white.alpha(in));
       s.line(x + w, y, x + w - tickLen, y, u, col::white.alpha(in));
@@ -332,69 +332,77 @@ void LevelUpMenu::render(Screen &s) {
     if (style.isClass)
       renderSilverThread(s, x, y, w, h, u, in, t, i);
 
-    float badgeSize = 16 * u;
-    float bx = x + 4 * u, by = y + (h - badgeSize) * 0.5f;
+    float badgeSize = 20 * u;
+    float bx = x + 6 * u, by = y + (h - badgeSize) * 0.5f;
     s.rect(bx, by, badgeSize, badgeSize,
            {tierCol.r * 0.16f, tierCol.g * 0.16f, tierCol.b * 0.16f, 0.9f * in});
     s.frame(bx, by, badgeSize, badgeSize, u, tierCol.alpha(0.8f * in));
     if (style.isClass)
       s.frame(bx - u, by - u, badgeSize + 2 * u, badgeSize + 2 * u, u,
-              Color{0.95f, 0.98f, 1.0f, (0.45f + 0.35f * std::sin(t * 4.0f)) * in});
+              Color{0.90f, 0.95f, 1.0f, (0.45f + 0.35f * std::sin(t * 4.0f)) * in});
 
     renderSymbol(s, style.symbol, bx + (badgeSize - 11 * u) * 0.5f,
                  by + (badgeSize - 11 * u) * 0.5f, u, tierCol.alpha(in), t);
 
-    float iconX = bx + badgeSize + 4 * u;
+    float iconX = bx + badgeSize + 6 * u;
     float iconY = y + (h - 16 * u) * 0.5f;
     s.color(col::white.alpha(in));
     s.sprite(up ? up->icon : atlas::tile(atlas::t::PotionRed), iconX, iconY, 0, 0,
              u, u);
     s.color(col::white);
 
-    float tx = iconX + 16 * u + 5 * u;
+    float tx = iconX + 16 * u + 7 * u;
     const char *name = evolving ? up->evolvedName : up ? up->name : "Roast Feast";
     std::string desc = evolving
                            ? fmt::format("{} evolves: double damage, faster", up->name)
                        : up ? up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)]
                             : "Restore 40 health";
 
-    s.text(name, tx, y + 3.5f * u, u, (sel ? col::white : tierCol).alpha(in));
-
-    float tagX = tx + Screen::textWidth(name, u) + 5 * u;
-    if (style.isClass) {
-      const char *cName = p.hero ? p.hero->name : "CLASS";
-      s.text(cName, tagX, y + 4.5f * u, small,
-             Color{0.90f, 0.94f, 1.0f, in});
-      tagX += Screen::textWidth(cName, small) + 5 * u;
-    }
-
-    if (evolving) {
-      s.text("EVOLVE", tagX, y + 4.5f * u, small, col::xp.alpha(in));
-    } else if (up && up->rare) {
-      s.text("RELIC", tagX, y + 4.5f * u, small, tierCol.alpha(in));
-    } else if (up && up->level == 0) {
-      s.text("TIER 1 (NEW)", tagX, y + 4.5f * u, small, tierCol.alpha(in));
-    } else if (up) {
-      for (int lvl = 0; lvl < Upgrade::MAX_LEVEL; lvl++) {
-        bool lit = lvl <= up->level;
-        s.rect(tagX + lvl * 4 * u, y + 5 * u, 2.5f * u, 2.5f * u,
-               (lit ? tierCol : Color{0.25f, 0.22f, 0.32f, 1}).alpha(in));
-      }
-      s.text(fmt::format("T{}", up->level + 1), tagX + Upgrade::MAX_LEVEL * 4 * u + 3 * u,
-             y + 4.5f * u, small, tierCol.alpha(in));
-    }
-
-    s.text(desc, tx, y + 13.5f * u, small,
+    s.text(name, tx, y + 4.5f * u, u, (sel ? col::white : tierCol).alpha(in));
+    s.text(desc, tx, y + 19.5f * u, small,
            (sel ? col::white * 0.9f : col::muted).alpha(in));
 
-    float kx = x + w - 21 * u, ky = y + (h - 14 * u) * 0.5f;
-    s.rect(kx, ky, 17 * u, 14 * u, {0.10f, 0.08f, 0.15f, 0.8f * in});
-    s.frame(kx, ky, 17 * u, 14 * u, u,
-            (sel ? tierCol : col::muted * 0.45f).alpha(in));
-    s.textCenter(std::to_string(i + 1), kx + 8.5f * u, ky + 4 * small, small,
+    float kw = 16 * u, kh = 16 * u;
+    float kx = x + w - kw - 8 * u, ky = y + (h - kh) * 0.5f;
+    s.rect(kx, ky, kw, kh, {0.10f, 0.08f, 0.15f, 0.85f * in});
+    s.frame(kx, ky, kw, kh, u, (sel ? tierCol : col::muted * 0.45f).alpha(in));
+    s.textCenter(std::to_string(i + 1), kx + kw * 0.5f, ky + 3.5f * small, small,
                  (sel ? col::white : col::muted).alpha(in));
+
+    float tagRight = kx - 8 * u;
+    if (evolving) {
+      s.text("EVOLVE", tagRight - Screen::textWidth("EVOLVE", small), y + 5.5f * u,
+             small, col::xp.alpha(in));
+    } else if (up && up->rare) {
+      s.text("RELIC", tagRight - Screen::textWidth("RELIC", small), y + 5.5f * u,
+             small, tierCol.alpha(in));
+    } else if (up && up->level == 0) {
+      std::string tagStr = style.isClass
+                               ? fmt::format("{}  TIER 1", p.hero ? p.hero->name : "CLASS")
+                               : "TIER 1 (NEW)";
+      Color tagCol = style.isClass ? Color{0.90f, 0.94f, 1.0f, in} : tierCol.alpha(in);
+      s.text(tagStr, tagRight - Screen::textWidth(tagStr, small), y + 5.5f * u,
+             small, tagCol);
+    } else if (up) {
+      std::string tStr = fmt::format("T{}", up->level + 1);
+      float tStrW = Screen::textWidth(tStr, small);
+      s.text(tStr, tagRight - tStrW, y + 5.5f * u, small, tierCol.alpha(in));
+
+      float pipW = Upgrade::MAX_LEVEL * 4 * u;
+      float pipsX = tagRight - tStrW - pipW - 3 * u;
+      for (int lvl = 0; lvl < Upgrade::MAX_LEVEL; lvl++) {
+        bool lit = lvl <= up->level;
+        s.rect(pipsX + lvl * 4 * u, y + 8.5f * u, 2.5f * u, 3.5f * u,
+               (lit ? tierCol : Color{0.22f, 0.20f, 0.30f, 1}).alpha(in));
+      }
+      if (style.isClass) {
+        const char *cName = p.hero ? p.hero->name : "CLASS";
+        s.text(cName, pipsX - Screen::textWidth(cName, small) - 5 * u, y + 5.5f * u,
+               small, Color{0.90f, 0.94f, 1.0f, in});
+      }
+    }
   }
   const SDL_FRect &last = r[choices.size() - 1];
   s.textCenter(fmt::format("1-{} / Arrows + Enter / Click", choices.size()),
-               s.w / 2, last.y + last.h + 8 * u, small, col::muted * 0.75f);
+               s.w / 2, last.y + last.h + 9 * u, small, col::muted * 0.75f);
 }
