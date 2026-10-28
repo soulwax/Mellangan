@@ -29,6 +29,12 @@ RUNE = (128, 244, 255)
 IRON = ((64, 64, 76), (104, 104, 118), (152, 152, 166))
 SHELF = ((176, 96, 40), (218, 140, 62), (244, 190, 112))
 GLOOM = ((14, 10, 16), (26, 20, 26), (40, 32, 38))
+WOLF = ((84, 88, 100), (124, 128, 140), (170, 174, 186))
+DIRE = ((46, 46, 58), (72, 72, 88), (108, 108, 126))
+WORM = ((150, 88, 78), (196, 128, 108), (232, 176, 148))
+NECRO = ((38, 24, 54), (66, 42, 90), (100, 68, 128))
+CLOAK = ((36, 84, 58), (56, 118, 78), (92, 156, 102))
+SKIN = (232, 184, 144)
 
 
 def mesa(c):
@@ -203,6 +209,75 @@ def timber(c):
     c.line(5, 4, 10, 9, BARK[0])
 
 
+def wolf(c, pal, eye, mane=None):
+    for x in (4, 6, 10, 12):
+        c.line(x, 11, x, 15, pal[0])
+    c.curve(3, 9, -3, -4, 0, pal[1])
+    c.ellipse(7.5, 10, 5.4, 2.9, pal, seed=90)
+    for x in range(4, 11):
+        c.put(x, 12, pal[2])
+    if mane:
+        c.ellipse(10.5, 8, 3.2, 3.4, mane, seed=91)
+    c.ellipse(12.5, 7, 2.8, 2.3, pal, seed=92)
+    c.rect(14, 7, 15, 8, pal)
+    c.put(15, 7, OUTLINE_DARK)
+    c.put(11, 4, pal[1]), c.put(12, 4, pal[2]), c.put(11, 3, pal[2])
+    c.put(13, 6, eye)
+
+
+def burrower(c):
+    c.ellipse(8, 14, 6.5, 2, OCHRE, seed=93)
+    for cy, rx in ((12, 4.2), (9, 3.8), (6.5, 3.4)):
+        c.ellipse(8, cy, rx, 2.2, WORM, seed=int(cy * 3))
+    c.ellipse(8, 4, 3.6, 2.6, WORM, seed=94)
+    c.ellipse(8, 3.6, 2, 1.4, GLOOM, seed=95)
+    for x, y in ((6, 3), (10, 3), (7, 5), (9, 5)):
+        c.put(x, y, BONE[2])
+    c.line(4, 2, 5, 4, WORM[0]), c.line(12, 2, 11, 4, WORM[0])
+
+
+def mound(c):
+    c.ellipse(8, 13, 6, 2.6, OCHRE, dither=0.25, seed=96)
+    c.line(5, 13, 7, 12, CLAY[0]), c.line(9, 12, 11, 14, CLAY[0])
+    for x, y in ((3, 14), (13, 13), (8, 11)):
+        c.put(x, y, STONE[1])
+
+
+def necromancer(c):
+    c.line(13, 2, 13, 15, BARK[1])
+    c.ellipse(13, 2, 1.6, 1.4, BONE, seed=97)
+    c.tri(7.5, 5, 15, 5.5, NECRO)
+    c.ellipse(7.5, 5, 3.6, 3.4, NECRO, seed=98)
+    c.ellipse(7.5, 6, 2.2, 1.8, GLOOM, seed=99)
+    c.put(6, 6, (120, 255, 140)), c.put(9, 6, (120, 255, 140))
+    c.put(12, 9, BONE[2]), c.put(4, 10, BONE[1])
+    for x in range(3, 13, 3):
+        c.put(x, 15, NECRO[0])
+
+
+def skeleton(c):
+    c.line(6, 11, 5, 15, BONE[1]), c.line(10, 11, 11, 15, BONE[1])
+    c.line(8, 6, 8, 11, BONE[1])
+    for y in (8, 10):
+        c.line(5, y, 11, y, BONE[2 if y == 8 else 1])
+    c.line(5, 7, 3, 11, BONE[1]), c.line(11, 7, 13, 11, BONE[1])
+    c.rect(6, 11, 10, 11, BONE)
+    c.ellipse(8, 4, 3.2, 2.9, BONE, seed=100)
+    c.put(7, 4, OUTLINE_DARK), c.put(9, 4, OUTLINE_DARK), c.put(8, 6, OUTLINE_DARK)
+
+
+def thief(c):
+    c.line(6, 12, 6, 15, GLOOM[2]), c.line(9, 12, 9, 15, GLOOM[2])
+    c.tri(7.5, 5, 13, 5, CLOAK)
+    c.ellipse(7.5, 5, 3.6, 3.4, CLOAK, seed=101)
+    c.ellipse(7.5, 6.5, 2.2, 1.6, (SKIN, SKIN, SKIN), seed=102)
+    c.line(5, 6, 10, 6, GLOOM[1])
+    c.put(6, 6, (250, 250, 240)), c.put(9, 6, (250, 250, 240))
+    c.ellipse(12, 10.5, 3, 3.2, TAN, seed=103)
+    c.line(11, 7, 13, 7, BARK[0])
+    c.put(12, 9, GOLD[2]), c.put(11, 11, GOLD[1])
+
+
 def needle_tuft(c):
     tuft(c, ((70, 64, 40), (100, 92, 56), (130, 122, 76)))
 
@@ -260,6 +335,16 @@ SINGLES = [
 
 GROUNDS = [("rail across", rails(False)), ("rail down", rails(True))]
 
+MOBS = [
+    ("wolf", lambda c: wolf(c, WOLF, (250, 210, 80))),
+    ("alpha", lambda c: wolf(c, DIRE, (255, 70, 60), BONE)),
+    ("burrower", burrower),
+    ("mound", mound),
+    ("necromancer", necromancer),
+    ("skeleton", skeleton),
+    ("thief", thief),
+]
+
 BARE = {"clay tuft", "needle tuft"}
 
 
@@ -273,7 +358,8 @@ def layout():
             slots.append((f"{name} {('left', 'mouth', 'right')[k]}", (fn, k, w), "wide", col + k, COLS + col + k))
         col += w
     free = [row * COLS + c for row in (0, 1) for c in range(col, COLS)] + list(range(2 * COLS, ROWS * COLS))
-    items = [(n, f, "single") for n, f in SINGLES] + [(n, f, "ground") for n, f in GROUNDS]
+    items = ([(n, f, "single") for n, f in SINGLES] + [(n, f, "ground") for n, f in GROUNDS] +
+             [(n, f, "single") for n, f in MOBS])
     assert len(items) <= len(free)
     for k, (name, fn, kind) in enumerate(items):
         slots.append((name, fn, kind, free[k], -1))
