@@ -8,6 +8,7 @@ extern "C" {
 
 void *pool_alloc(size_t size);
 void pool_free(void *p, size_t size);
+void pool_shutdown(void);
 
 #ifdef __cplusplus
 }

@@ -71,9 +71,9 @@ void Bench::frame(Game &g, double dt, int t, double tk, double rd) {
     split +=
         fmt::format("  {} {:.2f}", prof_name(i), prof_take(i) * 1000 / frames);
   spdlog::info("       ms/frame:{}  ({} particles, {} debris, {} sparks)",
-               split, g.level->particles.size(), Debris::alive, Spark::alive);
-  if (++step < STEPS)
-    return enter(g);
-  step = -1;
-  g.running = false;
+               split, g.level->particles.size(), int(Debris::alive), int(Spark::alive));
+               if (++step < STEPS)
+                 return enter(g);
+               step = -1;
+               g.running = false;
 }

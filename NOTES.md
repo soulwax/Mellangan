@@ -20,3 +20,8 @@ I also added a short paragraph to the README's packaging section.
 2. Source the SDK's `setup-env.sh` so `VULKAN_SDK` is set, then run `./dist.sh none`.
 3. Check that `otool -L build/Mellangan | grep vulkan` shows `@rpath/libvulkan.1.dylib`. The bundling relies on that, and I couldn't confirm it from here.
 4. A downloaded tarball will be quarantined by Gatekeeper. Players need right-click → Open, or `xattr -dr com.apple.quarantine <folder>`. Only signing and notarizing would avoid that.
+
+
+## Test class
+
+Currently it is not perfect and only tests the pool allocator and level lifecycle. It is not run automatically, but can be run with `./build/Mellangan --test`. It will log to `mellangan.log` and exit with 0 on success, 1 on failure.

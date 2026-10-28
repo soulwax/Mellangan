@@ -1,13 +1,15 @@
 #pragma once
 
 #include "particle/Particle.hpp"
+#include <atomic>
+
 
 class TextParticle : public Particle {
 public:
   int value;
   Color color;
 
-  inline static int alive = 0;
+  inline static std::atomic<int> alive{0};
 
   TextParticle(double x, double y, int value, Color color)
       : Particle(x, y, 0.8f), value(value), color(color) {

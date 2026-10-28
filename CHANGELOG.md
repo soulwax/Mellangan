@@ -6,6 +6,38 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-10-28
+
+### Added
+
+- Four signature mobs tied to exploration and biome identity:
+  - **Burrower** (Badlands & Desert): travels underground as a churning earth mound and erupts beneath the player after
+    an expanding telegraph ring.
+  - **Wolf & Alpha Wolf** (Taiga & Snow): wolves flank from the sides in coordinated packs while the alpha's howl speeds
+    them up.
+  - **Necromancer** (Barrows & Graveyards): retreats to maintain distance while raising skeletons from graves.
+  - **Treasure Thief** (Rare, Worldwide): flees on sight and attempts to escape through a portal after ten seconds;
+    defeating it yields an immediate treasure chest.
+- Three new weapons with unique combat roles:
+  - **Glaive**: a directional polearm thrust that impales and knocks back lines of encroaching enemies.
+  - **Chakram**: a returning bladed disc that carves through crowds on its forward path and returns to the wielder.
+  - **Censer**: swings smoldering clouds of aromatic incense that linger and scorch enemies caught in the fumes.
+- New bounty contracts to hunt the Taiga alpha and intercept fleeing treasure thieves.
+- Codex tracking and bestiary entries for all new monsters.
+- Headless memory leak, concurrency, and level lifecycle test suite (`--test` CLI flag).
+
+### Fixed
+
+- Fixed heap memory leak of the base path string returned by `SDL_GetBasePath()`.
+- Fixed texture resource leaks on partial initialization failure in `Screen` and added automatic RAII cleanup.
+- Ensured WAV audio samples and music stream buffers are always freed during audio shutdown even if the audio device
+  fails or closes early.
+- Fixed pool allocator memory retention: 64 KB slabs are now tracked and fully reclaimed via `pool_shutdown()` on exit.
+- Eliminated multithreaded data races during worker enemy thinking: synchronized pool allocations, level entity
+  additions, spawner rolls, and retirement queues.
+- Replaced non-atomic particle counters with `std::atomic` and made PRNG state thread-local, preventing dropped counts
+  and memory desync during parallel AI execution.
+
 ## [0.4.3] - 2026-10-28
 
 ### Added

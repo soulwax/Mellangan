@@ -36,6 +36,7 @@ public:
   int xOffset = 0, yOffset = 0;
   float w = 1, h = 1, scale = 1, u = 1;
 
+  ~Screen() { unload(); }
   bool load(const std::string &base);
   void unload();
 

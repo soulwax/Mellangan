@@ -44,17 +44,18 @@ bool Screen::load(const std::string &base) {
     return true;
   spdlog::error("Failed to load resources from {}res: {}", base,
                 vk2dStatusMessage());
+  unload();
   return false;
 }
 
 void Screen::unload() {
   if (post)
-    vk2dShaderFree(post);
-  for (VK2DTexture t : {atlas, silhouette, particles, font, world, light})
-    if (t)
-      vk2dTextureFree(t);
+    vk2dShaderFree(post), post = nullptr;
+  for (VK2DTexture *t : {&atlas, &silhouette, &particles, &font, &world, &light})
+    if (*t)
+      vk2dTextureFree(*t), *t = nullptr;
   if (silhouetteImg)
-    vk2dImageFree(silhouetteImg);
+    vk2dImageFree(silhouetteImg), silhouetteImg = nullptr;
 }
 
 void Screen::beginLight(Color ambient) {

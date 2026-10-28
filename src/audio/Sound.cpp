@@ -113,17 +113,19 @@ bool Sound::init(const std::string &base) {
 }
 
 void Sound::shutdown() {
-  if (!device)
-    return;
   for (auto *v : voices)
-    SDL_DestroyAudioStream(v);
-  SDL_DestroyAudioStream(musicStream);
-  SDL_CloseAudioDevice(device);
+    if (v)
+      SDL_DestroyAudioStream(v);
+  voices.fill(nullptr);
+  if (musicStream)
+    SDL_DestroyAudioStream(musicStream), musicStream = nullptr;
+  if (device)
+    SDL_CloseAudioDevice(device), device = 0;
   for (Sound *s : ALL)
-    SDL_free(s->data), s->data = nullptr;
-  std::free(musicData);
-  musicData = nullptr;
-  device = 0;
+    if (s->data)
+      SDL_free(s->data), s->data = nullptr;
+  if (musicData)
+    std::free(musicData), musicData = nullptr;
 }
 
 void Sound::tick() {

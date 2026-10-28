@@ -58,12 +58,14 @@ Level::Level(Game &game) : game(game) {
 }
 
 SpriteObject *Level::spawn(std::unique_ptr<SpriteObject> p) {
+  std::lock_guard<std::mutex> lock(addMutex);
   p->level = this;
   particles.push_back(std::move(p));
   return particles.back().get();
 }
 
 Entity *Level::add(std::unique_ptr<Entity> e) {
+  std::lock_guard<std::mutex> lock(addMutex);
   e->level = this;
   e->id = reg.create();
   pending.push_back(std::move(e));

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "entity/enemy/Enemy.hpp"
 
 class Level;
@@ -16,4 +18,5 @@ private:
   int bosses = 0;
 
   void ring(float dist, double &x, double &y) const;
+  std::mutex spawnMutex;
 };

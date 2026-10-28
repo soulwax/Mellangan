@@ -7,6 +7,8 @@
 
 #include "Crash.hpp"
 #include "Game.hpp"
+#include "Test.hpp"
+#include "entity/Pool.h"
 #include "Version.hpp"
 #include "other/Ouroboros.hpp"
 
@@ -33,6 +35,7 @@ int main(int argc, char **argv) {
     return 1;
   const char *basePath = SDL_GetBasePath();
   std::string base = basePath ? basePath : "";
+  SDL_free((void *)basePath);
   initLogging(base);
   installCrashHandler();
   spdlog::info("Mellangan v{}", MELLANGAN_VERSION);
@@ -55,6 +58,10 @@ int main(int argc, char **argv) {
     spdlog::critical("Vulkan2D init: {}", vk2dStatusMessage());
     return 1;
   }
+
+  for (int i = 1; i < argc; i++)
+    if (std::string_view(argv[i]) == "--test")
+      return runTests();
 
   int code = 0;
   {
@@ -85,6 +92,7 @@ int main(int argc, char **argv) {
   vk2dRendererQuit();
   SDL_DestroyWindow(window);
   SDL_Quit();
+  pool_shutdown();
   spdlog::info("Bye");
   return code;
 }

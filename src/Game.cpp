@@ -311,7 +311,7 @@ void Game::toTitle() {
 }
 
 void Game::announce(std::string text) {
-  spdlog::info("[{}] {}", clockText(level->time), text);
+  spdlog::info("[{}] {}", level ? clockText(level->time) : "00:00", text);
   banners.push_back(std::move(text));
 }
 

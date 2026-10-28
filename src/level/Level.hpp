@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "entity/Entity.hpp"
@@ -90,7 +91,10 @@ public:
                         float yMouse);
   void collide(double &x, double &y, float radius) const;
   bool blocks(double x, double y) const;
-  void retire(entt::entity id) { dead.push_back(id); }
+  void retire(entt::entity id) {
+    std::lock_guard<std::mutex> lock(addMutex);
+    dead.push_back(id);
+  }
   bool visited(const Structure &s) const;
   static bool unvisited(const Structure *s, const void *level);
 
@@ -129,6 +133,8 @@ private:
   int cell(double v, double origin) const {
     return std::clamp(int(std::floor((v - origin) / CELL)), 0, GRID - 1);
   }
+
+  mutable std::mutex addMutex;
 };
 
 template <class F> void Level::enemiesNear(double x, double y, float r, F &&f) {

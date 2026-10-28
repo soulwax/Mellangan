@@ -1,6 +1,8 @@
 #pragma once
 
 #include "particle/Particle.hpp"
+#include <atomic>
+
 
 class Spark : public Particle {
 public:
@@ -8,7 +10,7 @@ public:
   float size;
   bool glow;
 
-  inline static int alive = 0;
+  inline static std::atomic<int> alive{0};
 
   Spark(double x, double y, double xa, double ya, Color color, float life,
         float size, bool glow)

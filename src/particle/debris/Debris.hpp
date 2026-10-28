@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 
 #include "SpriteObject.hpp"
@@ -7,7 +8,7 @@
 class Debris : public SpriteObject {
 public:
   static constexpr int MAX = 1200;
-  inline static int alive = 0;
+  inline static std::atomic<int> alive{0};
 
   int life, icon = 0;
   double drag = 0.998, bounce = 0.6, gravity = 0.08;

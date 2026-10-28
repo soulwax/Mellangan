@@ -70,6 +70,7 @@ void Spawner::tick() {
 }
 
 void Spawner::spawn(EnemyKind kind, double x, double y, bool aware) {
+  std::lock_guard<std::mutex> lock(spawnMutex);
   float hpMul = 1 + level.time / 150;
   if (kind == EnemyKind::Cyclops)
     hpMul *= 1 + (bosses - 1) * 0.75f;
