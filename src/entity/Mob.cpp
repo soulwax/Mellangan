@@ -1,6 +1,6 @@
 #include "entity/Mob.hpp"
 
-void Mob::drawBody(Screen &s, int px, int py, int tile, bool floats, float move,
+void Mob::drawBody(Screen &s, int px, int py, Sprite body, bool floats, float move,
                    Color tint, float flashAmount, Color flashColor) const {
   float sx = 1, sy = 1, rot = 0;
   if (!floats) {
@@ -10,7 +10,7 @@ void Mob::drawBody(Screen &s, int px, int py, int tile, bool floats, float move,
     rot = std::sin(animT * 7) * 0.08f * move;
   }
   s.color(tint);
-  s.flash(atlas::tile(tile), px, py, 8, 16, sx * scale * facing, sy * scale,
+  s.flash(body, px, py, 8, 16, sx * scale * facing, sy * scale,
           rot, flashAmount, flashColor);
   s.color(col::white);
 }

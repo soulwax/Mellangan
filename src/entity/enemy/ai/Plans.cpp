@@ -1,11 +1,16 @@
 #include "entity/enemy/ai/Plans.hpp"
 
 #include "entity/enemy/ai/Approach.hpp"
+#include "entity/enemy/ai/Burrow.hpp"
+#include "entity/enemy/ai/Escape.hpp"
 #include "entity/enemy/ai/Falter.hpp"
+#include "entity/enemy/ai/Flank.hpp"
 #include "entity/enemy/ai/Follow.hpp"
 #include "entity/enemy/ai/Hide.hpp"
+#include "entity/enemy/ai/Howl.hpp"
 #include "entity/enemy/ai/LookOut.hpp"
 #include "entity/enemy/ai/Melee.hpp"
+#include "entity/enemy/ai/Raise.hpp"
 #include "entity/enemy/ai/Ranged.hpp"
 #include "entity/enemy/ai/Stalk.hpp"
 
@@ -19,6 +24,7 @@ const Approach CLOSE{40, {}};
 const Approach MARCH{48, {}};
 const Approach LUMBER{70, {}};
 const Approach CASTING_RANGE{200, {1, 0, 0, 28, 3, false}};
+const Approach SUMMON_RANGE{190, {0.9, 0, 0, 24, 2, false}};
 
 const LookOut WATCH{260};
 const LookOut GUARD{220};
@@ -32,6 +38,12 @@ const Melee SLAM{0.6f, 0.3f, 3.2, 2.4f};
 const Ranged CAST{150, 210};
 const Falter FALTER{0.3f};
 
+const Flank FLANK{68};
+const Howl HOWL{0.6f, 7.5f};
+const Burrow BURROW{2.8f, 0.75f, 2.4f};
+const Raise RAISE{0.85f, 5.5f};
+const Escape ESCAPE{10.0f};
+
 const Plan PLANS[] = {
     {{&FLUTTER}, {}},
     {{&PACK, &CHARGE}, {&FALTER}},
@@ -43,6 +55,12 @@ const Plan PLANS[] = {
     {{&MARCH, &CLEAVE}, {&FALTER}},
     {{&GUARD, &MARCH, &CLEAVE}, {&FALTER}},
     {{&LUMBER, &SLAM}, {}},
+    {{&FLANK, &BITE}, {&FALTER}},
+    {{&HOWL, &FLANK, &BITE}, {&FALTER}},
+    {{&BURROW, &NIP}, {}},
+    {{&SUMMON_RANGE, &RAISE, &CAST}, {&FALTER}},
+    {{&CHARGE, &NIP}, {&FALTER}},
+    {{&ESCAPE}, {}},
 };
 
 } // namespace

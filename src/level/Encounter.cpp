@@ -27,6 +27,8 @@ void graveyard(Level *level, const Structure *s) {
     level->spawner.spawn(EnemyKind::Ghost, s->centerX() + std::cos(dir) * 110,
                          s->centerY() + std::sin(dir) * 110);
   }
+  if (level->time >= 40)
+    level->spawner.spawn(EnemyKind::Necromancer, s->centerX(), s->centerY());
   Sound::horde.play(0.5f, 0.1f);
 }
 

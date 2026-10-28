@@ -43,6 +43,7 @@ public:
     if (size)
       head = (head + 1) & 7, size--;
   }
+  void clear() { head = size = 0; }
 
 private:
   const Goal *items[8]{};

@@ -11,15 +11,17 @@
 void Spawner::tick() {
   float t = level.time;
   std::vector<EnemyKind> pool;
-  for (int k = 0; k < int(EnemyKind::Cyclops); k++)
+  for (int k = 0; k < int(EnemyKind::Count); k++)
     if (Enemy::typeOf(EnemyKind(k)).unlockAt <= t)
       pool.push_back(EnemyKind(k));
   int n = int(pool.size());
   auto pick = [&](double x, double y) {
+    if (t >= 70 && rng.chance(0.015f))
+      return EnemyKind::Thief;
     uint32_t foes =
         BIOMES[world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)))]
             ->foes;
-    EnemyKind local[int(EnemyKind::Cyclops)];
+    EnemyKind local[int(EnemyKind::Count)];
     int m = 0;
     for (EnemyKind k : pool)
       if (foes & foe(k))
@@ -76,7 +78,22 @@ void Spawner::spawn(EnemyKind kind, double x, double y, bool aware) {
   if (kind != EnemyKind::Cyclops && level.time > 60 &&
       rng.chance((0.03f + level.time / 6000) * level.eliteMul))
     e->makeElite();
+  entt::entity alphaId = e->id;
   level.add(std::move(e));
+
+  if (kind == EnemyKind::Alpha) {
+    int packSize = rng.irange(2, 4);
+    for (int i = 0; i < packSize; i++) {
+      double a = TAU * i / packSize + rng.range(-0.3f, 0.3f);
+      double d = rng.range(22, 38);
+      auto w = Enemy::create(EnemyKind::Wolf, hpMul, 1 + level.time / 600);
+      w->x = x + std::cos(a) * d;
+      w->y = y + std::sin(a) * d;
+      w->aware = aware;
+      w->leader = alphaId;
+      level.add(std::move(w));
+    }
+  }
 }
 
 void Spawner::ring(float dist, double &x, double &y) const {

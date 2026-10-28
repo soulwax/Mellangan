@@ -21,7 +21,7 @@ void Nova::take(Player &p) {
   level->each<Enemy>([&](Enemy &e) {
     double xd = e.x - p.x, yd = e.y - p.y;
     if (xd * xd + yd * yd < 260 * 260)
-      e.hurt(e.type.tile == atlas::t::Cyclops ? 250.0f : 9999.0f, xd, yd, 200);
+      e.hurt(e.is(EnemyKind::Cyclops) ? 250.0f : 9999.0f, xd, yd, 200);
   });
   Sound::nova.play(0.8f, 0);
   Spark::burst(*level, p.x, p.bodyY(), {0.8f, 0.85f, 1, 1}, 40, 220, true);

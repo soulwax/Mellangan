@@ -36,7 +36,7 @@ public:
   uint32_t ticks = 0;
   int kills = 0, streak = 0, bestStreak = 0;
   float streakTime = 0;
-  int slain[int(EnemyKind::Cyclops) + 1]{};
+  int slain[int(EnemyKind::Count)]{};
   uint32_t entered = 0, litBiomes = 0;
   float pace = 1, step = 1, xpMul = 1, eliteMul = 1, kindleRate = 1;
   int omen = -1;

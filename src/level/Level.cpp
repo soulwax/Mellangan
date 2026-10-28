@@ -275,6 +275,8 @@ void Level::buildGrid() {
   std::fill(cellStart.begin(), cellStart.end(), 0);
   cellOf.clear();
   each<Enemy>([&](Enemy &e) {
+    if (e.buried)
+      return;
     int c = cell(e.y, yGrid) * GRID + cell(e.x, xGrid);
     cellOf.push_back(c);
     cellStart[c + 1]++;
@@ -284,14 +286,17 @@ void Level::buildGrid() {
   std::copy(cellStart.begin(), cellStart.end() - 1, cellFill.begin());
   cells.resize(cellStart.back());
   size_t k = 0;
-  each<Enemy>([&](Enemy &e) { cells[cellFill[cellOf[k++]]++] = &e; });
+  each<Enemy>([&](Enemy &e) {
+    if (!e.buried)
+      cells[cellFill[cellOf[k++]]++] = &e;
+  });
 }
 
 std::vector<Enemy *> Level::nearest(double x, double y, float range, int n) {
   std::vector<std::pair<double, Enemy *>> found;
   each<Enemy>([&](Enemy &e) {
     double xd = e.x - x, yd = e.y - y, d = xd * xd + yd * yd;
-    if (d < range * range)
+    if (d < range * range && !e.buried)
       found.emplace_back(d, &e);
   });
   int k = std::min(n, int(found.size()));

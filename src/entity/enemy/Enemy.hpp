@@ -15,7 +15,14 @@ enum class EnemyKind {
   Cultist,
   Demon,
   Knight,
-  Cyclops
+  Cyclops,
+  Wolf,
+  Alpha,
+  Burrower,
+  Necromancer,
+  Skeleton,
+  Thief,
+  Count
 };
 
 struct EnemyType {
@@ -24,6 +31,7 @@ struct EnemyType {
   Color blood;
   bool floats;
   float unlockAt;
+  Sprite (*art)(int) = nullptr;
 };
 
 class Enemy : public Mob {
@@ -33,13 +41,13 @@ public:
   bool elite = false;
   const Plan *plan = nullptr;
   GoalQueue goals;
-  float goalTime = 0, cooldown = 0;
+  float goalTime = 0, cooldown = 0, frenzy = 0, age = 0;
   double xMark = 0, yMark = 0, xWant = 0, yWant = 0, xPush = 0, yPush = 0,
          side = 1;
   entt::entity leader = entt::null;
   uint32_t seed;
   bool aware = true, wantsFire = false, wantsLeader = false, faltered = false,
-       alarmed = false;
+       alarmed = false, buried = false;
 
   Enemy(const EnemyType &type, float hpMul, float damageMul);
   static const EnemyType &typeOf(EnemyKind kind);
@@ -58,6 +66,8 @@ public:
             Upgrade *source = nullptr);
   const char *name() const;
   int kind() const;
+  bool is(EnemyKind k) const { return kind() == int(k); }
+  Sprite sprite() const;
   void makeElite();
   void think();
   void move();

@@ -7,7 +7,7 @@
 #include "level/Structure.hpp"
 
 struct Codex {
-  static constexpr int KINDS = int(EnemyKind::Cyclops) + 1,
+  static constexpr int KINDS = int(EnemyKind::Count),
                        SITES = int(StructureKind::Count);
 
   uint32_t biomes = 0, relics = 0;

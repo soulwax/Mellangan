@@ -9,9 +9,12 @@
 #include "menu/TitleMenu.hpp"
 
 namespace {
-const char *const FOES[Codex::KINDS] = {"BAT",    "RAT",   "SLIME",  "SCORPION",
-                                        "SPIDER", "GHOST", "CULTIST", "DEMON",
-                                        "KNIGHT", "CYCLOPS"};
+const char *const FOES[Codex::KINDS] = {
+    "BAT",        "RAT",        "SLIME",      "SCORPION",
+    "SPIDER",     "GHOST",      "CULTIST",    "DEMON",
+    "KNIGHT",     "CYCLOPS",    "WOLF",       "ALPHA WOLF",
+    "BURROWER",   "NECROMANCER","SKELETON",   "TREASURE THIEF"
+};
 } // namespace
 
 void CodexMenu::tick() {

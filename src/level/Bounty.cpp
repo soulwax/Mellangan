@@ -8,7 +8,7 @@
 
 namespace {
 
-enum { SLAY, KINDLE, ENTER, WALK, SURVIVE, STREAK, KINDS };
+enum { SLAY, KINDLE, ENTER, WALK, SURVIVE, STREAK, SLAY_ALPHA, CATCH_THIEF, KINDS };
 
 const char *const FOES[] = {"bats",      "rats",    "slimes",
                             "scorpions", "spiders", "ghosts"};
@@ -57,6 +57,12 @@ void Bounty::roll(Bounty *out, int n) {
     case STREAK:
       b.goal = 30 + int(r % 4) * 10;
       break;
+    case SLAY_ALPHA:
+      b.goal = 1;
+      break;
+    case CATCH_THIEF:
+      b.goal = 1;
+      break;
     }
   }
 }
@@ -73,8 +79,14 @@ std::string Bounty::text() const {
     return fmt::format("Walk {} regions", goal);
   case SURVIVE:
     return fmt::format("Survive until {}", clockText(float(goal)));
-  default:
+  case STREAK:
     return fmt::format("Reach a {} kill streak", goal);
+  case SLAY_ALPHA:
+    return "Slay the alpha";
+  case CATCH_THIEF:
+    return "Catch a thief";
+  default:
+    return "";
   }
 }
 
@@ -90,7 +102,13 @@ int Bounty::progress(const Level &l) const {
     return l.chart.discovered;
   case SURVIVE:
     return int(l.time);
-  default:
+  case STREAK:
     return l.bestStreak;
+  case SLAY_ALPHA:
+    return l.slain[int(EnemyKind::Alpha)];
+  case CATCH_THIEF:
+    return l.slain[int(EnemyKind::Thief)];
+  default:
+    return 0;
   }
 }

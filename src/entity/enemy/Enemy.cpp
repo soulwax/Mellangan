@@ -3,8 +3,13 @@
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "entity/enemy/AlphaWolf.hpp"
+#include "entity/enemy/Burrower.hpp"
 #include "entity/enemy/Cyclops.hpp"
 #include "entity/enemy/Ghost.hpp"
+#include "entity/enemy/Necromancer.hpp"
+#include "entity/enemy/Thief.hpp"
+#include "entity/enemy/Wolf.hpp"
 #include "entity/enemy/ai/Plans.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/pickup/Potion.hpp"
@@ -18,6 +23,7 @@
 
 namespace {
 namespace t = atlas::t;
+namespace fr = atlas::fr;
 
 const EnemyType TYPES[] = {
     {t::Bat, 5, 50, 5, 5, 1, 1, 1, {0.85f, 0.55f, 0.35f, 1}, true, 0},
@@ -50,6 +56,18 @@ const EnemyType TYPES[] = {
      {1, 0.75f, 0.5f, 1},
      false,
      1e9f},
+    {fr::Wolf, 28, 62, 9, 7, 1.0f, 3, 0.85f, {0.6f, 0.15f, 0.15f, 1}, false, 40,
+     atlas::frontier},
+    {fr::Alpha, 85, 54, 16, 9, 1.3f, 8, 0.5f, {0.55f, 0.12f, 0.12f, 1}, false, 80,
+     atlas::frontier},
+    {fr::Burrower, 48, 65, 15, 8, 1.1f, 5, 0.6f, {0.85f, 0.55f, 0.3f, 1}, false, 60,
+     atlas::frontier},
+    {fr::Necromancer, 60, 30, 10, 7, 1.1f, 7, 0.7f, {0.35f, 0.1f, 0.45f, 1}, false, 110,
+     atlas::frontier},
+    {fr::Skeleton, 14, 42, 7, 6, 0.95f, 1, 1.0f, {0.85f, 0.85f, 0.8f, 1}, false, 1e9f,
+     atlas::frontier},
+    {fr::Thief, 36, 68, 0, 7, 1.0f, 10, 0.9f, {0.95f, 0.8f, 0.3f, 1}, false, 90,
+     atlas::frontier},
 };
 constexpr int ELITE_XP = 6;
 } // namespace
@@ -74,6 +92,16 @@ std::unique_ptr<Enemy> Enemy::create(EnemyKind kind, float hpMul,
     e = std::make_unique<Ghost>(t, hpMul, damageMul);
   else if (kind == EnemyKind::Cyclops)
     e = std::make_unique<Cyclops>(t, hpMul, damageMul);
+  else if (kind == EnemyKind::Wolf)
+    e = std::make_unique<Wolf>(t, hpMul, damageMul);
+  else if (kind == EnemyKind::Alpha)
+    e = std::make_unique<AlphaWolf>(t, hpMul, damageMul);
+  else if (kind == EnemyKind::Burrower)
+    e = std::make_unique<Burrower>(t, hpMul, damageMul);
+  else if (kind == EnemyKind::Necromancer)
+    e = std::make_unique<Necromancer>(t, hpMul, damageMul);
+  else if (kind == EnemyKind::Thief)
+    e = std::make_unique<Thief>(t, hpMul, damageMul);
   else
     e = std::make_unique<Enemy>(t, hpMul, damageMul);
   e->plan = planOf(kind);
@@ -165,8 +193,13 @@ void Enemy::move() {
   if (!plan)
     return;
   const Player &p = *level->player;
-  x += (xWant * level->pace + xa) * DT;
-  y += (yWant * level->pace + ya) * DT;
+  float spdMul = 1.0f;
+  if (frenzy > 0) {
+    frenzy = std::max(0.0f, frenzy - DT);
+    spdMul = 1.35f;
+  }
+  x += (xWant * level->pace * spdMul + xa) * DT;
+  y += (yWant * level->pace * spdMul + ya) * DT;
   static const double KNOCK_DECAY = std::exp(-9 * DT);
   xa *= KNOCK_DECAY, ya *= KNOCK_DECAY;
   flash = std::max(0.0f, flash - DT);
@@ -249,7 +282,7 @@ void Enemy::render(Screen &s) {
   if (const Goal *g = goals.front())
     if (float t = g->tell(*this); t > 0)
       c = {c.r, c.g * (1 - 0.6f * t), c.b * (1 - 0.6f * t), c.a};
-  drawBody(s, xp, yp, type.tile, type.floats, 1, c, flash > 0 ? 1.0f : 0.0f,
+  drawBody(s, xp, yp, sprite(), type.floats, 1, c, flash > 0 ? 1.0f : 0.0f,
            col::white);
 }
 
@@ -260,11 +293,19 @@ void Enemy::renderLight(Screen &s) {
 
 void Enemy::renderShadow(Screen &s) { drawShadow(s, xp, yp, type.floats); }
 
+Sprite Enemy::sprite() const {
+  return type.art ? type.art(type.tile) : atlas::tile(type.tile);
+}
+
 const char *Enemy::name() const {
-  static const char *const NAMES[] = {"a bat",     "a rat",    "a slime",
-                                      "a scorpion", "a spider", "a ghost",
-                                      "a cultist", "a demon",  "a knight",
-                                      "the cyclops"};
+  static const char *const NAMES[] = {
+      "a bat",          "a rat",           "a slime",
+      "a scorpion",     "a spider",        "a ghost",
+      "a cultist",      "a demon",         "a knight",
+      "the cyclops",    "a wolf",          "an alpha wolf",
+      "a burrower",     "a necromancer",   "a skeleton",
+      "a treasure thief"
+  };
   return NAMES[&type - TYPES];
 }
 

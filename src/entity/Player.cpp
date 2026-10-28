@@ -64,7 +64,7 @@ void Player::render(Screen &s) {
     return;
   bool blink = invuln > 0 && std::fmod(invuln, 0.12f) < 0.06f;
   float move = float(std::sqrt(xa * xa + ya * ya) / speed);
-  drawBody(s, xp, yp, tile, false, move, col::white,
+  drawBody(s, xp, yp, atlas::tile(tile), false, move, col::white,
            blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
   int xt = xp + int(facing * 6);
   s.rect(xt, yp - 10, 1, 7, {0.42f, 0.26f, 0.13f, 1});

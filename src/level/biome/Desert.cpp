@@ -51,7 +51,7 @@ Desert::Desert()
              45,
              {0, 5, 20, 35, 40, 0, 0, 20},
              foe(EnemyKind::Scorpion) | foe(EnemyKind::Rat) |
-                 foe(EnemyKind::Demon),
+                 foe(EnemyKind::Burrower) | foe(EnemyKind::Demon),
              {{&f::cactus, 10, 50},
               {&f::barrelCactus, 6, 25},
               {&f::dryBush, 6, 30},

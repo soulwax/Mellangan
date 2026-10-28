@@ -12,7 +12,7 @@ public:
   }
 
 protected:
-  void drawBody(Screen &s, int px, int py, int tile, bool floats, float move,
+  void drawBody(Screen &s, int px, int py, Sprite body, bool floats, float move,
                 Color tint, float flashAmount, Color flashColor) const;
   void drawShadow(Screen &s, int px, int py, bool floats) const;
 };

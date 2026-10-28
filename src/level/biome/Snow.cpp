@@ -15,7 +15,8 @@ Snow::Snow()
            26,
            55,
            {10, 10, 20, 10, 10, 40, 10, 10},
-           foe(EnemyKind::Bat) | foe(EnemyKind::Ghost) | foe(EnemyKind::Knight),
+           foe(EnemyKind::Bat) | foe(EnemyKind::Ghost) |
+               foe(EnemyKind::Wolf) | foe(EnemyKind::Alpha),
            {{&f::snowPine, 25, 280},
             {&f::snowOak, 8, 120},
             {&f::snowBush, 6, 50},
