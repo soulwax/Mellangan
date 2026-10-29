@@ -82,6 +82,7 @@ namespace world {
 
 Climate climateAt(int x, int y);
 BiomeId biomeOf(Climate c);
+BiomeId biomeForLocation(int x, int y);
 BiomeId biomeAt(int x, int y);
 float clumpAt(int x, int y);
 int rim(int mask);

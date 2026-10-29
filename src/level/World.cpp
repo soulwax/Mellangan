@@ -131,7 +131,7 @@ const Biome *blendPick(int x, int y, uint32_t roll) {
 BiomeId rawBiome(int x, int y) {
   TileMemo *m = memoAt(x, y);
   if (!(m->bits & HAS_RAW))
-    m->bits |= HAS_RAW | uint32_t(biomeOf(climateAt(x, y))) << RAW_SHIFT;
+    m->bits |= HAS_RAW | uint32_t(biomeForLocation(x, y)) << RAW_SHIFT;
   return BiomeId(m->bits >> RAW_SHIFT & BIOME_BITS);
 }
 

@@ -12,6 +12,7 @@
 #include "entity/Pool.h"
 #include "entity/effect/GlaiveThrust.hpp"
 #include "entity/effect/IncenseCloud.hpp"
+#include "particle/DeathEffect.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/projectile/ChakramDisc.hpp"
@@ -250,6 +251,85 @@ static void testAutomaticLevelUp() {
   assert(p.pendingLevels == 0);
 }
 
+static void testGuiChoices() {
+  Game game;
+  Screen &s = game.screen;
+  s.w = 480, s.h = 270, s.u = 1;
+  auto cards = gui::ChoiceList::layout(s, 4);
+  gui::Panel panel(cards[0], col::panel, col::white, 1);
+  assert(panel.contains(cards[0].x + 1, cards[0].y + 1));
+  assert(!panel.contains(cards[0].x - 1, cards[0].y));
+  assert(cards[1].y - cards[0].y == 52);
+  assert(gui::ChoiceList::entrance(0, 0) == 0);
+  assert(gui::ChoiceList::entrance(1, 3) == 1);
+  gui::ChoiceList list;
+  Input in;
+  in.up.clicked = true;
+  auto result = list.update(in, cards, 4, false);
+  assert(list.selected == 3 && result.selectionChanged && result.activated == -1);
+  in.up.clicked = false;
+  in.confirm.clicked = true;
+  assert(list.update(in, cards, 4, false).activated == -1);
+  assert(list.update(in, cards, 4, true).activated == 3);
+  in.confirm.clicked = false;
+  in.mouseX = cards[1].x + 1;
+  in.mouseY = cards[1].y + 1;
+  in.mouseMoved = true;
+  result = list.update(in, cards, 4, true);
+  assert(list.selected == 1 && result.selectionChanged);
+  in.mouseMoved = false;
+  in.mouseClicked = true;
+  assert(list.update(in, cards, 4, false).activated == -1);
+  assert(list.update(in, cards, 4, true).activated == 1);
+  in.mouseClicked = false;
+  in.four.clicked = true;
+  assert(list.update(in, cards, 4, false).activated == 3);
+  assert(list.update(in, cards, 0, true).activated == -1);
+  std::cout << "[TEST] Reusable GUI layout, navigation and activation: PASS" << std::endl;
+}
+
+static void testEnemyDeathEffects() {
+  struct Case { EnemyKind kind; DeathStyle style; };
+  const Case cases[] = {{EnemyKind::Ghost, DeathStyle::Spirit},
+                        {EnemyKind::FrostWisp, DeathStyle::Spirit},
+                        {EnemyKind::Demon, DeathStyle::Flame},
+                        {EnemyKind::EmberImp, DeathStyle::Flame},
+                        {EnemyKind::Slime, DeathStyle::Slime},
+                        {EnemyKind::Bat, DeathStyle::Fallen},
+                        {EnemyKind::Spider, DeathStyle::Fallen},
+                        {EnemyKind::DustVulture, DeathStyle::Fallen}};
+  for (const Case &c : cases) {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    level.player->god = true;
+    auto enemy = Enemy::create(c.kind, 1, 1);
+    Enemy *e = enemy.get();
+    e->x = level.player->x + 30;
+    e->y = level.player->y;
+    level.add(std::move(enemy));
+    e->hurt(100000, 0, 0, 0);
+    assert(e->removed && level.kills == 1 && level.slain[int(c.kind)] == 1);
+    DeathEffect *effect = nullptr;
+    for (auto &p : level.particles)
+      if (auto *d = dynamic_cast<DeathEffect *>(p.get()))
+        effect = d;
+    assert(effect && effect->style == c.style);
+    if (c.style == DeathStyle::Spirit) {
+      double z = effect->z;
+      effect->tick();
+      assert(effect->z > z);
+    } else if (c.style == DeathStyle::Fallen) {
+      effect->z = effect->height = 8;
+      effect->tick();
+      assert(effect->z < 8);
+    }
+    game.level.reset();
+    assert(DeathEffect::alive == 0 && Debris::alive == 0 && Spark::alive == 0);
+  }
+  std::cout << "[TEST] Enemy death styles, motion, kill credit and cleanup: PASS" << std::endl;
+}
+
 static void testLevelLifecycleAndSimulation() {
   Game game;
   // run level lifecycle 3 times to check for leaks
@@ -305,6 +385,8 @@ int runTests() {
   testBiomeTransitions();
   testExperienceCurve();
   testAutomaticLevelUp();
+  testGuiChoices();
+  testEnemyDeathEffects();
   std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"
             << std::endl;

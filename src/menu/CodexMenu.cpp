@@ -3,6 +3,7 @@
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "gui/Widget.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Chart.hpp"
 #include "menu/PauseMenu.hpp"
@@ -165,9 +166,9 @@ void CodexMenu::render(Screen &s) {
   for (int direction : {-1, 1}) {
     SDL_FRect button = pageButton(s, direction);
     bool hover = inside(button, game.input);
-    s.rect(button.x, button.y, button.w, button.h, hover ? col::muted * 0.3f : col::panel);
-    s.frame(button.x, button.y, button.w, button.h, small, hover ? col::gold : col::muted);
-    s.textCenter(direction < 0 ? "<" : ">", button.x + button.w * 0.5f,
-                 button.y + 7 * small, small, col::gold);
+    gui::TextButton(button, hover ? col::muted * 0.3f : col::panel,
+                    hover ? col::gold : col::muted, small,
+                    direction < 0 ? "<" : ">", button.y + 7 * small,
+                    small, col::gold).render(s);
   }
 }

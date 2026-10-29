@@ -5,6 +5,7 @@
 #include "Atlas.hpp"
 #include "entity/enemy/ai/Goal.hpp"
 #include "gfx/Screen.hpp"
+#include "gfx/EnemyWarning.hpp"
 
 void Burrower::render(Screen &s) {
   if (buried) {
@@ -12,9 +13,7 @@ void Burrower::render(Screen &s) {
     if (const Goal *g = goals.front()) {
       float t = g->tell(*this);
       if (t > 0) {
-        s.color(Color{0.95f, 0.45f, 0.15f, t * 0.85f});
-        s.center(atlas::Ring, xMark, yMark, 32.0f / atlas::Ring.w, animT * 3.5f);
-        s.color(col::white);
+        enemyWarning(s, xMark, yMark, 16, t * 0.9f, animT * 3.5f);
       }
     }
     return;

@@ -111,6 +111,15 @@ BiomeId biomeOf(Climate c) {
   return BIOME_MEADOW;
 }
 
+BiomeId biomeForLocation(int x, int y) {
+  Climate c = climateAt(x, y);
+  double distance = std::hypot(double(x), double(y));
+  float blend = clampf(float((distance - 100.0) / 350.0), 0, 1);
+  blend = blend * blend * (3 - 2 * blend);
+  c.eerie *= blend;
+  return biomeOf(c);
+}
+
 float clumpAt(int x, int y) {
   float n = noise_fbm(x * 0.09f + 0.5f, y * 0.09f + 0.5f, 2, 404);
   return clampf((n - 0.05f) * 2.5f, 0, 1);

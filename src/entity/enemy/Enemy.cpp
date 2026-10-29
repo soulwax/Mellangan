@@ -19,7 +19,10 @@
 #include "entity/projectile/Orb.hpp"
 #include "level/Level.hpp"
 #include "particle/TextParticle.hpp"
+#include "particle/DeathEffect.hpp"
+#include "particle/Spark.hpp"
 #include "particle/debris/Debris.hpp"
+#include "particle/debris/FlameDebris.hpp"
 
 
 namespace {
@@ -389,5 +392,42 @@ void Enemy::die() {
     level->add<Potion>(x + 6, y);
   if (rng.chance(1 / 150.0f))
     level->add<Potion>(x, y);
-  Debris::gore(*level, x, y, 7 * scale, type.blood, !type.floats);
+  EnemyKind k = EnemyKind(kind());
+  bool spirit = k == EnemyKind::Ghost || k == EnemyKind::BogLantern ||
+                k == EnemyKind::FrostWisp;
+  bool flame = k == EnemyKind::Demon || k == EnemyKind::EmberImp ||
+               k == EnemyKind::CinderGolem;
+  bool slime = k == EnemyKind::Slime;
+  bool fallen = k == EnemyKind::Bat || k == EnemyKind::Scorpion ||
+                k == EnemyKind::Spider || k == EnemyKind::GlassMantis ||
+                k == EnemyKind::DustVulture;
+  if (spirit || flame || slime || fallen) {
+    DeathStyle style = spirit ? DeathStyle::Spirit : flame ? DeathStyle::Flame :
+                       slime ? DeathStyle::Slime : DeathStyle::Fallen;
+    if (DeathEffect::alive < 180)
+      level->add<DeathEffect>(x, y, float(z), sprite(), scale, facing,
+                              type.blood, style);
+    if (spirit || slime) {
+      for (int i = 0; i < 12 && Spark::alive < 500; i++)
+        level->add<Spark>(x + rng.range(-6, 6) * scale, bodyY(),
+                          rng.range(-15, 15), spirit ? -rng.range(25, 55) : rng.range(0, 8),
+                          type.blood, rng.range(0.4f, 0.9f), rng.range(0.3f, 0.7f), false);
+    } else if (flame) {
+      for (int i = 0; i < 12; i++)
+        FlameDebris::lick(*level, x + rng.range(-6, 6) * scale,
+                          y + rng.range(-4, 4) * scale, rng.range(2, 12) * scale, 1);
+      Spark::burst(*level, x, bodyY(), {1, 0.35f, 0.08f, 1}, 12, 70, true);
+    }
+  } else if (k == EnemyKind::Skeleton) {
+    Spark::burst(*level, x, bodyY(), type.blood, 14, 70, false);
+  } else {
+    Color blood = k == EnemyKind::Rat || k == EnemyKind::Cultist ||
+                          k == EnemyKind::Knight || k == EnemyKind::Cyclops ||
+                          k == EnemyKind::Wolf || k == EnemyKind::Alpha ||
+                          k == EnemyKind::Necromancer || k == EnemyKind::Thief
+                      ? Color{0.65f, 0.08f, 0.1f, 1}
+                      : type.blood;
+    Debris::gore(*level, x, y, 7 * scale, blood, true);
+    Spark::burst(*level, x, bodyY(), blood, 6, 45, false);
+  }
 }

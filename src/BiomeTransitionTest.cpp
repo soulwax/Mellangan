@@ -12,6 +12,9 @@
 #include "level/Noise.h"
 #include "level/World.hpp"
 #include "entity/Player.hpp"
+#include "gfx/EnemyWarning.hpp"
+#include "menu/LevelUpMenu.hpp"
+#include "menu/ShrineMenu.hpp"
 
 namespace {
 using world::GroundBlend;
@@ -170,6 +173,35 @@ void reachability() {
             << std::endl;
 }
 
+bool exotic(BiomeId b) {
+  return b == BIOME_BARROW || b == BIOME_ASHLANDS || b == BIOME_CRYSTAL ||
+         b == BIOME_FUNGAL || b >= BIOME_SALT;
+}
+
+void distanceDistribution() {
+  int count[3]{}, unusual[3]{};
+  for (uint32_t seed : {0u, 17u, 19u, 837u, 8675309u}) {
+    noise_reseed(seed);
+    for (int y = -1000; y <= 1000; y += 25)
+      for (int x = -1000; x <= 1000; x += 25) {
+        double d = std::hypot(double(x), double(y));
+        BiomeId b = world::biomeAt(x, y);
+        if (d <= 90)
+          assert(!exotic(b));
+        int band = d < 180 ? 0 : d < 450 ? 1 : d <= 1000 ? 2 : -1;
+        if (band >= 0)
+          count[band]++, unusual[band] += exotic(b);
+        if (d >= 460)
+          assert(world::biomeForLocation(x, y) == world::biomeOf(world::climateAt(x, y)));
+      }
+  }
+  assert(unusual[2] > 0);
+  assert(double(unusual[0]) / count[0] < double(unusual[2]) / count[2] * 0.5);
+  std::cout << "[TEST] Exotic biome samples near/middle/far: "
+            << unusual[0] << "/" << count[0] << ", " << unusual[1] << "/"
+            << count[1] << ", " << unusual[2] << "/" << count[2] << std::endl;
+}
+
 void crossings() {
   constexpr int SEEDS[] = {0, 17, 8675309};
   constexpr int BOUND = 2048, LINES = 32;
@@ -263,11 +295,23 @@ void chartMigration() {
     in.read(reinterpret_cast<char *>(&newMagic), sizeof newMagic);
     assert(in.good());
   }
-  assert(newMagic == 0x3443414Du);
+  assert(newMagic == 0x3543414Du);
   Chart roundTrip;
   roundTrip.load(saved.string());
   assert(roundTrip.at(0, 0) == current + 1);
   assert(roundTrip.at(1, 0) == 0);
+  header[0] = 0x3443414Du;
+  {
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    out.write(reinterpret_cast<const char *>(header), sizeof header);
+    out.write(reinterpret_cast<const char *>(&px), sizeof px);
+    out.write(reinterpret_cast<const char *>(&py), sizeof py);
+    out.write(reinterpret_cast<const char *>(cells), sizeof cells);
+    assert(out.good());
+  }
+  Chart scaled;
+  scaled.load(path.string());
+  assert(scaled.at(0, 0) == current + 1 && scaled.at(1, 0) == 0);
   std::filesystem::remove(path);
   std::filesystem::remove(saved);
   std::cout << "[TEST] Legacy biome chart migration and current-format round trip: PASS"
@@ -279,6 +323,7 @@ void testBiomeTransitions() {
   SaltRestore restore;
   noise_reseed(0);
   reachability();
+  distanceDistribution();
   for (int salt : {0, 19, 8675309}) {
     noise_reseed(uint32_t(salt));
     BiomeId a = world::biomeAt(-731, -419), b = world::biomeAt(931, -177);
@@ -361,4 +406,96 @@ void viewBiomeTransition(SDL_Window *window, const std::string &base, int x,
   std::cout << "[VIEW] Releasing screen" << std::endl;
   game.screen.unload();
   std::cout << "[VIEW] Screen released" << std::endl;
+}
+
+void viewDeathEffects(SDL_Window *window, const std::string &base) {
+  Game game;
+  game.window = window;
+  if (!game.screen.load(base))
+    return;
+  SDL_SetWindowAlwaysOnTop(window, true);
+  SDL_RaiseWindow(window);
+  game.level = std::make_unique<Level>(game);
+  Level &level = *game.level;
+  Player &player = *level.player;
+  player.god = true;
+  level.night.dawn = true;
+  const EnemyKind kinds[] = {EnemyKind::Rat, EnemyKind::Ghost, EnemyKind::Demon,
+                             EnemyKind::Slime, EnemyKind::Bat, EnemyKind::Spider};
+  bool running = true;
+  uint64_t ends = SDL_GetTicks() + 20000;
+  for (int frame = 0; running && SDL_GetTicks() < ends; frame++) {
+    SDL_Event e;
+    while (SDL_PollEvent(&e))
+      if (e.type == SDL_EVENT_QUIT ||
+          (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE))
+        running = false;
+    if (frame % 120 == 0)
+      for (int i = 0; i < 6; i++) {
+        auto enemy = Enemy::create(kinds[i], 1, 1);
+        Enemy *target = enemy.get();
+        target->x = player.x - 150 + i * 60;
+        target->y = player.y;
+        target->z = i == 4 ? 7 : 0;
+        level.add(std::move(enemy));
+        target->hurt(target->hp + 1, 0, 0, 0);
+      }
+    level.tick();
+    game.screen.xOffset = int(std::floor(player.x - Screen::W / 2.0));
+    game.screen.yOffset = int(std::floor(player.y - Screen::H / 2.0));
+    game.screen.beginLight({0.35f, 0.35f, 0.35f, 1});
+    level.renderLight(game.screen);
+    game.screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
+    level.render(game.screen);
+    enemyWarning(game.screen, player.x, player.y + 58, 24, 0.9f, 0);
+    game.screen.beginGui(window, {0, 0, 0, 0, 0});
+    const char *labels[] = {"RAT", "GHOST", "DEMON", "SLIME", "BAT", "SPIDER"};
+    for (int i = 0; i < 6; i++)
+      game.screen.textCenter(labels[i], 90.0f + i * 60, 95, 0.8f, col::white);
+    game.screen.textCenter("ENEMY WARNING", 240, 205, 0.8f, col::red);
+    vk2dRendererPresent();
+    SDL_Delay(16);
+  }
+  vk2dRendererWait();
+  game.level.reset();
+  game.screen.unload();
+}
+
+void viewGui(SDL_Window *window, const std::string &base) {
+  Game game;
+  game.window = window;
+  if (!game.screen.load(base))
+    return;
+  SDL_SetWindowAlwaysOnTop(window, true);
+  SDL_RaiseWindow(window);
+  game.level = std::make_unique<Level>(game);
+  LevelUpMenu upgrades(game);
+  ShrineMenu shrine(game);
+  upgrades.t = shrine.t = 1;
+  uint64_t start = SDL_GetTicks();
+  bool running = true;
+  while (running && SDL_GetTicks() - start < 20000) {
+    SDL_Event e;
+    while (SDL_PollEvent(&e))
+      if (e.type == SDL_EVENT_QUIT ||
+          (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE))
+        running = false;
+    Player &p = *game.level->player;
+    game.screen.xOffset = int(std::floor(p.x - Screen::W / 2.0));
+    game.screen.yOffset = int(std::floor(p.y - Screen::H / 2.0));
+    game.screen.beginLight({0.35f, 0.35f, 0.35f, 1});
+    game.level->renderLight(game.screen);
+    game.screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
+    game.level->render(game.screen);
+    game.screen.beginGui(window, {0, 0, 0, 0, 0});
+    if ((SDL_GetTicks() - start) / 5000 % 2 == 0)
+      upgrades.render(game.screen);
+    else
+      shrine.render(game.screen);
+    vk2dRendererPresent();
+    SDL_Delay(16);
+  }
+  vk2dRendererWait();
+  game.level.reset();
+  game.screen.unload();
 }

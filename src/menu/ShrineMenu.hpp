@@ -2,8 +2,7 @@
 
 #include <SDL3/SDL.h>
 
-#include <array>
-
+#include "gui/Widget.hpp"
 #include "menu/Menu.hpp"
 
 class ShrineMenu : public Menu {
@@ -15,6 +14,5 @@ public:
   float shrineEffect() const override { return 1.0f; }
 
 private:
-  int selected = 3;
-  std::array<SDL_FRect, 4> cards() const;
+  gui::ChoiceList selection{3};
 };

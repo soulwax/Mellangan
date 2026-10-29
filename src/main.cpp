@@ -61,6 +61,26 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  for (int i = 1; i < argc; i++)
+    if (std::string_view(argv[i]) == "--test-gui-view") {
+      viewGui(window, base);
+      vk2dRendererQuit();
+      SDL_DestroyWindow(window);
+      SDL_Quit();
+      pool_shutdown();
+      return 0;
+    }
+
+  for (int i = 1; i < argc; i++)
+    if (std::string_view(argv[i]) == "--test-effects-view") {
+      viewDeathEffects(window, base);
+      vk2dRendererQuit();
+      SDL_DestroyWindow(window);
+      SDL_Quit();
+      pool_shutdown();
+      return 0;
+    }
+
   for (int i = 1; i + 3 < argc; i++)
     if (std::string_view(argv[i]) == "--test-biome-view") {
       int x = 0, y = 0;

@@ -6,6 +6,14 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-10-29
+
+### Changed
+
+- Favor familiar biomes around spawn and introduce exotic regions gradually farther from the starting point; refresh older explored maps for the new geography.
+- Refactored reusable GUI panels, cards, buttons, badges, and choice navigation into shared components.
+- Made enemy attack circles red with warning ticks and added distinct particle deaths for spirits, demons, slimes, insects, flyers, and organic enemies.
+
 ## [0.5.2] - 2026-10-29
 
 ### Changed

@@ -3,6 +3,7 @@
 #include <cctype>
 
 #include "Game.hpp"
+#include "gui/Widget.hpp"
 #include "Version.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -173,9 +174,8 @@ void TitleMenu::render(Screen &s) {
 
   const SDL_FRect &f = l.seed;
   bool custom = mode == int(WorldMode::Custom);
-  s.rect(f.x, f.y, f.w, f.h, {0.02f, 0.02f, 0.04f, 0.9f});
-  s.frame(f.x, f.y, f.w, f.h, u,
-          (custom ? col::gold : col::muted).alpha(custom ? 0.6f : 0.25f));
+  gui::Panel(f, {0.02f, 0.02f, 0.04f, 0.9f},
+             (custom ? col::gold : col::muted).alpha(custom ? 0.6f : 0.25f), u).render(s);
   std::string code = game.worldName();
   if (custom && game.seedCode.empty())
     code.clear();

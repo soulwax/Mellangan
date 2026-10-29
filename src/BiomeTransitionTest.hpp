@@ -6,5 +6,7 @@
 #include <string>
 
 void testBiomeTransitions();
+void viewDeathEffects(SDL_Window *window, const std::string &base);
+void viewGui(SDL_Window *window, const std::string &base);
 void viewBiomeTransition(SDL_Window *window, const std::string &base, int x,
                          int y, uint32_t seed);

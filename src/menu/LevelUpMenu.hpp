@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "menu/Menu.hpp"
+#include "gui/Widget.hpp"
 
 class Upgrade;
 
@@ -21,12 +22,11 @@ public:
 private:
   std::vector<Upgrade *>
       choices; // nullptr: every upgrade is maxed, offer a feast
-  int selected = 0;
+  gui::ChoiceList selection;
 
   bool treasure = false;
   int evolveSlot = -1;
 
-  std::array<SDL_FRect, 4> cards() const;
   void apply(int i);
   void choose(int i);
 };

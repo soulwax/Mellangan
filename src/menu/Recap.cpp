@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "Game.hpp"
+#include "gui/Widget.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
@@ -136,8 +137,8 @@ float renderEndStats(Screen &s, const Level &l, float y, float alpha) {
   float cx = (s.w - cardW) * 0.5f;
   float cy = by + badgeH + 8 * u;
 
-  s.rect(cx, cy, cardW, cardH, col::panel.alpha(0.90f * alpha));
-  s.frame(cx, cy, cardW, cardH, u, col::muted.alpha(0.35f * alpha));
+  gui::Panel({cx, cy, cardW, cardH}, col::panel.alpha(0.90f * alpha),
+             col::muted.alpha(0.35f * alpha), u).render(s);
 
   float row1Y = cy + 4.5f * u;
   float col1X = cx + 10 * u;

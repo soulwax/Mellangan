@@ -50,15 +50,6 @@ const ShrineOption OPTIONS[4] = {{"FURY",
                                   "Esc"}};
 } // namespace
 
-std::array<SDL_FRect, 4> ShrineMenu::cards() const {
-  const Screen &s = game.screen;
-  float u = s.u, w = std::min(s.w * 0.90f, 440 * u), h = 46 * u, gap = 6 * u;
-  float y = s.h * 0.5f - (4 * h + 3 * gap) * 0.5f + 10 * u;
-  std::array<SDL_FRect, 4> r{};
-  for (int i = 0; i < 4; i++)
-    r[i] = {(s.w - w) * 0.5f, y + i * (h + gap), w, h};
-  return r;
-}
 
 void ShrineMenu::choose(int choice) {
   auto &n = game.level->night;
@@ -96,61 +87,29 @@ void ShrineMenu::tick() {
   Input &in = game.input;
   if (in.escape.clicked)
     return choose(3);
-  int prev = selected;
-  if (in.up.clicked)
-    selected = (selected + 3) % 4;
-  if (in.down.clicked)
-    selected = (selected + 1) % 4;
-  Key *keys[] = {&in.one, &in.two, &in.three, &in.four};
-  auto r = cards();
-  for (int i = 0; i < 4; i++) {
-    if (keys[i]->clicked)
-      return choose(i);
-    SDL_FPoint m{in.mouseX, in.mouseY};
-    if (!SDL_PointInRectFloat(&m, &r[i]))
-      continue;
-    if (in.mouseMoved && selected != i)
-      selected = i, Sound::select.play(0.4f, 0);
-    if (in.mouseClicked && t > 0.25f)
-      return choose(i);
-  }
-  if (selected != prev)
+  auto result = selection.update(in, gui::ChoiceList::layout(game.screen, 4),
+                                 4, t > 0.25f);
+  if (result.selectionChanged)
     Sound::select.play(0.4f, 0);
-  if (in.confirm.clicked && t > 0.25f)
-    choose(selected);
+  if (result.activated >= 0)
+    choose(result.activated);
 }
 
 void ShrineMenu::render(Screen &s) {
   float u = s.u, small = std::max(1.0f, u - 1);
-  auto r = cards();
+  auto r = gui::ChoiceList::layout(s, 4);
 
   s.textCenter("THE SHRINE OFFERS A BARGAIN", s.w * 0.5f, r[0].y - 28 * u,
                2 * u, col::gold.alpha(0.88f + 0.12f * std::sin(t * 5.0f)));
 
   for (int i = 0; i < 4; i++) {
-    float in = clampf((t - i * 0.05f) / 0.22f, 0, 1);
-    in = 1 - (1 - in) * (1 - in) * (1 - in);
+    float in = gui::ChoiceList::entrance(t, i);
     float x = r[i].x + (1 - in) * 32 * u, y = r[i].y, w = r[i].w, h = r[i].h;
-    bool sel = i == selected;
+    bool sel = i == selection.selected;
     const auto &opt = OPTIONS[i];
     Color themeCol = opt.color;
 
-    s.rect(x, y, w, h, col::panel.alpha(0.92f * in));
-    if (sel)
-      s.rect(x, y, w, h, themeCol.alpha(0.12f * in));
-    s.frame(x, y, w, h, sel ? 2 * u : u,
-            themeCol.alpha((sel ? 1.0f : 0.65f) * in));
-    if (sel) {
-      float tickLen = 7 * u;
-      s.line(x, y, x + tickLen, y, u, col::white.alpha(in));
-      s.line(x, y, x, y + tickLen, u, col::white.alpha(in));
-      s.line(x + w, y, x + w - tickLen, y, u, col::white.alpha(in));
-      s.line(x + w, y, x + w, y + tickLen, u, col::white.alpha(in));
-      s.line(x, y + h, x + tickLen, y + h, u, col::white.alpha(in));
-      s.line(x, y + h, x, y + h - tickLen, u, col::white.alpha(in));
-      s.line(x + w, y + h, x + w - tickLen, y + h, u, col::white.alpha(in));
-      s.line(x + w, y + h, x + w, y + h - tickLen, u, col::white.alpha(in));
-    }
+    gui::ChoiceCard({x, y, w, h}, themeCol, u, in, sel).render(s);
 
     float badgeSize = 24 * u;
     float bx = x + 6 * u, by = y + (h - badgeSize) * 0.5f;
@@ -174,11 +133,7 @@ void ShrineMenu::render(Screen &s) {
     float kw = std::max(18 * u, Screen::textWidth(opt.keyBadge, small) + 10 * u);
     float kh = 18 * u;
     float kx = x + w - kw - 8 * u, ky = y + (h - kh) * 0.5f;
-    s.rect(kx, ky, kw, kh, {0.10f, 0.08f, 0.15f, 0.85f * in});
-    s.frame(kx, ky, kw, kh, u, (sel ? themeCol : col::muted * 0.45f).alpha(in));
-    s.textCenter(opt.keyBadge, kx + kw * 0.5f,
-                 ky + (kh - 16 * small) * 0.5f, small,
-                 (sel ? col::white : col::muted).alpha(in));
+    gui::KeyBadge({kx, ky, kw, kh}, opt.keyBadge, themeCol, u, small, in, sel).render(s);
 
     float tagRight = kx - 8 * u;
     s.text(opt.cost, tagRight - Screen::textWidth(opt.cost, small),

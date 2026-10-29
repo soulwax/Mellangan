@@ -1,6 +1,7 @@
 #include "entity/enemy/ExpansionEnemy.hpp"
 
 #include "entity/Player.hpp"
+#include "gfx/EnemyWarning.hpp"
 #include "level/Level.hpp"
 #include "particle/Spark.hpp"
 
@@ -58,10 +59,12 @@ public:
 
   void render(Screen &s) override {
     Color c = tone(variant);
-    s.color(c.alpha(delay > 0 ? 0.65f : 0.3f * std::min(1.0f, life)));
-    s.center(atlas::Ring, xp, yp, radius * 2 / atlas::Ring.w, life * 0.4f);
-    if (delay <= 0)
+    enemyWarning(s, xp, yp, radius,
+                 delay > 0 ? 0.9f : 0.55f * std::min(1.0f, life), life * 0.4f);
+    if (delay <= 0) {
+      s.color(c.alpha(0.2f * std::min(1.0f, life)));
       s.center(atlas::Glow, xp, yp, radius * 2 / atlas::Glow.w);
+    }
     s.color(col::white);
   }
 };
@@ -231,10 +234,9 @@ void ExpansionEnemy::tick() {
 
 void ExpansionEnemy::render(Screen &s) {
   if (state == 1) {
-    Color c = tone(variant).alpha(0.8f);
+    Color c{1, 0.18f, 0.12f, 0.9f};
     float reach = variant == 0 ? 18.0f : variant == 1 ? 52.0f : 40.0f;
-    s.color(c);
-    s.center(atlas::Ring, xp, yp, reach * 2 / atlas::Ring.w, timer);
+    enemyWarning(s, xp, yp, reach, 0.9f, timer);
     if (variant == 2 || variant == 3 || variant == 5)
       s.line(xp, yp, xp + aimX * 90, yp + aimY * 90, 2, c);
     s.color(col::white);

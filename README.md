@@ -116,6 +116,10 @@ an eight-tile sampling radius at biome borders, while structures, dirt paths, la
 local shapes. Seeds remain deterministic; this generation change relocates biome boundaries. Old explored
 charts retain their explored area and refresh biome colours and structure markers when loaded.
 
+Familiar climates are concentrated near the spawn at the world origin. Exotic regions become more likely
+from roughly 100 to 450 tiles away, with the full biome distribution beyond that distance. Existing explored
+charts refresh their biome colours and structure markers when loaded under the new generation.
+
 Debug `--test` includes seeded biome-spacing and transition checks. To export a before/after map on Windows:
 
 ```powershell
@@ -126,6 +130,9 @@ uv run --with pillow tools/biome_transition_preview.py build/biome-transitions.c
 
 `./build/bin/Debug/MellanganApp.exe --test-biome-view 179 -142 0` opens a temporary rendered boundary view
 at tile `(179, -142)` with noise seed `0`, then exits after 20 seconds. It does not load or save player progress.
+`./build/bin/Debug/MellanganApp.exe --test-effects-view` shows a temporary, repeating enemy death and warning
+effects scene without loading or saving player progress.
+`./build/bin/Debug/MellanganApp.exe --test-gui-view` previews the level-up and shrine menus without saving progress.
 
 - `src/SpriteObject.hpp` – root of everything in the world: position, velocity, pixel position and a sprite
 - `src/entity` – `SpriteObject` → `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, and `Pool.c`
@@ -139,6 +146,7 @@ at tile `(179, -142)` with noise seed `0`, then exits after 20 seconds. It does 
   modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and
   `Encounter` (what a structure does when entered)
 - `src/menu` – title, pause, level-up, and death menus
+- `src/gui` – reusable GUI widgets and shared choice layout and input handling
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
 - `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites
