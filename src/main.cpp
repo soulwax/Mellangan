@@ -47,9 +47,12 @@ int main(int argc, char **argv) {
   installCrashHandler();
   spdlog::info("Mellangan v{}", MELLANGAN_VERSION);
 
+  SDL_WindowFlags flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
+#ifdef __APPLE__
+  flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+#endif
   SDL_Window *window =
-      SDL_CreateWindow("Mellangan", Screen::W * 3, Screen::H * 3,
-                       SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+      SDL_CreateWindow("Mellangan", Screen::W * 3, Screen::H * 3, flags);
   if (!window) {
     spdlog::critical("SDL_CreateWindow: {}", SDL_GetError());
     return 1;
@@ -69,6 +72,11 @@ int main(int argc, char **argv) {
     spdlog::critical("Vulkan2D init: {}", vk2dStatusMessage());
     return 1;
   }
+  int ww, wh, pw, ph;
+  SDL_GetWindowSize(window, &ww, &wh);
+  SDL_GetWindowSizeInPixels(window, &pw, &ph);
+  spdlog::info("{}", vk2dHostInformation());
+  spdlog::info("Window {}x{}, {}x{} pixels", ww, wh, pw, ph);
 
   for (int i = 1; i < argc; i++)
     if (std::string_view(argv[i]) == "--test-combat-view") {
