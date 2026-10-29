@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-10-29
+
 ### Changed
 
 - Improved hostile attack warnings and status indicators, and added a persistent reduced-particles option.
