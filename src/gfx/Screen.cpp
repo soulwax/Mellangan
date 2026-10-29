@@ -15,7 +15,7 @@ struct PostData {
   float time, hurt, lowHealth;
   uint32_t light;
   float resW, resH, vignette, grain;
-  float pause, shrine, pad0, pad1;
+  float pause, shrine, scale, pad;
 };
 
 static VK2DShader loadShader(const std::string &path, uint32_t uniformSize) {
@@ -39,8 +39,8 @@ bool Screen::load(const std::string &base) {
   font = vk2dTextureLoad(path("res/font.png").c_str());
   post = loadShader(path("res/shaders/post.spv"), sizeof(PostData));
   loadSilhouette(path("res/atlas.png"));
-  world = vk2dTextureCreate(W, H);
-  light = vk2dTextureCreate(W, H);
+  world = vk2dTextureCreate(MAX_W, MAX_H);
+  light = vk2dTextureCreate(MAX_W, MAX_H);
   if (atlas && silhouette && particles && font && post && world && light)
     return true;
   spdlog::error("Failed to load resources from {}res: {}", base,
@@ -57,6 +57,21 @@ void Screen::unload() {
       vk2dTextureFree(*t), *t = nullptr;
   if (silhouetteImg)
     vk2dImageFree(silhouetteImg), silhouetteImg = nullptr;
+}
+
+void Screen::fit(SDL_Window *window) {
+  int pw, ph;
+  SDL_GetWindowSizeInPixels(window, &pw, &ph);
+  float fw = float(std::max(pw, 1)), fh = float(std::max(ph, 1));
+  if (fw * H >= fh * W)
+    vw = std::min(MAX_W, int(std::round(H * fw / fh))), vh = H;
+  else
+    vw = W, vh = std::min(MAX_H, int(std::round(W * fh / fw)));
+}
+
+float Screen::reach() const {
+  return std::max(0.0f, std::hypot(float(vw), float(vh)) * 0.5f -
+                            std::hypot(float(W), float(H)) * 0.5f);
 }
 
 void Screen::beginLight(Color ambient) {
@@ -87,8 +102,7 @@ void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
   cam.w = w, cam.h = h, cam.zoom = 1;
   vk2dRendererSetCamera(cam);
 
-  float fit = std::min(w / W, h / H);
-  scale = fit >= 1 ? std::floor(fit) : fit;
+  scale = std::min(w / vw, h / vh);
   u = std::max(1.0f, std::round(scale * 0.5f));
   xOffset = yOffset = 0;
 
@@ -97,11 +111,11 @@ void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
   color(col::white);
 
   PostData data{fx.time,  fx.hurt,  fx.lowHealth, vk2dTextureGetID(light),
-                float(W), float(H), 0.85f,        0.02f,
-                fx.pause, fx.shrine, 0,            0};
-  vk2dRendererDrawShader(post, &data, world, std::floor((w - W * scale) / 2),
-                         std::floor((h - H * scale) / 2), scale, scale, 0, 0, 0,
-                         0, 0, W, H);
+                float(vw), float(vh), 0.85f,      0.02f,
+                fx.pause, fx.shrine, scale,        0};
+  vk2dRendererDrawShader(post, &data, world, std::floor((w - vw * scale) / 2),
+                         std::floor((h - vh * scale) / 2), scale, scale, 0, 0, 0,
+                         0, 0, float(vw), float(vh));
 }
 
 void Screen::color(Color c) {
@@ -239,5 +253,5 @@ void Screen::textCenter(std::string_view s, double cx, double y, float size,
 
 bool Screen::visible(double x, double y, float m) const {
   double xv = x - xOffset, yv = y - yOffset;
-  return xv > -m && yv > -m && xv < W + m && yv < H + m;
+  return xv > -m && yv > -m && xv < vw + m && yv < vh + m;
 }

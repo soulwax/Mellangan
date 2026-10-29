@@ -106,8 +106,8 @@ public:
 private:
   static constexpr int GRID = 48;
   static constexpr float CELL = 28;
-  static constexpr int SOLID_W = Screen::W / 16 + 8,
-                       SOLID_H = Screen::H / 16 + 8;
+  static constexpr int SOLID_W = Screen::MAX_W / 16 + 8,
+                       SOLID_H = Screen::MAX_H / 16 + 8;
 
   std::vector<std::unique_ptr<Entity>> pending;
   std::vector<entt::entity> dead;

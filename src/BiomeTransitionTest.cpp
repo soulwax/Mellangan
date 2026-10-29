@@ -405,8 +405,9 @@ void viewBiomeTransition(SDL_Window *window, const std::string &base, int x,
       if (e.type == SDL_EVENT_QUIT ||
           (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE))
         running = false;
-    game.screen.xOffset = int(std::floor(p.x - Screen::W / 2.0));
-    game.screen.yOffset = int(std::floor(p.y - Screen::H / 2.0));
+    game.screen.fit(window);
+    game.screen.xOffset = int(std::floor(p.x - game.screen.vw / 2.0));
+    game.screen.yOffset = int(std::floor(p.y - game.screen.vh / 2.0));
     game.screen.beginLight({0.3f, 0.3f, 0.3f, 1});
     game.level->renderLight(game.screen);
     game.screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
@@ -461,8 +462,9 @@ void viewDeathEffects(SDL_Window *window, const std::string &base) {
         target->hurt(target->hp + 1, 0, 0, 0);
       }
     level.tick();
-    game.screen.xOffset = int(std::floor(player.x - Screen::W / 2.0));
-    game.screen.yOffset = int(std::floor(player.y - Screen::H / 2.0));
+    game.screen.fit(window);
+    game.screen.xOffset = int(std::floor(player.x - game.screen.vw / 2.0));
+    game.screen.yOffset = int(std::floor(player.y - game.screen.vh / 2.0));
     game.screen.beginLight({0.35f, 0.35f, 0.35f, 1});
     level.renderLight(game.screen);
     game.screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
@@ -501,8 +503,9 @@ void viewGui(SDL_Window *window, const std::string &base) {
           (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE))
         running = false;
     Player &p = *game.level->player;
-    game.screen.xOffset = int(std::floor(p.x - Screen::W / 2.0));
-    game.screen.yOffset = int(std::floor(p.y - Screen::H / 2.0));
+    game.screen.fit(window);
+    game.screen.xOffset = int(std::floor(p.x - game.screen.vw / 2.0));
+    game.screen.yOffset = int(std::floor(p.y - game.screen.vh / 2.0));
     game.screen.beginLight({0.35f, 0.35f, 0.35f, 1});
     game.level->renderLight(game.screen);
     game.screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
@@ -553,8 +556,9 @@ void viewBiomeEncounter(SDL_Window *window, const std::string &base) {
           (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE))
         running = false;
     level.tick();
-    game.screen.xOffset = int(std::floor(p.x - Screen::W / 2.0));
-    game.screen.yOffset = int(std::floor(p.y - Screen::H / 2.0));
+    game.screen.fit(window);
+    game.screen.xOffset = int(std::floor(p.x - game.screen.vw / 2.0));
+    game.screen.yOffset = int(std::floor(p.y - game.screen.vh / 2.0));
     game.screen.beginLight({0.35f, 0.35f, 0.35f, 1});
     level.renderLight(game.screen);
     game.screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
@@ -619,8 +623,9 @@ void viewCombatReadability(SDL_Window *window, const std::string &base) {
     if (frame % 20 == 0)
       Spark::burst(level, p.x, p.y - 15, col::gold, 14, 100, true);
     level.tick();
-    game.screen.xOffset = int(std::floor(p.x - Screen::W / 2.0));
-    game.screen.yOffset = int(std::floor(p.y - Screen::H / 2.0));
+    game.screen.fit(window);
+    game.screen.xOffset = int(std::floor(p.x - game.screen.vw / 2.0));
+    game.screen.yOffset = int(std::floor(p.y - game.screen.vh / 2.0));
     game.screen.beginLight({0.3f, 0.3f, 0.3f, 1});
     level.renderLight(game.screen);
     game.screen.beginWorld({0.04f, 0.03f, 0.06f, 1});

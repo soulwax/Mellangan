@@ -369,8 +369,9 @@ void Game::render() {
   double xj = 0, yj = 0;
   if (shake > 0.05f)
     xj = rng.range(-1, 1) * shake, yj = rng.range(-1, 1) * shake;
-  screen.xOffset = int(std::floor(xCam + xj - Screen::W / 2.0f));
-  screen.yOffset = int(std::floor(yCam + yj - Screen::H / 2.0f));
+  screen.fit(window);
+  screen.xOffset = int(std::floor(xCam + xj - screen.vw / 2.0f));
+  screen.yOffset = int(std::floor(yCam + yj - screen.vh / 2.0f));
 
   float d = level->night.daylight();
   screen.beginLight({lerpf(0.06f, 0.42f, d), lerpf(0.07f, 0.34f, d),
@@ -404,14 +405,14 @@ void Game::renderCompass() {
     return;
   Screen &s = screen;
   float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
-  float xo = std::floor((s.w - Screen::W * k) / 2),
-        yo = std::floor((s.h - Screen::H * k) / 2);
-  float xm = xo + Screen::W * k * 0.5f, ym = yo + Screen::H * k * 0.5f;
+  float xo = std::floor((s.w - s.vw * k) / 2),
+        yo = std::floor((s.h - s.vh * k) / 2);
+  float xm = xo + s.vw * k * 0.5f, ym = yo + s.vh * k * 0.5f;
   float xt = xo + float(n.beacon.centerX() - xView) * k,
         yt = yo + float(n.beacon.centerY() - 24 - yView) * k;
   float xd = xt - xm, yd = yt - ym,
         dd = std::max(1.0f, std::sqrt(xd * xd + yd * yd));
-  float xh = Screen::W * k * 0.5f - 18 * u, yh = Screen::H * k * 0.5f - 18 * u;
+  float xh = s.vw * k * 0.5f - 18 * u, yh = s.vh * k * 0.5f - 18 * u;
   float fit = std::min({1.0f, xd != 0 ? xh / std::abs(xd) : 1e9f,
                         yd != 0 ? yh / std::abs(yd) : 1e9f});
   float xe = xm + xd * fit, ye = ym + yd * fit, xn = xd / dd, yn = yd / dd;

@@ -55,10 +55,11 @@ void Spawner::tick() {
   if (t >= nextWave) {
     nextWave += 60;
     int count = std::min(64, 24 + int(t / 12));
+    double r = 270 + level.game.screen.reach();
     for (int i = 0; i < count; i++) {
       double dir = TAU * i / count;
-      spawn(pool.back(), level.player->x + std::cos(dir) * 270,
-            level.player->y + std::sin(dir) * 270);
+      spawn(pool.back(), level.player->x + std::cos(dir) * r,
+            level.player->y + std::sin(dir) * r);
     }
     level.game.announce("THE HORDE CLOSES IN");
     Sound::horde.play(0.7f, 0);
@@ -115,6 +116,7 @@ void Spawner::ring(float dist, double &x, double &y) const {
     dir = std::atan2(p.ya, p.xa) + rng.range(-0.8f, 0.8f);
   else
     dir = rng.range(0, TAU);
+  dist += level.game.screen.reach();
   x = p.x + std::cos(dir) * dist;
   y = p.y + std::sin(dir) * dist;
 }

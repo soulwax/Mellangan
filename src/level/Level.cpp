@@ -42,8 +42,8 @@ template <class F>
 void eachVisibleTile(const Screen &s, F &&f, int before = 0, int after = 0) {
   int x0 = int(std::floor(s.xOffset / 16.0)) - before,
       y0 = int(std::floor(s.yOffset / 16.0)) - before;
-  for (int y = y0; y <= y0 + before + Screen::H / 16 + 1 + after; y++)
-    for (int x = x0; x <= x0 + before + Screen::W / 16 + 1 + after; x++)
+  for (int y = y0; y <= y0 + before + s.vh / 16 + 1 + after; y++)
+    for (int x = x0; x <= x0 + before + s.vw / 16 + 1 + after; x++)
       f(x, y);
 }
 

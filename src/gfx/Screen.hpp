@@ -31,15 +31,17 @@ struct PostFx {
 };
 class Screen {
 public:
-  static constexpr int W = 480, H = 270;
+  static constexpr int W = 480, H = 270, MAX_W = 640, MAX_H = 360;
 
-  int xOffset = 0, yOffset = 0;
+  int xOffset = 0, yOffset = 0, vw = W, vh = H;
   float w = 1, h = 1, scale = 1, u = 1;
 
   ~Screen() { unload(); }
   bool load(const std::string &base);
   void unload();
 
+  void fit(SDL_Window *window);
+  float reach() const;
   void beginLight(Color ambient);
   void beginWorld(Color clear);
   void beginGui(SDL_Window *window, const PostFx &fx);

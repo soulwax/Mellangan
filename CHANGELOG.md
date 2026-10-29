@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The view now fills the window on every platform: 16:9 windows show the familiar 480×270 world, wider or taller windows reveal more of it (up to 640×270 or 480×360) instead of showing black bars, and the world scales by any factor with crisp pixel-art filtering. Enemy spawn rings move out with the view so enemies still appear off screen.
+
 ### Added
 
 - Native Apple Silicon macOS builds as a self-contained `Mellangan.app` (macOS 12+) with embedded MoltenVK, an icon and bundle metadata; `setup-macos.sh` installs a reproducible Homebrew toolchain plus pinned `slangc` and MoltenVK.

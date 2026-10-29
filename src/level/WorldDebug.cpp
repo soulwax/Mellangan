@@ -12,14 +12,15 @@ struct View {
   float xo, yo;
   double xw, yw;
   float k;
+  int vw, vh;
 
   float guiX(double x) const { return float(xo + (x - xw) * k); }
   float guiY(double y) const { return float(yo + (y - yw) * k); }
   double worldX(float x) const { return xw + (x - xo) / k; }
   double worldY(float y) const { return yw + (y - yo) / k; }
   bool inside(float x, float y) const {
-    return x >= xo && y >= yo && x < xo + Screen::W * k &&
-           y < yo + Screen::H * k;
+    return x >= xo && y >= yo && x < xo + vw * k &&
+           y < yo + vh * k;
   }
 };
 
@@ -64,25 +65,25 @@ void Level::renderWorldDebug(Screen &s, int xView, int yView, float xMouse,
                              float yMouse) {
   float k = s.scale, u = s.u, small = std::max(1.0f, u - 1),
         t = SDL_GetTicks() / 1000.0f;
-  View v{std::floor((s.w - Screen::W * k) / 2),
-         std::floor((s.h - Screen::H * k) / 2), double(xView), double(yView),
-         k};
+  View v{std::floor((s.w - s.vw * k) / 2),
+         std::floor((s.h - s.vh * k) / 2), double(xView), double(yView),
+         k, s.vw, s.vh};
   constexpr float RP = world::REGION * 16;
 
   int tx0 = int(std::floor(xView / 16.0)), ty0 = int(std::floor(yView / 16.0));
   int rx0 = world::regionOf(tx0), ry0 = world::regionOf(ty0);
-  int rx1 = world::regionOf(tx0 + Screen::W / 16 + 1),
-      ry1 = world::regionOf(ty0 + Screen::H / 16 + 1);
+  int rx1 = world::regionOf(tx0 + s.vw / 16 + 1),
+      ry1 = world::regionOf(ty0 + s.vh / 16 + 1);
   Color grid{1, 1, 1, 0.16f};
   for (int rx = rx0; rx <= rx1 + 1; rx++) {
     float gx = v.guiX(rx * RP);
-    if (gx >= v.xo && gx < v.xo + Screen::W * k)
-      s.rect(gx, v.yo, 1, Screen::H * k, grid);
+    if (gx >= v.xo && gx < v.xo + s.vw * k)
+      s.rect(gx, v.yo, 1, s.vh * k, grid);
   }
   for (int ry = ry0; ry <= ry1 + 1; ry++) {
     float gy = v.guiY(ry * RP);
-    if (gy >= v.yo && gy < v.yo + Screen::H * k)
-      s.rect(v.xo, gy, Screen::W * k, 1, grid);
+    if (gy >= v.yo && gy < v.yo + s.vh * k)
+      s.rect(v.xo, gy, s.vw * k, 1, grid);
   }
   for (int ry = ry0; ry <= ry1; ry++)
     for (int rx = rx0; rx <= rx1; rx++) {
@@ -114,8 +115,8 @@ void Level::renderWorldDebug(Screen &s, int xView, int yView, float xMouse,
       if (!world::structureIn(rx, ry, st))
         continue;
       auto [x, y, w, h] = box(st, 0);
-      if (x + w < v.xo || y + h < v.yo || x > v.xo + Screen::W * k ||
-          y > v.yo + Screen::H * k)
+      if (x + w < v.xo || y + h < v.yo || x > v.xo + s.vw * k ||
+          y > v.yo + s.vh * k)
         continue;
       seen++;
       bool hot = hoverStructure && hovered.rx == rx && hovered.ry == ry;
@@ -136,10 +137,10 @@ void Level::renderWorldDebug(Screen &s, int xView, int yView, float xMouse,
              c);
     float xf = v.guiX(player->x), yf = v.guiY(player->bodyY());
     float xt = v.guiX(target.centerX()), yt = v.guiY(target.centerY());
-    float xm = v.guiX(xView + Screen::W * 0.5),
-          ym = v.guiY(yView + Screen::H * 0.5);
-    float xh = Screen::W * k * 0.5f - 14 * u,
-          yh = Screen::H * k * 0.5f - 14 * u, xd = xt - xm, yd = yt - ym;
+    float xm = v.guiX(xView + s.vw * 0.5),
+          ym = v.guiY(yView + s.vh * 0.5);
+    float xh = s.vw * k * 0.5f - 14 * u,
+          yh = s.vh * k * 0.5f - 14 * u, xd = xt - xm, yd = yt - ym;
     float fit = std::min(xd != 0 ? xh / std::abs(xd) : INFINITY,
                          yd != 0 ? yh / std::abs(yd) : INFINITY);
     bool offscreen = fit < 1;
