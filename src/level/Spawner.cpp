@@ -7,7 +7,6 @@
 #include "level/Level.hpp"
 #include "level/biome/Biome.hpp"
 
-
 void Spawner::tick() {
   float t = level.time;
   std::vector<EnemyKind> pool, common;
@@ -22,17 +21,18 @@ void Spawner::tick() {
     uint32_t foes =
         BIOMES[world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)))]
             ->foes;
-    BiomeId region=world::biomeAt(int(std::floor(x/16)),int(std::floor(y/16)));
-    if (region==BIOME_MIRE)
-      foes|=foe(EnemyKind::MireLeech)|foe(EnemyKind::BogLantern);
-    if (region==BIOME_DESERT || region==BIOME_BADLANDS)
-      foes|=foe(EnemyKind::GlassMantis)|foe(EnemyKind::DustVulture);
-    if (region==BIOME_SNOW || region==BIOME_TAIGA)
-      foes|=foe(EnemyKind::FrostWisp)|foe(EnemyKind::Iceback);
-    if (region==BIOME_FUNGAL)
-      foes|=foe(EnemyKind::Sporeling)|foe(EnemyKind::MycelialBrute);
-    if (region==BIOME_ASHLANDS)
-      foes|=foe(EnemyKind::EmberImp)|foe(EnemyKind::CinderGolem);
+    BiomeId region =
+        world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)));
+    if (region == BIOME_MIRE)
+      foes |= foe(EnemyKind::MireLeech) | foe(EnemyKind::BogLantern);
+    if (region == BIOME_DESERT || region == BIOME_BADLANDS)
+      foes |= foe(EnemyKind::GlassMantis) | foe(EnemyKind::DustVulture);
+    if (region == BIOME_SNOW || region == BIOME_TAIGA)
+      foes |= foe(EnemyKind::FrostWisp) | foe(EnemyKind::Iceback);
+    if (region == BIOME_FUNGAL)
+      foes |= foe(EnemyKind::Sporeling) | foe(EnemyKind::MycelialBrute);
+    if (region == BIOME_ASHLANDS)
+      foes |= foe(EnemyKind::EmberImp) | foe(EnemyKind::CinderGolem);
     EnemyKind local[int(EnemyKind::Count)];
     int m = 0;
     for (EnemyKind k : pool)
@@ -56,10 +56,11 @@ void Spawner::tick() {
   if (t >= nextWave) {
     nextWave += 60;
     int count = std::min(64, 24 + int(t / 12));
+    double r = 270 + level.game.screen.reach();
     for (int i = 0; i < count; i++) {
       double dir = TAU * i / count;
-      spawn(common.back(), level.player->x + std::cos(dir) * 270,
-            level.player->y + std::sin(dir) * 270);
+      spawn(pool.back(), level.player->x + std::cos(dir) * r,
+            level.player->y + std::sin(dir) * r);
     }
     level.game.announce("THE HORDE CLOSES IN");
     Sound::horde.play(0.7f, 0);
@@ -116,6 +117,7 @@ void Spawner::ring(float dist, double &x, double &y) const {
     dir = std::atan2(p.ya, p.xa) + rng.range(-0.8f, 0.8f);
   else
     dir = rng.range(0, TAU);
+  dist += level.game.screen.reach();
   x = p.x + std::cos(dir) * dist;
   y = p.y + std::sin(dir) * dist;
 }

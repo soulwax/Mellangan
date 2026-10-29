@@ -6,14 +6,22 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-10-29
+
+### Changed
+
+- The view now fills the window on every platform: 16:9 windows show the familiar 480×270 world, wider or taller windows reveal more of it (up to 640×270 or 480×360) instead of showing black bars, and the world scales by any factor with crisp pixel-art filtering. Enemy spawn rings move out with the view so enemies still appear off screen.
+
+### Added
+
+- Native Apple Silicon macOS builds as a self-contained `Mellangan.app` (macOS 12+) with embedded MoltenVK, an icon and bundle metadata; `setup-macos.sh` installs a reproducible Homebrew toolchain plus pinned `slangc` and MoltenVK.
+- macOS windows render at full Retina resolution, and startup logs the renderer, device and window pixel size.
+- `dist.sh` packages the macOS build as an ad hoc signed `Mellangan.app` zip instead of a bare executable with a launcher script.
+- On macOS the log and Vulkan2D error file are written to the application support folder instead of next to the executable.
+
 ### Fixed
 
-- Regional monsters stay in their regions. Wandering spawns and the minute horde draw only from the classic roster
-  again, instead of filling every biome with whichever regional monster unlocked last, such as cinder golems and
-  mycelial brutes after three minutes. Wolves, burrowers, necromancers and the ten expansion monsters now appear only
-  where their biome calls for them.
-- The ten expansion biomes host fitting monsters instead of an index-shifted pair. For example, the Ember Fen has
-  ember imps and leeches rather than frost wisps and icebacks, and the Glass Desert has glass mantises and burrowers.
+- Vulkan2D enables portability enumeration on macOS only when the instance offers it (SDL always requests it), checks descriptor-indexing features by name, clamps the texture limit to the device, drops obsolete device layers, and keeps running when the validation layer is missing or fails to load.
 
 ## [0.5.4] - 2026-10-29
 
@@ -26,6 +34,15 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - Biome challenges now feature local enemies and themed permanent run rewards, with stronger rewards in exotic regions.
+
+### Fixed
+
+- Regional monsters stay in their regions. Wandering spawns and the minute horde draw only from the classic roster
+  again, instead of filling every biome with whichever regional monster unlocked last, such as cinder golems and
+  mycelial brutes after three minutes. Wolves, burrowers, necromancers and the ten expansion monsters now appear only
+  where their biome calls for them.
+- The ten expansion biomes host fitting monsters instead of an index-shifted pair. For example, the Ember Fen has
+  ember imps and leeches rather than frost wisps and icebacks, and the Glass Desert has glass mantises and burrowers.
 
 ## [0.5.3] - 2026-10-29
 

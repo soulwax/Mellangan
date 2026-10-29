@@ -25,14 +25,28 @@ struct PostData
     float grain;
     float pause;
     float shrine;
-    float2 _pad;
+    float scale;       // screen pixels per world pixel
+    float _pad;
 };
 [[vk::binding(3, 3)]]
 ConstantBuffer<PostData> post;
 
+float2 inView(float2 uv)
+{
+    return clamp(uv, 0.5, post.resolution - 0.5);
+}
+
 float3 albedoAt(float2 uv)
 {
-    return textures[push.textureIndex].Sample(sampler, uv).rgb;
+    float2 p = uv - 0.5;
+    float2 i = floor(p);
+    float2 f = saturate((p - i - 0.5) * post.scale + 0.5);
+    float2 base = i + 0.5;
+    float3 a = textures[push.textureIndex].Sample(sampler, inView(base)).rgb;
+    float3 b = textures[push.textureIndex].Sample(sampler, inView(base + float2(1, 0))).rgb;
+    float3 c = textures[push.textureIndex].Sample(sampler, inView(base + float2(0, 1))).rgb;
+    float3 d = textures[push.textureIndex].Sample(sampler, inView(base + float2(1, 1))).rgb;
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
 }
 float3 lightAt(float2 uv)
 {
@@ -40,17 +54,17 @@ float3 lightAt(float2 uv)
     float2 i = floor(p);
     float2 f = p - i;
     float2 base = i + 0.5;
-    float3 a = textures[post.lightTexture].Sample(sampler, base).rgb;
-    float3 b = textures[post.lightTexture].Sample(sampler, base + float2(1, 0)).rgb;
-    float3 c = textures[post.lightTexture].Sample(sampler, base + float2(0, 1)).rgb;
-    float3 d = textures[post.lightTexture].Sample(sampler, base + float2(1, 1)).rgb;
+    float3 a = textures[post.lightTexture].Sample(sampler, inView(base)).rgb;
+    float3 b = textures[post.lightTexture].Sample(sampler, inView(base + float2(1, 0))).rgb;
+    float3 c = textures[post.lightTexture].Sample(sampler, inView(base + float2(0, 1))).rgb;
+    float3 d = textures[post.lightTexture].Sample(sampler, inView(base + float2(1, 1))).rgb;
     float3 l = lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
     return l * 1.6; // light map stores 0.625 as neutral so lights can over-expose
 }
 
 float3 litAt(float2 uv)
 {
-    return albedoAt(uv) * textures[post.lightTexture].Sample(sampler, uv).rgb * 1.6;
+    return albedoAt(uv) * textures[post.lightTexture].Sample(sampler, inView(uv)).rgb * 1.6;
 }
 
 float3 aces(float3 x)

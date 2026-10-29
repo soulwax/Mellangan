@@ -1,6 +1,6 @@
 # Mellangan
 
-Linux support is coming, possibly macos.
+Linux support is coming. macOS on Apple Silicon builds as a native app.
 
 The programming paradigm is "C with classes": that means the game is written in C++20 and might feel like C++ but the code is structured to use C idioms.
 
@@ -64,6 +64,33 @@ cmake --build build
 
 Single-config generators default to a Release build. Players need a Vulkan driver (Mesa or the GPU vendor's).
 Crashes log a backtrace to `mellangan.log` next to the executable.
+
+### macOS (Apple Silicon)
+
+Install the Xcode command line tools (`xcode-select --install`) and [Homebrew](https://brew.sh), then run
+`./setup-macos.sh`. It installs CMake, Ninja, the Vulkan headers and loader, MoltenVK, the validation layers and
+`vulkaninfo` from Homebrew, registers the validation layer under `~/.config/vulkan`, and downloads pinned,
+checksummed `slangc` and MoltenVK releases into the ignored `build-deps/` folder, where CMake finds them. Then:
+
+```sh
+cmake -S . -B build-macos -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_OSX_ARCHITECTURES=arm64
+cmake --build build-macos
+open build-macos/bin/Mellangan.app
+```
+
+The result is a self-contained `Mellangan.app` for macOS 12 or newer: it links and embeds MoltenVK, loads assets
+from `Contents/Resources/res`, and needs no Vulkan SDK or environment variables. Run
+`build-macos/bin/Mellangan.app/Contents/MacOS/Mellangan --test` for the test suite. The log, `vk2derror.txt`,
+saves and the Codex live in `~/Library/Application Support/soulwax/Mellangan/`.
+
+For Vulkan validation during development, configure a second tree with `-DMELLANGAN_VULKAN_LOADER=ON`; it links
+Homebrew's loader instead of embedding MoltenVK, so that build only runs on the machine that built it. Do not set
+`VK_ICD_FILENAMES` to Homebrew's mock driver; `vulkaninfo --summary` should list your Apple GPU with MoltenVK.
+`./dist.sh` on a Mac packages `dist/Mellangan-<version>-macos-arm64.zip`: a Release `Mellangan.app` with only the
+shipped assets, arm64 MoltenVK, a dependency check and an ad hoc signature, plus a `.sha256`.
+
+The macOS download is not notarized yet. After unzipping, macOS refuses the first launch; open System Settings →
+Privacy & Security and choose **Open Anyway** for Mellangan, or run `xattr -dr com.apple.quarantine Mellangan.app`.
 
 ## Releasing
 
