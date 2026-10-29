@@ -421,6 +421,70 @@ def relic(index):
     return c.image()
 
 
+def shrine_symbol(index):
+    FIRE = ((140, 28, 24), (220, 64, 32), (255, 160, 48), (255, 235, 120))
+    EMERALD = ((18, 64, 36), (42, 140, 72), (110, 220, 120), (200, 255, 190))
+    ASTRAL = ((28, 18, 52), (62, 44, 110), (124, 92, 180))
+    CYAN = ((18, 70, 110), (46, 150, 215), (140, 235, 255), (240, 255, 255))
+    if index == 0:
+        c = Canvas()
+        c.line(7.5, 2, 7.5, 13, FIRE[1], 2)
+        c.line(7.5, 4, 7.5, 11, FIRE[2], 1)
+        c.put(7, 3, FIRE[3])
+        c.put(8, 3, FIRE[3])
+        c.curve(3, 11, 4, -8, 2, FIRE[0], 2)
+        c.curve(12, 11, 11, -8, 2, FIRE[0], 2)
+        c.line(4, 8, 4, 11, FIRE[1])
+        c.line(11, 8, 11, 11, FIRE[1])
+        c.put(4, 5, FIRE[2])
+        c.put(11, 5, FIRE[2])
+        c.rect(5, 12, 10, 14, ((70, 16, 20), (120, 24, 28), (180, 42, 40)))
+        c.put(7, 13, GOLD[2])
+        c.put(8, 13, GOLD[2])
+        return c.image(True)
+    if index == 1:
+        c = Canvas()
+        c.ellipse(7.5, 6.5, 3.5, 3.5, EMERALD)
+        c.put(7, 6, EMERALD[3])
+        c.put(8, 6, EMERALD[3])
+        c.curve(2, 14, 5, -8, 2, WOOD[1], 2)
+        c.curve(13, 14, 10, -8, 2, WOOD[0], 2)
+        c.line(4, 11, 11, 13, WOOD[1], 2)
+        c.line(11, 11, 4, 13, WOOD[0], 2)
+        c.line(7.5, 10, 7.5, 14, WOOD[1], 2)
+        c.cluster(6, 1, (".##", "###"), EMERALD[2])
+        c.put(7, 2, EMERALD[3])
+        c.cluster(1, 4, ("##", ".#"), EMERALD[1])
+        c.cluster(12, 4, ("##", "#."), EMERALD[1])
+        return c.image(True)
+    if index == 2:
+        c = Canvas()
+        c.tri(7.5, 2, 9, 6, ASTRAL)
+        c.tri(7.5, 13, 9, -6, ASTRAL)
+        c.ellipse(7.5, 7.5, 4.0, 2.5, ((200, 210, 230), (235, 242, 255), (255, 255, 255)))
+        c.ellipse(7.5, 7.5, 2.0, 2.0, CYAN)
+        c.put(7, 7, GOLD[2])
+        c.put(8, 7, GOLD[2])
+        return c.image(True)
+    c = Canvas()
+    c.rect(4, 10, 11, 12, GOLD)
+    c.line(5, 10, 10, 10, GOLD[2])
+    c.line(6, 13, 9, 13, GOLD[1], 2)
+    c.line(4, 14, 11, 14, GOLD[0])
+    c.put(7, 11, (220, 50, 40))
+    c.put(8, 11, (220, 50, 40))
+    c.line(7.5, 2, 7.5, 9, FIRE[2], 2)
+    c.line(7.5, 4, 7.5, 8, FIRE[3], 1)
+    c.put(7, 3, (255, 255, 255))
+    c.put(8, 3, (255, 255, 255))
+    c.curve(4, 9, 4, -4, 1, FIRE[1], 2)
+    c.curve(11, 9, 11, -4, 1, FIRE[1], 2)
+    c.put(5, 5, FIRE[2])
+    c.put(10, 5, FIRE[2])
+    return c.image(True)
+
+
+
 def biome_prop(biome, variant):
     c = Canvas()
     pal, accent = PALETTES[biome], ACCENTS[biome]
@@ -688,6 +752,8 @@ def add_expansion(atlas):
     for i in range(8):
         place_cell(out, ACTORS, 14 + i, weapon(i))
         place_cell(out, ACTORS, 22 + i, relic(i))
+    for i in range(4):
+        place_cell(out, ACTORS, 30 + i, shrine_symbol(i))
     for biome in range(10):
         for variant in range(3):
             place_cell(out, BANDS[7], biome * 3 + variant, biome_prop(biome, variant))
@@ -754,7 +820,7 @@ def reference_errors(atlas):
 
 
 def expansion_errors(atlas):
-    names = MONSTERS + HEROES + WEAPONS + RELICS
+    names = MONSTERS + HEROES + WEAPONS + RELICS + tuple(f"shrine {i}" for i in range(4))
     checks = [(sprite(atlas, i % 24 * 18 + 1,
                       ACTORS.y + i // 24 * 18 + 1), name)
               for i, name in enumerate(names)]

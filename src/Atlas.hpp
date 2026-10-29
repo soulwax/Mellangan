@@ -164,6 +164,7 @@ constexpr Sprite expansion(int index) {
 }
 namespace ex {
 constexpr int MireLeech = 0, RicochetSling = 14;
+constexpr int ShrineFury = 30, ShrineRoots = 31, ShrineVision = 32, ShrineFlame = 33;
 }
 constexpr Sprite biomeProp(int index) {
   return {float((index % 24) * 18 + 1), float(660 + (index / 24) * 18 + 1), 16,

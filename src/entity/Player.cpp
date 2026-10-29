@@ -47,9 +47,12 @@ void Player::tick() {
   float v = speed * level->step * status.movement();
   xa += (xd * v - xa) * k;
   ya += (yd * v - ya) * k;
+  double px = x, py = y;
   x += xa * DT;
   y += ya * DT;
   level->collide(x, y, radius);
+  double mx = x - px, my = y - py;
+  level->distanceRan += float(std::sqrt(mx * mx + my * my));
   if (xd != 0)
     facing = xd > 0 ? 1.0f : -1.0f;
   if (xd != 0 || yd != 0)

@@ -54,8 +54,10 @@ Level::Level(Game &game) : game(game) {
   player = add<Player>();
   flush();
   Bounty::roll(bounties, 3);
-  if (rng.chance(0.2f))
+  if (rng.chance(0.2f)) {
     omen = rng.irange(0, OMEN_COUNT - 1);
+    handicaps += (omen == 0 ? 2 : 1);
+  }
 }
 
 SpriteObject *Level::spawn(std::unique_ptr<SpriteObject> p) {

@@ -24,7 +24,8 @@ struct PostData
     float vignette;
     float grain;
     float pause;
-    float3 _pad;
+    float shrine;
+    float2 _pad;
 };
 [[vk::binding(3, 3)]]
 ConstantBuffer<PostData> post;
@@ -103,6 +104,43 @@ float4 PixelShader(float2 uv)
         float3 frozen = float3(blurLuma, blurLuma, blurLuma) * float3(0.55, 0.58, 0.72);
         col = lerp(col, frozen, p * 0.75);
         col *= (1.0 - smoothstep(0.35, 1.05, dist) * (0.45 * p));
+    }
+
+    if (post.shrine > 0.001)
+    {
+        float sAmt = saturate(post.shrine);
+        float2 sc = n * float2(res.x / res.y, 1.0);
+        float sDist = length(sc);
+        float sAng = atan2(sc.y, sc.x);
+
+        float rays1 = sin(sAng * 7.0 + post.time * 1.8) * 0.5 + 0.5;
+        float rays2 = sin(sAng * 11.0 - post.time * 2.4 + sDist * 6.0) * 0.5 + 0.5;
+        float rays = lerp(rays1, rays2, 0.4);
+
+        float wave = sDist * 3.5 - post.time * 1.2;
+        float3 rainbow = 0.5 + 0.5 * cos(6.28318 * (wave * 0.3 + float3(0.0, 0.33, 0.67) + rays * 0.15));
+
+        float2 prismOff = n * (0.015 * sAmt);
+        float3 albedoPrism = float3(
+            albedoAt(uv + prismOff * 2.0).r,
+            albedoAt(uv).g,
+            albedoAt(uv - prismOff * 2.0).b
+        );
+        float3 litPrism = albedoPrism * lightAt(uv);
+        litPrism = aces(litPrism * 1.2);
+
+        float centerGlow = exp(-sDist * 2.2) * 1.4;
+        float rings = sin(sDist * 22.0 - post.time * 4.0) * 0.5 + 0.5;
+        float pulse = 0.85 + 0.15 * sin(post.time * 3.5);
+
+        float3 aura = rainbow * (0.7 + 0.3 * rays) * pulse;
+        float3 psychCol = litPrism * (0.6 + aura * 1.4) + aura * (centerGlow * 0.5 + rings * 0.12 * sDist);
+
+        float edgeGlow = smoothstep(0.35, 1.15, sDist);
+        float3 edgeAmethyst = float3(0.35, 0.08, 0.45) * (0.7 + 0.3 * sin(sAng * 5.0 + post.time * 2.0));
+        psychCol += edgeAmethyst * edgeGlow * 0.6;
+
+        col = lerp(col, psychCol, sAmt * 0.85);
     }
 
     col += (hash(floor(uv) + frac(post.time * 7.31) * 113.0) - 0.5) * post.grain;

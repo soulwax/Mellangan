@@ -6,14 +6,14 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-29
+
+### Added
+
+- Comprehensive end-game run statistics with a 21-tier performance ranking (F- to S+), distance ran tracking with kilometre overflow, total damage dealt, and signature class styling.
+- Overhauled menu aesthetics with un-squashed level-up cards, psychedelic background illumination shader, and custom multi-color symbol sprites for shrine offerings.
+
 ## [0.4.8] - 2026-10-29
-
-### Fixed
-
-- Refined level-up card proportions and typography layout:
-  - Relaxed card dimensions and line spacing to resolve text squashing between titles and descriptions.
-  - Right-anchored tier progression tags and hero class labels beside shortcut badges for clean visual breathing room.
-  - Enhanced procedural category symbol badges with proportional spacing.
 
 ### Fixed
 

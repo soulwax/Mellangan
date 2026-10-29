@@ -112,6 +112,7 @@ void BiomeEvents::tick(Level &level) {
   bool first = nextPulse == current.begins;
   nextPulse = level.time + 0.5f;
   if (inside) {
+    if (first) level.handicaps++;
     p.felledBy = NAMES[current.biome - BIOME_SALT];
     switch (current.biome) {
     case BIOME_SALT:

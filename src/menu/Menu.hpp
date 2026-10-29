@@ -17,4 +17,5 @@ public:
   virtual bool showHud() const { return true; }
   virtual bool typing() const { return false; }
   virtual float pauseEffect() const { return 0; }
+  virtual float shrineEffect() const { return 0; }
 };

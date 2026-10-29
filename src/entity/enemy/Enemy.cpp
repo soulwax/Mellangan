@@ -349,6 +349,7 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
     damage *= level->player->hero ? level->player->hero->edge() : 1.8f;
   if (src)
     src->dealt += std::min(damage, std::max(hp, 0.0f));
+  level->totalDamage += damage;
   hp -= damage;
   flash = 0.1f;
   aware = true;

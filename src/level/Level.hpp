@@ -43,6 +43,8 @@ public:
   uint32_t entered = 0, litBiomes = 0;
   float pace = 1, step = 1, xpMul = 1, eliteMul = 1, kindleRate = 1;
   int omen = -1;
+  float distanceRan = 0, totalDamage = 0;
+  int handicaps = 0;
   Bounty bounties[3];
   Spawner spawner{*this};
   Night night{*this};

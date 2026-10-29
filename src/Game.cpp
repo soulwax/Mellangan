@@ -360,7 +360,8 @@ void Game::render() {
 
   float health = p.hp / p.maxHp;
   float pause = menu ? menu->pauseEffect() : 0.0f;
-  screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0, pause});
+  float shrine = menu ? menu->shrineEffect() : 0.0f;
+  screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0, pause, shrine});
   if (worldDebug && dev)
     level->renderWorldDebug(screen, xView, yView, input.mouseX, input.mouseY);
   if (!menu || menu->showHud())
