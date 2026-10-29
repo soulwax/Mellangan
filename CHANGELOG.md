@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-10-29
+
 ### Changed
 
 - The view now fills the window on every platform: 16:9 windows show the familiar 480×270 world, wider or taller windows reveal more of it (up to 640×270 or 480×360) instead of showing black bars, and the world scales by any factor with crisp pixel-art filtering. Enemy spawn rings move out with the view so enemies still appear off screen.
