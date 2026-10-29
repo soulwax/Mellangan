@@ -202,14 +202,12 @@ void BiomeEvents::render(Screen &s, const Level &level) const {
                  warning ? 0.8f : 0.5f, level.time * 0.15f);
   else {
     s.color(c.alpha(warning ? 0.8f : 0.4f));
-    s.center(atlas::Ring, current.x, current.y,
-             current.radius * 2 / atlas::Ring.w, level.time * 0.15f);
+    s.ring(current.x, current.y, current.radius);
   }
   if (warning) {
     float progress = clampf((level.time - current.begins + 3) / 3, 0, 1);
     s.color((dangerous ? col::red : c).alpha(0.7f));
-    s.center(atlas::Ring, current.x, current.y,
-             current.radius * 2 * progress / atlas::Ring.w);
+    s.ring(current.x, current.y, current.radius * progress);
   } else {
     s.color(c.alpha(0.16f));
     s.center(atlas::Glow, current.x, current.y,

@@ -2,6 +2,7 @@
 
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "particle/Mote.hpp"
 #include "particle/Spark.hpp"
 #include "level/Level.hpp"
 
@@ -24,8 +25,10 @@ void SoulSiphon::tick(Player &p) {
   float dmg = (14.0f + 6 * at(level, 3)) * p.might * power;
   for (Enemy *e : targets) {
     e->hurt(dmg, 0, 0, 0, this);
-    Spark::burst(*p.level, e->x, e->bodyY(), {0.9f, 0.3f, 0.35f, 1}, 4, 40,
-                 true);
+    Spark::burst(*p.level, e->x, e->bodyY(), {0.9f, 0.3f, 0.35f, 1}, 3, 30,
+                 false);
+    p.level->add<Mote>(e->x, e->bodyY(), atlas::pt::Wisp,
+                       Color{1, 0.55f, 0.62f, 0.95f}, rng.range(0.5f, 0.7f));
   }
   p.hp = std::min(p.maxHp, p.hp + float(targets.size()));
 }

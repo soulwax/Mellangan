@@ -16,4 +16,5 @@ public:
 private:
   const Halo &halo;
   const Player &player;
+  float spin = 0;
 };

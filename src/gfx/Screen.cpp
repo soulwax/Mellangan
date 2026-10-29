@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <string>
 
+#include "Math.hpp"
+
 extern "C" VK2DShader vk2dShaderFrom(const uint8_t *vert, int vertSize,
                                      const uint8_t *frag, int fragSize,
                                      uint32_t uniformSize);
@@ -124,11 +126,12 @@ void Screen::color(Color c) {
   vk2dRendererSetColourMod(v);
 }
 
-void Screen::particle(int icon, double x, double y, Color c) {
+void Screen::particle(int icon, double x, double y, Color c, float scale,
+                      float rot) {
   color(c);
-  vk2dRendererDrawTexture(particles, float(x - xOffset - 4),
-                          float(y - yOffset - 4), 1, 1, 0, 0, 0,
-                          float(icon % 8 * 8), float(icon / 8 * 8), 8, 8);
+  vk2dRendererDrawTexture(particles, float(x - xOffset - 4 * scale),
+                          float(y - yOffset - 4 * scale), scale, scale, rot, 4,
+                          4, float(icon % 8 * 8), float(icon / 8 * 8), 8, 8);
   color(col::white);
 }
 
@@ -177,7 +180,7 @@ void Screen::glow(double x, double y, float size, Color c) {
     return;
   lightBudget--;
   color(c);
-  center(atlas::Glow, x, y, size / atlas::Glow.w);
+  center(atlas::Light, x, y, size / atlas::Light.w);
 }
 
 void Screen::rect(double x, double y, float rw, float rh, Color c) {
@@ -203,6 +206,18 @@ void Screen::bracket(float x, float y, float w, float h, float u) {
   for (int i = 0; i < 4; i++) {
     rect(i & 1 ? x + w - tick : x, i & 2 ? y + h - u : y, tick, u, c);
     rect(i & 1 ? x + w - u : x, i & 2 ? y + h - tick : y, u, tick, c);
+  }
+}
+
+void Screen::ring(double x, double y, float r, Color c, float width) {
+  if (r < 1)
+    return;
+  int n = std::clamp(int(r * 0.9f), 12, 72);
+  double px = x + r, py = y;
+  for (int i = 1; i <= n; i++) {
+    double a = TAU * i / n, qx = x + std::cos(a) * r, qy = y + std::sin(a) * r;
+    line(px, py, qx, qy, width, c);
+    px = qx, py = qy;
   }
 }
 

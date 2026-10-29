@@ -6,7 +6,9 @@
 
 DeathEffect::DeathEffect(double x, double y, float height, Sprite body,
                          float size, float facing, Color tint, DeathStyle style)
-    : Particle(x, y, style == DeathStyle::Fallen ? 1.6f : 1.0f), style(style),
+    : Particle(x, y, style == DeathStyle::Fallen ? 1.6f :
+                     style == DeathStyle::Gilded ? 0.9f : 1.0f),
+      style(style),
       size(size), facing(facing), height(height), tint(tint) {
   sprite = body;
   z = height;
@@ -22,6 +24,9 @@ void DeathEffect::tick() {
     z = height + t * 30;
   else if (style == DeathStyle::Fallen)
     z = height * std::max(0.0f, 1 - t * 5);
+  if (style == DeathStyle::Gilded && rng.chance(0.25f) && Spark::alive < 500)
+    level->add<Spark>(x + rng.range(-6, 6) * size, y - rng.range(2, 14) * size,
+                      0, -rng.range(4, 12), tint, 0.4f, 0.5f, true);
   if (style == DeathStyle::Flame && rng.chance(0.45f))
     FlameDebris::lick(*level, x + rng.range(-5, 5) * size, y,
                       rng.range(3, 13) * size, 1);
@@ -48,6 +53,14 @@ void DeathEffect::render(Screen &s) {
     sy *= 1 - 0.35f * fall;
   } else if (style == DeathStyle::Flame) {
     sy *= 1 - t * 0.7f;
+  } else if (style == DeathStyle::Gilded) {
+    float crumble = std::max(0.0f, t - 0.6f) / 0.4f;
+    sy *= 1 - 0.5f * crumble * crumble;
+    s.color(col::white.alpha(1 - crumble));
+    s.flash(sprite, xp, yp, 8, 16, sx, sy, 0, 0.8f - 0.3f * t,
+            t < 0.08f ? col::white : tint);
+    s.color(col::white);
+    return;
   }
   s.color(col::white.alpha(fade));
   s.sprite(sprite, xp, yp, 8, 16, sx, sy, rotation);

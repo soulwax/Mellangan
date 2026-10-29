@@ -16,4 +16,5 @@ private:
   float damage, life = 0.3f;
   bool struck = false;
   std::array<float, 7> jag{};
+  std::array<float, 3> fork{};
 };

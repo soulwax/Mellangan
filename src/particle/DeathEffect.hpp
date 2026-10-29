@@ -4,7 +4,7 @@
 
 #include "particle/Particle.hpp"
 
-enum class DeathStyle { Spirit, Flame, Slime, Fallen };
+enum class DeathStyle { Spirit, Flame, Slime, Fallen, Gilded };
 
 class DeathEffect : public Particle {
 public:

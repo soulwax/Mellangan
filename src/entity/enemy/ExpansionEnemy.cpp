@@ -65,7 +65,7 @@ public:
       enemyWarning(s, xp, yp, radius, trail ? 0.6f : 0.9f, life * 0.4f);
     else if (trail) {
       s.color(c.alpha(0.3f * fade));
-      s.center(atlas::Ring, xp, yp, radius * 2 / atlas::Ring.w, life * 0.4f);
+      s.ring(xp, yp, radius);
     } else
       enemyWarning(s, xp, yp, radius, 0.55f * fade, life * 0.4f);
     if (delay <= 0) {
@@ -251,7 +251,7 @@ void ExpansionEnemy::render(Screen &s) {
   Enemy::render(s);
   if (variant == 7) {
     s.color(tone(variant).alpha(0.2f));
-    s.center(atlas::Ring, xp, yp, 140.0f / atlas::Ring.w, animT * 0.3f);
+    s.ring(xp, yp, 70);
     s.color(col::white);
   }
 }

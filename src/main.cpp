@@ -149,10 +149,13 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
       game.dev |= std::string_view(argv[i]) == "--dev";
       game.bench.enabled |= std::string_view(argv[i]) == "--bench";
+      if (std::string_view(argv[i]) == "--arm" && i + 1 < argc)
+        game.arm = argv[++i];
     }
     if (game.dev)
       spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world "
-                   "debug, F9 warp to nearest structure");
+                   "debug, F9 warp to nearest structure; --arm \"A,B!\" "
+                   "starts runs with those upgrades");
     if (game.dev) {
       constexpr ouroboros::Ouroboros council;
       int n = int(SDL_GetTicks() % 1000);

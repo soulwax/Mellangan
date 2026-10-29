@@ -9,17 +9,34 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - The Alpha Wolf howls, the Burrower erupts with a crack of stone and the Necromancer raises the dead with a rattle of bones, each with its own sound. These voices play only on screen and are rate-limited, so a large pack still sounds like one cue.
+- Developer flag `--arm "Name,Other!"` (with `--dev`) starts every run with those upgrades at full level; `!` evolves one, and a leading `=` drops the class starter and skips level-ups, so one ability can be watched alone.
 
 ### Changed
 
+- Frost Nova looks like one: a bright ring of frost bursts outward, flinging ice shards and leaving glinting frost on the ground.
+- Meteor drops a molten rock from the sky instead of lobbing a bomb: a gold ring and a growing shadow mark where it lands, a fiery streak follows it down, and the impact throws rocks and leaves a burning, scorched crater.
+- The Arcane Staff fires violet arcane missiles that spin, trail sparks and leave a fading rune where they strike; the Archmage's Staff fires larger ones.
+- Chain Lightning arcs from you through each foe in turn instead of calling bolts from the sky, and Static Field snaps arcs to every foe it shocks inside a crackling edge ring.
+- Storm Rod bolts fork, flash a ring across the ground and leave a scorch mark.
+- Judgement is a pillar of holy light: a gold rune circle tightens on the target, the beam slams down and a halo ring lingers.
+- Warding Halo shows its reach as a ring of slowly turning runes that flares with each pulse.
+- Radiance bursts as a gold sunburst, and a glint flies back to you from every foe it mends you for; Aegis wraps you in a golden shield for exactly as long as you are untouchable.
+- Soul Siphon pulls crimson souls out of its victims and into you, and Wraith Bolts are bone-white spirits trailing dark smoke.
+- Fire Bombs fly with a sputtering fuse, burst with a ring and a scorch mark, and leave pools of dancing flame.
+- Acid Flasks tumble through the air, shatter into glass and leave sizzling green pools of popping bubbles instead of fire.
+- Transmute turns the foes it kills into gold statues that flash, crumble and scatter coins.
+- Glows, rings and shadows are pixel art now: rings are crisp one-pixel outlines drawn at their true radius, glows are banded and dithered, and shadows are hard-edged; lighting stays smooth.
+
 - Each of the ten expansion biomes now favours structures that suit it (mines in the Hollow Caverns, ruins in the Sunken Ruins, standing stones in Starfall Basin) instead of one picked by position.
 - Classic castles, graveyards and mines always keep their own encounter; biome challenges only take over smaller sites there.
+- Banners (region names, encounters, hordes, bosses) sit on a dark plate framed by thin gold rules, so they stay readable over a dense crowd.
 - Frost, spore and ember trails show a red warning only while they arm, then settle into a soft ring in their element's colour, so crowded fights stay readable.
 
 ### Fixed
 
 - Moonlight and storm events no longer tell you to move to safety, count as a handicap or show up as your cause of death; they now invite you to step inside.
 - Removed a Cyclops entry from the Badlands spawn list that could never trigger.
+- The F3 frame counter sits above the class-skill panel instead of overlapping it.
 
 ## [0.5.5] - 2026-10-29
 

@@ -2,7 +2,7 @@
 
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
-#include "entity/effect/Strike.hpp"
+#include "entity/effect/Smite.hpp"
 #include "level/Level.hpp"
 
 Judgement::Judgement()
@@ -24,6 +24,6 @@ void Judgement::tick(Player &p) {
   float dmg = (38.0f + 12 * at(level, 3)) * p.might * power,
         r = 20.0f + 8 * at(level, 3);
   for (Enemy *e : targets)
-    p.level->add<Strike>(e->x, e->y, dmg, r)->source = this;
+    p.level->add<Smite>(e->x, e->y, dmg, r)->source = this;
   Sound::thunder.play(0.25f);
 }

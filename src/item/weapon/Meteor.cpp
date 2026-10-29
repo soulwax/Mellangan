@@ -2,7 +2,7 @@
 
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
-#include "entity/projectile/Bomb.hpp"
+#include "entity/projectile/MeteorRock.hpp"
 #include "level/Level.hpp"
 
 Meteor::Meteor()
@@ -23,9 +23,9 @@ void Meteor::tick(Player &p) {
   for (int i = 0; i <= at(level, 5); i++) {
     Enemy *e = targets[rng.irange(0, int(targets.size()) - 1)];
     p.level
-        ->add<Bomb>(e->x, e->y - 140, e->x, e->y,
-                    (50.0f + 20 * at(level, 2)) * p.might * power,
-                    30.0f + 10 * at(level, 3), 6 * p.might * power, 2)
+        ->add<MeteorRock>(e->x, e->y,
+                          (50.0f + 20 * at(level, 2)) * p.might * power,
+                          30.0f + 10 * at(level, 3), 6 * p.might * power)
         ->source = this;
   }
 }

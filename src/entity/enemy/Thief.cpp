@@ -13,9 +13,9 @@ void Thief::render(Screen &s) {
     float t = g->tell(*this);
     if (t > 0) {
       s.color(Color{0.4f, 0.9f, 1.0f, t * 0.75f});
-      s.center(atlas::Ring, xp, yp - 4, 24.0f / atlas::Ring.w, animT * 5.0f);
+      s.ring(xp, yp - 4, 12);
       s.color(Color{1.0f, 0.85f, 0.3f, t * 0.65f});
-      s.center(atlas::Ring, xp, yp - 4, 18.0f / atlas::Ring.w, -animT * 4.0f);
+      s.ring(xp, yp - 4, 9);
       s.color(col::white);
     }
   }

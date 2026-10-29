@@ -26,7 +26,7 @@ void WraithBolts::tick(Player &p) {
     double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x);
     p.level
         ->add<Bolt>(p.x, p.bodyY(), std::cos(dir) * 200, std::sin(dir) * 200,
-                    dmg, 1 + at(level, 4), e->id)
+                    dmg, 1 + at(level, 4), e->id, BoltStyle::Wraith)
         ->source = this;
   }
   Sound::cast.play(0.3f);

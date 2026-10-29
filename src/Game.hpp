@@ -40,7 +40,7 @@ public:
   static constexpr int HISTORY = 6;
 
   WorldMode worldMode = WorldMode::Classic;
-  std::string seedCode;
+  std::string seedCode, arm;
   std::vector<PastWorld> history;
   Codex codex;
   float best = 0;
@@ -57,6 +57,7 @@ public:
   void newGame(bool reroll = true);
   void toTitle();
   void reseed();
+  void armPlayer();
   std::string worldName() const;
   void announce(std::string text);
   void setReducedParticles(bool reduced);

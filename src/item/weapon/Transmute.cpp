@@ -3,6 +3,7 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "entity/pickup/Gem.hpp"
+#include "particle/Mark.hpp"
 #include "particle/Spark.hpp"
 #include "level/Level.hpp"
 
@@ -24,10 +25,13 @@ void Transmute::tick(Player &p) {
   for (int i = 0; i <= at(level, 5) && i < int(targets.size()); i++) {
     Enemy *e = targets[i];
     double x = e->x, y = e->y;
+    e->gilded = true;
     e->hurt((110.0f + 40 * at(level, 2)) * p.might * power, 0, 0, 0, this);
+    e->gilded = e->removed;
     if (e->removed)
       Gem::drop(*p.level, x, y, 2.0f + 2 * at(level, 3));
-    Spark::burst(*p.level, x, y - 6, col::gold, 14, 90, true);
+    p.level->add<Mark>(x, y - 8, 0.6f, atlas::pt::HolyGlint, col::gold, 1.5f);
+    Spark::burst(*p.level, x, y - 6, col::gold, 8, 70, true);
   }
   Sound::chest.play(0.3f);
 }

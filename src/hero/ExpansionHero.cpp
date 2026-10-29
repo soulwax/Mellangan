@@ -60,14 +60,14 @@ public:
     if (d < 1e-5)
       return;
     level->add<Bolt>(x, y - 7, xd / d * 190, yd / d * 190, damage, 1,
-                     e.id);
+                     e.id, BoltStyle::Tinker);
     Spark::burst(*level, x, y - 7, col::gold, 3, 30, true);
   }
 
   void render(Screen &s) override {
     s.sprite(atlas::frontier(atlas::fr::LanternPost), xp, yp, 8, 16);
     s.color(col::gold.alpha(0.5f * std::min(1.0f, life)));
-    s.center(atlas::Ring, xp, yp, 0.45f, life);
+    s.ring(xp, yp, 14);
     s.color(col::white);
   }
 

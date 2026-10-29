@@ -133,6 +133,8 @@ void Game::tick() {
     if (input.confirm.clicked)
       level->player->cast();
     level->tick();
+    if (dev && !arm.empty() && arm.front() == '=')
+      level->player->pendingLevels = level->player->pendingTreasures = 0;
     if (!menuChanged && level->night.offering)
       setMenu(std::make_unique<ShrineMenu>(*this));
     else if (!menuChanged && level->player->pendingLevels > 0)
@@ -235,6 +237,8 @@ void Game::newGame(bool reroll) {
   if (worldMode == WorldMode::Random && reroll)
     seedCode.clear();
   reseed();
+  if (dev && !arm.empty())
+    armPlayer();
   setMenu(nullptr);
   best = 0, beatBest = false;
   if (level->omen >= 0)
@@ -244,6 +248,36 @@ void Game::newGame(bool reroll) {
     if (w.code == worldName())
       best = w.best;
   spdlog::info("New run in world {}", worldName());
+}
+
+void Game::armPlayer() {
+  Player &p = *level->player;
+  std::string_view list = arm;
+  if (list.front() == '=') {
+    list.remove_prefix(1);
+    for (auto &u : p.upgrades)
+      u->level = 0;
+  }
+  while (!list.empty()) {
+    size_t comma = list.find(',');
+    std::string_view name = list.substr(0, comma);
+    list.remove_prefix(comma == list.npos ? list.size() : comma + 1);
+    bool evolve = !name.empty() && name.back() == '!';
+    if (evolve)
+      name.remove_suffix(1);
+    auto it = std::find_if(p.upgrades.begin(), p.upgrades.end(),
+                           [&](auto &u) { return name == u->name; });
+    if (it == p.upgrades.end()) {
+      spdlog::warn("dev: no upgrade named {}", name);
+      continue;
+    }
+    Upgrade &u = **it;
+    while (!u.maxed())
+      u.levelUp(p);
+    if (evolve && u.evolvedName)
+      u.evolve();
+    spdlog::info("dev: armed {} at level {}", u.name, u.level);
+  }
 }
 
 namespace {
@@ -392,11 +426,13 @@ void Game::render() {
     renderHud();
   if (menu)
     menu->render(screen);
-  if (showFps)
+  if (showFps) {
+    float size = std::max(1.0f, screen.u - 1);
     screen.text(fmt::format("{:.0f} fps  {} entities", fps,
                             level->reg.view<Owned>().size()),
-                4 * screen.u, screen.h - 40 * screen.u,
-                std::max(1.0f, screen.u - 1), col::muted);
+                4 * screen.u, screen.h - 46 * screen.u - 16 * size, size,
+                col::muted);
+  }
 }
 
 void Game::renderCompass() {
@@ -544,6 +580,12 @@ void Game::renderHud() {
 
   if (bannerTime > 0 && !menu) {
     float a = std::min({1.0f, bannerTime * 2, (3 - bannerTime) * 4});
-    s.textCenter(banner, s.w / 2, s.h * 0.22f, 2 * u, col::gold.alpha(a));
+    float size = 2 * u, y = s.h * 0.22f;
+    float pw = Screen::textWidth(banner, size) + 24 * u, ph = 16 * size + 8 * u;
+    float px = std::floor(s.w / 2 - pw / 2), py = y - 2 * u;
+    s.rect(px, py, pw, ph, col::panel.alpha(0.72f * a));
+    s.rect(px, py, pw, u, col::gold.alpha(0.55f * a));
+    s.rect(px, py + ph - u, pw, u, col::gold.alpha(0.55f * a));
+    s.textCenter(banner, s.w / 2, y, size, col::gold.alpha(a));
   }
 }

@@ -54,11 +54,14 @@ public:
   void flash(const Sprite &s, double x, double y, float xo, float yo, float xs,
              float ys, float rot, float amount, Color c);
   void glow(double x, double y, float size, Color c);
-  void particle(int icon, double x, double y, Color c);
+  void particle(int icon, double x, double y, Color c, float scale = 1,
+                float rot = 0);
   void rect(double x, double y, float rw, float rh, Color c);
   void frame(double x, double y, float rw, float rh, float t, Color c);
   void bracket(float x, float y, float w, float h, float u);
   void line(double x0, double y0, double x1, double y1, float width, Color c);
+  void ring(double x, double y, float r, Color c, float width = 1);
+  void ring(double x, double y, float r) { ring(x, y, r, current); }
   void number(int n, double x, double y, Color c);
   void text(std::string_view s, double x, double y, float size, Color c);
   void textCenter(std::string_view s, double cx, double y, float size, Color c);

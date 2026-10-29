@@ -28,7 +28,7 @@ void AcidFlask::tick(Player &p) {
         ->add<Bomb>(p.x, p.bodyY(), xt, yt, 12 * p.might * power,
                     28.0f + 6 * at(level, 2),
                     (7.0f + 4 * at(level, 3)) * p.might * power,
-                    3.5f + at(level, 5))
+                    3.5f + at(level, 5), PoolStyle::Acid)
         ->source = this;
   }
   Sound::axe.play(0.3f);

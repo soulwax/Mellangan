@@ -59,7 +59,7 @@ public:
   entt::entity leader = entt::null;
   uint32_t seed;
   bool aware = true, wantsFire = false, wantsLeader = false, faltered = false,
-       alarmed = false, buried = false;
+       alarmed = false, buried = false, gilded = false;
 
   Enemy(const EnemyType &type, float hpMul, float damageMul);
   static const EnemyType &typeOf(EnemyKind kind);

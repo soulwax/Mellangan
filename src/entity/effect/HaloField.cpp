@@ -7,6 +7,7 @@
 
 void HaloField::tick() {
   x = player.x, y = player.y;
+  spin += DT * 0.9f;
   if (rng.chance(0.8f) && Spark::alive < 500) {
     float angle = rng.range(0, TAU);
     float r = halo.range() * rng.range(0.85f, 1.0f);
@@ -17,7 +18,17 @@ void HaloField::tick() {
   }
 }
 
-void HaloField::render(Screen &) {}
+void HaloField::render(Screen &s) {
+  constexpr Color LILAC{0.78f, 0.62f, 1, 1};
+  float r = halo.range(), flare = halo.pulse;
+  double cy = player.bodyY();
+  s.ring(xp, cy, r, LILAC.alpha(0.2f + 0.45f * flare));
+  for (int i = 0; i < 6; i++) {
+    float a = spin + TAU * i / 6;
+    s.particle(atlas::pt::Rune, xp + std::cos(a) * r, cy + std::sin(a) * r,
+               LILAC.alpha(0.45f + 0.5f * flare), 1, a + PI * 0.5f);
+  }
+}
 
 void HaloField::renderLight(Screen &s) {
   s.glow(xp, yp, halo.range() * 2.8f,

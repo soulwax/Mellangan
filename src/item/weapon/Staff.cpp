@@ -31,6 +31,6 @@ void Staff::tick(Player &p) {
                     e->id)
         ->source = this;
   }
-  Spark::burst(*p.level, p.x, p.bodyY(), {0.45f, 0.8f, 1, 1}, 4, 40, true);
+  Spark::burst(*p.level, p.x, p.bodyY(), {0.72f, 0.45f, 1, 1}, 4, 40, true);
   Sound::cast.play(0.3f, 0.1f);
 }

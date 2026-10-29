@@ -21,6 +21,8 @@
 #include "level/Level.hpp"
 #include "particle/TextParticle.hpp"
 #include "particle/DeathEffect.hpp"
+#include "particle/Shockwave.hpp"
+#include "particle/debris/Chip.hpp"
 #include "particle/Spark.hpp"
 #include "particle/debris/Debris.hpp"
 #include "particle/debris/FlameDebris.hpp"
@@ -406,6 +408,15 @@ void Enemy::die() {
     level->add<Potion>(x + 6, y);
   if (rng.chance(1 / 150.0f))
     level->add<Potion>(x, y);
+  if (gilded) {
+    constexpr Color GOLD{1, 0.7f, 0.15f, 1};
+    level->add<DeathEffect>(x, y, float(z), sprite(), scale, facing, GOLD,
+                            DeathStyle::Gilded);
+    level->add<Shockwave>(x, bodyY(), 4, 22 * scale, 0.3f, GOLD, false);
+    for (int i = 0; i < 7 && Debris::room(); i++)
+      level->add<Chip>(x, y, 6 * scale, atlas::pt::Coin, col::white, 1.3);
+    return;
+  }
   EnemyKind k = EnemyKind(kind());
   bool spirit = k == EnemyKind::Ghost || k == EnemyKind::BogLantern ||
                 k == EnemyKind::FrostWisp;

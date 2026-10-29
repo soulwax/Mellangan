@@ -7,7 +7,7 @@ inline void enemyWarning(Screen &s, double x, double y, float radius,
                          float alpha, float phase) {
   Color c{1, 0.18f, 0.12f, alpha};
   s.color(c);
-  s.center(atlas::Ring, x, y, radius * 2 / atlas::Ring.w, phase);
+  s.ring(x, y, radius);
   s.color(col::white);
   for (int i = 0; i < 4; i++) {
     float a = PI * 0.5f * i;

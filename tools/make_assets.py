@@ -59,13 +59,25 @@ def field(w, h, fn):
     return im
 
 
-def glow(size):
+BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
+GLOW_BANDS = [0.0, 0.16, 0.34, 0.58, 0.9]
+
+
+def dither(v, x, y, levels):
+    t = (BAYER[int(y) % 4][int(x) % 4] + 0.5) / 16
+    for lo, hi in zip(levels, levels[1:]):
+        if v <= hi:
+            return hi if (v - lo) / (hi - lo) > t else lo
+    return levels[-1]
+
+
+def glow(size, banded=True):
     c = size / 2
 
     def fn(x, y):
         d = math.hypot(x - c, y - c) / c
         a = (1 - smoothstep(0.0, 1.0, d)) ** 1.6
-        return 1, 1, 1, a
+        return 1, 1, 1, dither(a, x, y, GLOW_BANDS) if banded else a
 
     return field(size, size, fn)
 
@@ -74,10 +86,10 @@ def ring(size):
     c = size / 2
 
     def fn(x, y):
-        d = math.hypot(x - c, y - c) / c
-        band = math.exp(-((d - 0.86) / 0.07) ** 2)
-        inner = 0.22 * smoothstep(0.95, 0.2, d) * (0.6 + 0.4 * d)
-        return 1, 1, 1, clamp01(band + inner) * (d < 1.0)
+        d = math.hypot(x - c, y - c)
+        band = abs(d - c * 0.86)
+        a = 1.0 if band < 0.8 else 0.45 if d < c * 0.86 and band < 1.8 else 0.0
+        return 1, 1, 1, a
 
     return field(size, size, fn)
 
@@ -116,7 +128,7 @@ def shadow(w, h):
         dx = (x - w / 2) / (w / 2)
         dy = (y - h / 2) / (h / 2)
         d = math.hypot(dx, dy)
-        return 0, 0, 0, 0.45 * smoothstep(1.0, 0.55, d)
+        return 0, 0, 0, 0.42 if d < 0.62 else 0.24 if d < 0.95 else 0.0
 
     return field(w, h, fn)
 
@@ -210,6 +222,7 @@ def build(source):
         (gem(GEM_PALETTES["red"]), (220, FX_Y)),
         (bolt(10), (232, FX_Y)),
         (soft_dot(8), (244, FX_Y)),
+        (glow(64, banded=False), (256, FX_Y)),
         (Image.new("RGBA", (4, 4), (255, 255, 255, 255)), (196, FX_Y + 12)),
         (digits(), (176, FX_Y + 20)),
     ]

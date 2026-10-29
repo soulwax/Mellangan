@@ -210,7 +210,7 @@ void ExpansionAttack::render(Screen &s) {
   Color c = TINTS[kind];
   if (kind == 4) {
     s.color(c.alpha(0.25f + age * 0.6f));
-    s.center(atlas::Ring, xp, yp, reach * 2 / atlas::Ring.w, age);
+    s.ring(xp, yp, reach);
   } else if (kind == 5 || kind == 6) {
     float width = kind == 6 ? 3.0f + 2 * (count - 1) : 2.0f;
     s.line(ox, oy, ox + dx * reach, oy + dy * reach, width, c.alpha(0.65f));

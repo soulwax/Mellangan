@@ -176,6 +176,7 @@ constexpr Sprite biomeGround(int set, int cell) {
 }
 
 constexpr Sprite Glow{0, 200, 64, 64};
+constexpr Sprite Light{256, 200, 64, 64};
 constexpr Sprite Ring{64, 200, 64, 64};
 constexpr Sprite Slash{128, 200, 24, 48};
 constexpr Sprite Shadow{176, 200, 16, 8};
@@ -185,6 +186,12 @@ constexpr Sprite Bolt{232, 200, 10, 10};
 constexpr Sprite Dot{244, 200, 8, 8};
 constexpr Sprite White{197, 213, 2, 2};
 constexpr Sprite digit(int d) { return {float(176 + d * 5), 220, 5, 7}; }
+
+namespace pt {
+constexpr int IceShard = 32, Snowflake = 33, FrostGlint = 34, Rock = 35,
+              Pebble = 36, MeteorCore = 37, Ember = 38, ArcaneStar = 39,
+              Wisp = 40, Rune = 41, HolyGlint = 42, Coin = 43, Bubble = 44;
+} // namespace pt
 
 namespace tt {
 constexpr int Grass = 0, GrassTufts = 1, GrassFlowers = 2;
