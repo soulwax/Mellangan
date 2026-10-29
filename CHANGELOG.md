@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-10-29
+
 ### Added
 
 - The Alpha Wolf howls, the Burrower erupts with a crack of stone and the Necromancer raises the dead with a rattle of bones, each with its own sound. These voices play only on screen and are rate-limited, so a large pack still sounds like one cue.
