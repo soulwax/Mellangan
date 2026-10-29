@@ -86,7 +86,11 @@ saves and the Codex live in `~/Library/Application Support/soulwax/Mellangan/`.
 For Vulkan validation during development, configure a second tree with `-DMELLANGAN_VULKAN_LOADER=ON`; it links
 Homebrew's loader instead of embedding MoltenVK, so that build only runs on the machine that built it. Do not set
 `VK_ICD_FILENAMES` to Homebrew's mock driver; `vulkaninfo --summary` should list your Apple GPU with MoltenVK.
-`dist.sh` does not package the `.app` yet.
+`./dist.sh` on a Mac packages `dist/Mellangan-<version>-macos-arm64.zip`: a Release `Mellangan.app` with only the
+shipped assets, arm64 MoltenVK, a dependency check and an ad hoc signature, plus a `.sha256`.
+
+The macOS download is not notarized yet. After unzipping, macOS refuses the first launch; open System Settings →
+Privacy & Security and choose **Open Anyway** for Mellangan, or run `xattr -dr com.apple.quarantine Mellangan.app`.
 
 ## Releasing
 

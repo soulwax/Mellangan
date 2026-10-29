@@ -6,8 +6,8 @@
 #   ./dist.sh minor    0.2.7 -> 0.3.0
 #   ./dist.sh none     rebuild the current version, changelog untouched
 #
-# On macOS the Vulkan loader and MoltenVK are copied from $VULKAN_SDK into lib/, and Mellangan.command starts the
-# game with the bundled driver, so players need nothing installed.
+# On macOS it packs an ad hoc signed Mellangan.app (arm64, embedded MoltenVK, see setup-macos.sh) into
+# dist/Mellangan-<version>-macos-arm64.zip instead, so players need nothing installed.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -63,9 +63,51 @@ fi
 echo "Mellangan $version"
 
 # --- build -------------------------------------------------------------------------------------------------------
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release --parallel
+if [[ $platform == macos ]]; then
+  cmake -S . -B build-macos-dist -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 \
+    -DMELLANGAN_VULKAN_LOADER=OFF
+  cmake --build build-macos-dist --parallel
+else
+  cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+  cmake --build build --config Release --parallel
+fi
 trap - ERR
+
+if [[ $platform == macos ]]; then
+  name=Mellangan-$version-macos-arm64
+  stage=dist/$name
+  archive=dist/$name.zip
+  built=build-macos-dist/bin/Mellangan.app
+  app=$stage/Mellangan.app
+  rm -rf "$stage" "$archive" "$archive.sha256"
+  mkdir -p "$stage"
+  cp -R "$built" "$app"
+  res=$app/Contents/Resources/res
+  rm -rf "$res" && mkdir -p "$res/shaders"
+  cp res/atlas.png res/particles.png res/font.png res/CREDITS.md "$res/"
+  cp "$built"/Contents/Resources/res/shaders/*.spv "$res/shaders/"
+  cp -R res/sfx res/music "$res/"
+  cp CHANGELOG.md "$stage/"
+
+  exe=$app/Contents/MacOS/Mellangan
+  mvk=$app/Contents/Frameworks/libMoltenVK.dylib
+  lipo "$mvk" -thin arm64 -output "$mvk.arm64" && mv "$mvk.arm64" "$mvk"
+  for f in "$exe" "$mvk"; do
+    lipo "$f" -verify_arch arm64 || { echo "$f lacks arm64" >&2; exit 1; }
+    if otool -L "$f" | tail -n +2 | grep -vE '^\s+(/System/Library/|/usr/lib/|@rpath/libMoltenVK\.dylib)'; then
+      echo "$f links a library outside the system and the bundle" >&2
+      exit 1
+    fi
+  done
+  codesign --force --sign - "$mvk"
+  codesign --force --sign - "$app"
+  codesign --verify --deep --strict --verbose=2 "$app"
+
+  (cd dist && ditto -c -k --keepParent "$name" "$name.zip" && shasum -a 256 "$name.zip" > "$name.zip.sha256")
+  echo "$(pwd)/$archive ($(du -h "$archive" | cut -f1))"
+  cat "$archive.sha256"
+  exit 0
+fi
 
 # --- package -----------------------------------------------------------------------------------------------------
 name=Mellangan-$version-$platform
@@ -80,23 +122,6 @@ cp "$bin/Mellangan" CHANGELOG.md "$stage/"
 cp res/atlas.png res/particles.png res/font.png res/CREDITS.md "$stage/res/"
 cp "$bin"/res/shaders/*.spv "$stage/res/shaders/"
 cp -R res/sfx res/music "$stage/res/"
-
-if [[ $platform == macos ]]; then
-  sdk=${VULKAN_SDK:?set VULKAN_SDK to the SDK macOS folder, e.g. by sourcing its setup-env.sh}
-  mkdir -p "$stage/lib"
-  cp -L "$sdk/lib/libvulkan.1.dylib" "$sdk/lib/libMoltenVK.dylib" "$stage/lib/"
-  sed -E 's|"library_path": *"[^"]*"|"library_path": "./libMoltenVK.dylib"|' \
-    "$sdk/share/vulkan/icd.d/MoltenVK_icd.json" > "$stage/lib/MoltenVK_icd.json"
-  install_name_tool -add_rpath @executable_path/lib "$stage/Mellangan"
-  codesign --force --sign - "$stage/Mellangan"
-  cat > "$stage/Mellangan.command" << 'EOF'
-#!/bin/sh
-cd "$(dirname "$0")"
-export VK_DRIVER_FILES="$PWD/lib/MoltenVK_icd.json" VK_ICD_FILENAMES="$PWD/lib/MoltenVK_icd.json"
-exec ./Mellangan "$@"
-EOF
-  chmod +x "$stage/Mellangan.command"
-fi
 
 tar -C dist -czf "$archive" "$name"
 if command -v sha256sum > /dev/null; then
