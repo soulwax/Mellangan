@@ -17,6 +17,8 @@
 #include "entity/projectile/ChakramDisc.hpp"
 #include "level/Level.hpp"
 #include "item/Upgrade.hpp"
+#include "hero/Hero.hpp"
+#include "menu/LevelUpMenu.hpp"
 #include "particle/Spark.hpp"
 #include "particle/TextParticle.hpp"
 #include "particle/debris/Debris.hpp"
@@ -143,6 +145,111 @@ static void testStatusDamage() {
   game.level.reset();
 }
 
+static void testExperienceCurve() {
+  Player early;
+  early.gainXp(33);
+  assert(early.lvl == 3 && early.pendingLevels == 2);
+  assert(std::abs(early.exp - 10) < 0.001f);
+  assert(std::abs(early.expNext - 25.92f) < 0.01f);
+
+  Player progression;
+  double total = 0;
+  float last = 0;
+  for (int level = 1; level < 100; level++) {
+    float required = progression.expNext;
+    assert(required > last && std::isfinite(required));
+    total += required;
+    progression.gainXp(required);
+    assert(progression.lvl == level + 1);
+    last = required;
+  }
+  assert(total > 12000000 && progression.pendingLevels == 99);
+
+  Player spree;
+  spree.hero = HEROES[0];
+  for (int seconds = 0; seconds < 600; seconds++)
+    for (int kills = 0; kills < 60; kills++)
+      spree.gainXp(20 * 1.35f * 1.5f * 1.5f);
+  assert(spree.lvl < 100 && spree.lvl >= 40);
+  assert(spree.exp >= 0 && spree.exp < spree.expNext);
+  std::cout << "[TEST] Exponential XP: level 100 requires " << total
+            << " XP; generous 10-minute spree reached level " << spree.lvl
+            << std::endl;
+}
+
+static void testAutomaticLevelUp() {
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Player &p = *game.level->player;
+  p.upgrades.clear();
+
+  auto one = std::make_unique<Upgrade>("Single", atlas::White,
+                                      std::array<const char *, 5>{}, true);
+  Upgrade *single = one.get();
+  single->level = Upgrade::MAX_LEVEL - 1;
+  p.upgrades.push_back(std::move(one));
+  p.hp = 10;
+  p.pendingLevels = 3;
+  assert(!LevelUpMenu::open(game));
+  assert(single->level == Upgrade::MAX_LEVEL && p.pendingLevels == 0);
+  assert(p.hp == 90);
+
+  p.upgrades.clear();
+  for (const char *name : {"First", "Second"}) {
+    auto up = std::make_unique<Upgrade>(name, atlas::White,
+                                       std::array<const char *, 5>{}, true);
+    up->level = Upgrade::MAX_LEVEL - 1;
+    p.upgrades.push_back(std::move(up));
+  }
+  p.pendingLevels = 2;
+  auto menu = LevelUpMenu::open(game);
+  assert(menu && p.pendingLevels == 2);
+  game.input.one.clicked = true;
+  menu->tick();
+  game.input.one.clicked = false;
+  assert(p.pendingLevels == 0);
+  assert(p.upgrades[0]->maxed() && p.upgrades[1]->maxed());
+
+  p.upgrades.clear();
+  auto weapon = std::make_unique<Upgrade>("Weapon", atlas::White,
+                                         std::array<const char *, 5>{}, true);
+  weapon->level = Upgrade::MAX_LEVEL;
+  weapon->partner = "Partner";
+  weapon->evolvedName = "Evolved";
+  Upgrade *evolving = weapon.get();
+  p.upgrades.push_back(std::move(weapon));
+  auto partner = std::make_unique<Upgrade>("Partner", atlas::White,
+                                          std::array<const char *, 5>{}, false);
+  partner->level = Upgrade::MAX_LEVEL;
+  p.upgrades.push_back(std::move(partner));
+  p.pendingLevels = 1;
+  p.pendingTreasures = 1;
+  menu = LevelUpMenu::open(game);
+  assert(menu && p.pendingLevels == 1 && p.pendingTreasures == 0);
+  game.input.two.clicked = true;
+  menu->tick();
+  game.input.two.clicked = false;
+  assert(evolving->evolved && p.pendingLevels == 0);
+
+  p.upgrades.clear();
+  auto ordinary = std::make_unique<Upgrade>("Ordinary", atlas::White,
+                                            std::array<const char *, 5>{}, true);
+  auto rare = std::make_unique<Upgrade>("Relic", atlas::White,
+                                        std::array<const char *, 5>{}, false);
+  rare->rare = true;
+  p.upgrades.push_back(std::move(ordinary));
+  p.upgrades.push_back(std::move(rare));
+  p.pendingLevels = 1;
+  p.pendingTreasures = 1;
+  menu = LevelUpMenu::open(game);
+  assert(menu && p.pendingLevels == 1 && p.pendingTreasures == 0);
+  game.input.two.clicked = true;
+  menu->tick();
+  game.input.two.clicked = false;
+  assert(p.upgrades[1]->level == 1 && (game.codex.relics & 1));
+  assert(p.pendingLevels == 0);
+}
+
 static void testLevelLifecycleAndSimulation() {
   Game game;
   // run level lifecycle 3 times to check for leaks
@@ -196,6 +303,9 @@ int runTests() {
   testExpansionEnemies();
   testExpansionContent();
   testBiomeTransitions();
+  testExperienceCurve();
+  testAutomaticLevelUp();
+  std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"
             << std::endl;
   testLevelLifecycleAndSimulation();

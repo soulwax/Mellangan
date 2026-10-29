@@ -31,8 +31,8 @@ void IncenseCloud::tick() {
     });
   }
 
-  if (rng.chance(0.5f) && Spark::alive < 500) {
-    float dir = rng.range(0, TAU), r = rng.range(0, radius * 0.8f);
+  if (rng.chance(0.8f) && Spark::alive < 500) {
+    float dir = rng.range(0, TAU), r = std::sqrt(rng.range(0.0f, 1.0f)) * radius;
     level->add<Spark>(x + std::cos(dir) * r, y + std::sin(dir) * r,
                       rng.range(-4, 4), -rng.range(10, 24),
                       Color{1.0f, rng.range(0.7f, 0.9f), 0.3f, 1.0f},
@@ -42,10 +42,8 @@ void IncenseCloud::tick() {
 
 void IncenseCloud::render(Screen &s) {
   float fade = std::min(1.0f, life * 1.8f) * std::min(1.0f, (maxLife - life) * 5.0f);
-  s.color(Color{0.95f, 0.8f, 0.35f, 0.28f * fade});
+  s.color(Color{0.95f, 0.8f, 0.35f, 0.12f * fade});
   s.center(atlas::Glow, xp, yp, radius * 2.2f / atlas::Glow.w);
-  s.color(Color{1.0f, 0.9f, 0.5f, 0.20f * fade});
-  s.center(atlas::Ring, xp, yp, radius * 1.8f / atlas::Ring.w, life * 0.8f);
   s.color(col::white);
 }
 

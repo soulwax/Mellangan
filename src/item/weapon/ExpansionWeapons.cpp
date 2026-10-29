@@ -122,6 +122,12 @@ void ExpansionAttack::tick() {
                kind == 5 ? 0.3f : kind == 6 ? 0.65f : 2.5f;
   if (age >= life)
     return remove();
+  if (kind == 2 && rng.chance(0.8f) && Spark::alive < 500) {
+    float angle = rng.range(0, TAU), r = reach * rng.range(0.8f, 1.0f);
+    level->add<Spark>(x + std::cos(angle) * r, y + std::sin(angle) * r,
+                      rng.range(-4, 4), -rng.range(3, 10), TINTS[kind],
+                      rng.range(0.4f, 0.8f), rng.range(0.35f, 0.6f), false);
+  }
   bool area = kind == 2 || kind == 4;
   bool line = kind == 5 || kind == 6;
   if (kind == 4 && age < 0.6f)
@@ -202,14 +208,14 @@ void ExpansionAttack::tick() {
 
 void ExpansionAttack::render(Screen &s) {
   Color c = TINTS[kind];
-  if (kind == 2 || kind == 4) {
-    s.color(c.alpha(kind == 4 ? 0.25f + age * 0.6f : 0.5f));
+  if (kind == 4) {
+    s.color(c.alpha(0.25f + age * 0.6f));
     s.center(atlas::Ring, xp, yp, reach * 2 / atlas::Ring.w, age);
   } else if (kind == 5 || kind == 6) {
     float width = kind == 6 ? 3.0f + 2 * (count - 1) : 2.0f;
     s.line(ox, oy, ox + dx * reach, oy + dy * reach, width, c.alpha(0.65f));
     s.line(ox, oy, ox + dx * reach, oy + dy * reach, 1, col::white.alpha(0.8f));
-  } else {
+  } else if (kind != 2) {
     if (kind == 1)
       s.line(ox, oy, x, y, 1, c.alpha(0.4f));
     s.color(c);

@@ -18,8 +18,8 @@ void FirePool::tick() {
       }
     });
   }
-  if (rng.chance(0.6f) && Spark::alive < 500) {
-    float dir = rng.range(0, TAU), r = rng.range(0, radius);
+  if (Spark::alive < 500) {
+    float dir = rng.range(0, TAU), r = std::sqrt(rng.range(0.0f, 1.0f)) * radius;
     level->add<Spark>(x + std::cos(dir) * r, y + std::sin(dir) * r,
                       rng.range(-6, 6), -rng.range(15, 35),
                       Color{1, rng.range(0.35f, 0.7f), 0.15f, 1},
@@ -29,10 +29,8 @@ void FirePool::tick() {
 
 void FirePool::render(Screen &s) {
   float fade = std::min(1.0f, life * 2) * std::min(1.0f, (maxLife - life) * 6);
-  s.color({1, 0.45f, 0.12f, 0.35f * fade});
+  s.color({1, 0.45f, 0.12f, 0.15f * fade});
   s.center(atlas::Glow, xp, yp, radius * 2.4f / atlas::Glow.w);
-  s.color({1, 0.6f, 0.2f, 0.25f * fade});
-  s.center(atlas::Ring, xp, yp, radius * 2 / atlas::Ring.w, -life);
   s.color(col::white);
 }
 

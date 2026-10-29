@@ -20,7 +20,7 @@ void Strike::tick() {
       if (xd * xd + yd * yd < r * r)
         e.hurt(damage, e.x - x, e.y - y, 50, source);
     });
-    Spark::burst(*level, x, y, {0.7f, 0.85f, 1, 1}, 10, 90, true);
+    Spark::burst(*level, x, y, {0.7f, 0.85f, 1, 1}, 18, 90, true);
   }
   if ((life -= DT) <= 0)
     remove();
@@ -38,9 +38,6 @@ void Strike::render(Screen &s) {
     s.line(x0, y0, x1, y1, 1, col::white.alpha(a));
     x0 = x1, y0 = y1;
   }
-  s.color({0.7f, 0.85f, 1, a * 0.6f});
-  s.center(atlas::Ring, xp, yp, radius * 2 / atlas::Ring.w * (1.3f - 0.3f * a));
-  s.color(col::white);
 }
 
 void Strike::renderLight(Screen &s) {

@@ -1,6 +1,7 @@
 #include "entity/Player.hpp"
 
 #include <cstring>
+#include <limits>
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
@@ -169,6 +170,11 @@ void Player::heal(float amount) {
 void Player::gainXp(float amount) {
   if (hero)
     amount *= hero->wisdom();
-  for (exp += amount; exp >= expNext; expNext = 6.0f + lvl * 6.0f)
-    exp -= expNext, lvl++, pendingLevels++;
+  exp += amount;
+  while (exp >= expNext) {
+    exp -= expNext;
+    lvl++, pendingLevels++;
+    double next = (6.0 + lvl * 6.0) * std::pow(1.08, lvl - 2);
+    expNext = float(std::min(next, double(std::numeric_limits<float>::max())));
+  }
 }

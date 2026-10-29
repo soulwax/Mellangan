@@ -232,6 +232,17 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
   Sound::levelUp.play(0.6f, 0);
 }
 
+std::unique_ptr<Menu> LevelUpMenu::open(Game &game) {
+  Player &p = *game.level->player;
+  while (p.pendingLevels > 0) {
+    auto menu = std::make_unique<LevelUpMenu>(game);
+    if (menu->choices.size() > 1)
+      return menu;
+    menu->apply(0);
+  }
+  return nullptr;
+}
+
 std::array<SDL_FRect, 4> LevelUpMenu::cards() const {
   const Screen &s = game.screen;
   int n = int(choices.size());
@@ -272,6 +283,11 @@ void LevelUpMenu::tick() {
 }
 
 void LevelUpMenu::choose(int i) {
+  apply(i);
+  game.setMenu(open(game));
+}
+
+void LevelUpMenu::apply(int i) {
   Player &p = *game.level->player;
   Sound::confirm.play(0.6f, 0);
   Upgrade *choice = choices[i];
@@ -292,8 +308,7 @@ void LevelUpMenu::choose(int i) {
   } else {
     p.heal(40);
   }
-  game.setMenu(--p.pendingLevels > 0 ? std::make_unique<LevelUpMenu>(game)
-                                     : nullptr);
+  --p.pendingLevels;
 }
 
 void LevelUpMenu::render(Screen &s) {

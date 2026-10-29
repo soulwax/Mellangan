@@ -6,6 +6,14 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-10-29
+
+### Changed
+
+- Replaced decorative combat rings with drifting particles for halos, sigils, fire, incense, and lightning strikes while retaining attack warnings.
+- Automatically apply a level-up when only one choice is available.
+- Increased XP requirements exponentially after the opening levels, making very high levels a long-term goal even during sustained kill streaks.
+
 ## [0.5.1] - 2026-10-29
 
 ### Changed

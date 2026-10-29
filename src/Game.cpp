@@ -6,12 +6,12 @@
 #include <cstdio>
 
 #include "audio/Sound.hpp"
-#include "hero/Hero.hpp"
-#include "level/Flavour.hpp"
-#include "level/Noise.h"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
+#include "level/Flavour.hpp"
+#include "level/Noise.h"
 #include "menu/DawnMenu.hpp"
 #include "menu/DeadMenu.hpp"
 #include "menu/LevelUpMenu.hpp"
@@ -21,6 +21,7 @@
 #include "menu/TitleMenu.hpp"
 #include "particle/debris/Debris.hpp"
 #include "particle/debris/FlameDebris.hpp"
+
 
 bool Game::init(SDL_Window *w, const std::string &base) {
   window = w;
@@ -125,7 +126,7 @@ void Game::tick() {
     if (!menuChanged && level->night.offering)
       setMenu(std::make_unique<ShrineMenu>(*this));
     else if (!menuChanged && level->player->pendingLevels > 0)
-      setMenu(std::make_unique<LevelUpMenu>(*this));
+      setMenu(LevelUpMenu::open(*this));
   }
   if (menuChanged)
     menu = std::move(nextMenu), menuChanged = false;
@@ -189,9 +190,10 @@ void Game::build() {
     level->chart.save(chartPath);
   std::string code = worldMode == WorldMode::Classic ? "" : seedCode;
   noise_reseed(saltOf(code));
-  chartPath = prefPath.empty() ? ""
-                               : prefPath + (code.empty() ? "chart.bin"
-                                                          : "chart-" + code + ".bin");
+  chartPath =
+      prefPath.empty()
+          ? ""
+          : prefPath + (code.empty() ? "chart.bin" : "chart-" + code + ".bin");
   level = std::make_unique<Level>(*this);
   if (!bench.enabled)
     level->chart.load(chartPath);
@@ -289,20 +291,22 @@ void Game::remember(bool dawn) {
     }
   history.insert(history.begin(), w);
   while (int(history.size()) > HISTORY) {
-    SDL_RemovePath((prefPath + "chart-" + history.back().code + ".bin").c_str());
+    SDL_RemovePath(
+        (prefPath + "chart-" + history.back().code + ".bin").c_str());
     history.pop_back();
   }
   std::string out;
   for (const PastWorld &p : history)
-    out += fmt::format("{} {:.1f} {} {}\n", p.code, p.best, p.runs, int(p.dawn));
+    out +=
+        fmt::format("{} {:.1f} {} {}\n", p.code, p.best, p.runs, int(p.dawn));
   SDL_SaveFile((prefPath + "worlds.txt").c_str(), out.data(), out.size());
 }
 
 void Game::saveWorld() const {
   if (prefPath.empty() || bench.enabled)
     return;
-  std::string s = worldMode == WorldMode::Random  ? "random\n"
-                  : worldMode == WorldMode::Daily ? "daily\n"
+  std::string s = worldMode == WorldMode::Random   ? "random\n"
+                  : worldMode == WorldMode::Daily  ? "daily\n"
                   : worldMode == WorldMode::Custom ? "custom " + seedCode + "\n"
                                                    : "classic\n";
   SDL_SaveFile((prefPath + "world.txt").c_str(), s.data(), s.size());
@@ -347,8 +351,8 @@ void Game::render() {
   double xj = 0, yj = 0;
   if (shake > 0.05f)
     xj = rng.range(-1, 1) * shake, yj = rng.range(-1, 1) * shake;
-  screen.xOffset = int(std::floor(xCam + xj - Screen::W / 2));
-  screen.yOffset = int(std::floor(yCam + yj - Screen::H / 2));
+  screen.xOffset = int(std::floor(xCam + xj - Screen::W / 2.0f));
+  screen.yOffset = int(std::floor(yCam + yj - Screen::H / 2.0f));
 
   float d = level->night.daylight();
   screen.beginLight({lerpf(0.06f, 0.42f, d), lerpf(0.07f, 0.34f, d),
@@ -361,7 +365,8 @@ void Game::render() {
   float health = p.hp / p.maxHp;
   float pause = menu ? menu->pauseEffect() : 0.0f;
   float shrine = menu ? menu->shrineEffect() : 0.0f;
-  screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0, pause, shrine});
+  screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0,
+                           pause, shrine});
   if (worldDebug && dev)
     level->renderWorldDebug(screen, xView, yView, input.mouseX, input.mouseY);
   if (!menu || menu->showHud())
@@ -413,12 +418,17 @@ void Game::renderMinimap() {
   Player &p = *level->player;
   float u = s.u, small = std::max(1.0f, u - 1), side = 64 * u;
   float x = s.w - side - 4 * u, y = s.h - side - 6 * u;
-  ChartView v{x,    y, side, side, 2 * u, p.x / (16.0 * Chart::CELL),
+  ChartView v{x,
+              y,
+              side,
+              side,
+              2 * u,
+              p.x / (16.0 * Chart::CELL),
               p.y / (16.0 * Chart::CELL)};
   Chart::border(s, v, u);
   level->chart.draw(s, *level, v, time);
-  BiomeId b = world::biomeAt(int(std::floor(p.x / 16)),
-                             int(std::floor(p.y / 16)));
+  BiomeId b =
+      world::biomeAt(int(std::floor(p.x / 16)), int(std::floor(p.y / 16)));
   std::string_view name = Chart::title(b), note = FLAVOURS[b].note;
   s.text(note, s.w - Screen::textWidth(note, small) - 4 * u,
          y - 4 * u - 32 * small, small, col::gold * 0.8f);
@@ -443,8 +453,8 @@ void Game::renderHud() {
          small, col::muted);
   if (level->streak >= 10) {
     std::string streak = fmt::format("x{} STREAK", level->streak);
-    s.text(streak, s.w - Screen::textWidth(streak, small) - 4 * u,
-           top + 34 * u, small,
+    s.text(streak, s.w - Screen::textWidth(streak, small) - 4 * u, top + 34 * u,
+           small,
            col::gold.alpha(0.5f + 0.5f * std::min(1.0f, level->streakTime)));
   }
   Night &n = level->night;
@@ -494,8 +504,7 @@ void Game::renderHud() {
            wait > 0 ? col::muted : h->tint);
     s.text(wait > 0 ? fmt::format("{:.0f}s", std::ceil(p.skillTime))
                     : std::string("SPACE"),
-           bx + box + 5 * u, by + 2 * u + 16 * small, small,
-           col::muted * 0.8f);
+           bx + box + 5 * u, by + 2 * u + 16 * small, small, col::muted * 0.8f);
   }
   s.rect(4 * u, hy, hw, 6 * u, col::panel);
   s.rect(5 * u, hy + u, (hw - 2 * u) * clampf(p.hp / p.maxHp, 0, 1), 4 * u,
