@@ -15,11 +15,11 @@ Enemies can have their own type of attacks, upgrades, passives and abilities.
 -
 ## Screenshots
 
-Rendered biome views from the game:
-
-| Snow and forest | Desert | Hollow caverns |
-| --- | --- | --- |
-| ![Snow and forest biome transition](static/screenshots/01-snow.png) | ![Desert biome transition](static/screenshots/02-desert.png) | ![Hollow caverns biome](static/screenshots/03-caverns.png) |
+| Title screen | Class selection |
+| --- | --- |
+| ![Mellangan title screen and world selection](static/screenshots/01-title.png) | ![Choosing the Mage class](static/screenshots/02-classes.png) |
+| Combat and exploration | Upgrades |
+| ![Surviving enemies in the savanna](static/screenshots/03-combat.png) | ![Choosing a level-up upgrade during a run](static/screenshots/04-upgrades.png) |
 
 ## Building
 
