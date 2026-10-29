@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 file(STRINGS VERSION MELLANGAN_VERSION LIMIT_COUNT 1)
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+    # MoltenVK's official release requires macOS 12.
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 12.0 CACHE STRING "")
+endif ()
 project(Mellangan VERSION ${MELLANGAN_VERSION} LANGUAGES C CXX)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS VERSION)
 
@@ -32,6 +36,16 @@ endif ()
 
 # Shaders are compiled offline with the SDK's slangc, so Vulkan2D doesn't need to build Slang from source.
 set(VK2D_DISABLE_SHADERS ON CACHE BOOL "" FORCE)
+if (APPLE)
+    # The app links MoltenVK directly and embeds it; the loader option is for local runs with validation layers.
+    option(MELLANGAN_VULKAN_LOADER "Link the system Vulkan loader instead of the bundled MoltenVK" OFF)
+    find_package(Vulkan REQUIRED)
+    if (NOT MELLANGAN_VULKAN_LOADER)
+        file(GLOB _mvk_dirs LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/build-deps/moltenvk-*")
+        find_library(MOLTENVK_LIBRARY MoltenVK PATHS ${_mvk_dirs} NO_DEFAULT_PATH REQUIRED)
+        set_target_properties(Vulkan::Vulkan PROPERTIES IMPORTED_LOCATION "${MOLTENVK_LIBRARY}")
+    endif ()
+endif ()
 add_subdirectory(extern/Vulkan2D)
 add_subdirectory(extern/spdlog)
 add_subdirectory(extern/entt)
@@ -49,8 +63,37 @@ if (WIN32)
     list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/generated/Mellangan.rc)
 endif ()
 
+if (APPLE)
+    set(_icns ${CMAKE_CURRENT_BINARY_DIR}/generated/Mellangan.icns)
+    set(_iconset ${CMAKE_CURRENT_BINARY_DIR}/generated/Mellangan.iconset)
+    add_custom_command(OUTPUT ${_icns}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${_iconset}
+            COMMAND sips -z 16 16 ${CMAKE_CURRENT_SOURCE_DIR}/res/icon.png --out ${_iconset}/icon_16x16.png
+            COMMAND sips -z 32 32 ${CMAKE_CURRENT_SOURCE_DIR}/res/icon.png --out ${_iconset}/icon_16x16@2x.png
+            COMMAND sips -z 32 32 ${CMAKE_CURRENT_SOURCE_DIR}/res/icon.png --out ${_iconset}/icon_32x32.png
+            COMMAND sips -z 64 64 ${CMAKE_CURRENT_SOURCE_DIR}/res/icon.png --out ${_iconset}/icon_32x32@2x.png
+            COMMAND sips -z 128 128 ${CMAKE_CURRENT_SOURCE_DIR}/res/icon.png --out ${_iconset}/icon_128x128.png
+            COMMAND sips -z 256 256 ${CMAKE_CURRENT_SOURCE_DIR}/res/icon.png --out ${_iconset}/icon_128x128@2x.png
+            COMMAND sips -z 256 256 ${CMAKE_CURRENT_SOURCE_DIR}/res/icon.png --out ${_iconset}/icon_256x256.png
+            COMMAND iconutil -c icns ${_iconset} -o ${_icns}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/res/icon.png
+            VERBATIM)
+    set_source_files_properties(${_icns} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    list(APPEND SOURCES ${_icns})
+endif ()
+
 add_executable(Mellangan ${SOURCES})
-set_target_properties(Mellangan PROPERTIES OUTPUT_NAME "MellanganApp")
+if (APPLE)
+    configure_file(res/Info.plist.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Info.plist @ONLY)
+    set_target_properties(Mellangan PROPERTIES
+            MACOSX_BUNDLE ON
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_BINARY_DIR}/generated/Info.plist
+            OUTPUT_NAME "Mellangan"
+            BUILD_WITH_INSTALL_RPATH ON
+            INSTALL_RPATH "@executable_path/../Frameworks")
+else ()
+    set_target_properties(Mellangan PROPERTIES OUTPUT_NAME "MellanganApp")
+endif ()
 # Generated header so a version bump only recompiles the files that show the version.
 configure_file(src/Version.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Version.hpp @ONLY)
 target_include_directories(Mellangan PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/generated)
@@ -95,7 +138,10 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio")
     file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/compile_commands.json CONTENT "[\n${_entries}\n]\n" CONDITION $<CONFIG:Release>)
 endif ()
 
-find_program(SLANGC slangc HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin" REQUIRED)
+if (APPLE)
+    file(GLOB _slang_bins LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/build-deps/slang-*/bin")
+endif ()
+find_program(SLANGC slangc HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin" ${_slang_bins} REQUIRED)
 file(GLOB SHADER_SOURCES CONFIGURE_DEPENDS res/shaders/*.slang)
 foreach (src ${SHADER_SOURCES})
     get_filename_component(name ${src} NAME_WE)
@@ -110,6 +156,22 @@ endforeach ()
 add_custom_target(shaders DEPENDS ${SHADER_BINARIES})
 add_dependencies(Mellangan shaders)
 
-add_custom_command(TARGET Mellangan POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:Mellangan>/res
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADER_BINARIES} $<TARGET_FILE_DIR:Mellangan>/res/shaders)
+if (APPLE)
+    set(_res $<TARGET_BUNDLE_CONTENT_DIR:Mellangan>/Resources/res)
+    set(_embed "")
+    if (NOT MELLANGAN_VULKAN_LOADER)
+        set(_embed COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_BUNDLE_CONTENT_DIR:Mellangan>/Frameworks
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MOLTENVK_LIBRARY} $<TARGET_BUNDLE_CONTENT_DIR:Mellangan>/Frameworks
+                COMMAND codesign --force --sign - $<TARGET_BUNDLE_CONTENT_DIR:Mellangan>/Frameworks/libMoltenVK.dylib)
+    endif ()
+    add_custom_command(TARGET Mellangan POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res ${_res}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADER_BINARIES} ${_res}/shaders
+            ${_embed}
+            COMMAND codesign --force --sign - $<TARGET_BUNDLE_DIR:Mellangan>
+            VERBATIM)
+else ()
+    add_custom_command(TARGET Mellangan POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:Mellangan>/res
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADER_BINARIES} $<TARGET_FILE_DIR:Mellangan>/res/shaders)
+endif ()

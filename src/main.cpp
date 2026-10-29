@@ -38,7 +38,12 @@ int main(int argc, char **argv) {
     return 1;
   const char *basePath = SDL_GetBasePath();
   std::string base = basePath ? basePath : "";
-  initLogging(base);
+  std::string logDir = base;
+#ifdef __APPLE__
+  if (char *pref = SDL_GetPrefPath("soulwax", "Mellangan"))
+    logDir = pref, SDL_free(pref);
+#endif
+  initLogging(logDir);
   installCrashHandler();
   spdlog::info("Mellangan v{}", MELLANGAN_VERSION);
 
@@ -53,6 +58,10 @@ int main(int argc, char **argv) {
   VK2DRendererConfig config{VK2D_MSAA_1X, VK2D_SCREEN_MODE_VSYNC,
                             VK2D_FILTER_TYPE_NEAREST};
   VK2DStartupOptions options{};
+#ifdef __APPLE__
+  std::string errorFile = logDir + "vk2derror.txt";
+  options.errorFile = errorFile.c_str();
+#endif
 #ifndef NDEBUG
   options.enableDebug = true;
 #endif

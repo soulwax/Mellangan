@@ -6,6 +6,15 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Native Apple Silicon macOS builds as a self-contained `Mellangan.app` (macOS 12+) with embedded MoltenVK, an icon and bundle metadata; `setup-macos.sh` installs a reproducible Homebrew toolchain plus pinned `slangc` and MoltenVK.
+- On macOS the log and Vulkan2D error file are written to the application support folder instead of next to the executable.
+
+### Fixed
+
+- Vulkan2D enables portability enumeration on macOS only when the instance offers it (SDL always requests it), checks descriptor-indexing features by name, clamps the texture limit to the device, drops obsolete device layers, and keeps running when the validation layer is missing or fails to load.
+
 ## [0.5.4] - 2026-10-29
 
 ### Changed
