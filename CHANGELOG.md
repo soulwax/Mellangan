@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-29
+
 ### Changed
 
 - Enlarged biome geography by 2.5 times and blended ground materials, colours, and vegetation across wider borders while preserving paths, structures, lava, and oasis water.
