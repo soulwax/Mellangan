@@ -5,6 +5,8 @@
 #include "entity/Mob.hpp"
 #include "entity/enemy/ai/Goal.hpp"
 
+class Sound;
+
 enum class EnemyKind {
   Bat,
   Rat,
@@ -84,6 +86,7 @@ public:
   void push();
   void settle();
   float roll();
+  void voice(Sound &s, float volume, float jitter = 0.06f) const;
 
 protected:
   virtual Color tint() const { return col::white; }

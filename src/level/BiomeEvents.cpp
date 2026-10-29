@@ -29,6 +29,8 @@ uint32_t mix(uint32_t n) {
   return n ^ n >> 16;
 }
 
+bool boon(int biome) { return biome == BIOME_MOON || biome == BIOME_STORM; }
+
 bool sanctuary(double x, double y) {
   Structure site;
   return world::structureAt(int(std::floor(x / 16)),
@@ -84,7 +86,8 @@ void BiomeEvents::tick(Level &level) {
         current = candidate;
         active = true;
         nextPulse = current.begins;
-        level.game.announce(std::string(NAMES[biome - BIOME_SALT]) + " - MOVE TO SAFETY");
+        level.game.announce(std::string(NAMES[biome - BIOME_SALT]) +
+                            (boon(biome) ? " - STEP INSIDE" : " - MOVE TO SAFETY"));
       }
     }
   }
@@ -113,8 +116,11 @@ void BiomeEvents::tick(Level &level) {
   bool first = nextPulse == current.begins;
   nextPulse = level.time + 0.5f;
   if (inside) {
-    if (first) level.handicaps++;
-    p.felledBy = NAMES[current.biome - BIOME_SALT];
+    if (!boon(current.biome)) {
+      if (first)
+        level.handicaps++;
+      p.felledBy = NAMES[current.biome - BIOME_SALT];
+    }
     switch (current.biome) {
     case BIOME_SALT:
       if (first)
@@ -190,7 +196,7 @@ void BiomeEvents::render(Screen &s, const Level &level) const {
     return;
   Color c = TONES[current.biome - BIOME_SALT];
   bool warning = level.time < current.begins;
-  bool dangerous = current.biome != BIOME_MOON && current.biome != BIOME_STORM;
+  bool dangerous = !boon(current.biome);
   if (dangerous)
     enemyWarning(s, current.x, current.y, current.radius,
                  warning ? 0.8f : 0.5f, level.time * 0.15f);

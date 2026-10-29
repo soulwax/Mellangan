@@ -1,13 +1,21 @@
 """Converts the Kenney OGGs the game uses into res/sfx as mono 44.1 kHz s16 WAV (what src/audio expects),
 peak-normalized to -1 dBFS so the volumes set in code are the only balance that matters.
+An SFX entry may carry an extra ffmpeg filter (pitch, trim, fade). Sounds the bundle has no source for
+(the wolf howl) are synthesized here with the standard library only.
 The music (res/music/night.ogg) is sourced separately; see res/CREDITS.md.
 
 Usage: python tools/make_audio.py "<path to Kenney Game Assets All-in-1>"   (needs ffmpeg on PATH)
 """
+import math
+import random
 import re
+import struct
 import subprocess
 import sys
+import wave
 from pathlib import Path
+
+RATE = 44100
 
 SFX = {
     "cast": "Retro Sounds 2/laser1",
@@ -33,7 +41,44 @@ SFX = {
     "nova": "Retro Sounds 2/explosion5",
     "barrel": "Impact Sounds/impactWood_heavy_000",
     "orb": "Retro Sounds 2/laser3",
+    "erupt": ("Foley Sounds/stonesHit1", "aresample=44100,asetrate=37485,aresample=44100"),
+    "raise": ("Casino Audio/dice-shake-1",
+              "aresample=44100,asetrate=35280,aresample=44100,atrim=0:0.8,afade=t=out:st=0.5:d=0.3"),
 }
+
+
+def howl() -> list[float]:
+    """A wolf howl: a breathy rise, a held note with slow vibrato, then a falling tail."""
+    rng = random.Random(7)
+    n = int(RATE * 1.15)
+    out, phase, breath = [], 0.0, 0.0
+    for i in range(n):
+        t = i / RATE
+        rise = min(1.0, t / 0.3)
+        fall = max(0.0, (t - 0.75) / 0.4)
+        f = 250 + 190 * (1 - (1 - rise) ** 2) - 150 * fall ** 1.5
+        f *= 1 + 0.012 * math.sin(math.tau * 5.5 * t) * min(1.0, t / 0.4)
+        phase += math.tau * f / RATE
+        tone = math.sin(phase) + 0.28 * math.sin(2 * phase) + 0.08 * math.sin(3 * phase)
+        breath = 0.9 * breath + 0.1 * rng.uniform(-1, 1)
+        env = min(1.0, t / 0.12) * min(1.0, (1.15 - t) / 0.4)
+        out.append(env * (tone + (1.2 - 0.8 * rise) * breath))
+    return out
+
+
+SYNTH = {"howl": howl}
+
+
+def write(samples: list[float], dst: Path):
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    peak = max(abs(s) for s in samples) or 1
+    gain = 10 ** (-1 / 20) / peak
+    with wave.open(str(dst), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(RATE)
+        w.writeframes(b"".join(struct.pack("<h", round(s * gain * 32767)) for s in samples))
+    print(f"synth -> {dst.relative_to(dst.parents[2])}")
 
 
 def find(audio: Path, rel: str) -> Path:
@@ -50,11 +95,17 @@ def peak_db(src: Path) -> float:
     return float(re.search(r"max_volume: (-?[\d.]+) dB", out).group(1))
 
 
-def convert(src: Path, dst: Path):
+def convert(src: Path, dst: Path, shape: str = ""):
     dst.parent.mkdir(parents=True, exist_ok=True)
-    gain = -1.0 - peak_db(src)
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-ac", "1", "-ar", "44100", "-sample_fmt", "s16",
-                    "-af", f"volume={gain:.2f}dB", str(dst)], check=True)
+    tmp = dst.with_suffix(".tmp.wav")
+    shaped = src
+    if shape:
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-ac", "1", "-af", shape, str(tmp)], check=True)
+        shaped = tmp
+    gain = -1.0 - peak_db(shaped)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(shaped), "-ac", "1", "-ar", "44100", "-sample_fmt",
+                    "s16", "-af", f"volume={gain:.2f}dB", str(dst)], check=True)
+    tmp.unlink(missing_ok=True)
     print(f"{src.name} -> {dst.relative_to(dst.parents[2])} ({gain:+.1f} dB)")
 
 
@@ -63,8 +114,11 @@ def main():
         sys.exit(__doc__)
     audio = Path(sys.argv[1]) / "Audio"
     res = Path(__file__).resolve().parent.parent / "res"
-    for name, rel in SFX.items():
-        convert(find(audio, rel), res / "sfx" / f"{name}.wav")
+    for name, entry in SFX.items():
+        rel, shape = entry if isinstance(entry, tuple) else (entry, "")
+        convert(find(audio, rel), res / "sfx" / f"{name}.wav", shape)
+    for name, make in SYNTH.items():
+        write(make(), res / "sfx" / f"{name}.wav")
 
 
 if __name__ == "__main__":

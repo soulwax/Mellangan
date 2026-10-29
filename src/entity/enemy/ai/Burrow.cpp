@@ -40,7 +40,7 @@ GoalState Burrow::tick(Enemy &e, const Sense &s, double &xs, double &ys) const {
       e.x = e.xMark;
       e.y = e.yMark;
       e.buried = false;
-      Sound::hit.play(0.6f, -0.15f);
+      e.voice(Sound::erupt, 0.35f, 0.1f);
       Spark::burst(*e.level, e.x, e.bodyY(), e.type.blood, 25, 110, true);
 
       Player &p = *e.level->player;

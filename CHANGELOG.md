@@ -6,6 +6,21 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The Alpha Wolf howls, the Burrower erupts with a crack of stone and the Necromancer raises the dead with a rattle of bones, each with its own sound. These voices play only on screen and are rate-limited, so a large pack still sounds like one cue.
+
+### Changed
+
+- Each of the ten expansion biomes now favours structures that suit it (mines in the Hollow Caverns, ruins in the Sunken Ruins, standing stones in Starfall Basin) instead of one picked by position.
+- Classic castles, graveyards and mines always keep their own encounter; biome challenges only take over smaller sites there.
+- Frost, spore and ember trails show a red warning only while they arm, then settle into a soft ring in their element's colour, so crowded fights stay readable.
+
+### Fixed
+
+- Moonlight and storm events no longer tell you to move to safety, count as a handicap or show up as your cause of death; they now invite you to step inside.
+- Removed a Cyclops entry from the Badlands spawn list that could never trigger.
+
 ## [0.5.5] - 2026-10-29
 
 ### Changed

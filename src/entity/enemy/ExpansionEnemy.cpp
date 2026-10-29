@@ -59,10 +59,17 @@ public:
 
   void render(Screen &s) override {
     Color c = tone(variant);
-    enemyWarning(s, xp, yp, radius,
-                 delay > 0 ? 0.9f : 0.55f * std::min(1.0f, life), life * 0.4f);
+    float fade = std::min(1.0f, life);
+    bool trail = variant == 4 || variant == 6 || variant == 8;
+    if (delay > 0)
+      enemyWarning(s, xp, yp, radius, trail ? 0.6f : 0.9f, life * 0.4f);
+    else if (trail) {
+      s.color(c.alpha(0.3f * fade));
+      s.center(atlas::Ring, xp, yp, radius * 2 / atlas::Ring.w, life * 0.4f);
+    } else
+      enemyWarning(s, xp, yp, radius, 0.55f * fade, life * 0.4f);
     if (delay <= 0) {
-      s.color(c.alpha(0.2f * std::min(1.0f, life)));
+      s.color(c.alpha(0.2f * fade));
       s.center(atlas::Glow, xp, yp, radius * 2 / atlas::Glow.w);
     }
     s.color(col::white);

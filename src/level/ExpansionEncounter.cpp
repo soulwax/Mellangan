@@ -114,7 +114,10 @@ bool expansionEncounter(Level &level, const Structure &site) {
   if (site.kind == StructureKind::Shrine)
     return false;
   int biome = int(world::biomeAt(site.x + site.w / 2, site.y + site.h / 2));
-  if (biome < BIOME_SALT && site.seed % 3 != 0)
+  bool setPiece = site.kind == StructureKind::Castle ||
+                  site.kind == StructureKind::Graveyard ||
+                  site.kind == StructureKind::Mine;
+  if (biome < BIOME_SALT && (setPiece || site.seed % 3 != 0))
     return false;
   level.add<ExpansionChallenge>(site, BiomeId(biome));
   return true;

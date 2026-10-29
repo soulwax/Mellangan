@@ -130,6 +130,11 @@ float Enemy::roll() {
   return float(seed >> 8) / float(1 << 24);
 }
 
+void Enemy::voice(Sound &s, float volume, float jitter) const {
+  if (level->game.screen.visible(x, y, 24))
+    s.play(volume, jitter);
+}
+
 Sense Enemy::sense() const {
   const Player &p = *level->player;
   double rx = p.x - x, ry = p.y - y, raw = std::sqrt(rx * rx + ry * ry);

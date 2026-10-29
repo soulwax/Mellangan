@@ -27,6 +27,19 @@ const uint32_t FOES[]={
     foe(K::Spider)|foe(K::MycelialBrute),
     foe(K::CinderGolem)|foe(K::Cultist)};
 
+const int WEIGHTS[][int(StructureKind::Count)]={
+    {5,5,15,35,15,0,25,10},
+    {35,5,15,15,25,0,5,0},
+    {5,10,30,5,10,0,40,0},
+    {0,25,15,5,50,5,5,0},
+    {5,10,15,30,30,0,0,10},
+    {40,5,15,30,10,0,5,5},
+    {5,5,15,20,10,30,25,0},
+    {0,5,15,15,35,0,10,30},
+    {0,10,15,10,20,0,5,50},
+    {0,10,30,10,15,0,45,0}};
+static_assert(std::size(WEIGHTS)==std::size(NAMES));
+
 const std::array<Feature,30> &props() {
   static const auto value = [] {
     std::array<Feature,30> out{};
@@ -48,8 +61,7 @@ BiomeData data(int index) {
   d.dirt=0.12f;
   d.structureChance=65;
   for (int i=0;i<int(StructureKind::Count);i++)
-    d.structureWeights[i]=10;
-  d.structureWeights[index%int(StructureKind::Count)]=45;
+    d.structureWeights[i]=WEIGHTS[index][i];
   d.foes=FOES[index] | foe(EnemyKind::Bat) | foe(EnemyKind::Slime);
   for (int i=0;i<3;i++)
     d.spawns[i]={&props()[index*3+i],10+i*4,20+i*10};

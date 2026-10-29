@@ -12,7 +12,7 @@ GoalState Howl::tick(Enemy &e, const Sense &, double &xs, double &ys) const {
   if (e.goalTime < windup)
     return GoalState::Running;
 
-  Sound::horde.play(0.45f, 0.35f);
+  e.voice(Sound::howl, 0.3f, 0.12f);
   Spark::burst(*e.level, e.x, e.bodyY(), col::gold, 16, 75, true);
   e.frenzy = 6.0f;
   e.cooldown = cooldown;

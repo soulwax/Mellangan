@@ -8,7 +8,7 @@ class Sound {
 public:
   static Sound cast, hit, kill, slash, axe, gem, levelUp, hurt, death, chest,
       potion, select, confirm, boss, horde, thunder, explosion, bow, scythe,
-      magnet, nova, barrel, orb;
+      magnet, nova, barrel, orb, howl, erupt, raise;
 
   static bool init(const std::string &base);
   static void shutdown();

@@ -14,7 +14,7 @@ GoalState Raise::tick(Enemy &e, const Sense &, double &xs, double &ys) const {
   if (e.goalTime < windup)
     return GoalState::Running;
 
-  Sound::orb.play(0.4f, -0.2f);
+  e.voice(Sound::raise, 0.3f, 0.1f);
   for (int i = 0; i < 2; i++) {
     double a = e.roll() * 6.2831853;
     double d = 20.0 + e.roll() * 22.0;

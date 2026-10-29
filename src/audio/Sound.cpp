@@ -63,6 +63,9 @@ Sound Sound::magnet{"magnet", 0};
 Sound Sound::nova{"nova", 0};
 Sound Sound::barrel{"barrel", 0.05f};
 Sound Sound::orb{"orb", 0.1f};
+Sound Sound::howl{"howl", 2.5f};
+Sound Sound::erupt{"erupt", 0.4f};
+Sound Sound::raise{"raise", 1.2f};
 
 namespace {
 Sound *const ALL[] = {
@@ -71,7 +74,8 @@ Sound *const ALL[] = {
     &Sound::death,     &Sound::chest,  &Sound::potion,  &Sound::select,
     &Sound::confirm,   &Sound::boss,   &Sound::horde,   &Sound::thunder,
     &Sound::explosion, &Sound::bow,    &Sound::scythe,  &Sound::magnet,
-    &Sound::nova,      &Sound::barrel, &Sound::orb};
+    &Sound::nova,      &Sound::barrel, &Sound::orb,     &Sound::howl,
+    &Sound::erupt,     &Sound::raise};
 } // namespace
 
 bool Sound::load(const std::string &path) {
