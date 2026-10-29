@@ -112,7 +112,7 @@ Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits w
 ## Layout
 
 Biome climate fields are stretched to 2.5 times their previous width. Ground materials and vegetation mix over
-an eight-tile sampling radius at biome borders, while structures, dirt paths, lava, and oasis water keep their
+a four-tile sampling radius at biome borders, while structures, dirt paths, lava, and oasis water keep their
 local shapes. Seeds remain deterministic; this generation change relocates biome boundaries. Old explored
 charts retain their explored area and refresh biome colours and structure markers when loaded.
 

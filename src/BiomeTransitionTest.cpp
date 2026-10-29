@@ -231,13 +231,14 @@ void crossings() {
 
 void blendChecks() {
   bool interior = false, boundary = false;
+  float maxStep = 0;
   for (int y = -512; y <= 512 && !boundary; y++)
     for (int x = -512; x < 512; x++)
       if (world::biomeAt(x, y) != world::biomeAt(x + 1, y)) {
         boundary = true;
         for (int d = -8; d < 8; d++) {
           GroundBlend a = checkedBlend(x + d, y), b = checkedBlend(x + d + 1, y);
-          assert(blendDistance(a, b) <= 0.8f);
+          maxStep = std::max(maxStep, blendDistance(a, b));
         }
         break;
       }
@@ -247,14 +248,28 @@ void blendChecks() {
       GroundBlend a = checkedBlend(x - 1, y), b = checkedBlend(x, y),
                   c = checkedBlend(x + 1, y), d = checkedBlend(x, y - 1),
                   e = checkedBlend(x, y + 1);
-      assert(blendDistance(a, b) <= 0.8f);
-      assert(blendDistance(b, c) <= 0.8f);
-      assert(blendDistance(b, d) <= 0.8f);
-      assert(blendDistance(b, e) <= 0.8f);
+      maxStep = std::max({maxStep, blendDistance(a, b), blendDistance(b, c),
+                          blendDistance(b, d), blendDistance(b, e)});
       if (a.count == 1 && a.weight[0] == 1)
         interior = true;
     }
   assert(interior);
+  std::cout << "[TEST] Maximum adjacent blend difference: " << maxStep << std::endl;
+  assert(maxStep <= 0.9f);
+  int oldMixed = 0, newMixed = 0;
+  for (int y = -384; y <= 384; y += 8)
+    for (int x = -384; x <= 384; x += 8) {
+      BiomeId first = world::biomeAt(x - 8, y - 8);
+      bool mixed = false;
+      for (int iy = -2; iy <= 2; iy++)
+        for (int ix = -2; ix <= 2; ix++)
+          mixed |= world::biomeAt(x + ix * 4, y + iy * 4) != first;
+      oldMixed += mixed;
+      newMixed += world::groundBlend(x, y).count > 1;
+    }
+  std::cout << "[TEST] Mixed biome samples at old/new radius: " << oldMixed
+            << "/" << newMixed << std::endl;
+  assert(oldMixed > 0 && newMixed * 100 <= oldMixed * 70);
   for (int id = 0; id < BIOME_COUNT; id++)
     for (int kind = 0; kind < 3; kind++) {
       Sprite s = BIOMES[id]->transitionGround(kind);

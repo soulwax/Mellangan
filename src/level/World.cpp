@@ -56,7 +56,7 @@ TileMemo *memoAt(int x, int y) {
   return m;
 }
 
-int floor4(int v) { return (v - (v >> 31 & 3)) / 4; }
+int floor2(int v) { return v / 2 - (v < 0 && v % 2 != 0); }
 
 GroundBlend compactBlend(const float *weights) {
   GroundBlend out{};
@@ -87,13 +87,13 @@ GroundBlend compactBlend(const float *weights) {
 }
 
 const GroundBlend &blendNode(int x, int y) {
-  BlendNode *node = &blendMemo[(x / 4 & 63) | (y / 4 & 63) << 6];
+  BlendNode *node = &blendMemo[(x / 2 & 63) | (y / 2 & 63) << 6];
   if (node->epoch != noise_epoch || node->x != x || node->y != y) {
     constexpr int K[5] = {1, 2, 3, 2, 1};
     float totals[BIOME_COUNT]{};
     for (int iy = -2; iy <= 2; iy++)
       for (int ix = -2; ix <= 2; ix++)
-        totals[biomeAt(x + ix * 4, y + iy * 4)] += float(K[ix + 2] * K[iy + 2]);
+        totals[biomeAt(x + ix * 2, y + iy * 2)] += float(K[ix + 2] * K[iy + 2]);
     node->x = x;
     node->y = y;
     node->epoch = noise_epoch;
@@ -241,12 +241,12 @@ BiomeId biomeAt(int x, int y) {
 }
 
 GroundBlend groundBlend(int x, int y) {
-  int gx = floor4(x), gy = floor4(y), x0 = gx * 4, y0 = gy * 4;
-  float fx = (x - x0) * 0.25f, fy = (y - y0) * 0.25f;
+  int gx = floor2(x), gy = floor2(y), x0 = gx * 2, y0 = gy * 2;
+  float fx = (x - x0) * 0.5f, fy = (y - y0) * 0.5f;
   fx = fx * fx * (3 - 2 * fx);
   fy = fy * fy * (3 - 2 * fy);
-  return interpolateBlend(blendNode(x0, y0), blendNode(x0 + 4, y0),
-                           blendNode(x0, y0 + 4), blendNode(x0 + 4, y0 + 4),
+  return interpolateBlend(blendNode(x0, y0), blendNode(x0 + 2, y0),
+                           blendNode(x0, y0 + 2), blendNode(x0 + 2, y0 + 2),
                            fx, fy);
 }
 

@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Narrowed biome ground, colour, and vegetation cisitions by half for sharper boundaries.
+
 ## [0.5.3] - 2026-10-29
 
 ### Changed
