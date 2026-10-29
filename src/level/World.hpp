@@ -26,6 +26,13 @@ bool nearestStructure(double x, double y, int maxRegions, Structure &out,
 typedef bool (*PatchTest)(int x, int y, const void *ctx);
 bool smoothPatch(PatchTest test, const void *ctx, int x, int y);
 
+struct GroundBlend {
+  BiomeId biome[3];
+  float weight[3];
+  int count;
+};
+
+GroundBlend groundBlend(int x, int y);
 bool isDirt(int x, int y);
 Sprite groundTile(int x, int y);
 float groundShade(int x, int y);

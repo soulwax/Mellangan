@@ -7,6 +7,9 @@ public:
   Carpet(const BiomeData &data, BiomeId self, int set)
       : Biome(data), self(self), set(set) {}
   bool ground(int x, int y, Sprite *out) const override;
+  Sprite transitionGround(int kind) const override {
+    return atlas::carpet(set, kind);
+  }
 
 protected:
   BiomeId self;

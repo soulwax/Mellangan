@@ -6,6 +6,19 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Enlarged biome geography by 2.5 times and blended ground materials, colours, and vegetation across wider borders while preserving paths, structures, lava, and oasis water.
+- Migrated older explored maps to the new geography without clearing explored areas or Codex progress.
+
+### Fixed
+
+- Removed an invalid free of SDL3's cached base path that could cause a Debug heap assertion during shutdown.
+
+### Added
+
+- Deterministic biome-spacing, blend-continuity, cache, reachability, and chart-migration tests, plus map previews and an isolated in-game boundary viewer.
+
 ## [0.5.0] - 2026-10-29
 
 ### Added

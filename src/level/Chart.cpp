@@ -162,6 +162,7 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
 
 namespace {
 constexpr uint32_t MAGIC = 0x3343414Du;
+constexpr uint32_t SCALED_MAGIC = 0x3443414Du;
 constexpr size_t PAGE_BYTES = 8 + Chart::PAGE * Chart::PAGE;
 } // namespace
 
@@ -177,18 +178,32 @@ void Chart::load(const std::string &path) {
     std::memcpy(head, data, sizeof head);
   size_t want =
       sizeof head + head[1] * PAGE_BYTES + head[2] * sizeof(Structure);
-  if (head[0] == MAGIC && size == want) {
+  if ((head[0] == MAGIC || head[0] == SCALED_MAGIC) && size == want) {
     const uint8_t *at = data + sizeof head;
     for (uint32_t i = 0; i < head[1]; i++, at += PAGE_BYTES) {
       int32_t px, py;
       std::memcpy(&px, at, 4), std::memcpy(&py, at + 4, 4);
       auto p = std::make_unique<Page>();
-      for (int k = 0; k < PAGE * PAGE; k++)
+      for (int k = 0; k < PAGE * PAGE; k++) {
         p->cell[k] = at[8 + k] <= BIOME_COUNT ? at[8 + k] : 0;
+        if (p->cell[k] && head[0] == MAGIC)
+          p->cell[k] = uint8_t(world::biomeAt(
+              (px * PAGE + k % PAGE) * CELL + CELL / 2,
+              (py * PAGE + k / PAGE) * CELL + CELL / 2) + 1);
+      }
       pages[keyOf(px, py)] = std::move(p);
     }
     sites.resize(head[2]);
     std::memcpy(sites.data(), at, head[2] * sizeof(Structure));
+    if (head[0] == MAGIC) {
+      size_t count = 0;
+      for (const Structure &old : sites) {
+        Structure current;
+        if (world::structureIn(old.rx, old.ry, current))
+          sites[count++] = current;
+      }
+      sites.resize(count);
+    }
     lastKey = ~0ull;
   }
   SDL_free(data);
@@ -199,7 +214,7 @@ void Chart::save(const std::string &path) const {
     return;
   std::vector<uint8_t> out(12 + pages.size() * PAGE_BYTES +
                            sites.size() * sizeof(Structure));
-  uint32_t head[3] = {MAGIC, uint32_t(pages.size()), uint32_t(sites.size())};
+  uint32_t head[3] = {SCALED_MAGIC, uint32_t(pages.size()), uint32_t(sites.size())};
   std::memcpy(out.data(), head, sizeof head);
   uint8_t *at = out.data() + sizeof head;
   for (auto &[key, p] : pages) {

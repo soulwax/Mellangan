@@ -67,10 +67,12 @@ public:
 
   virtual bool winter() const { return false; }
   virtual Sprite grass(int kind) const;
+  virtual Sprite transitionGround(int kind) const { return grass(kind); }
   virtual Sprite dirtRim(int offset) const;
   virtual Sprite frost(Sprite ground) const { return ground; }
   virtual void weather(Level &, double, double) const {}
   virtual bool ground(int, int, Sprite *) const { return false; }
+  virtual bool fixedGround(int, int) const { return false; }
   virtual int place(int, int, uint32_t, Prop &) const { return -1; }
 };
 

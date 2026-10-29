@@ -48,6 +48,8 @@ bool Ashlands::ground(int x, int y, Sprite *out) const {
   return true;
 }
 
+bool Ashlands::fixedGround(int x, int y) const { return lava(x, y); }
+
 int Ashlands::place(int x, int y, uint32_t roll, Prop &p) const {
   if (!lava(x, y))
     return -1;

@@ -93,6 +93,8 @@ bool Desert::ground(int x, int y, Sprite *out) const {
   return true;
 }
 
+bool Desert::fixedGround(int x, int y) const { return wet(x, y); }
+
 int Desert::place(int x, int y, uint32_t roll, Prop &p) const {
   if (wet(x, y))
     return p.solid = 7, 1;

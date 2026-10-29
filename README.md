@@ -103,6 +103,22 @@ Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits w
 
 ## Layout
 
+Biome climate fields are stretched to 2.5 times their previous width. Ground materials and vegetation mix over
+an eight-tile sampling radius at biome borders, while structures, dirt paths, lava, and oasis water keep their
+local shapes. Seeds remain deterministic; this generation change relocates biome boundaries. Old explored
+charts retain their explored area and refresh biome colours and structure markers when loaded.
+
+Debug `--test` includes seeded biome-spacing and transition checks. To export a before/after map on Windows:
+
+```powershell
+$env:MELLANGAN_BIOME_PREVIEW = 'build/biome-transitions.csv'
+./build/bin/Debug/MellanganApp.exe --test
+uv run --with pillow tools/biome_transition_preview.py build/biome-transitions.csv build/biome-transitions.png
+```
+
+`./build/bin/Debug/MellanganApp.exe --test-biome-view 179 -142 0` opens a temporary rendered boundary view
+at tile `(179, -142)` with noise seed `0`, then exits after 20 seconds. It does not load or save player progress.
+
 - `src/SpriteObject.hpp` – root of everything in the world: position, velocity, pixel position and a sprite
 - `src/entity` – `SpriteObject` → `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, and `Pool.c`
   (slab allocator for entities)

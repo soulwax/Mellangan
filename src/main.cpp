@@ -4,10 +4,13 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+#include <charconv>
+#include <cstring>
 
 #include "Crash.hpp"
 #include "Game.hpp"
 #include "Test.hpp"
+#include "BiomeTransitionTest.hpp"
 #include "entity/Pool.h"
 #include "Version.hpp"
 #include "other/Ouroboros.hpp"
@@ -35,7 +38,6 @@ int main(int argc, char **argv) {
     return 1;
   const char *basePath = SDL_GetBasePath();
   std::string base = basePath ? basePath : "";
-  SDL_free((void *)basePath);
   initLogging(base);
   installCrashHandler();
   spdlog::info("Mellangan v{}", MELLANGAN_VERSION);
@@ -58,6 +60,27 @@ int main(int argc, char **argv) {
     spdlog::critical("Vulkan2D init: {}", vk2dStatusMessage());
     return 1;
   }
+
+  for (int i = 1; i + 3 < argc; i++)
+    if (std::string_view(argv[i]) == "--test-biome-view") {
+      int x = 0, y = 0;
+      unsigned seed = 0;
+      auto parse = [](const char *s, auto &value) {
+        const char *end = s + std::strlen(s);
+        auto result = std::from_chars(s, end, value);
+        return result.ec == std::errc{} && result.ptr == end;
+      };
+      if (!parse(argv[i + 1], x) || !parse(argv[i + 2], y) ||
+          !parse(argv[i + 3], seed) ||
+          x < -1000000 || x > 1000000 || y < -1000000 || y > 1000000)
+        return 1;
+      viewBiomeTransition(window, base, x, y, seed);
+      vk2dRendererQuit();
+      SDL_DestroyWindow(window);
+      SDL_Quit();
+      pool_shutdown();
+      return 0;
+    }
 
   for (int i = 1; i < argc; i++)
     if (std::string_view(argv[i]) == "--test")

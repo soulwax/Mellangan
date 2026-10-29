@@ -319,10 +319,49 @@ std::vector<Enemy *> Level::nearest(double x, double y, float range, int n) {
 void Level::renderFloor(Screen &s) {
   eachVisibleTile(s, [&](int x, int y) {
     float n = world::groundShade(x, y), shade = 0.8f + 0.2f * n;
-    Color t = world::groundTint(x, y);
-    s.color({shade * t.r, shade * 0.97f * t.g,
-             (shade * 0.93f + 0.04f * (1 - n)) * t.b, 1});
-    s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
+    int own = int(world::biomeAt(x, y));
+    Structure st;
+    bool protectedGround = world::structureAt(x, y, st) || world::isDirt(x, y) ||
+                           BIOMES[own]->fixedGround(x, y);
+    if (protectedGround) {
+      Color t = world::groundTint(x, y);
+      s.color({shade * t.r, shade * 0.97f * t.g,
+               (shade * 0.93f + 0.04f * (1 - n)) * t.b, 1});
+      s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
+      return;
+    }
+    world::GroundBlend blend = world::groundBlend(x, y);
+    int order[3], count = 0;
+    for (int i = 0; i < blend.count; i++)
+      if (int(blend.biome[i]) == own)
+        order[count++] = i;
+    for (int i = 0; i < blend.count; i++)
+      if (int(blend.biome[i]) != own)
+        order[count++] = i;
+    float cumulative = 0;
+    uint32_t roll = hash2(x, y);
+    for (int i = 0; i < count; i++) {
+      int k = order[i], id = int(blend.biome[k]);
+      cumulative += blend.weight[k];
+      float alpha = i == 0 ? 1 : blend.weight[k] / cumulative;
+      const Color &t = BIOMES[id]->tint;
+      s.color({shade * t.r, shade * 0.97f * t.g,
+               (shade * 0.93f + 0.04f * (1 - n)) * t.b, alpha});
+      int variant = int(roll % 100);
+      int kind = variant < BIOMES[id]->flowers
+                     ? 2
+                     : variant < BIOMES[id]->flowers + BIOMES[id]->tufts ? 1 : 0;
+      if (id == BIOME_DESERT)
+        kind = variant < 10 ? 1 : variant < 15 ? 2 : 0;
+      else if (id == BIOME_ASHLANDS || id == BIOME_CRYSTAL ||
+               id == BIOME_FUNGAL || id == BIOME_BADLANDS ||
+               id == BIOME_SAVANNA || id == BIOME_TAIGA || id >= BIOME_SALT)
+        kind = variant < 12 ? 1 : variant < 16 ? 2 : 0;
+      Sprite ground = blend.count == 1 && id == own
+                          ? world::groundTile(x, y)
+                          : BIOMES[id]->transitionGround(kind);
+      s.sprite(ground, x * 16, y * 16, 0, 0);
+    }
   });
   s.color(col::white);
 }

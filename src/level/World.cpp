@@ -23,11 +23,6 @@ bool dirtNoise(int x, int y, const Biome *b) {
   return noise_fbm(x * 0.11f - 200.5f, y * 0.11f + 77.5f, 2, 505) > b->dirt;
 }
 
-// Per-tile memo of everything noise-derived. bits holds the biome in its low 3
-// bits plus has/value flags, so one direct-mapped slot answers biome, dirt,
-// shade and clump. Indexed by the low coordinate bits: any 128x64-tile window
-// maps without collisions, which covers the view, its margins and the tint's
-// +-3 taps.
 enum : uint32_t {
   BIOME_BITS = 31,
   HAS_BIOME = 1 << 5,
@@ -47,11 +42,90 @@ struct TileMemo {
 };
 TileMemo memo[128 * 64];
 
+struct BlendNode {
+  int x, y;
+  uint32_t epoch;
+  GroundBlend blend;
+};
+BlendNode blendMemo[64 * 64];
+
 TileMemo *memoAt(int x, int y) {
   TileMemo *m = &memo[(x & 127) | (y & 63) << 7];
   if (m->epoch != noise_epoch || m->x != x || m->y != y)
     m->x = x, m->y = y, m->bits = 0, m->epoch = noise_epoch;
   return m;
+}
+
+int floor4(int v) { return (v - (v >> 31 & 3)) / 4; }
+
+GroundBlend compactBlend(const float *weights) {
+  GroundBlend out{};
+  float total = 0;
+  for (int i = 0; i < BIOME_COUNT; i++)
+    total += weights[i];
+  for (int n = 0; n < 3; n++) {
+    int best = -1;
+    for (int i = 0; i < BIOME_COUNT; i++) {
+      bool used = false;
+      for (int k = 0; k < out.count; k++)
+        used |= int(out.biome[k]) == i;
+      if (!used && (best < 0 || weights[i] > weights[best]))
+        best = i;
+    }
+    if (best < 0 || weights[best] <= 0)
+      break;
+    out.biome[out.count] = BiomeId(best);
+    out.weight[out.count++] = weights[best] / total;
+  }
+  float sum = 0;
+  for (int i = 0; i < out.count; i++)
+    sum += out.weight[i];
+  if (sum > 0)
+    for (int i = 0; i < out.count; i++)
+      out.weight[i] /= sum;
+  return out;
+}
+
+const GroundBlend &blendNode(int x, int y) {
+  BlendNode *node = &blendMemo[(x / 4 & 63) | (y / 4 & 63) << 6];
+  if (node->epoch != noise_epoch || node->x != x || node->y != y) {
+    constexpr int K[5] = {1, 2, 3, 2, 1};
+    float totals[BIOME_COUNT]{};
+    for (int iy = -2; iy <= 2; iy++)
+      for (int ix = -2; ix <= 2; ix++)
+        totals[biomeAt(x + ix * 4, y + iy * 4)] += float(K[ix + 2] * K[iy + 2]);
+    node->x = x;
+    node->y = y;
+    node->epoch = noise_epoch;
+    node->blend = compactBlend(totals);
+  }
+  return node->blend;
+}
+
+GroundBlend interpolateBlend(const GroundBlend &a, const GroundBlend &b,
+                             const GroundBlend &c, const GroundBlend &d,
+                             float fx, float fy) {
+  float totals[BIOME_COUNT]{};
+  auto add = [&](const GroundBlend &blend, float amount) {
+    for (int i = 0; i < blend.count; i++)
+      totals[blend.biome[i]] += blend.weight[i] * amount;
+  };
+  add(a, (1 - fx) * (1 - fy));
+  add(b, fx * (1 - fy));
+  add(c, (1 - fx) * fy);
+  add(d, fx * fy);
+  return compactBlend(totals);
+}
+
+const Biome *blendPick(int x, int y, uint32_t roll) {
+  GroundBlend blend = groundBlend(x, y);
+  float r = float(roll % 10000) / 10000.0f;
+  for (int i = 0; i < blend.count; i++) {
+    if (r < blend.weight[i])
+      return BIOMES[blend.biome[i]];
+    r -= blend.weight[i];
+  }
+  return BIOMES[biomeAt(x, y)];
 }
 
 BiomeId rawBiome(int x, int y) {
@@ -63,9 +137,11 @@ BiomeId rawBiome(int x, int y) {
 
 bool rawDirt(int x, int y) {
   TileMemo *m = memoAt(x, y);
-  if (!(m->bits & HAS_RAW_DIRT))
-    m->bits |= HAS_RAW_DIRT |
-               (dirtNoise(x, y, BIOMES[biomeAt(x, y)]) ? uint32_t(RAW_DIRT) : 0u);
+  if (!(m->bits & HAS_RAW_DIRT)) {
+    bool dirt = dirtNoise(x, y, BIOMES[biomeAt(x, y)]);
+    m = memoAt(x, y);
+    m->bits |= HAS_RAW_DIRT | (dirt ? uint32_t(RAW_DIRT) : 0u);
+  }
   return m->bits & RAW_DIRT;
 }
 
@@ -164,6 +240,16 @@ BiomeId biomeAt(int x, int y) {
   return BiomeId(m->bits & BIOME_BITS);
 }
 
+GroundBlend groundBlend(int x, int y) {
+  int gx = floor4(x), gy = floor4(y), x0 = gx * 4, y0 = gy * 4;
+  float fx = (x - x0) * 0.25f, fy = (y - y0) * 0.25f;
+  fx = fx * fx * (3 - 2 * fx);
+  fy = fy * fy * (3 - 2 * fy);
+  return interpolateBlend(blendNode(x0, y0), blendNode(x0 + 4, y0),
+                           blendNode(x0, y0 + 4), blendNode(x0 + 4, y0 + 4),
+                           fx, fy);
+}
+
 bool solidCore(PatchTest test, const void *ctx, int x, int y) {
   if (!test(x, y, ctx))
     return false;
@@ -189,6 +275,7 @@ bool isDirt(int x, int y) {
     Structure s;
     bool dirt = structureAt(x, y, s, 1) ? structureDirt(&s, x - s.x, y - s.y)
                                         : patchDirt(x, y);
+    m = memoAt(x, y);
     m->bits |= HAS_DIRT | (dirt ? uint32_t(DIRT) : 0u);
   }
   return m->bits & DIRT;
@@ -200,9 +287,7 @@ bool winterAt(int x, int y) { return BIOMES[biomeAt(x, y)]->winter(); }
 
 const Biome *blendedBiome(int x, int y) {
   const Biome *here = BIOMES[biomeAt(x, y)];
-  uint32_t h = hash2(x * 31 + 5, y * 17 + 9);
-  const Biome *there =
-      BIOMES[biomeAt(x + int(h % 7) - 3, y + int((h >> 3) % 7) - 3)];
+  const Biome *there = blendPick(x, y, hash2(x * 31 + 5, y * 17 + 9));
   return there->winter() == here->winter() ? there : here;
 }
 
@@ -240,18 +325,15 @@ float groundShade(int x, int y) {
 }
 
 Color groundTint(int x, int y) {
-  int gx = x >> 2, gy = y >> 2;
-  float fx = ((x & 3) + 0.5f) / 4, fy = ((y & 3) + 0.5f) / 4;
-  fx = fx * fx * (3 - 2 * fx), fy = fy * fy * (3 - 2 * fy);
-  const Color &a = BIOMES[biomeAt(gx * 4, gy * 4)]->tint,
-              &b = BIOMES[biomeAt(gx * 4 + 4, gy * 4)]->tint,
-              &c = BIOMES[biomeAt(gx * 4, gy * 4 + 4)]->tint,
-              &d = BIOMES[biomeAt(gx * 4 + 4, gy * 4 + 4)]->tint;
-  auto mix = [&](float Color::*k) {
-    float top = lerpf(a.*k, b.*k, fx), bottom = lerpf(c.*k, d.*k, fx);
-    return lerpf(top, bottom, fy);
-  };
-  return {mix(&Color::r), mix(&Color::g), mix(&Color::b), 1};
+  GroundBlend blend = groundBlend(x, y);
+  Color out{0, 0, 0, 1};
+  for (int i = 0; i < blend.count; i++) {
+    const Color &t = BIOMES[blend.biome[i]]->tint;
+    out.r += t.r * blend.weight[i];
+    out.g += t.g * blend.weight[i];
+    out.b += t.b * blend.weight[i];
+  }
+  return out;
 }
 
 bool propAt(int x, int y, Prop &p) {
@@ -270,8 +352,7 @@ bool propAt(int x, int y, Prop &p) {
   if (int own = self->place(x, y, h, p); own >= 0)
     return own;
   uint32_t g = hash2(x * 31 + 5, y * 17 + 9);
-  const Biome *other =
-      BIOMES[biomeAt(x + int(g % 7) - 3, y + int((g >> 3) % 7) - 3)];
+  const Biome *other = blendPick(x, y, g);
   if (other != self && (h >> 4) % 1000 < 110) {
     const Feature *fringe = (h >> 21) & 1 ? self->fringe : other->fringe;
     if (fringe)

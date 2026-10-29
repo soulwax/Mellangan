@@ -1,4 +1,5 @@
 #include "Test.hpp"
+#include "BiomeTransitionTest.hpp"
 
 #include <cassert>
 #include <cstring>
@@ -194,6 +195,7 @@ int runTests() {
   testStatusDamage();
   testExpansionEnemies();
   testExpansionContent();
+  testBiomeTransitions();
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"
             << std::endl;
   testLevelLifecycleAndSimulation();
