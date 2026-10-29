@@ -13,6 +13,14 @@ using [EnTT](https://github.com/skypjack/entt) for entity storage and [spdlog](h
 Survive the night against a horde of enemies blabla, but with the catch that you need to traverse the biomes to find shrines to light and kindle them to win the run. The enemies are a mix of melee and ranged, and the player can pick up upgrades to help them survive.
 Enemies can have their own type of attacks, upgrades, passives and abilities.
 -
+## Screenshots
+
+Rendered biome views from the game:
+
+| Snow and forest | Desert | Hollow caverns |
+| --- | --- | --- |
+| ![Snow and forest biome transition](static/screenshots/01-snow.png) | ![Desert biome transition](static/screenshots/02-desert.png) | ![Hollow caverns biome](static/screenshots/03-caverns.png) |
+
 ## Building
 
 Requires CMake 3.21+, a C++20 compiler (MSVC on Windows, GCC 11+ or Clang 14+ on Linux), and the
