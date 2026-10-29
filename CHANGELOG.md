@@ -6,6 +6,15 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Regional monsters stay in their regions. Wandering spawns and the minute horde draw only from the classic roster
+  again, instead of filling every biome with whichever regional monster unlocked last, such as cinder golems and
+  mycelial brutes after three minutes. Wolves, burrowers, necromancers and the ten expansion monsters now appear only
+  where their biome calls for them.
+- The ten expansion biomes host fitting monsters instead of an index-shifted pair. For example, the Ember Fen has
+  ember imps and leeches rather than frost wisps and icebacks, and the Glass Desert has glass mantises and burrowers.
+
 ## [0.5.4] - 2026-10-29
 
 ### Changed

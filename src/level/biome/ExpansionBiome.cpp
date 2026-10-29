@@ -14,6 +14,19 @@ const Color COLORS[] = {{0.8f,0.8f,0.7f,1},{0.3f,0.65f,0.6f,1},
     {0.8f,0.55f,0.15f,1},{0.5f,0.65f,0.55f,1},{0.7f,0.65f,0.8f,1},
     {0.3f,0.25f,0.4f,1},{0.4f,0.45f,0.85f,1}};
 
+using K=EnemyKind;
+const uint32_t FOES[]={
+    foe(K::GlassMantis)|foe(K::DustVulture),
+    foe(K::MireLeech)|foe(K::BogLantern),
+    foe(K::FrostWisp)|foe(K::Ghost),
+    foe(K::MireLeech)|foe(K::Necromancer),
+    foe(K::EmberImp)|foe(K::MireLeech),
+    foe(K::Sporeling)|foe(K::Wolf)|foe(K::Alpha),
+    foe(K::DustVulture)|foe(K::Iceback),
+    foe(K::GlassMantis)|foe(K::Burrower),
+    foe(K::Spider)|foe(K::MycelialBrute),
+    foe(K::CinderGolem)|foe(K::Cultist)};
+
 const std::array<Feature,30> &props() {
   static const auto value = [] {
     std::array<Feature,30> out{};
@@ -37,9 +50,7 @@ BiomeData data(int index) {
   for (int i=0;i<int(StructureKind::Count);i++)
     d.structureWeights[i]=10;
   d.structureWeights[index%int(StructureKind::Count)]=45;
-  d.foes=foe(EnemyKind(int(EnemyKind::MireLeech)+index)) |
-         foe(EnemyKind(int(EnemyKind::MireLeech)+(index+1)%10)) |
-         foe(EnemyKind::Bat) | foe(EnemyKind::Slime);
+  d.foes=FOES[index] | foe(EnemyKind::Bat) | foe(EnemyKind::Slime);
   for (int i=0;i<3;i++)
     d.spawns[i]={&props()[index*3+i],10+i*4,20+i*10};
   d.fringe=&props()[index*3+2];

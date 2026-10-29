@@ -10,11 +10,12 @@
 
 void Spawner::tick() {
   float t = level.time;
-  std::vector<EnemyKind> pool;
+  std::vector<EnemyKind> pool, common;
   for (int k = 0; k < int(EnemyKind::Count); k++)
     if (Enemy::typeOf(EnemyKind(k)).unlockAt <= t)
-      pool.push_back(EnemyKind(k));
-  int n = int(pool.size());
+      (k < int(EnemyKind::Cyclops) ? common : pool).push_back(EnemyKind(k));
+  pool.insert(pool.end(), common.begin(), common.end());
+  int n = int(common.size());
   auto pick = [&](double x, double y) {
     if (t >= 70 && rng.chance(0.015f))
       return EnemyKind::Thief;
@@ -39,8 +40,8 @@ void Spawner::tick() {
         local[m++] = k;
     if (m && rng.chance(0.45f))
       return local[rng.irange(0, m - 1)];
-    return n > 2 && rng.chance(0.55f) ? pool[n - 1 - rng.irange(0, 1)]
-                                      : pool[rng.irange(0, n - 1)];
+    return n > 2 && rng.chance(0.55f) ? common[n - 1 - rng.irange(0, 1)]
+                                      : common[rng.irange(0, n - 1)];
   };
 
   if ((timer -= DT) <= 0) {
@@ -57,7 +58,7 @@ void Spawner::tick() {
     int count = std::min(64, 24 + int(t / 12));
     for (int i = 0; i < count; i++) {
       double dir = TAU * i / count;
-      spawn(pool.back(), level.player->x + std::cos(dir) * 270,
+      spawn(common.back(), level.player->x + std::cos(dir) * 270,
             level.player->y + std::sin(dir) * 270);
     }
     level.game.announce("THE HORDE CLOSES IN");
