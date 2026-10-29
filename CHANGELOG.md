@@ -9,6 +9,7 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - Native Apple Silicon macOS builds as a self-contained `Mellangan.app` (macOS 12+) with embedded MoltenVK, an icon and bundle metadata; `setup-macos.sh` installs a reproducible Homebrew toolchain plus pinned `slangc` and MoltenVK.
+- macOS windows render at full Retina resolution, and startup logs the renderer, device and window pixel size.
 - On macOS the log and Vulkan2D error file are written to the application support folder instead of next to the executable.
 
 ### Fixed
