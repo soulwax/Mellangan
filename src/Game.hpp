@@ -35,7 +35,7 @@ public:
   Input input;
   std::unique_ptr<Level> level;
   std::unique_ptr<Menu> menu;
-  bool running = true, dev = false;
+  bool running = true, dev = false, reducedParticles = false;
   Bench bench;
   static constexpr int HISTORY = 6;
 
@@ -59,6 +59,7 @@ public:
   void reseed();
   std::string worldName() const;
   void announce(std::string text);
+  void setReducedParticles(bool reduced);
   void onPlayerHurt() { hurt = 1, shake = 4; }
   void onExplosion() { shake = std::max(shake, 2.5f); }
   void onPlayerDied();

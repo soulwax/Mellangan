@@ -24,4 +24,5 @@ public:
   void tick() override;
   void render(Screen &s) override;
   void renderLight(Screen &s) override;
+  bool cosmeticParticle() const override { return true; }
 };

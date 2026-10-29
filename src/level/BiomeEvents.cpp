@@ -2,6 +2,7 @@
 
 #include "Game.hpp"
 #include "entity/Player.hpp"
+#include "gfx/EnemyWarning.hpp"
 #include "level/Level.hpp"
 #include "level/Noise.h"
 #include "particle/Spark.hpp"
@@ -189,11 +190,18 @@ void BiomeEvents::render(Screen &s, const Level &level) const {
     return;
   Color c = TONES[current.biome - BIOME_SALT];
   bool warning = level.time < current.begins;
-  s.color(c.alpha(warning ? 0.8f : 0.4f));
-  s.center(atlas::Ring, current.x, current.y,
-           current.radius * 2 / atlas::Ring.w, level.time * 0.15f);
+  bool dangerous = current.biome != BIOME_MOON && current.biome != BIOME_STORM;
+  if (dangerous)
+    enemyWarning(s, current.x, current.y, current.radius,
+                 warning ? 0.8f : 0.5f, level.time * 0.15f);
+  else {
+    s.color(c.alpha(warning ? 0.8f : 0.4f));
+    s.center(atlas::Ring, current.x, current.y,
+             current.radius * 2 / atlas::Ring.w, level.time * 0.15f);
+  }
   if (warning) {
     float progress = clampf((level.time - current.begins + 3) / 3, 0, 1);
+    s.color((dangerous ? col::red : c).alpha(0.7f));
     s.center(atlas::Ring, current.x, current.y,
              current.radius * 2 * progress / atlas::Ring.w);
   } else {

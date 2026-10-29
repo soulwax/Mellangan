@@ -12,6 +12,7 @@
 #include "entity/enemy/ExpansionEnemy.hpp"
 #include "entity/enemy/Wolf.hpp"
 #include "entity/enemy/ai/Plans.hpp"
+#include "entity/enemy/ai/Melee.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/pickup/Potion.hpp"
 #include "hero/Hero.hpp"
@@ -303,8 +304,16 @@ void Enemy::render(Screen &s) {
   if (elite)
     c = {c.r, c.g * 0.85f, c.b * 0.45f, c.a};
   if (const Goal *g = goals.front())
-    if (float t = g->tell(*this); t > 0)
+    if (float t = g->tell(*this); t > 0) {
       c = {c.r, c.g * (1 - 0.6f * t), c.b * (1 - 0.6f * t), c.a};
+      if (dynamic_cast<const Melee *>(g)) {
+        double ex = xp + xMark * (radius + 13), ey = yp + yMark * (radius + 13);
+        Color warning{1, 0.18f, 0.12f, 0.55f + 0.45f * t};
+        s.line(xp + xMark * radius, yp + yMark * radius, ex, ey, 2, warning);
+        s.line(ex, ey, ex - xMark * 5 - yMark * 3, ey - yMark * 5 + xMark * 3, 2, warning);
+        s.line(ex, ey, ex - xMark * 5 + yMark * 3, ey - yMark * 5 - xMark * 3, 2, warning);
+      }
+    }
   drawBody(s, xp, yp, sprite(), type.floats, 1, c, flash > 0 ? 1.0f : 0.0f,
            col::white);
 }

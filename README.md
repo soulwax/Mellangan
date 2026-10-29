@@ -106,6 +106,12 @@ and fire pools leave a short burn when enemies move away. Afflictions clear on d
 | Esc / P | Pause |
 | F11 | Fullscreen |
 | F3 | FPS counter |
+| V | Toggle full or reduced cosmetic particles (also available while paused) |
+
+Enemy attack warnings use red markers, including directional melee windups and hostile projectiles.
+Burn, chill, poison, and marked effects have distinct icons and player HUD timers. Reduced particles hides
+some cosmetic sparks and debris while keeping gameplay indicators and damage numbers visible; the setting
+is remembered between sessions.
 
 Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits when it is done).
 
@@ -120,6 +126,10 @@ Familiar climates are concentrated near the spawn at the world origin. Exotic re
 from roughly 100 to 450 tiles away, with the full biome distribution beyond that distance. Existing explored
 charts refresh their biome colours and structure markers when loaded under the new generation.
 
+Some structures start a biome challenge: defeat the local guards and complete the indicated objective to earn
+a treasure chest, experience, and a biome-themed bonus for the rest of the run. Exotic biome bonuses are twice
+as strong. Leaving the challenge area, running out of time, or losing a guard fails the challenge.
+
 Debug `--test` includes seeded biome-spacing and transition checks. To export a before/after map on Windows:
 
 ```powershell
@@ -133,6 +143,8 @@ at tile `(179, -142)` with noise seed `0`, then exits after 20 seconds. It does 
 `./build/bin/Debug/MellanganApp.exe --test-effects-view` shows a temporary, repeating enemy death and warning
 effects scene without loading or saving player progress.
 `./build/bin/Debug/MellanganApp.exe --test-gui-view` previews the level-up and shrine menus without saving progress.
+`./build/bin/Debug/MellanganApp.exe --test-encounter-view` previews a biome challenge without saving progress.
+`./build/bin/Debug/MellanganApp.exe --test-combat-view` previews combat indicators; V switches particle detail.
 
 - `src/SpriteObject.hpp` – root of everything in the world: position, velocity, pixel position and a sprite
 - `src/entity` – `SpriteObject` → `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, and `Pool.c`
@@ -145,6 +157,8 @@ effects scene without loading or saving player progress.
 - `src/level` – `Level` (backed by an `entt::registry`) and the `Spawner`; world generation as small table-driven
   modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and
   `Encounter` (what a structure does when entered)
+- `src/level/BiomeReward`, `EncounterGuards`, and `EncounterObjective` – biome challenge rewards, local guard
+  tracking, and objective rules used by the encounter lifecycle
 - `src/menu` – title, pause, level-up, and death menus
 - `src/gui` – reusable GUI widgets and shared choice layout and input handling
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D

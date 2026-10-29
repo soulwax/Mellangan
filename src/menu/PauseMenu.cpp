@@ -23,6 +23,8 @@ void PauseMenu::render(Screen &s) {
                col::muted);
   s.textCenter("C codex", s.w / 2, s.h * 0.35f + 60 * u + 40 * small, small,
                col::muted);
+  s.textCenter(game.reducedParticles ? "V particles: reduced" : "V particles: full",
+               s.w / 2, s.h * 0.35f + 60 * u + 60 * small, small, col::muted);
   s.textCenter("Q to quit to title", s.w / 2, s.h * 0.35f + 60 * u + 20 * small,
                small, col::muted);
   s.textCenter("world " + game.worldName(), s.w / 2, s.h - 30 * small, small,

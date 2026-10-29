@@ -5,23 +5,23 @@
 
 #include "entity/Entity.hpp"
 #include "level/Structure.hpp"
-
-struct ExpansionChallengeState {
-  std::array<bool, 6> defeated{};
-  bool escaped = false;
-};
+#include "level/biome/Biome.hpp"
+#include "level/BiomeReward.hpp"
+#include "level/EncounterGuards.hpp"
+#include "level/EncounterObjective.hpp"
 
 class ExpansionChallenge : public Entity {
 public:
-  explicit ExpansionChallenge(const Structure &site, int biome);
+  explicit ExpansionChallenge(const Structure &site, BiomeId biome);
   void onAdded() override;
   void tick() override;
   void render(Screen &s) override;
   void renderLight(Screen &s) override;
   bool complete() const;
-  int kind, biome, defenders = 0;
-  float elapsed = 0, progress = 0, integrity = 100;
-  double heading, distance = 0;
+  int defenders = 0;
+  BiomeId biome;
+  float elapsed = 0;
+  EncounterObjective objective;
   bool rewarded = false, failed = false;
   std::array<entt::entity, 6> guardIds{};
   std::shared_ptr<ExpansionChallengeState> state;

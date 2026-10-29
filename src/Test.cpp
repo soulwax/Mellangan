@@ -1,5 +1,6 @@
 #include "Test.hpp"
 #include "BiomeTransitionTest.hpp"
+#include "BiomeEncounterTest.hpp"
 
 #include <cassert>
 #include <cstring>
@@ -13,6 +14,8 @@
 #include "entity/effect/GlaiveThrust.hpp"
 #include "entity/effect/IncenseCloud.hpp"
 #include "particle/DeathEffect.hpp"
+#include "particle/VisualDetail.hpp"
+#include "gfx/StatusVisual.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/projectile/ChakramDisc.hpp"
@@ -251,6 +254,43 @@ static void testAutomaticLevelUp() {
   assert(p.pendingLevels == 0);
 }
 
+static void testCombatReadability() {
+  std::vector<std::unique_ptr<Spark>> sparks;
+  int shown = 0;
+  for (int i = 0; i < 128; i++) {
+    sparks.push_back(std::make_unique<Spark>(0, 0, 0, 0, col::white, 1, 1, false));
+    bool visible = showParticle(*sparks.back(), true);
+    assert(showParticle(*sparks.back(), false));
+    assert(visible == showParticle(*sparks.back(), true));
+    shown += visible;
+  }
+  assert(shown > 0 && shown < 100);
+  TextParticle text(0, 0, 1, col::white);
+  DeathEffect death(0, 0, 0, atlas::tile(atlas::t::Bat), 1, 1, col::white,
+                    DeathStyle::Fallen);
+  assert(showParticle(text, true) && showParticle(death, true));
+  Status status;
+  for (int i = 0; i < int(StatusKind::Count); i++) {
+    auto kind = StatusKind(i);
+    assert(status.apply(kind, 1, 0.2f));
+    assert(statusName(kind)[0] && statusColor(kind).a == 1);
+  }
+  for (int i = 0; i < int(StatusKind::Count); i++)
+    assert(status.power(StatusKind(i)) > 0);
+  Input input;
+  SDL_Event e{};
+  e.type = SDL_EVENT_KEY_DOWN;
+  e.key.scancode = SDL_SCANCODE_V;
+  input.handle(e, 1);
+  input.tick();
+  assert(input.particles.clicked);
+  e.type = SDL_EVENT_WINDOW_FOCUS_LOST;
+  input.handle(e, 1);
+  input.tick();
+  assert(!input.particles.down);
+  std::cout << "[TEST] Particle detail, simultaneous status indicators and input: PASS" << std::endl;
+}
+
 static void testGuiChoices() {
   Game game;
   Screen &s = game.screen;
@@ -383,8 +423,10 @@ int runTests() {
   testExpansionEnemies();
   testExpansionContent();
   testBiomeTransitions();
+  testBiomeEncounters();
   testExperienceCurve();
   testAutomaticLevelUp();
+  testCombatReadability();
   testGuiChoices();
   testEnemyDeathEffects();
   std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;

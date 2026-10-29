@@ -14,6 +14,7 @@
 #include "level/Flavour.hpp"
 #include "hero/Hero.hpp"
 #include "entity/pickup/Chest.hpp"
+#include "particle/VisualDetail.hpp"
 
 namespace {
 uint32_t orderedBits(float f) {
@@ -430,7 +431,8 @@ void Level::render(Screen &s) {
     if (!o.self->removed && s.visible(o.self->x, o.self->y, 48))
       queue(o.self.get());
   for (auto &p : particles)
-    if (!p->removed && s.visible(p->x, p->y, 48))
+    if (!p->removed && showParticle(*p, game.reducedParticles) &&
+        s.visible(p->x, p->y, 48))
       queue(p.get());
   for (Prop &p : props)
     queue(&p);
@@ -473,7 +475,8 @@ void Level::renderLight(Screen &s) {
         s.visible(o.self->x, o.self->y, 160))
       o.self->drawLight(s);
   for (auto &p : particles)
-    if (!p->removed && s.visible(p->x, p->y, 60))
+    if (!p->removed && showParticle(*p, game.reducedParticles) &&
+        s.visible(p->x, p->y, 60))
       p->drawLight(s);
   for (Prop &p : props) {
     if (p.light.a <= 0)

@@ -1,4 +1,5 @@
 #include "entity/Mob.hpp"
+#include "gfx/StatusVisual.hpp"
 
 void Mob::drawBody(Screen &s, int px, int py, Sprite body, bool floats, float move,
                    Color tint, float flashAmount, Color flashColor) const {
@@ -21,6 +22,7 @@ void Mob::drawBody(Screen &s, int px, int py, Sprite body, bool floats, float mo
   s.flash(body, px, py, 8, 16, sx * scale * facing, sy * scale,
           rot, flashAmount, flashColor);
   s.color(col::white);
+  statusIcons(s, status, px, py - 18 * scale);
 }
 
 void Mob::drawShadow(Screen &s, int px, int py, bool floats) const {

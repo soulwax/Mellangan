@@ -8,7 +8,13 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Changed
 
+- Improved hostile attack warnings and status indicators, and added a persistent reduced-particles option.
+- Split biome challenge rewards, guards, and objective rules into reusable modules.
 - Narrowed biome ground, colour, and vegetation cisitions by half for sharper boundaries.
+
+### Added
+
+- Biome challenges now feature local enemies and themed permanent run rewards, with stronger rewards in exotic regions.
 
 ## [0.5.3] - 2026-10-29
 

@@ -7,6 +7,7 @@
 
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "gfx/StatusVisual.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
@@ -30,6 +31,13 @@ bool Game::init(SDL_Window *w, const std::string &base) {
     return false;
   if (char *pref = SDL_GetPrefPath("soulwax", "Mellangan"))
     prefPath = pref, SDL_free(pref);
+  if (!prefPath.empty() && !bench.enabled) {
+    size_t size = 0;
+    char *setting = static_cast<char *>(SDL_LoadFile((prefPath + "visual.txt").c_str(), &size));
+    if (setting && size > 0)
+      reducedParticles = setting[0] == '1';
+    SDL_free(setting);
+  }
   loadWorld();
   if (!prefPath.empty() && !bench.enabled)
     codex.load(prefPath + "codex.txt");
@@ -105,6 +113,8 @@ void Game::tick() {
     showFps = !showFps;
   if (input.mute.clicked && !(menu && menu->typing()))
     Sound::toggleMute();
+  if (input.particles.clicked && !(menu && menu->typing()))
+    setReducedParticles(!reducedParticles);
   if (input.fullscreen.clicked)
     SDL_SetWindowFullscreen(
         window, !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN));
@@ -322,6 +332,14 @@ void Game::announce(std::string text) {
   banners.push_back(std::move(text));
 }
 
+void Game::setReducedParticles(bool reduced) {
+  reducedParticles = reduced;
+  if (!prefPath.empty() && !bench.enabled) {
+    const char *value = reduced ? "1\n" : "0\n";
+    SDL_SaveFile((prefPath + "visual.txt").c_str(), value, 2);
+  }
+}
+
 void Game::onPlayerDied() {
   Player &p = *level->player;
   Sound::death.play(0.8f, 0);
@@ -488,6 +506,17 @@ void Game::renderHud() {
     }
     for (int i = 0; i < up->level; i++)
       s.rect(x + u + i * 3.4f * u, y + 19 * u, 2 * u, 2 * u, col::gold);
+  }
+
+  float sx = 4 * u, sy = top + 54 * u;
+  for (int i = 0; i < int(StatusKind::Count); i++) {
+    StatusKind kind = StatusKind(i);
+    const StatusEffect &effect = p.status.effects[i];
+    if (effect.time <= 0)
+      continue;
+    std::string label = fmt::format("{} {:.1f}s", statusName(kind), effect.time);
+    s.text(label, sx, sy, small, statusColor(kind));
+    sx += Screen::textWidth(label, small) + 8 * u;
   }
 
   float hw = 80 * u, hy = s.h - 12 * u;

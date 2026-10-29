@@ -23,6 +23,7 @@ public:
   void tick() override;
   void render(Screen &s) override;
   void renderShadow(Screen &s) override;
+  bool cosmeticParticle() const override { return true; }
 
 protected:
   virtual void collide(double xxa, double yya, double zza);
