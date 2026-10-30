@@ -79,6 +79,16 @@ int main(int argc, char **argv) {
   spdlog::info("Window {}x{}, {}x{} pixels", ww, wh, pw, ph);
 
   for (int i = 1; i < argc; i++)
+    if (std::string_view(argv[i]) == "--capture-screenshots") {
+      captureScreenshotSuite(window, base);
+      vk2dRendererQuit();
+      SDL_DestroyWindow(window);
+      SDL_Quit();
+      pool_shutdown();
+      return 0;
+    }
+
+  for (int i = 1; i < argc; i++)
     if (std::string_view(argv[i]) == "--test-combat-view") {
       viewCombatReadability(window, base);
       vk2dRendererQuit();
@@ -142,6 +152,8 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; i++)
     if (std::string_view(argv[i]) == "--test")
       return runTests();
+    else if (std::string_view(argv[i]) == "--biome-map" && i + 1 < argc)
+      return mapBiomes(argv[i + 1]);
 
   int code = 0;
   {
@@ -158,7 +170,7 @@ int main(int argc, char **argv) {
     }
     if (game.dev)
       spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world "
-                   "debug, F9 warp to nearest structure; --arm \"A,B!\" "
+                   "debug, F9 warp to nearest structure, F10 next weather; --arm \"A,B!\" "
                    "starts runs with those upgrades, --biome N starts in biome N");
     if (game.dev) {
       constexpr ouroboros::Ouroboros council;

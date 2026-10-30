@@ -117,6 +117,8 @@ void Game::tick() {
   input.tick();
   time += DT;
   Sound::tick();
+  if (level)
+    Sound::ambience(level->sky.rainfall(), level->sky.gale());
   if (input.fps.clicked)
     showFps = !showFps;
   if (input.mute.clicked && !(menu && menu->typing()))
@@ -182,6 +184,9 @@ void Game::devTick() {
   if (input.devWorld.clicked)
     worldDebug = !worldDebug,
     spdlog::info("dev: world debug {}", worldDebug ? "on" : "off");
+  if (input.devSky.clicked)
+    level->sky.force(Front((int(level->sky.front) + 1) % int(Front::Count))),
+        spdlog::info("dev: weather front {}", int(level->sky.front));
   Structure target;
   if (input.devWarp.clicked &&
       world::nearestStructure(p.x, p.y, 8, target, Level::unvisited,
@@ -482,9 +487,10 @@ void Game::render() {
 
   float d = level->night.daylight();
   const Color &air = level->air;
-  screen.beginLight({lerpf(0.06f, 0.42f, d) * air.r,
-                     lerpf(0.07f, 0.34f, d) * air.g,
-                     lerpf(0.15f, 0.33f, d) * air.b, 1});
+  Color sky = level->sky.shade();
+  screen.beginLight({lerpf(0.06f, 0.42f, d) * air.r * sky.r,
+                     lerpf(0.07f, 0.34f, d) * air.g * sky.g,
+                     lerpf(0.15f, 0.33f, d) * air.b * sky.b, 1});
   level->renderLight(screen);
   screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
   level->render(screen);
@@ -564,6 +570,9 @@ void Game::renderMinimap() {
          y - 4 * u - 32 * small, small, col::gold * 0.8f);
   s.text(name, s.w - Screen::textWidth(name, small) - 4 * u,
          y - 2 * u - 16 * small, small, col::muted);
+  std::string_view sky = level->sky.name();
+  s.text(sky, s.w - Screen::textWidth(sky, small) - 4 * u,
+         y - 6 * u - 48 * small, small, Color{0.62f, 0.72f, 0.9f, 0.85f});
 }
 
 void Game::renderHud() {

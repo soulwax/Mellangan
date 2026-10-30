@@ -31,7 +31,6 @@ Sprite Biome::dirtRim(int offset) const {
 }
 
 namespace {
-constexpr float CLIMATE_COORDINATE_SCALE = 2.5f;
 const Meadow MEADOW;
 const Forest FOREST;
 const Autumn AUTUMN;
@@ -61,8 +60,8 @@ const Biome *const BIOMES[BIOME_COUNT] = {
 namespace world {
 
 Climate climateAt(int x, int y) {
-  float sx = x / CLIMATE_COORDINATE_SCALE;
-  float sy = y / CLIMATE_COORDINATE_SCALE;
+  float sx = x / CLIMATE_SCALE;
+  float sy = y / CLIMATE_SCALE;
   float wx = sx + noise_fbm(sx * 0.045f + 11.3f, sy * 0.045f - 4.1f, 2, 701) * 5 +
              noise_perlin(sx * 0.23f + 3.1f, sy * 0.23f - 8.7f, 703) * 0.9f;
   float wy = sy + noise_fbm(sx * 0.045f - 7.7f, sy * 0.045f + 9.2f, 2, 702) * 5 +
@@ -71,23 +70,23 @@ Climate climateAt(int x, int y) {
   c.temp = noise_fbm(wx * 0.011f, wy * 0.011f, 3, 101);
   c.moist = noise_fbm(wx * 0.013f + 40.5f, wy * 0.013f, 3, 202);
   c.eerie = noise_fbm(wx * 0.017f, wy * 0.017f - 60.5f, 2, 303);
+  c.wild = noise_fbm(wx * 0.012f + 123.5f, wy * 0.012f - 77.5f, 2, 505);
   return c;
 }
 
 BiomeId biomeOf(Climate c) {
-  if (c.eerie > -0.18f && c.eerie < -0.08f) {
-    int band=c.temp < -0.2f ? 0 : c.temp < -0.07f ? 1 :
-             c.temp < 0.07f ? 2 : c.temp < 0.2f ? 3 : 4;
-    return BiomeId(BIOME_SALT+band*2+(c.moist>0 ? 1 : 0));
+  if (c.wild > WILD) {
+    int band = c.temp < -0.2f ? 0 : c.temp < -0.07f ? 1 :
+               c.temp < 0.07f ? 2 : c.temp < 0.2f ? 3 : 4;
+    return BiomeId(BIOME_SALT + band * 2 + (c.moist > 0 ? 1 : 0));
   }
-  if (c.eerie > 0.14f && c.temp > 0.2f)
-    return BIOME_ASHLANDS;
-  if (c.eerie > 0.21f && c.temp < -0.14f)
-    return BIOME_CRYSTAL;
-  if (c.eerie > 0.14f && c.moist > 0.18f)
-    return BIOME_FUNGAL;
-  if (c.eerie > 0.26f)
-    return BIOME_BARROW;
+  if (c.eerie > 0.14f) {
+    if (c.temp > 0.12f)
+      return BIOME_ASHLANDS;
+    if (c.temp < -0.12f)
+      return BIOME_CRYSTAL;
+    return c.moist > 0.06f ? BIOME_FUNGAL : BIOME_BARROW;
+  }
   if (c.temp < -0.12f && c.temp > -0.38f && c.moist > 0.08f && c.moist < 0.26f)
     return BIOME_TAIGA;
   if (c.temp < -0.24f)
@@ -111,12 +110,33 @@ BiomeId biomeOf(Climate c) {
   return BIOME_MEADOW;
 }
 
+void siteOf(int x, int y, int &sx, int &sy) {
+  float fx = x + noise_fbm(x * 0.018f + 3.7f, y * 0.018f - 1.3f, 2, 611) * 30 +
+             noise_perlin(x * 0.09f, y * 0.09f + 5.1f, 612) * 3;
+  float fy = y + noise_fbm(x * 0.018f - 8.1f, y * 0.018f + 6.4f, 2, 613) * 30 +
+             noise_perlin(x * 0.09f + 2.3f, y * 0.09f, 614) * 3;
+  int cx = int(std::floor(fx / BIOME_CELL)), cy = int(std::floor(fy / BIOME_CELL));
+  float best = 1e30f;
+  for (int j = cy - 1; j <= cy + 1; j++)
+    for (int i = cx - 1; i <= cx + 1; i++) {
+      uint32_t h = hash2(i * 73 + int(noise_salt), j * 151 - int(noise_salt));
+      float px = (i + 0.15f + (h & 255) / 255.0f * 0.7f) * BIOME_CELL,
+            py = (j + 0.15f + (h >> 8 & 255) / 255.0f * 0.7f) * BIOME_CELL;
+      float d = (px - fx) * (px - fx) + (py - fy) * (py - fy);
+      if (d < best)
+        best = d, sx = int(px), sy = int(py);
+    }
+}
+
 BiomeId biomeForLocation(int x, int y) {
-  Climate c = climateAt(x, y);
-  double distance = std::hypot(double(x), double(y));
-  float blend = clampf(float((distance - 100.0) / 350.0), 0, 1);
+  int sx, sy;
+  siteOf(x, y, sx, sy);
+  Climate c = climateAt(sx, sy);
+  double distance = std::hypot(double(sx), double(sy));
+  float blend = clampf(float((distance - 260.0) / 400.0), 0, 1);
   blend = blend * blend * (3 - 2 * blend);
   c.eerie *= blend;
+  c.wild = lerpf(-1, c.wild, blend);
   return biomeOf(c);
 }
 

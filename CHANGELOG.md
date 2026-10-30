@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.10] - 2026-10-30
+
 ### Added
 
 - Every region now has a world event, not just the ten newer ones. Each one is announced, telegraphed and lasts a few seconds:
@@ -27,7 +29,7 @@ All notable changes to Mellangan are documented here. The format follows
   - Wolves encircle you in the Taiga.
 
   Events start after the first 40 seconds, and the older regions have them less often than the newer ones.
-- Every region has its own weather:
+- Every region has its own ambient life:
   - butterflies in the Meadows;
   - falling leaves in the Greenwood;
   - maple leaves in the Autumn Woods;
@@ -37,27 +39,62 @@ All notable changes to Mellangan are documented here. The format follows
   - cherry petals;
   - bog mist;
   - blowing sand;
-  - jungle rain;
+  - falling jungle leaves;
   - savanna gusts;
   - falling ash;
   - crystal glints;
   - spores;
   - badlands dust;
   - salt glare;
-  - floodplain rain;
+  - rising bubbles on the Floodplain;
   - moonlit motes;
   - rising bubbles in the Sunken Ruins;
   - fen embers;
   - amber leaves;
   - shooting stars over the Starfall Basin.
-- The Storm Steppe has driving rain and lightning that strikes nearby foes every few seconds.
+- Real weather. Fronts roll in and out every minute or two, and what you get depends on the region:
+  - **Clouds** cast drifting shadows across the ground.
+  - **Rain** slants with the wind, ripples where it lands and darkens the scene.
+  - **Storms** bring heavier rain, a darker sky and lightning that flashes the screen and strikes nearby foes.
+  - **Snow** in cold lands settles briefly on the ground.
+  - **Fog** banks roll through mires, barrows, fungal woods and caverns.
+  - **Dust** storms streak across deserts and badlands.
+  - **Ash** falls over the Ashlands and the Ember Fen.
+
+  - **Rain leaves puddles** that spread while it pours and dry slowly afterwards. Drops fall in depth, near ones longer and brighter than far ones, and each lands with a splash crown before its ripple.
+  - **Snow settles**: the ground whitens tile by tile as a snowfall goes on, then thaws.
+  - **Ash and dust** leave a light scatter on the ground.
+  - **Lightning** flickers twice, and sheet lightning lights the clouds between strikes.
+
+  The current weather (drizzle, rain, thunderstorm, snowfall, fog, sandstorm or ashfall) is named above the region name by the minimap. Fog takes on each region's light: green in the Mire, violet in the Hollow Caverns.
+
+  Weather is no longer an even sheet:
+  - Rain and snow fall in showers and bands that drift with the wind, and clouds gather darker over them.
+  - Each new front brings a wind from its own direction, which slowly wanders. Gusts sweep across the ground, so drops caught in one slant harder.
+  - Snowflakes flutter on their own rhythm, and a few big flakes drift close by.
+  - Clouds and fog banks come in irregular clusters of varied shape and speed.
+  - Puddles and dust gather in low ground and spread outward as the weather goes on.
+  - Snow settles in patches with soft pixel edges that slowly close into a white blanket over about a minute, and thaws the same way.
+
+  The leaves, petals and seeds drift with the same wind.
+  - Snow settles on trees and shrubs as well as the ground, so a forest whitens with the snowfall.
+  - Butterflies, petals and seed fluff shelter from rain, snow and dust, and come back when it clears.
+  - Rain soaks the ground, which darkens as it gets wetter. Puddles catch your torchlight, and lightning makes them flash.
+  - Rain ripples only where it lands in water; on grass it just splashes.
+  - Strong, lasting rain floods low ground into pools that fill tile by tile with proper water edges. Rain rings on their surface, and the pools mirror whatever stands in them: trees, foes and you. Storms flood faster, and pools drain slowly once the rain stops.
+  - Trees bend in the wind: their crowns lean a pixel or two in gusts, more in a storm.
+  - You leave footprints in snow that stay until the snow melts, and fading muddy prints on wet ground.
+  - Thunder follows the flash: a near strike cracks almost at once, a far one rumbles later and lower, and distant sheet lightning brings a low roll.
+  - Rain softens the distance with a light haze.
+  - Rain and wind can now be heard: a soft rain bed that swells under showers and storms, and a low wind that rises with gales and sandstorms. Both stay well under the music and the fight. Each region has its own odds of each front: the Storm Steppe is almost always stormy, the Desert is mostly clear with the odd sandstorm, and the Hollow Caverns are usually fogged in. The cloud, fog and splash sprites are pixelated from the NS1 weather VFX packs.
 - Each region has its own light: a warm glare in the Desert, a blue hush in the Moonlit Grove, a dim dusk in the Hollow Caverns and a red cast in the Ashlands. The light shifts gradually as you cross a border.
 - Seven new particle icons: maple leaf, raindrop, gust, seed fluff, falling star, butterfly and spore.
-- Dev: `--biome N` starts a `--dev` run inside biome N.
+- Dev: `--biome N` starts a `--dev` run inside biome N, F10 cycles the weather, and `--biome-map <file.ppm>` writes a map of the world's biomes.
 
 ### Changed
 
 - Region events are defined in one table, which makes each event easy to tune.
+- The world is calmer. Biomes now form large, coherent regions about four screens across, with organic borders, instead of a patchwork of thin strips and stray patches. The ten newer biomes form their own wild lands rather than ribbons running through everything else, and the dark lands (Ashlands, Crystal Fields, Fungal Wood and Barrows) no longer have green meadow holes inside them. The ten newer biomes also no longer scatter grass-rimmed dirt patches across their ground. The map has about 92% fewer biome borders, and the start area stays gentle. World layouts differ from earlier versions.
 
 ## [0.5.9] - 2026-10-30
 

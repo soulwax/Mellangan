@@ -22,6 +22,16 @@ short *musicData = nullptr;
 int musicLength = 0;
 bool muted = false;
 
+struct Bed {
+  const char *file;
+  float peak;
+  Uint8 *data = nullptr;
+  Uint32 length = 0;
+  SDL_AudioStream *stream = nullptr;
+  float gain = 0, want = 0;
+};
+Bed beds[] = {{"rain", 0.2f}, {"wind", 0.14f}};
+
 void loadMusic(const std::string &path) {
   int channels = 0, rate = 0;
   int frames =
@@ -111,6 +121,18 @@ bool Sound::init(const std::string &base) {
   for (Sound *s : ALL)
     s->load(base + "res/sfx/" + s->file + ".wav");
 
+  for (Bed &b : beds) {
+    SDL_AudioSpec spec;
+    std::string path = base + "res/sfx/" + b.file + ".wav";
+    if (!SDL_LoadWAV(path.c_str(), &spec, &b.data, &b.length)) {
+      spdlog::warn("Can't load {}: {}", path, SDL_GetError());
+      continue;
+    }
+    b.stream = SDL_CreateAudioStream(&spec, &SPEC);
+    SDL_BindAudioStream(device, b.stream);
+    SDL_SetAudioStreamGain(b.stream, 0);
+  }
+
   loadMusic(base + "res/music/night.ogg");
   SDL_ResumeAudioDevice(device);
   return true;
@@ -123,6 +145,12 @@ void Sound::shutdown() {
   voices.fill(nullptr);
   if (musicStream)
     SDL_DestroyAudioStream(musicStream), musicStream = nullptr;
+  for (Bed &b : beds) {
+    if (b.stream)
+      SDL_DestroyAudioStream(b.stream), b.stream = nullptr;
+    if (b.data)
+      SDL_free(b.data), b.data = nullptr;
+  }
   if (device)
     SDL_CloseAudioDevice(device), device = 0;
   for (Sound *s : ALL)
@@ -135,6 +163,24 @@ void Sound::shutdown() {
 void Sound::tick() {
   if (musicStream && SDL_GetAudioStreamQueued(musicStream) < musicLength)
     SDL_PutAudioStreamData(musicStream, musicData, musicLength);
+  for (Bed &b : beds) {
+    if (!b.stream)
+      continue;
+    b.gain += (b.want - b.gain) * 0.02f;
+    if (b.gain < 0.002f && b.want == 0) {
+      if (SDL_GetAudioStreamQueued(b.stream) > 0)
+        SDL_ClearAudioStream(b.stream);
+      continue;
+    }
+    SDL_SetAudioStreamGain(b.stream, b.gain);
+    if (SDL_GetAudioStreamQueued(b.stream) < int(b.length))
+      SDL_PutAudioStreamData(b.stream, b.data, int(b.length));
+  }
+}
+
+void Sound::ambience(float rain, float wind) {
+  beds[0].want = beds[0].peak * clampf(rain, 0, 1);
+  beds[1].want = beds[1].peak * clampf(wind, 0, 1);
 }
 
 void Sound::toggleMute() {
@@ -143,7 +189,7 @@ void Sound::toggleMute() {
     SDL_SetAudioDeviceGain(device, muted ? 0.0f : 1.0f);
 }
 
-void Sound::play(float volume, float pitchJitter) {
+void Sound::play(float volume, float pitchJitter, float pitch) {
   if (!device || !data)
     return;
   Uint64 now = SDL_GetTicks();
@@ -161,7 +207,7 @@ void Sound::play(float volume, float pitchJitter) {
   SDL_AudioStream *v = voices[pick];
   SDL_ClearAudioStream(v);
   SDL_SetAudioStreamGain(v, volume);
-  SDL_SetAudioStreamFrequencyRatio(v, 1 + rng.range(-pitchJitter, pitchJitter));
+  SDL_SetAudioStreamFrequencyRatio(v, pitch * (1 + rng.range(-pitchJitter, pitchJitter)));
   SDL_PutAudioStreamData(v, data, int(length));
   SDL_FlushAudioStream(v);
   voiceStarted[pick] = last = now;

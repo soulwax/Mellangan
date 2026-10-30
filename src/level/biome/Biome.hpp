@@ -37,7 +37,7 @@ enum BiomeId {
 };
 
 struct Climate {
-  float temp, moist, eerie;
+  float temp, moist, eerie, wild;
 };
 
 struct FeatureSpawn {
@@ -80,8 +80,13 @@ extern const Biome *const BIOMES[BIOME_COUNT];
 
 namespace world {
 
+constexpr float CLIMATE_SCALE = 9.0f;
+constexpr float WILD = 0.2f;
+constexpr int BIOME_CELL = 112;
+
 Climate climateAt(int x, int y);
 BiomeId biomeOf(Climate c);
+void siteOf(int x, int y, int &sx, int &sy);
 BiomeId biomeForLocation(int x, int y);
 BiomeId biomeAt(int x, int y);
 float clumpAt(int x, int y);

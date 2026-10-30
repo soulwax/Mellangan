@@ -84,7 +84,7 @@ if [[ $platform == macos ]]; then
   cp -R "$built" "$app"
   res=$app/Contents/Resources/res
   rm -rf "$res" && mkdir -p "$res/shaders"
-  cp res/atlas.png res/particles.png res/font.png res/balance.ini res/CREDITS.md "$res/"
+  cp res/atlas.png res/particles.png res/weather.png res/font.png res/balance.ini res/CREDITS.md "$res/"
   cp "$built"/Contents/Resources/res/shaders/*.spv "$res/shaders/"
   cp -R res/sfx res/music "$res/"
   cp CHANGELOG.md "$stage/"
@@ -119,7 +119,7 @@ mkdir -p "$stage/res/shaders"
 bin=build
 [[ -f build/Release/Mellangan ]] && bin=build/Release
 cp "$bin/Mellangan" CHANGELOG.md "$stage/"
-cp res/atlas.png res/particles.png res/font.png res/balance.ini res/CREDITS.md "$stage/res/"
+cp res/atlas.png res/particles.png res/weather.png res/font.png res/balance.ini res/CREDITS.md "$stage/res/"
 cp "$bin"/res/shaders/*.spv "$stage/res/shaders/"
 cp -R res/sfx res/music "$stage/res/"
 

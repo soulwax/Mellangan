@@ -2,7 +2,8 @@
 
 void Prop::render(Screen &s) {
   for (int i = 0; i < count; i++)
-    s.sprite(parts[i].sprite, xp, yp + parts[i].yo, 8, 16);
+    s.sprite(parts[i].sprite, xp + std::clamp(-parts[i].yo / 16, 0, 2) * sway,
+             yp + parts[i].yo, 8, 16);
 }
 
 float Prop::occlusion(float &width) const {

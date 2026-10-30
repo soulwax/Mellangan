@@ -245,7 +245,8 @@ void Level::weather() {
                                 int(std::floor(player->y / 16)));
   BIOMES[here]->weather(*this, player->x, player->y);
   const Air &a = AIRS[here];
-  for (float n = a.rate * (night.dawn ? 0.5f : 1); n > 0; n--) {
+  float shelter = 1 - 0.75f * sky.rough();
+  for (float n = a.rate * shelter * (night.dawn ? 0.5f : 1); n > 0; n--) {
     if (Drift::alive > Drift::MAX / 2 || !rng.chance(std::min(1.0f, n)))
       break;
     double x = player->x + rng.range(-260, 260),
@@ -255,16 +256,14 @@ void Level::weather() {
                           a.life * rng.range(0.7f, 1.2f));
     d->drag = 0, d->sway = a.sway, d->scale = a.scale * rng.range(0.85f, 1.1f);
     d->spin = a.spin * rng.range(-1, 1);
+    d->xa += sky.windX * 0.5f, d->ya += sky.windY * 0.5f;
     if (a.spin == 0)
       d->rot = 0;
   }
-  if (a.strike > 0 && !player->dead() && (strikeTime -= DT) <= 0) {
-    strikeTime = a.strike * rng.range(0.6f, 1.4f);
-    strike();
-  }
+  sky.tick(*this);
 }
 
-void Level::strike() {
+float Level::strike() {
   Enemy *target = nullptr;
   int seen = 0;
   enemiesNear(player->x, player->y, 200, [&](Enemy &e) {
@@ -275,7 +274,7 @@ void Level::strike() {
          y = target ? target->y : player->y + rng.range(-120, 120);
   double xd = x - player->x, yd = y - player->y;
   if (!target && xd * xd + yd * yd < 60 * 60)
-    return;
+    return -1;
   std::vector<ArcNode> bolt;
   for (int i = 0; i <= 6; i++)
     bolt.push_back({x + (i > 0 && i < 6 ? rng.range(-9, 9) : 0),
@@ -289,7 +288,7 @@ void Level::strike() {
     if (ex * ex + ey * ey < 34 * 34)
       e.hurt(28 + time * 0.08f, ex, ey, 60);
   });
-  Sound::thunder.play(0.22f);
+  return float(std::sqrt(xd * xd + yd * yd));
 }
 
 void Level::explore() {
@@ -372,6 +371,31 @@ std::vector<Enemy *> Level::nearest(double x, double y, float range, int n) {
 }
 
 void Level::renderFloor(Screen &s) {
+  bool snowing = sky.laid == Front::Snow && sky.cover > 0;
+  auto covered = [&](int x, int y) { return sky.snowAt(x, y); };
+  bool flooded = sky.flood() > 0;
+  auto pool = [&](int x, int y, float shade) {
+    if (!sky.poolAt(x, y))
+      return;
+    Sprite ground = world::groundTile(x, y);
+    if (BIOMES[BIOME_SNOW]->frost(ground).y == ground.y)
+      return;
+    int mask = int(sky.poolAt(x, y - 1)) | sky.poolAt(x, y + 1) << 1 |
+               sky.poolAt(x - 1, y) << 2 | sky.poolAt(x + 1, y) << 3;
+    s.color({0.5f * shade, 0.58f * shade, 0.76f * shade, 0.94f});
+    s.sprite(atlas::waterRim(world::rim(mask)), x * 16, y * 16, 0, 0);
+  };
+  auto settle = [&](int x, int y, float shade) {
+    Sprite ground = world::groundTile(x, y),
+           white = BIOMES[BIOME_SNOW]->frost(ground);
+    if (white.y == ground.y || !covered(x, y))
+      return;
+    int mask = int(covered(x, y - 1)) | covered(x, y + 1) << 1 |
+               covered(x - 1, y) << 2 | covered(x + 1, y) << 3;
+    s.color({shade, shade, shade * 1.03f, 1});
+    s.sprite(mask == 15 ? white : atlas::snowRim(world::rim(mask)), x * 16,
+             y * 16, 0, 0);
+  };
   eachVisibleTile(s, [&](int x, int y) {
     float n = world::groundShade(x, y), shade = 0.8f + 0.2f * n;
     int own = int(world::biomeAt(x, y));
@@ -383,6 +407,8 @@ void Level::renderFloor(Screen &s) {
       s.color({shade * t.r, shade * 0.97f * t.g,
                (shade * 0.93f + 0.04f * (1 - n)) * t.b, 1});
       s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
+      if (snowing)
+        settle(x, y, shade);
       return;
     }
     world::GroundBlend blend = world::groundBlend(x, y);
@@ -417,6 +443,10 @@ void Level::renderFloor(Screen &s) {
                           : BIOMES[id]->transitionGround(kind);
       s.sprite(ground, x * 16, y * 16, 0, 0);
     }
+    if (flooded)
+      pool(x, y, shade);
+    if (snowing)
+      settle(x, y, shade);
   });
   s.color(col::white);
 }
@@ -432,6 +462,12 @@ void Level::scatter(Screen &s) {
       [&](int x, int y) {
         if (!world::propAt(x, y, p))
           return;
+        if (sky.snowAt(x, y))
+          for (int i = 0; i < p.count; i++)
+            p.parts[i].sprite = BIOMES[BIOME_SNOW]->frost(p.parts[i].sprite);
+        Structure site;
+        if (p.count >= 2 && !world::structureAt(x, y, site))
+          p.sway = sky.sway(p.x, p.y, time);
         props.push_back(p);
         if (p.solid > 0)
           solids[(y - solidY) * SOLID_W + x - solidX] = p.solid;
@@ -477,6 +513,7 @@ bool Level::blocks(double x, double y) const {
 void Level::render(Screen &s) {
   prof_begin(PROF_FLOOR);
   renderFloor(s);
+  sky.renderGround(s);
   events.render(s,*this);
   prof_end(PROF_FLOOR);
   prof_begin(PROF_SORT);
@@ -492,6 +529,8 @@ void Level::render(Screen &s) {
     queue(&p);
   radixSort(keys, keysTmp);
   prof_end(PROF_SORT);
+  if (sky.flood() > 0)
+    reflect(s);
   prof_begin(PROF_DRAW);
   bool shadows = false;
   for (uint64_t k : keys) {
@@ -509,7 +548,29 @@ void Level::render(Screen &s) {
     }
     drawn[k & 0xFFFFFF]->draw(s);
   }
+  sky.render(s, air);
   prof_end(PROF_DRAW);
+}
+
+void Level::reflect(Screen &s) {
+  int shown = 0;
+  for (uint64_t k : keys) {
+    SpriteObject *e = drawn[k & 0xFFFFFF];
+    int tx = int(std::floor(e->x / 16)), ty = int(std::floor(e->y / 16));
+    if (!sky.poolAt(tx, ty) || !sky.poolAt(tx, ty + 1))
+      continue;
+    Prop *prop = dynamic_cast<Prop *>(e);
+    if (!prop && !dynamic_cast<Entity *>(e))
+      continue;
+    if (prop && prop->count > 1 && !sky.poolAt(tx, ty + 2))
+      continue;
+    s.mirror(std::floor(e->y), {0.55f, 0.66f, 0.9f, 0.42f});
+    e->draw(s);
+    s.unmirror();
+    if (++shown >= 80)
+      break;
+  }
+  s.color(col::white);
 }
 
 void Level::queue(SpriteObject *e) {
@@ -524,6 +585,7 @@ void Level::renderLight(Screen &s) {
   lights.clear();
   player->drawLight(s);
   night.renderLight(s);
+  sky.renderLight(s);
   for (auto [id, o] : reg.view<Owned>().each())
     if (o.self.get() != player && !o.self->removed &&
         s.visible(o.self->x, o.self->y, 160))

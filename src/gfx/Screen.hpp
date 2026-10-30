@@ -45,8 +45,12 @@ public:
   void beginLight(Color ambient);
   void beginWorld(Color clear);
   void beginGui(SDL_Window *window, const PostFx &fx);
+  void targetGui(VK2DTexture target) { screenTarget = target; }
+  bool saveTarget(VK2DTexture target, const std::string &path);
 
   void color(Color c);
+  void mirror(double axis, Color veil) { mirrorY = axis, this->veil = veil, mirrored = true; }
+  void unmirror() { mirrored = false; }
   void sprite(const Sprite &s, double x, double y, float xo, float yo,
               float xs = 1, float ys = 1, float rot = 0);
   void center(const Sprite &s, double x, double y, float scale = 1,
@@ -56,6 +60,8 @@ public:
   void glow(double x, double y, float size, Color c);
   void particle(int icon, double x, double y, Color c, float scale = 1,
                 float rot = 0);
+  void sky(const Sprite &s, double x, double y, Color c, float xs = 1,
+           float ys = 1, float rot = 0);
   void rect(double x, double y, float rw, float rh, Color c);
   void frame(double x, double y, float rw, float rh, float t, Color c);
   void bracket(float x, float y, float w, float h, float u);
@@ -72,10 +78,12 @@ public:
 
 private:
   VK2DTexture atlas = nullptr, silhouette = nullptr, particles = nullptr,
-              font = nullptr, world = nullptr, light = nullptr;
+              weather = nullptr, font = nullptr, world = nullptr, light = nullptr, screenTarget = nullptr;
   VK2DImage silhouetteImg = nullptr;
   VK2DShader post = nullptr;
-  Color current;
+  Color current, veil;
+  double mirrorY = 0;
+  bool mirrored = false;
   int lightBudget = 0;
 
   void glyphs(std::string_view s, double x, double y, float size);

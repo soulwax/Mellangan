@@ -5,7 +5,12 @@
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <string>
+#include <vector>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 #include "Math.hpp"
 
@@ -38,12 +43,13 @@ bool Screen::load(const std::string &base) {
   auto path = [&](const char *rel) { return base + rel; };
   atlas = vk2dTextureLoad(path("res/atlas.png").c_str());
   particles = vk2dTextureLoad(path("res/particles.png").c_str());
+  weather = vk2dTextureLoad(path("res/weather.png").c_str());
   font = vk2dTextureLoad(path("res/font.png").c_str());
   post = loadShader(path("res/shaders/post.spv"), sizeof(PostData));
   loadSilhouette(path("res/atlas.png"));
   world = vk2dTextureCreate(MAX_W, MAX_H);
   light = vk2dTextureCreate(MAX_W, MAX_H);
-  if (atlas && silhouette && particles && font && post && world && light)
+  if (atlas && silhouette && particles && weather && font && post && world && light)
     return true;
   spdlog::error("Failed to load resources from {}res: {}", base,
                 vk2dStatusMessage());
@@ -54,7 +60,7 @@ bool Screen::load(const std::string &base) {
 void Screen::unload() {
   if (post)
     vk2dShaderFree(post), post = nullptr;
-  for (VK2DTexture *t : {&atlas, &silhouette, &particles, &font, &world, &light})
+  for (VK2DTexture *t : {&atlas, &silhouette, &particles, &weather, &font, &world, &light})
     if (*t)
       vk2dTextureFree(*t), *t = nullptr;
   if (silhouetteImg)
@@ -94,9 +100,14 @@ void Screen::beginWorld(Color clear) {
 }
 
 void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
-  vk2dRendererSetTarget(VK2D_TARGET_SCREEN);
-  int pw, ph;
-  SDL_GetWindowSizeInPixels(window, &pw, &ph);
+  vk2dRendererSetTarget(screenTarget ? screenTarget : VK2D_TARGET_SCREEN);
+  int pw = 0, ph = 0;
+  if (screenTarget) {
+    pw = int(vk2dTextureWidth(screenTarget));
+    ph = int(vk2dTextureHeight(screenTarget));
+  } else if (window) {
+    SDL_GetWindowSizeInPixels(window, &pw, &ph);
+  }
   w = float(std::max(pw, 1)), h = float(std::max(ph, 1));
 
   VK2DCameraSpec cam{};
@@ -122,12 +133,16 @@ void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
 
 void Screen::color(Color c) {
   current = c;
+  if (mirrored)
+    c = {c.r * veil.r, c.g * veil.g, c.b * veil.b, c.a * veil.a};
   const float v[4] = {c.r, c.g, c.b, c.a};
   vk2dRendererSetColourMod(v);
 }
 
 void Screen::particle(int icon, double x, double y, Color c, float scale,
                       float rot) {
+  if (mirrored)
+    return;
   color(c);
   vk2dRendererDrawTexture(particles, float(x - xOffset - 4 * scale),
                           float(y - yOffset - 4 * scale), scale, scale, rot, 4,
@@ -135,8 +150,19 @@ void Screen::particle(int icon, double x, double y, Color c, float scale,
   color(col::white);
 }
 
+void Screen::sky(const Sprite &s, double x, double y, Color c, float xs,
+                 float ys, float rot) {
+  color(c);
+  vk2dRendererDrawTexture(weather, float(x - xOffset - s.w * xs / 2),
+                          float(y - yOffset - s.h * ys / 2), xs, ys, rot,
+                          s.w / 2, s.h / 2, s.x, s.y, s.w, s.h);
+  color(col::white);
+}
+
 void Screen::sprite(const Sprite &s, double x, double y, float xo, float yo,
                     float xs, float ys, float rot) {
+  if (mirrored)
+    y = 2 * mirrorY - y, ys = -ys, rot = -rot;
   float xp = float(x - xOffset - xo * xs), yp = float(y - yOffset - yo * ys);
   vk2dRendererDrawTexture(atlas, xp, yp, xs, ys, rot, xo, yo, s.x, s.y, s.w,
                           s.h);
@@ -165,7 +191,7 @@ bool Screen::loadSilhouette(const std::string &path) {
 void Screen::flash(const Sprite &s, double x, double y, float xo, float yo,
                    float xs, float ys, float rot, float amount, Color c) {
   sprite(s, x, y, xo, yo, xs, ys, rot);
-  if (amount <= 0)
+  if (amount <= 0 || mirrored)
     return;
   Color prev = current;
   color({c.r, c.g, c.b, prev.a * std::min(amount, 1.0f)});
@@ -176,6 +202,8 @@ void Screen::flash(const Sprite &s, double x, double y, float xo, float yo,
 }
 
 void Screen::glow(double x, double y, float size, Color c) {
+  if (mirrored)
+    return;
   if (lightBudget <= 0 || !visible(x, y, size * 0.5f))
     return;
   lightBudget--;
@@ -184,6 +212,8 @@ void Screen::glow(double x, double y, float size, Color c) {
 }
 
 void Screen::rect(double x, double y, float rw, float rh, Color c) {
+  if (mirrored)
+    return;
   Color prev = current;
   color(c);
   const Sprite &s = atlas::White;
@@ -210,6 +240,8 @@ void Screen::bracket(float x, float y, float w, float h, float u) {
 }
 
 void Screen::ring(double x, double y, float r, Color c, float width) {
+  if (mirrored)
+    return;
   if (r < 1)
     return;
   int n = std::clamp(int(r * 0.9f), 12, 72);
@@ -233,6 +265,8 @@ void Screen::line(double x0, double y0, double x1, double y1, float width,
 }
 
 void Screen::number(int n, double x, double y, Color c) {
+  if (mirrored)
+    return;
   std::string s = std::to_string(std::max(n, 0));
   double xp = std::round(x - (s.size() * 4 + 1) * 0.5), yp = std::round(y - 3);
   Color prev = current;
@@ -253,6 +287,8 @@ void Screen::glyphs(std::string_view s, double x, double y, float size) {
 }
 
 void Screen::text(std::string_view s, double x, double y, float size, Color c) {
+  if (mirrored)
+    return;
   Color prev = current;
   color({0.02f, 0.01f, 0.05f, c.a * 0.85f});
   glyphs(s, x + size, y + size, size);
@@ -269,4 +305,19 @@ void Screen::textCenter(std::string_view s, double cx, double y, float size,
 bool Screen::visible(double x, double y, float m) const {
   double xv = x - xOffset, yv = y - yOffset;
   return xv > -m && yv > -m && xv < vw + m && yv < vh + m;
+}
+
+bool Screen::saveTarget(VK2DTexture target, const std::string &path) {
+  if (!target)
+    return false;
+  vk2dRendererWait();
+  int tw = int(vk2dTextureWidth(target));
+  int th = int(vk2dTextureHeight(target));
+  std::vector<uint8_t> pixels(size_t(tw) * th * 4);
+  if (!vk2dTextureCopyPixels(target, pixels.data()))
+    return false;
+  std::filesystem::path p(path);
+  if (p.has_parent_path())
+    std::filesystem::create_directories(p.parent_path());
+  return stbi_write_png(path.c_str(), tw, th, 4, pixels.data(), tw * 4) != 0;
 }

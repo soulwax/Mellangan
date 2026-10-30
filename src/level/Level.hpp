@@ -13,6 +13,7 @@
 #include "entity/enemy/Enemy.hpp"
 #include "level/Bounty.hpp"
 #include "level/BiomeEvents.hpp"
+#include "level/Sky.hpp"
 #include "level/Chart.hpp"
 #include "level/LightField.hpp"
 #include "level/Night.hpp"
@@ -53,6 +54,7 @@ public:
   LightField lights;
   Chart chart;
   BiomeEvents events;
+  Sky sky;
   explicit Level(Game &game);
 
   std::vector<std::unique_ptr<SpriteObject>> particles;
@@ -103,6 +105,8 @@ public:
     dead.push_back(id);
   }
   bool visited(const Structure &s) const;
+  float strike();
+  void reflect(Screen &s);
   static bool unvisited(const Structure *s, const void *level);
 
 private:
@@ -124,14 +128,13 @@ private:
   int solidX = 0, solidY = 0;
   std::unordered_set<uint64_t> visits;
 
-  float burnTime = 0, bountyTime = 0, strikeTime = 2;
+  float burnTime = 0, bountyTime = 0;
 
   void flush();
   void explore();
   void climate();
   void hunt();
   void weather();
-  void strike();
   void ambience();
   void buildGrid();
   void renderFloor(Screen &s);

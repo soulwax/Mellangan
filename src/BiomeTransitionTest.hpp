@@ -12,3 +12,5 @@ void viewBiomeEncounter(SDL_Window *window, const std::string &base);
 void viewCombatReadability(SDL_Window *window, const std::string &base);
 void viewBiomeTransition(SDL_Window *window, const std::string &base, int x,
                          int y, uint32_t seed);
+void captureScreenshotSuite(SDL_Window *window, const std::string &base);
+int mapBiomes(const char *path);

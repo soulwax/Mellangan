@@ -13,7 +13,7 @@ struct Air {
   Color grade;
   int icon;
   Color tint;
-  float rate, vx, vy, sway, spin, scale, life, strike;
+  float rate, vx, vy, sway, spin, scale, life;
 };
 
 struct Omen {

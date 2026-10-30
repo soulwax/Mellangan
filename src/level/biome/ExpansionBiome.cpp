@@ -58,7 +58,7 @@ BiomeData data(int index) {
   d.name=NAMES[index];
   d.debug=COLORS[index];
   d.tint={1,1,1,1};
-  d.dirt=0.12f;
+  d.dirt=2.0f;
   d.structureChance=65;
   for (int i=0;i<int(StructureKind::Count);i++)
     d.structureWeights[i]=WEIGHTS[index][i];

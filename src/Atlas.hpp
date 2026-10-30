@@ -196,6 +196,21 @@ constexpr int IceShard = 32, Snowflake = 33, FrostGlint = 34, Rock = 35,
               Butterfly = 56, Spore = 57;
 } // namespace pt
 
+namespace wx {
+constexpr Sprite Cloud{0, 0, 96, 96}, FogA{96, 0, 64, 64}, FogB{160, 0, 64, 64},
+                 Drop{64, 96, 1, 6};
+constexpr Sprite ripple(int f) { return {float(f * 8), 96, 8, 8}; }
+constexpr Sprite splash(int f) { return {float(32 + f * 8), 96, 8, 8}; }
+constexpr Sprite flake(int i) { return {float(48 + i * 4), 96, 4, 4}; }
+constexpr Sprite ash(int i) { return {float(72 + i * 3), 96, 3, 3}; }
+constexpr Sprite puddle(int i) {
+  return i ? Sprite{16, 104, 12, 6} : Sprite{0, 104, 16, 8};
+}
+constexpr Sprite drift(int i) {
+  return i ? Sprite{48, 104, 12, 6} : Sprite{32, 104, 16, 8};
+}
+} // namespace wx
+
 namespace tt {
 constexpr int Grass = 0, GrassTufts = 1, GrassFlowers = 2;
 constexpr int AutumnCrown = 3, Crown = 4, AutumnTrunk = 15, Trunk = 16;

@@ -14,8 +14,9 @@ public:
   static void shutdown();
   static void tick();
   static void toggleMute();
+  static void ambience(float rain, float wind);
 
-  void play(float volume = 1, float pitchJitter = 0.06f);
+  void play(float volume = 1, float pitchJitter = 0.06f, float pitch = 1);
 
 private:
   const char *file;

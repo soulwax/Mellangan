@@ -96,4 +96,5 @@ private:
   void renderHud();
   void renderCompass();
   void renderMinimap();
+  friend void captureScreenshotSuite(SDL_Window *window, const std::string &base);
 };

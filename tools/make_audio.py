@@ -66,7 +66,52 @@ def howl() -> list[float]:
     return out
 
 
-SYNTH = {"howl": howl}
+def seamless(samples: list[float], fade: int) -> list[float]:
+    """Crossfades the tail into the head so the clip loops without a click."""
+    body = samples[:-fade]
+    for i in range(fade):
+        k = i / fade
+        body[i] = body[i] * k + samples[len(samples) - fade + i] * (1 - k)
+    return body
+
+
+def rain() -> list[float]:
+    """A rain bed: soft high hiss with scattered droplet ticks, 6 s, loopable."""
+    rng = random.Random(11)
+    n = int(RATE * 6.5)
+    out, low, prev = [], 0.0, 0.0
+    ticks = sorted(rng.randrange(n) for _ in range(2600))
+    tick, env, freq, phase = 0, 0.0, 0.0, 0.0
+    for i in range(n):
+        white = rng.uniform(-1, 1)
+        low = 0.86 * low + 0.14 * white
+        hiss = (white - low) * 0.35 + low * 0.25
+        while tick < len(ticks) and ticks[tick] == i:
+            env, freq, phase = rng.uniform(0.3, 1), rng.uniform(1800, 5200), 0.0
+            tick += 1
+        phase += math.tau * freq / RATE
+        drop = env * math.sin(phase)
+        env *= 0.992
+        prev = 0.6 * prev + 0.4 * (hiss + drop * 0.5)
+        out.append(prev)
+    return seamless(out, int(RATE * 0.5))
+
+
+def wind() -> list[float]:
+    """A wind bed: low filtered rumble that swells twice per 8 s loop."""
+    rng = random.Random(13)
+    n = int(RATE * 8.5)
+    out, a, b = [], 0.0, 0.0
+    for i in range(n):
+        t = i / RATE
+        a = 0.995 * a + 0.005 * rng.uniform(-1, 1)
+        b = 0.9 * b + 0.1 * rng.uniform(-1, 1)
+        swell = 0.55 + 0.45 * math.sin(math.tau * t / 4.0) ** 2
+        out.append(swell * (a * 9 + b * 0.25 * swell))
+    return seamless(out, int(RATE * 0.5))
+
+
+SYNTH = {"howl": howl, "rain": rain, "wind": wind}
 
 
 def write(samples: list[float], dst: Path):
