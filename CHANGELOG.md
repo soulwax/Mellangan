@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.8] - 2026-10-30
+
 ### Added
 
 - Five difficulties, in homage to DOOM: I'M TOO YOUNG TO DIE, HEY, NOT TOO ROUGH, HURT ME PLENTY, ULTRA-VIOLENCE and NIGHTMARE! Pick one on the title screen with Left/Right or a click; the choice is remembered.
