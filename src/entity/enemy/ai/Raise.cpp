@@ -15,9 +15,9 @@ GoalState Raise::tick(Enemy &e, const Sense &, double &xs, double &ys) const {
     return GoalState::Running;
 
   e.voice(Sound::raise, 0.3f, 0.1f);
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0, n = e.boss ? 4 : 2; i < n; i++) {
     double a = e.roll() * 6.2831853;
-    double d = 20.0 + e.roll() * 22.0;
+    double d = (e.boss ? 40.0 : 20.0) + e.roll() * 22.0;
     double sx = e.x + std::cos(a) * d;
     double sy = e.y + std::sin(a) * d;
     e.level->spawner.spawn(EnemyKind::Skeleton, sx, sy, true);

@@ -22,6 +22,9 @@
 #include "menu/TitleMenu.hpp"
 #include "particle/debris/Debris.hpp"
 #include "particle/debris/FlameDebris.hpp"
+#include "particle/Flourish.hpp"
+#include "particle/Shockwave.hpp"
+#include "particle/Spark.hpp"
 
 namespace {
 std::string slurp(const std::string &path);
@@ -134,6 +137,8 @@ void Game::tick() {
   } else if (input.map.clicked) {
     Sound::select.play(0.5f, 0);
     setMenu(std::make_unique<MapMenu>(*this));
+  } else if (freeze > 0) {
+    freeze -= DT;
   } else {
     if (input.confirm.clicked)
       level->player->cast();
@@ -142,8 +147,12 @@ void Game::tick() {
       level->player->pendingLevels = level->player->pendingTreasures = 0;
     if (!menuChanged && level->night.offering)
       setMenu(std::make_unique<ShrineMenu>(*this));
-    else if (!menuChanged && level->player->pendingLevels > 0)
-      setMenu(LevelUpMenu::open(*this));
+    else if (!menuChanged && level->player->pendingLevels > 0) {
+      if (levelBeat < 0)
+        levelBeat = 0.3f, celebrate();
+      else if ((levelBeat -= DT) <= 0)
+        levelBeat = -1, setMenu(LevelUpMenu::open(*this));
+    }
   }
   if (menuChanged)
     menu = std::move(nextMenu), menuChanged = false;
@@ -215,7 +224,8 @@ void Game::build() {
   if (!bench.enabled)
     level->chart.load(chartPath);
   xCam = level->player->x, yCam = level->player->y;
-  hurt = shake = bannerTime = 0;
+  hurt = shake = bannerTime = freeze = 0;
+  levelBeat = -1;
   banners.clear();
 }
 
@@ -254,6 +264,22 @@ void Game::newGame(bool reroll) {
     if (w.code == worldName())
       best = w.best;
   spdlog::info("New run in world {}", worldName());
+}
+
+void Game::hitStop(float seconds) {
+  if (seconds < 0.1f && time - lastStop < 0.35f)
+    return;
+  lastStop = time;
+  freeze = std::max(freeze, std::min(seconds, 0.15f));
+}
+
+void Game::celebrate() {
+  Player &p = *level->player;
+  p.invuln = std::max(p.invuln, 0.5f);
+  level->add<Shockwave>(p.x, p.bodyY(), 4, 70, 0.4f, col::gold)->spokes = 12;
+  flourish::scatter(*level, p.x, p.bodyY(), atlas::pt::HolyGlint, col::gold, 10,
+                    90, -40);
+  Spark::burst(*level, p.x, p.bodyY(), col::gold, 10, 120, true);
 }
 
 void Game::loadBalance() {
@@ -580,6 +606,40 @@ void Game::renderHud() {
     sx += Screen::textWidth(label, small) + 8 * u;
   }
 
+  auto &ids = level->bossIds;
+  ids.erase(std::remove_if(ids.begin(), ids.end(),
+                           [&](entt::entity id) {
+                             Enemy *e = level->get<Enemy>(id);
+                             return !e || e->removed;
+                           }),
+            ids.end());
+  if (!ids.empty() && !p.dead()) {
+    Enemy &b = *level->get<Enemy>(ids.front());
+    const char *name = b.is(EnemyKind::Alpha)         ? "THE PACK LORD"
+                       : b.is(EnemyKind::Necromancer) ? "THE LICH"
+                                                      : "THE CYCLOPS";
+    float bw = 160 * u, bx = (s.w - bw) / 2, by = s.h - 22 * u;
+    float k = clampf(b.hp / b.maxHp, 0, 1);
+    s.textCenter(ids.size() > 1 ? fmt::format("{}  +{}", name, ids.size() - 1)
+                                : std::string(name),
+                 s.w / 2, by - 15 * small, small, Color{1, 0.45f, 0.45f, 1});
+    s.rect(bx - u, by - u, bw + 2 * u, 6 * u, col::panel);
+    s.rect(bx, by, bw * k, 4 * u, Color{0.85f, 0.12f, 0.18f, 1});
+    s.rect(bx, by, bw * k, u, Color{1, 0.5f, 0.5f, 0.6f});
+  }
+  float low = 1 - clampf(p.hp / (p.maxHp * 0.3f), 0, 1);
+  if (low > 0 && !p.dead()) {
+    float rate = 4 + 6 * low, beat = std::pow(std::abs(std::sin(time * rate)), 6.0f);
+    float a = (0.12f + 0.28f * beat) * low;
+    for (int i = 0; i < 4; i++) {
+      float band = (4 - i) * 6 * u, k = a * (i + 1) / 4;
+      Color c = col::red.alpha(k * 0.6f);
+      s.rect(0, 0, s.w, band, c);
+      s.rect(0, s.h - band, s.w, band, c);
+      s.rect(0, band, band, s.h - 2 * band, c);
+      s.rect(s.w - band, band, band, s.h - 2 * band, c);
+    }
+  }
   float hw = 80 * u, hy = s.h - 12 * u;
   if (const Hero *h = p.hero) {
     float box = 22 * u, bx = 4 * u, by = hy - box - 8 * u;

@@ -59,7 +59,7 @@ public:
   entt::entity leader = entt::null;
   uint32_t seed;
   bool aware = true, wantsFire = false, wantsLeader = false, faltered = false,
-       alarmed = false, buried = false, gilded = false;
+       alarmed = false, buried = false, gilded = false, boss = false;
 
   Enemy(const EnemyType &type, float hpMul, float damageMul);
   static const EnemyType &typeOf(EnemyKind kind);
@@ -81,6 +81,7 @@ public:
   bool is(EnemyKind k) const { return kind() == int(k); }
   Sprite sprite() const;
   void makeElite(float health = 4);
+  void makeBoss(float health, float damage);
   void think();
   void move();
   void push();

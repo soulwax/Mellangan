@@ -6,7 +6,7 @@ class Player;
 
 class Pickup : public Entity {
 public:
-  float t = 0, speed = 0;
+  float t = 0, speed = 0, swirl = 0;
   bool magnet = false;
 
   Pickup(double x, double y) { this->x = x, this->y = y; }

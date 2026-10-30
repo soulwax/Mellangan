@@ -125,7 +125,7 @@ void Player::hurt(float damage, bool periodic) {
   damage = std::max(periodic ? 0.1f : 1.0f, damage - armor);
   hp -= damage;
   if (!periodic)
-    invuln = level->game.balance.invuln;
+    invuln = level->game.balance.invuln, level->game.hitStop(0.05f);
   level->game.onPlayerHurt();
   Sound::hurt.play(0.7f);
   TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);

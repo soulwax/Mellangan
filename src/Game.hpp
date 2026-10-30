@@ -70,13 +70,16 @@ public:
   void setReducedParticles(bool reduced);
   void onPlayerHurt() { hurt = 1, shake = 4; }
   void onExplosion() { shake = std::max(shake, 2.5f); }
+  void hitStop(float seconds);
+  void celebrate();
   void onPlayerDied();
   void onDawn();
 
 private:
   std::unique_ptr<Menu> nextMenu;
   bool menuChanged = false, showFps = false, worldDebug = false;
-  float time = 0, hurt = 0, shake = 0, fps = 0, bannerTime = 0;
+  float time = 0, hurt = 0, shake = 0, fps = 0, bannerTime = 0, freeze = 0,
+        lastStop = -1, levelBeat = -1;
   std::string banner, chartPath, prefPath;
   std::deque<std::string> banners;
   double xCam = 0, yCam = 0;

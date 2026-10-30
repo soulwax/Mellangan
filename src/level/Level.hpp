@@ -45,6 +45,7 @@ public:
   int omen = -1;
   float distanceRan = 0, totalDamage = 0;
   int handicaps = 0;
+  std::vector<entt::entity> bossIds;
   Bounty bounties[3];
   Spawner spawner{*this};
   Night night{*this};

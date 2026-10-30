@@ -13,6 +13,7 @@
 #include "entity/enemy/Wolf.hpp"
 #include "entity/enemy/ai/Plans.hpp"
 #include "entity/enemy/ai/Melee.hpp"
+#include "entity/pickup/Chest.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/pickup/Potion.hpp"
 #include "hero/Hero.hpp"
@@ -21,6 +22,7 @@
 #include "level/Level.hpp"
 #include "particle/TextParticle.hpp"
 #include "particle/DeathEffect.hpp"
+#include "particle/Drift.hpp"
 #include "particle/Shockwave.hpp"
 #include "particle/debris/Chip.hpp"
 #include "particle/Spark.hpp"
@@ -87,6 +89,78 @@ const EnemyType TYPES[] = {
     {9,160,22,16,10,1.4f,12,0.25f,{0.7f,0.3f,0.1f,1},false,190,atlas::expansion},
 };
 constexpr int ELITE_XP = 6;
+
+void puffs(Level &level, double x, double y, Color c, int n, float speed,
+           float rise) {
+  for (int i = 0; i < n && Drift::room(); i++) {
+    float a = rng.range(0, TAU), v = rng.range(0.4f, 1) * speed;
+    Drift *d = level.add<Drift>(x, y, std::cos(a) * v, std::sin(a) * v * 0.6f - rise,
+                                atlas::pt::Puff, c, rng.range(0.6f, 1.0f));
+    d->grow = 1.3f, d->scale = 0.6f, d->spin = rng.range(-1, 1);
+  }
+}
+
+void chips(Level &level, double x, double y, float z, int icon, Color c, int n,
+           double speed) {
+  for (int i = 0; i < n && Debris::room(); i++)
+    level.add<Chip>(x, y, z, icon, c, speed);
+}
+
+bool signature(Level &level, EnemyKind k, double x, double y, double body,
+               float scale) {
+  switch (k) {
+  case EnemyKind::Skeleton:
+    chips(level, x, y, 8 * scale, atlas::pt::Bone, col::white, 5, 1.1);
+    puffs(level, x, y, Color{0.85f, 0.82f, 0.72f, 0.45f}, 3, 20, 4);
+    return true;
+  case EnemyKind::Iceback:
+    chips(level, x, y, 8 * scale, atlas::pt::IceShard, col::white, 9, 1.4);
+    level.add<Shockwave>(x, body, 3, 18 * scale, 0.3f,
+                         Color{0.75f, 0.92f, 1, 0.9f}, false);
+    return true;
+  case EnemyKind::Sporeling:
+  case EnemyKind::MycelialBrute:
+    puffs(level, x, body, Color{0.78f, 0.95f, 0.55f, 0.5f},
+          k == EnemyKind::Sporeling ? 5 : 9, 35 * scale, 6);
+    return true;
+  case EnemyKind::Burrower:
+    chips(level, x, y, 4, atlas::pt::Rock, col::white, 4, 1.3);
+    chips(level, x, y, 4, atlas::pt::Pebble, col::white, 4, 1.6);
+    puffs(level, x, y, Color{0.62f, 0.5f, 0.38f, 0.5f}, 4, 30, 2);
+    return true;
+  default:
+    return false;
+  }
+}
+
+void flesh(Level &level, EnemyKind k, double x, double y, double body,
+           float scale) {
+  switch (k) {
+  case EnemyKind::Knight:
+    chips(level, x, y, 8 * scale, atlas::pt::Pebble, Color{0.8f, 0.85f, 0.95f, 1},
+          4, 1.2);
+    Spark::burst(level, x, body, col::white, 5, 80, false);
+    break;
+  case EnemyKind::Cultist:
+  case EnemyKind::Necromancer:
+    puffs(level, x, body, Color{0.35f, 0.15f, 0.45f, 0.55f}, 5, 25, 10);
+    for (int i = 0; i < 2 && Drift::room(); i++) {
+      Drift *d = level.add<Drift>(x, body, rng.range(-8, 8), -30,
+                                  atlas::pt::Wisp, Color{0.75f, 0.55f, 1, 0.9f},
+                                  0.9f);
+      d->sway = 6, d->drag = 0.5f;
+    }
+    break;
+  case EnemyKind::Thief:
+    chips(level, x, y, 8, atlas::pt::Coin, col::white, 6, 1.3);
+    break;
+  case EnemyKind::MireLeech:
+    puffs(level, x, y, Color{0.35f, 0.45f, 0.25f, 0.5f}, 3, 20, 2);
+    break;
+  default:
+    break;
+  }
+}
 } // namespace
 
 Enemy::Enemy(const EnemyType &type, float hpMul, float damageMul)
@@ -208,6 +282,16 @@ void Enemy::act() {
     return;
   level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul)
       ->by = name();
+  if (boss) {
+    double turn = std::atan2(yd, xd) + PI / 10;
+    for (int i = 0; i < 10; i++) {
+      double a = turn + TAU * i / 10;
+      level->add<Orb>(x, bodyY(), std::cos(a) * 45, std::sin(a) * 45,
+                      8 * damageMul)->by = name();
+    }
+    level->add<Shockwave>(x, bodyY(), 6, 40, 0.4f, Color{0.75f, 0.35f, 1, 0.9f})
+        ->spokes = 10;
+  }
   Sound::orb.play(0.3f);
 }
 
@@ -306,7 +390,20 @@ void Enemy::makeElite(float health) {
   radius *= 1.3f;
 }
 
+void Enemy::makeBoss(float health, float damage) {
+  boss = true;
+  hp = maxHp = health;
+  damageMul *= damage;
+  scale *= 2.2f;
+  radius *= 1.9f;
+}
+
 void Enemy::render(Screen &s) {
+  if (boss) {
+    float beat = 0.5f + 0.25f * std::sin(age * 5);
+    s.ring(xp, yp, radius + 6, Color{0.9f, 0.15f, 0.2f, beat});
+    s.ring(xp, yp, radius + 10, Color{0.9f, 0.15f, 0.2f, beat * 0.4f});
+  }
   Color c = tint();
   if (elite)
     c = {c.r, c.g * 0.85f, c.b * 0.45f, c.a};
@@ -326,6 +423,8 @@ void Enemy::render(Screen &s) {
 }
 
 void Enemy::renderLight(Screen &s) {
+  if (boss)
+    s.glow(xp, yp - 7 * scale, 130, {0.35f, 0.06f, 0.08f, 1});
   if (elite)
     s.glow(xp, yp - 7 * scale, 40 * scale, {0.12f, 0.09f, 0.02f, 1});
 }
@@ -376,7 +475,7 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
     alarmed = true;
     level->enemiesNear(x, y, 90, [](Enemy &o) { o.aware = true; });
   }
-  float f = force * type.knockResist * (elite ? 0.5f : 1.0f);
+  float f = force * type.knockResist * (boss ? 0.15f : elite ? 0.5f : 1.0f);
   xa += xd * f;
   ya += yd * f;
   TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)),
@@ -406,6 +505,18 @@ void Enemy::die() {
                 (1 + std::min(level->streak, 100) * 0.005f));
   if (elite && rng.chance(0.25f))
     level->add<Potion>(x + 6, y);
+  if (elite)
+    level->game.hitStop(0.035f);
+  if (boss) {
+    level->add<Chest>(x, y);
+    level->add<Shockwave>(x, bodyY(), 6, 90, 0.6f, Color{0.95f, 0.2f, 0.25f, 1})
+        ->spokes = 16;
+    Spark::burst(*level, x, bodyY(), type.blood, 30, 150, true);
+    level->game.hitStop(0.12f);
+    level->game.onExplosion();
+    level->game.announce(is(EnemyKind::Alpha) ? "THE PACK LORD FALLS"
+                                              : "THE LICH CRUMBLES");
+  }
   if (rng.chance(1 / 150.0f))
     level->add<Potion>(x, y);
   if (gilded) {
@@ -443,9 +554,13 @@ void Enemy::die() {
                           y + rng.range(-4, 4) * scale, rng.range(2, 12) * scale, 1);
       Spark::burst(*level, x, bodyY(), {1, 0.35f, 0.08f, 1}, 12, 70, true);
     }
-  } else if (k == EnemyKind::Skeleton) {
-    Spark::burst(*level, x, bodyY(), type.blood, 14, 70, false);
+  } else if (signature(*level, k, x, y, bodyY(), scale)) {
+    if (DeathEffect::alive < 180 && k != EnemyKind::Sporeling &&
+        k != EnemyKind::Iceback)
+      level->add<DeathEffect>(x, y, float(z), sprite(), scale, facing,
+                              type.blood, DeathStyle::Fallen);
   } else {
+    flesh(*level, k, x, y, bodyY(), scale);
     Color blood = k == EnemyKind::Rat || k == EnemyKind::Cultist ||
                           k == EnemyKind::Knight || k == EnemyKind::Cyclops ||
                           k == EnemyKind::Wolf || k == EnemyKind::Alpha ||

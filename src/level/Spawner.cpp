@@ -77,29 +77,44 @@ void Spawner::tick() {
     bosses++;
     double x, y;
     ring(300, x, y);
-    spawn(EnemyKind::Cyclops, x, y);
-    level.game.announce("A CYCLOPS APPROACHES");
+    struct BossDef {
+      EnemyKind kind;
+      const char *arrival;
+    };
+    static const BossDef BOSSES[] = {
+        {EnemyKind::Cyclops, "A CYCLOPS APPROACHES"},
+        {EnemyKind::Alpha, "THE PACK LORD HOWLS"},
+        {EnemyKind::Necromancer, "THE LICH RISES"}};
+    const BossDef &def = BOSSES[(bosses - 1) % 3];
+    spawn(def.kind, x, y, true, def.kind != EnemyKind::Cyclops);
+    level.game.announce(def.arrival);
     Sound::boss.play(0.8f, 0);
   }
 }
 
-void Spawner::spawn(EnemyKind kind, double x, double y, bool aware) {
+void Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
+                    bool boss) {
   std::lock_guard<std::mutex> lock(spawnMutex);
   const Balance &b = level.game.balance;
   float hpMul = b.enemyHp * (1 + level.time / b.enemyHpRamp);
   float dmgMul = b.enemyDamage * (1 + level.time / b.enemyDamageRamp);
+  float bossHp = 1 + (bosses - 1) * b.bossHpStep;
   if (kind == EnemyKind::Cyclops)
-    hpMul *= 1 + (bosses - 1) * b.bossHpStep;
+    hpMul *= bossHp;
   auto e = Enemy::create(kind, hpMul, dmgMul);
   e->x = x, e->y = y, e->aware = aware;
-  if (kind != EnemyKind::Cyclops && level.time > b.eliteStart &&
+  if (boss)
+    e->makeBoss(Enemy::typeOf(EnemyKind::Cyclops).hp * hpMul * bossHp, 1.6f);
+  else if (kind != EnemyKind::Cyclops && level.time > b.eliteStart &&
       rng.chance((b.eliteBase + level.time / b.eliteRamp) * level.eliteMul))
     e->makeElite(b.eliteHp);
   Entity *added = level.add(std::move(e));
+  if (boss || kind == EnemyKind::Cyclops)
+    level.bossIds.push_back(added->id);
   entt::entity alphaId = added->id;
 
   if (kind == EnemyKind::Alpha) {
-    int packSize = rng.irange(2, 4);
+    int packSize = boss ? rng.irange(6, 8) : rng.irange(2, 4);
     for (int i = 0; i < packSize; i++) {
       double a = TAU * i / packSize + rng.range(-0.3f, 0.3f);
       double d = rng.range(22, 38);

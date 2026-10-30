@@ -10,7 +10,8 @@ class Spawner {
 public:
   explicit Spawner(Level &level) : level(level) {}
   void tick();
-  void spawn(EnemyKind kind, double x, double y, bool aware = true);
+  void spawn(EnemyKind kind, double x, double y, bool aware = true,
+             bool boss = false);
 
 private:
   Level &level;

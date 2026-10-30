@@ -6,6 +6,31 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.9] - 2026-10-30
+
+### Added
+
+- Two new bosses join the Cyclops in rotation: the Pack Lord, a giant Alpha Wolf that brings a pack of six to eight and howls them into a frenzy, and the Lich, a giant Necromancer that raises four skeletons at a time. Bosses wear a pulsing crimson ring, shrug off most knockback, survive a Nova and drop a chest.
+- A boss health bar at the bottom of the screen names the boss you face and counts any others still alive.
+- The Pack Lord's Blood Moon Howl flashes a crimson sunburst and calls three more wolves while its pack is under ten.
+- The Lich's Death Ring: each cast also fires a slower ring of ten orbs.
+- A low-health warning: below 30% health the screen edges pulse red like a heartbeat, faster as health drops.
+
+### Changed
+
+- Heavy moments land with a brief hit stop: taking a hit, killing an elite and felling a boss. It is rate-limited so a crowd never stutters the game.
+- Levelling up has a beat: a gold sunburst and glints burst from you, with a moment of safety, before the choices appear.
+- Gems and pickups spiral in toward you instead of sliding in a straight line.
+- Twelve monsters no longer die in generic gore:
+  - Skeletons collapse into bones and dust.
+  - Icebacks shatter into ice.
+  - Sporelings and Mycelial Brutes burst into spore clouds.
+  - Burrowers crumble into rocks and dirt.
+  - Knights shed armour plates and sparks.
+  - Cultists and Necromancers release violet smoke and freed souls.
+  - Thieves scatter coins.
+  - Mire Leeches leave a puff of bog.
+
 ## [0.5.8] - 2026-10-30
 
 ### Added

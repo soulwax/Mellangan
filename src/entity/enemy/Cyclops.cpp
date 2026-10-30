@@ -17,4 +17,5 @@ void Cyclops::die() {
   Spark::burst(*level, x, bodyY(), type.blood, 40, 140, true);
   level->add<Explosion>(x, y, 10, 9);
   level->game.announce("THE CYCLOPS FALLS");
+  level->game.hitStop(0.12f);
 }

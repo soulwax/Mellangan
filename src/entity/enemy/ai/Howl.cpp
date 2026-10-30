@@ -3,6 +3,7 @@
 #include "audio/Sound.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "level/Level.hpp"
+#include "particle/Shockwave.hpp"
 #include "particle/Spark.hpp"
 
 GoalState Howl::tick(Enemy &e, const Sense &, double &xs, double &ys) const {
@@ -17,10 +18,23 @@ GoalState Howl::tick(Enemy &e, const Sense &, double &xs, double &ys) const {
   e.frenzy = 6.0f;
   e.cooldown = cooldown;
 
-  e.level->enemiesNear(e.x, e.y, 240, [](Enemy &o) {
+  int pack = 0;
+  e.level->enemiesNear(e.x, e.y, 240, [&](Enemy &o) {
     if (o.is(EnemyKind::Wolf))
-      o.frenzy = 6.0f;
+      o.frenzy = 6.0f, pack++;
   });
+
+  if (e.boss) {
+    e.level->add<Shockwave>(e.x, e.bodyY(), 10, 120, 0.6f,
+                            Color{0.95f, 0.2f, 0.25f, 0.9f})->spokes = 16;
+    for (int i = 0; pack < 10 && i < 3; i++, pack++) {
+      double a = e.roll() * TAU, d = 90 + e.roll() * 30;
+      double wx = e.x + std::cos(a) * d, wy = e.y + std::sin(a) * d;
+      e.level->spawner.spawn(EnemyKind::Wolf, wx, wy, true);
+      Spark::burst(*e.level, wx, wy - 6, Color{0.9f, 0.2f, 0.25f, 1}, 8, 50,
+                   false);
+    }
+  }
 
   return GoalState::Done;
 }
