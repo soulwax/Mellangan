@@ -47,11 +47,12 @@ TitleMenu::Layout TitleMenu::layout() const {
   for (int i = 0; i < 4; i++)
     l.chips[i] = {in + i * (chip + 3 * u), y + pad + 14 * u, chip, 16 * u};
   l.seed = {in, y + pad + 56 * u, iw, 18 * u};
-  float ry = l.seed.y + l.seed.h + 30 * u;
+  l.diff = {in, l.seed.y + l.seed.h + 22 * u, iw, 16 * u};
+  float ry = l.diff.y + l.diff.h + 42 * u;
   int n = std::min(int(game.history.size()), 6);
   for (int i = 0; i < 6; i++)
     l.rows[i] = {in, ry + i * 13 * u, iw, 12 * u};
-  float bottom = n ? ry + n * 13 * u : l.seed.y + l.seed.h;
+  float bottom = n ? ry + n * 13 * u : l.diff.y + l.diff.h + 18 * u;
   l.panel = {x, y, w, bottom + pad - y};
   return l;
 }
@@ -105,6 +106,12 @@ void TitleMenu::tick() {
     return choose((int(game.worldMode) + 1) % 4);
   if (!typing() && in.codex.clicked)
     return game.setMenu(std::make_unique<CodexMenu>(game, false));
+  int tiers = int(Difficulty::Count), tier = int(game.difficulty);
+  if (!typing() && (in.prior.clicked || in.next.clicked)) {
+    Sound::select.play(0.5f, 0);
+    return game.setDifficulty(
+        Difficulty((tier + (in.next.clicked ? 1 : tiers - 1)) % tiers));
+  }
   int n = int(game.history.size());
   if (n && in.older.clicked)
     return recall(pick < 0 ? 0 : std::max(0, pick - 1));
@@ -116,6 +123,12 @@ void TitleMenu::tick() {
     for (int i = 0; i < 4; i++)
       if (inside(l.chips[i], in))
         return choose(i);
+    if (inside(l.diff, in)) {
+      Sound::select.play(0.5f, 0);
+      bool right = in.mouseX > l.diff.x + l.diff.w / 2;
+      return game.setDifficulty(
+          Difficulty((tier + (right ? 1 : tiers - 1)) % tiers));
+    }
     for (int i = 0; i < std::min(n, 6); i++)
       if (inside(l.rows[i], in))
         return recall(i);
@@ -192,6 +205,22 @@ void TitleMenu::render(Screen &s) {
                                                              : "";
   s.text(hint, f.x + f.w - Screen::textWidth(hint, small) - 6 * u, ty, small,
          col::muted * 0.7f);
+
+  const SDL_FRect &d = l.diff;
+  Difficulty tier = game.difficulty;
+  bool nightmare = tier == Difficulty::Nightmare;
+  Color heat = nightmare ? col::red : col::gold;
+  s.text("DIFFICULTY", p.x + pad, d.y - 14 * u, small, col::muted);
+  s.text("Left/Right", p.x + p.w - pad - Screen::textWidth("Left/Right", small),
+         d.y - 14 * u, small, col::muted * 0.7f);
+  gui::Panel(d, {0.02f, 0.02f, 0.04f, 0.9f}, heat.alpha(0.5f), u).render(s);
+  float dy = d.y + (d.h - 16 * small) / 2;
+  s.text("<", d.x + 5 * u, dy, small, heat.alpha(0.8f));
+  s.text(">", d.x + d.w - 5 * u - Screen::textWidth(">", small), dy, small,
+         heat.alpha(0.8f));
+  s.textCenter(difficultyTitle(tier), d.x + d.w / 2, dy, small,
+               nightmare ? col::red.alpha(0.75f + 0.25f * std::sin(t * 6)) : heat);
+  s.text(difficultyBlurb(tier), p.x + pad, d.y + d.h + 5 * u, small, col::muted);
 
   int n = std::min(int(game.history.size()), 6);
   if (!n)

@@ -12,6 +12,7 @@
 #include "input/Input.hpp"
 #include "level/Level.hpp"
 #include "menu/Menu.hpp"
+#include "meta/Balance.hpp"
 #include "meta/Codex.hpp"
 
 
@@ -42,6 +43,9 @@ public:
   WorldMode worldMode = WorldMode::Classic;
   std::string seedCode, arm;
   int heroPick = -1;
+  Balance balance;
+  Difficulty difficulty = Difficulty::HurtMePlenty;
+  std::string base;
   std::vector<PastWorld> history;
   Codex codex;
   float best = 0;
@@ -59,6 +63,8 @@ public:
   void toTitle();
   void reseed();
   void armPlayer();
+  void loadBalance();
+  void setDifficulty(Difficulty d);
   std::string worldName() const;
   void announce(std::string text);
   void setReducedParticles(bool reduced);

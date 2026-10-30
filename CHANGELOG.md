@@ -6,6 +6,14 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Five difficulties, in homage to DOOM: I'M TOO YOUNG TO DIE, HEY, NOT TOO ROUGH, HURT ME PLENTY, ULTRA-VIOLENCE and NIGHTMARE! Pick one on the title screen with Left/Right or a click; the choice is remembered.
+  - HURT ME PLENTY is the new default and noticeably gentler than before: slower spawn growth, smaller hordes, fewer elites, sturdier player and faster levelling.
+  - ULTRA-VIOLENCE is the previous balance, unchanged.
+  - NIGHTMARE! has faster foes, bigger hordes, more frequent bosses and many more elites.
+- Game balance lives in `res/balance.ini`: spawn pacing, hordes, bosses, foe health, damage and speed growth, elites, player health, damage taken, invulnerability and the experience curve, with shared values and per-difficulty overrides. A `balance.ini` in the save folder overrides it for fine-tuning; changes apply from the next run.
+
 ## [0.5.7] - 2026-10-30
 
 ### Changed

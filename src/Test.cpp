@@ -149,6 +149,21 @@ static void testStatusDamage() {
   game.level.reset();
 }
 
+static void testBalance() {
+  const char *text = "; comment\n[all]\nxp = 2\nhorde_max = 10 ; trailing\n"
+                     "[nightmare]\nxp = 3\n[hurt_me_plenty]\nplayer_hp = 120\n";
+  Balance plenty, nightmare, uv;
+  plenty.load(text, Difficulty::HurtMePlenty);
+  nightmare.load(text, Difficulty::Nightmare);
+  uv.load(text, Difficulty::UltraViolence);
+  assert(plenty.xp == 2 && plenty.playerHp == 120 && plenty.hordeMax == 10);
+  assert(nightmare.xp == 3 && nightmare.playerHp == 100);
+  assert(uv.xp == 2 && uv.playerHp == 100);
+  assert(difficultyFrom("nightmare") == Difficulty::Nightmare);
+  assert(difficultyFrom("garbage") == Difficulty::HurtMePlenty);
+  std::cout << "[TEST] Balance tiers, overrides and comments: PASS" << std::endl;
+}
+
 static void testExperienceCurve() {
   Player early;
   early.gainXp(33);
@@ -424,6 +439,7 @@ int runTests() {
   testExpansionContent();
   testBiomeTransitions();
   testBiomeEncounters();
+  testBalance();
   testExperienceCurve();
   testAutomaticLevelUp();
   testCombatReadability();

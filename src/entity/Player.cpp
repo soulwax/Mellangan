@@ -21,6 +21,8 @@ void Player::onAdded() {
   hero = g.dev && g.heroPick >= 0 && g.heroPick < HERO_COUNT
              ? HEROES[g.heroPick]
              : &heroOf(g.codex);
+  hp = maxHp = g.balance.playerHp;
+  xpBase = g.balance.xpBase, xpGrowth = g.balance.xpGrowth;
   hero->equip(*this);
   for (auto &u : upgrades)
     if (std::strcmp(u->name, hero->weapon) == 0)
@@ -114,7 +116,7 @@ void Player::hurt(float damage, bool periodic) {
   if ((!periodic && invuln > 0) || dead() || god)
     return;
   if (!periodic)
-    damage *= status.incoming();
+    damage *= status.incoming() * level->game.balance.damageTaken;
   if (hero && (damage = hero->guard(*this, damage)) <= 0)
     return;
   for (auto &up : upgrades)
@@ -123,7 +125,7 @@ void Player::hurt(float damage, bool periodic) {
   damage = std::max(periodic ? 0.1f : 1.0f, damage - armor);
   hp -= damage;
   if (!periodic)
-    invuln = 0.6f;
+    invuln = level->game.balance.invuln;
   level->game.onPlayerHurt();
   Sound::hurt.play(0.7f);
   TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);
@@ -177,7 +179,7 @@ void Player::gainXp(float amount) {
   while (exp >= expNext) {
     exp -= expNext;
     lvl++, pendingLevels++;
-    double next = (6.0 + lvl * 6.0) * std::pow(1.08, lvl - 2);
+    double next = (xpBase + lvl * xpBase) * std::pow(double(xpGrowth), lvl - 2);
     expNext = float(std::min(next, double(std::numeric_limits<float>::max())));
   }
 }

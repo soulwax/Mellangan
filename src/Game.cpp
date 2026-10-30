@@ -23,9 +23,13 @@
 #include "particle/debris/Debris.hpp"
 #include "particle/debris/FlameDebris.hpp"
 
+namespace {
+std::string slurp(const std::string &path);
+} // namespace
 
 bool Game::init(SDL_Window *w, const std::string &base) {
   window = w;
+  this->base = base;
   rng.state ^= SDL_GetPerformanceCounter() * 0x2545F4914F6CDD1Dull;
   if (!screen.load(base))
     return false;
@@ -37,6 +41,7 @@ bool Game::init(SDL_Window *w, const std::string &base) {
     if (setting && size > 0)
       reducedParticles = setting[0] == '1';
     SDL_free(setting);
+    difficulty = difficultyFrom(slurp(prefPath + "difficulty.txt"));
   }
   loadWorld();
   if (!prefPath.empty() && !bench.enabled)
@@ -229,6 +234,7 @@ void Game::reseed() {
     SDL_TimeToDateTime(now, &d, true);
     seedCode = fmt::format("D{:04}{:02}{:02}", d.year, d.month, d.day);
   }
+  loadBalance();
   build();
   saveWorld();
 }
@@ -248,6 +254,24 @@ void Game::newGame(bool reroll) {
     if (w.code == worldName())
       best = w.best;
   spdlog::info("New run in world {}", worldName());
+}
+
+void Game::loadBalance() {
+  balance = Balance{};
+  if (bench.enabled)
+    return;
+  balance.load(slurp(base + "res/balance.ini"), difficulty);
+  if (!prefPath.empty())
+    balance.load(slurp(prefPath + "balance.ini"), difficulty);
+}
+
+void Game::setDifficulty(Difficulty d) {
+  difficulty = d;
+  if (!prefPath.empty() && !bench.enabled) {
+    std::string name = difficultyName(d);
+    SDL_SaveFile((prefPath + "difficulty.txt").c_str(), name.data(), name.size());
+  }
+  reseed();
 }
 
 void Game::armPlayer() {

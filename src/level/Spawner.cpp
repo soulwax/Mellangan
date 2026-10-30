@@ -8,6 +8,7 @@
 #include "level/biome/Biome.hpp"
 
 void Spawner::tick() {
+  const Balance &b = level.game.balance;
   float t = level.time;
   std::vector<EnemyKind> pool, common;
   for (int k = 0; k < int(EnemyKind::Count); k++)
@@ -38,24 +39,24 @@ void Spawner::tick() {
     for (EnemyKind k : pool)
       if (foes & foe(k))
         local[m++] = k;
-    if (m && rng.chance(0.45f))
+    if (m && rng.chance(b.localChance))
       return local[rng.irange(0, m - 1)];
-    return n > 2 && rng.chance(0.55f) ? common[n - 1 - rng.irange(0, 1)]
+    return n > 2 && rng.chance(b.strongChance) ? common[n - 1 - rng.irange(0, 1)]
                                       : common[rng.irange(0, n - 1)];
   };
 
   if ((timer -= DT) <= 0) {
-    timer += std::max(0.06f, 0.9f - t * 0.005f);
-    for (int i = 0, batch = 1 + int(t / 70);
-         i < batch && level.count<Enemy>() < 550; i++) {
+    timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp);
+    for (int i = 0, batch = 1 + int(t / b.batchEvery);
+         i < batch && level.count<Enemy>() < int(b.enemyCap); i++) {
       double x, y;
       ring(rng.range(280, 320), x, y);
       spawn(pick(x, y), x, y, false);
     }
   }
   if (t >= nextWave) {
-    nextWave += 60;
-    int count = std::min(64, 24 + int(t / 12));
+    nextWave += b.hordeEvery;
+    int count = std::min(int(b.hordeMax), int(b.hordeBase + t / b.hordeRamp));
     double r = 270 + level.game.screen.reach();
     for (int i = 0; i < count; i++) {
       double dir = TAU * i / count;
@@ -72,7 +73,7 @@ void Spawner::tick() {
     level.add(std::move(b));
   }
   if (t >= nextBoss) {
-    nextBoss += 150;
+    nextBoss += b.bossEvery;
     bosses++;
     double x, y;
     ring(300, x, y);
@@ -84,14 +85,16 @@ void Spawner::tick() {
 
 void Spawner::spawn(EnemyKind kind, double x, double y, bool aware) {
   std::lock_guard<std::mutex> lock(spawnMutex);
-  float hpMul = 1 + level.time / 150;
+  const Balance &b = level.game.balance;
+  float hpMul = b.enemyHp * (1 + level.time / b.enemyHpRamp);
+  float dmgMul = b.enemyDamage * (1 + level.time / b.enemyDamageRamp);
   if (kind == EnemyKind::Cyclops)
-    hpMul *= 1 + (bosses - 1) * 0.75f;
-  auto e = Enemy::create(kind, hpMul, 1 + level.time / 600);
+    hpMul *= 1 + (bosses - 1) * b.bossHpStep;
+  auto e = Enemy::create(kind, hpMul, dmgMul);
   e->x = x, e->y = y, e->aware = aware;
-  if (kind != EnemyKind::Cyclops && level.time > 60 &&
-      rng.chance((0.03f + level.time / 6000) * level.eliteMul))
-    e->makeElite();
+  if (kind != EnemyKind::Cyclops && level.time > b.eliteStart &&
+      rng.chance((b.eliteBase + level.time / b.eliteRamp) * level.eliteMul))
+    e->makeElite(b.eliteHp);
   Entity *added = level.add(std::move(e));
   entt::entity alphaId = added->id;
 
@@ -100,7 +103,7 @@ void Spawner::spawn(EnemyKind kind, double x, double y, bool aware) {
     for (int i = 0; i < packSize; i++) {
       double a = TAU * i / packSize + rng.range(-0.3f, 0.3f);
       double d = rng.range(22, 38);
-      auto w = Enemy::create(EnemyKind::Wolf, hpMul, 1 + level.time / 600);
+      auto w = Enemy::create(EnemyKind::Wolf, hpMul, dmgMul);
       w->x = x + std::cos(a) * d;
       w->y = y + std::sin(a) * d;
       w->aware = aware;

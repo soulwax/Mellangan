@@ -299,9 +299,9 @@ void Enemy::tick() {
   }
 }
 
-void Enemy::makeElite() {
+void Enemy::makeElite(float health) {
   elite = true;
-  hp = maxHp *= 4;
+  hp = maxHp *= health;
   scale *= 1.35f;
   radius *= 1.3f;
 }

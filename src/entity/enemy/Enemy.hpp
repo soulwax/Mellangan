@@ -80,7 +80,7 @@ public:
   int kind() const;
   bool is(EnemyKind k) const { return kind() == int(k); }
   Sprite sprite() const;
-  void makeElite();
+  void makeElite(float health = 4);
   void think();
   void move();
   void push();

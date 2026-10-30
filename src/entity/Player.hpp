@@ -15,7 +15,7 @@ public:
   float invuln = 0;
   int lvl = 1, pendingLevels = 0, pendingTreasures = 0, revives = 0;
   const char *felledBy = nullptr;
-  float exp = 0, expNext = 5;
+  float exp = 0, expNext = 5, xpBase = 6, xpGrowth = 1.08f;
   float speed = 74, might = 1, haste = 1, magnet = 28, armor = 0, regen = 0,
         luck = 0;
   bool god = false;

@@ -17,7 +17,7 @@ private:
   static constexpr int MAX_CODE = 12;
 
   struct Layout {
-    SDL_FRect panel, chips[4], seed, rows[6];
+    SDL_FRect panel, chips[4], seed, diff, rows[6];
   };
   int pick = -1;
 

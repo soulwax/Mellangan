@@ -199,8 +199,8 @@ void Level::climate() {
                                              int(std::floor(player->y / 16)))];
   const Omen *o = omen >= 0 ? &OMENS[omen] : nullptr;
   step = f.step * (o ? o->step : 1);
-  pace = f.foes * (o ? o->foes : 1);
-  xpMul = f.xp * (o ? o->xp : 1);
+  pace = f.foes * (o ? o->foes : 1) * game.balance.enemySpeed;
+  xpMul = f.xp * (o ? o->xp : 1) * game.balance.xp;
   eliteMul = o ? o->elite : 1;
   kindleRate = (o ? o->kindle : 1) * (player->hero ? player->hero->devotion() : 1);
   if (streak > 0 && (streakTime -= DT) <= 0)
