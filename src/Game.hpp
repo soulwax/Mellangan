@@ -42,7 +42,7 @@ public:
 
   WorldMode worldMode = WorldMode::Classic;
   std::string seedCode, arm;
-  int heroPick = -1;
+  int heroPick = -1, biomePick = -1;
   Balance balance;
   Difficulty difficulty = Difficulty::HurtMePlenty;
   std::string base;
@@ -63,6 +63,7 @@ public:
   void toTitle();
   void reseed();
   void armPlayer();
+  void visitBiome();
   void loadBalance();
   void setDifficulty(Difficulty d);
   std::string worldName() const;

@@ -43,6 +43,7 @@ public:
   uint32_t entered = 0, litBiomes = 0;
   float pace = 1, step = 1, xpMul = 1, eliteMul = 1, kindleRate = 1;
   int omen = -1;
+  Color air;
   float distanceRan = 0, totalDamage = 0;
   int handicaps = 0;
   std::vector<entt::entity> bossIds;
@@ -123,13 +124,14 @@ private:
   int solidX = 0, solidY = 0;
   std::unordered_set<uint64_t> visits;
 
-  float burnTime = 0, bountyTime = 0;
+  float burnTime = 0, bountyTime = 0, strikeTime = 2;
 
   void flush();
   void explore();
   void climate();
   void hunt();
   void weather();
+  void strike();
   void ambience();
   void buildGrid();
   void renderFloor(Screen &s);

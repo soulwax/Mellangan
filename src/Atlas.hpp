@@ -191,7 +191,9 @@ namespace pt {
 constexpr int IceShard = 32, Snowflake = 33, FrostGlint = 34, Rock = 35,
               Pebble = 36, MeteorCore = 37, Ember = 38, ArcaneStar = 39,
               Wisp = 40, Rune = 41, HolyGlint = 42, Coin = 43, Bubble = 44, Petal = 45,
-              Leaf = 46, Feather = 47, Puff = 48, Crescent = 49, Bone = 50;
+              Leaf = 46, Feather = 47, Puff = 48, Crescent = 49, Bone = 50,
+              MapleLeaf = 51, Rain = 52, Gust = 53, Fluff = 54, FallingStar = 55,
+              Butterfly = 56, Spore = 57;
 } // namespace pt
 
 namespace tt {

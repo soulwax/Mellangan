@@ -14,7 +14,7 @@ struct BiomeEventSchedule {
 
 class BiomeEvents {
 public:
-  std::array<int, 10> handled;
+  std::array<int, 26> handled;
   BiomeEventSchedule current;
   bool active = false;
 

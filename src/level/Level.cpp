@@ -14,6 +14,10 @@
 #include "level/Flavour.hpp"
 #include "hero/Hero.hpp"
 #include "entity/pickup/Chest.hpp"
+#include "particle/Arc.hpp"
+#include "particle/Drift.hpp"
+#include "particle/Shockwave.hpp"
+#include "particle/Spark.hpp"
 #include "particle/VisualDetail.hpp"
 
 namespace {
@@ -195,8 +199,12 @@ void Level::ambience() {
 }
 
 void Level::climate() {
-  const Flavour &f = FLAVOURS[world::biomeAt(int(std::floor(player->x / 16)),
-                                             int(std::floor(player->y / 16)))];
+  BiomeId here = world::biomeAt(int(std::floor(player->x / 16)),
+                                int(std::floor(player->y / 16)));
+  const Flavour &f = FLAVOURS[here];
+  const Color &g = AIRS[here].grade;
+  float k = 1 - std::exp(-0.9f * DT);
+  air = {lerpf(air.r, g.r, k), lerpf(air.g, g.g, k), lerpf(air.b, g.b, k), 1};
   const Omen *o = omen >= 0 ? &OMENS[omen] : nullptr;
   step = f.step * (o ? o->step : 1);
   pace = f.foes * (o ? o->foes : 1) * game.balance.enemySpeed;
@@ -233,9 +241,55 @@ void Level::hunt() {
 }
 
 void Level::weather() {
-  BIOMES[world::biomeAt(int(std::floor(player->x / 16)),
-                        int(std::floor(player->y / 16)))]
-      ->weather(*this, player->x, player->y);
+  BiomeId here = world::biomeAt(int(std::floor(player->x / 16)),
+                                int(std::floor(player->y / 16)));
+  BIOMES[here]->weather(*this, player->x, player->y);
+  const Air &a = AIRS[here];
+  for (float n = a.rate * (night.dawn ? 0.5f : 1); n > 0; n--) {
+    if (Drift::alive > Drift::MAX / 2 || !rng.chance(std::min(1.0f, n)))
+      break;
+    double x = player->x + rng.range(-260, 260),
+           y = player->y + rng.range(-170, 170) - a.vy * 0.3;
+    Drift *d = add<Drift>(x, y, a.vx * rng.range(0.8f, 1.2f),
+                          a.vy * rng.range(0.8f, 1.2f), a.icon, a.tint,
+                          a.life * rng.range(0.7f, 1.2f));
+    d->drag = 0, d->sway = a.sway, d->scale = a.scale * rng.range(0.85f, 1.1f);
+    d->spin = a.spin * rng.range(-1, 1);
+    if (a.spin == 0)
+      d->rot = 0;
+  }
+  if (a.strike > 0 && !player->dead() && (strikeTime -= DT) <= 0) {
+    strikeTime = a.strike * rng.range(0.6f, 1.4f);
+    strike();
+  }
+}
+
+void Level::strike() {
+  Enemy *target = nullptr;
+  int seen = 0;
+  enemiesNear(player->x, player->y, 200, [&](Enemy &e) {
+    if (!e.boss && rng.chance(1.0f / ++seen))
+      target = &e;
+  });
+  double x = target ? target->x : player->x + rng.range(-200, 200),
+         y = target ? target->y : player->y + rng.range(-120, 120);
+  double xd = x - player->x, yd = y - player->y;
+  if (!target && xd * xd + yd * yd < 60 * 60)
+    return;
+  std::vector<ArcNode> bolt;
+  for (int i = 0; i <= 6; i++)
+    bolt.push_back({x + (i > 0 && i < 6 ? rng.range(-9, 9) : 0),
+                    y - 170 + i * 170 / 6.0});
+  Color storm{0.75f, 0.85f, 1, 1};
+  add<Arc>(std::move(bolt), 0.3f, storm);
+  add<Shockwave>(x, y, 4, 34, 0.35f, storm);
+  Spark::burst(*this, x, y, storm, 6, 70, true);
+  enemiesNear(x, y, 40, [&](Enemy &e) {
+    double ex = e.x - x, ey = e.y - y;
+    if (ex * ex + ey * ey < 34 * 34)
+      e.hurt(28 + time * 0.08f, ex, ey, 60);
+  });
+  Sound::thunder.play(0.22f);
 }
 
 void Level::explore() {

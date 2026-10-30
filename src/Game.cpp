@@ -255,6 +255,8 @@ void Game::newGame(bool reroll) {
   reseed();
   if (dev && !arm.empty())
     armPlayer();
+  if (dev && biomePick >= 0 && biomePick < BIOME_COUNT)
+    visitBiome();
   setMenu(nullptr);
   best = 0, beatBest = false;
   if (level->omen >= 0)
@@ -298,6 +300,27 @@ void Game::setDifficulty(Difficulty d) {
     SDL_SaveFile((prefPath + "difficulty.txt").c_str(), name.data(), name.size());
   }
   reseed();
+}
+
+void Game::visitBiome() {
+  Player &p = *level->player;
+  for (int r = 0; r < 4000; r += 12)
+    for (int i = 0, n = std::max(1, r / 2); i < n; i++) {
+      double a = TAU * i / n;
+      int x = int(std::cos(a) * r), y = int(std::sin(a) * r);
+      bool deep = true;
+      for (int k = 0; k < 4; k++)
+        deep &= world::biomeAt(x + (k & 1 ? 6 : -6), y + (k & 2 ? 6 : -6)) ==
+                biomePick;
+      if (!deep || world::biomeAt(x, y) != biomePick)
+        continue;
+      p.x = x * 16 + 8, p.y = y * 16 + 8;
+      xCam = p.x, yCam = p.y;
+      spdlog::info("dev: visiting {} at tile ({}, {})", BIOMES[biomePick]->name,
+                   x, y);
+      return;
+    }
+  spdlog::warn("dev: biome {} not found", biomePick);
 }
 
 void Game::armPlayer() {
@@ -458,8 +481,10 @@ void Game::render() {
   screen.yOffset = int(std::floor(yCam + yj - screen.vh / 2.0f));
 
   float d = level->night.daylight();
-  screen.beginLight({lerpf(0.06f, 0.42f, d), lerpf(0.07f, 0.34f, d),
-                     lerpf(0.15f, 0.33f, d), 1});
+  const Color &air = level->air;
+  screen.beginLight({lerpf(0.06f, 0.42f, d) * air.r,
+                     lerpf(0.07f, 0.34f, d) * air.g,
+                     lerpf(0.15f, 0.33f, d) * air.b, 1});
   level->renderLight(screen);
   screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
   level->render(screen);

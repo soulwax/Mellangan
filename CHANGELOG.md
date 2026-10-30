@@ -6,6 +6,59 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Every region now has a world event, not just the ten newer ones. Each one is announced, telegraphed and lasts a few seconds:
+  - A Warm Breeze heals in the Meadows.
+  - The Old Oaks Shelter in the Greenwood, pushing foes out of their circle.
+  - A Harvest Gale sweeps through the Autumn Woods.
+  - Wildfire spreads across the Heath.
+  - The Barrow opens and skeletons climb out.
+  - A Blizzard howls in the Snowfields.
+  - Petals fall in the Blossom Grove, cleansing and healing.
+  - Bog gas rises in the Mire.
+  - A sandstorm sweeps the Desert.
+  - Vines grasp in the Jungle.
+  - A stampede thunders across the Savanna.
+  - The ground erupts in the Ashlands.
+  - The crystals resonate in Crystal Fields, charging your class skill.
+  - A spore bloom in the Fungal Wood heals you and poisons foes.
+  - Rocks fall in the Badlands.
+  - Wolves encircle you in the Taiga.
+
+  Events start after the first 40 seconds, and the older regions have them less often than the newer ones.
+- Every region has its own weather:
+  - butterflies in the Meadows;
+  - falling leaves in the Greenwood;
+  - maple leaves in the Autumn Woods;
+  - drifting seed fluff on the Heath;
+  - barrow mist;
+  - snowflakes;
+  - cherry petals;
+  - bog mist;
+  - blowing sand;
+  - jungle rain;
+  - savanna gusts;
+  - falling ash;
+  - crystal glints;
+  - spores;
+  - badlands dust;
+  - salt glare;
+  - floodplain rain;
+  - moonlit motes;
+  - rising bubbles in the Sunken Ruins;
+  - fen embers;
+  - amber leaves;
+  - shooting stars over the Starfall Basin.
+- The Storm Steppe has driving rain and lightning that strikes nearby foes every few seconds.
+- Each region has its own light: a warm glare in the Desert, a blue hush in the Moonlit Grove, a dim dusk in the Hollow Caverns and a red cast in the Ashlands. The light shifts gradually as you cross a border.
+- Seven new particle icons: maple leaf, raindrop, gust, seed fluff, falling star, butterfly and spore.
+- Dev: `--biome N` starts a `--dev` run inside biome N.
+
+### Changed
+
+- Region events are defined in one table, which makes each event easy to tune.
+
 ## [0.5.9] - 2026-10-30
 
 ### Added

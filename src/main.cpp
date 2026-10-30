@@ -153,11 +153,13 @@ int main(int argc, char **argv) {
         game.arm = argv[++i];
       if (std::string_view(argv[i]) == "--hero" && i + 1 < argc)
         game.heroPick = std::atoi(argv[++i]);
+      if (std::string_view(argv[i]) == "--biome" && i + 1 < argc)
+        game.biomePick = std::atoi(argv[++i]);
     }
     if (game.dev)
       spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world "
                    "debug, F9 warp to nearest structure; --arm \"A,B!\" "
-                   "starts runs with those upgrades");
+                   "starts runs with those upgrades, --biome N starts in biome N");
     if (game.dev) {
       constexpr ouroboros::Ouroboros council;
       int n = int(SDL_GetTicks() % 1000);
