@@ -4,7 +4,11 @@
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "level/Level.hpp"
+#include "particle/Drift.hpp"
+#include "particle/Mark.hpp"
+#include "particle/Shockwave.hpp"
 #include "particle/Spark.hpp"
+#include "particle/debris/Chip.hpp"
 
 namespace {
 const char *const NAMES[] = {"Ricochet Sling", "Harpoon", "Ground Sigil",
@@ -102,6 +106,7 @@ bool ExpansionAttack::hitBefore(entt::entity id) const {
 
 void ExpansionAttack::strike(Enemy &e) {
   hits.push_back(e.id);
+  impact(e);
   if (kind == 1 || kind == 7)
     e.afflict(StatusKind::Marked, 2.0f, kind == 1 ? 0.2f : 0.1f, source);
   if (kind == 2)
@@ -117,17 +122,14 @@ void ExpansionAttack::tick() {
   Player &p = *level->player;
   if (p.dead())
     return remove();
+  if (age == 0)
+    born();
   age += DT;
   float life = kind == 2 ? 3.0f : kind == 4 ? 0.7f :
                kind == 5 ? 0.3f : kind == 6 ? 0.65f : 2.5f;
   if (age >= life)
     return remove();
-  if (kind == 2 && rng.chance(0.8f) && Spark::alive < 500) {
-    float angle = rng.range(0, TAU), r = reach * rng.range(0.8f, 1.0f);
-    level->add<Spark>(x + std::cos(angle) * r, y + std::sin(angle) * r,
-                      rng.range(-4, 4), -rng.range(3, 10), TINTS[kind],
-                      rng.range(0.4f, 0.8f), rng.range(0.35f, 0.6f), false);
-  }
+  trail();
   bool area = kind == 2 || kind == 4;
   bool line = kind == 5 || kind == 6;
   if (kind == 4 && age < 0.6f)
@@ -162,6 +164,9 @@ void ExpansionAttack::tick() {
       return;
     pulse = kind == 2 ? 0.6f : kind == 6 ? 0.2f : 10;
     hits.clear();
+    if (kind == 2)
+      level->add<Shockwave>(x, y, reach * 0.25f, reach, 0.4f,
+                            Color{0.75f, 0.85f, 1, 0.7f}, false);
   }
   Enemy *bounced = nullptr;
   double cx = line ? ox + dx * reach * 0.5 : x;
@@ -201,26 +206,161 @@ void ExpansionAttack::tick() {
       dx = (target->x - x) / len, dy = (target->bodyY() - y) / len;
   }
   if (kind == 4) {
-    Spark::burst(*level, x, y, TINTS[kind], 12, reach * 2, true);
+    blast();
     remove();
+  }
+}
+
+void ExpansionAttack::born() {
+  Color c = TINTS[kind];
+  if (kind == 5) {
+    for (int i = 0; i < 5 && Drift::room(); i++) {
+      double k = rng.range(0.15f, 1.0f) * reach;
+      Drift *d = level->add<Drift>(ox + dx * k, oy + dy * k, rng.range(-15, 15),
+                                   rng.range(-25, -5), atlas::pt::Leaf,
+                                   col::white, rng.range(0.5f, 0.8f));
+      d->spin = rng.range(-4, 4), d->sway = 8, d->gravity = 30;
+    }
+  } else if (kind == 6) {
+    for (int i = 0; i < 4; i++)
+      level->add<Mark>(ox + dx * reach, oy + dy * reach, 0.5f,
+                       atlas::pt::HolyGlint, i % 2 ? col::white : c,
+                       1.0f + i * 0.3f, i * 0.4f);
+  } else if (kind == 2) {
+    level->add<Shockwave>(x, y, 2, reach, 0.3f, c.alpha(0.9f));
+  }
+}
+
+void ExpansionAttack::trail() {
+  Color c = TINTS[kind];
+  if (kind == 2 && rng.chance(0.25f) && Drift::room()) {
+    float a = rng.range(0, TAU), r = reach * rng.range(0.2f, 0.95f);
+    Drift *d = level->add<Drift>(x + std::cos(a) * r, y + std::sin(a) * r, 0,
+                                 -rng.range(4, 10), atlas::pt::Snowflake,
+                                 c.alpha(0.8f), rng.range(0.5f, 0.9f));
+    d->spin = 1.5f, d->scale = 0.7f;
+  } else if (kind == 0 && rng.chance(0.3f) && Drift::room()) {
+    Drift *d = level->add<Drift>(x, y + 2, 0, -4, atlas::pt::Puff,
+                                 Color{0.8f, 0.7f, 0.55f, 0.35f}, 0.35f);
+    d->scale = 0.5f, d->grow = 1.2f;
+  } else if (kind == 3 && rng.chance(0.15f) && Drift::room()) {
+    Drift *d = level->add<Drift>(x, y, -dy * 20, dx * 20, atlas::pt::Puff,
+                                 Color{1, 0.95f, 0.85f, 0.3f}, 0.4f);
+    d->scale = 0.6f, d->grow = 1.5f, d->spin = 3;
+  } else if (kind == 7 && rng.chance(0.6f) && Spark::alive < 600) {
+    level->add<Spark>(x, y, -dx * 20 + rng.range(-8, 8),
+                      -dy * 20 - rng.range(4, 12), c, 0.35f, 0.4f, false);
+  } else if (kind == 4 && age < 0.6f && rng.chance(0.6f) && Drift::room()) {
+    float k = age / 0.6f;
+    Drift *d = level->add<Drift>(x + 40 * (1 - k), y - 120 * (1 - k * k), 0, -6,
+                                 atlas::pt::Puff, Color{0.6f, 0.55f, 0.5f, 0.45f},
+                                 0.5f);
+    d->scale = 0.5f, d->grow = 1;
+  }
+}
+
+void ExpansionAttack::blast() {
+  Color c = TINTS[kind];
+  level->add<Shockwave>(x, y, 4, reach * 1.3f, 0.35f, c);
+  level->add<Mark>(x, y, 2.5f, atlas::Glow, Color{0.06f, 0.04f, 0.03f, 0.45f},
+                   reach * 2.2f / atlas::Glow.w);
+  for (int i = 0; i < 6 && Debris::room(); i++)
+    level->add<Chip>(x, y, 2, i % 2 ? atlas::pt::Rock : atlas::pt::Pebble,
+                     col::white, 1.4);
+  for (int i = 0; i < 4 && Drift::room(); i++) {
+    float a = rng.range(0, TAU);
+    Drift *d = level->add<Drift>(x, y, std::cos(a) * 30, std::sin(a) * 20 - 10,
+                                 atlas::pt::Puff, Color{0.5f, 0.45f, 0.42f, 0.5f},
+                                 rng.range(0.6f, 0.9f));
+    d->grow = 1.6f;
+  }
+  Spark::burst(*level, x, y, c, 8, reach * 2, true);
+}
+
+void ExpansionAttack::impact(Enemy &e) {
+  Color c = TINTS[kind];
+  if (kind == 0) {
+    for (int i = 0; i < 3 && Debris::room(); i++)
+      level->add<Chip>(e.x, e.y, 6, atlas::pt::Pebble, col::white, 0.9);
+  } else if (kind == 1) {
+    for (int i = 0; i < 5 && Drift::room(); i++) {
+      Drift *d = level->add<Drift>(e.x, e.bodyY(), rng.range(-40, 40),
+                                   rng.range(-60, -20), atlas::pt::FrostGlint,
+                                   c, rng.range(0.3f, 0.5f));
+      d->gravity = 200, d->drag = 0.5f, d->scale = 0.6f;
+    }
+  } else if (kind == 7) {
+    level->add<Mark>(e.x, e.bodyY(), 0.5f, atlas::pt::Wisp, c, 1, 0);
   }
 }
 
 void ExpansionAttack::render(Screen &s) {
   Color c = TINTS[kind];
-  if (kind == 4) {
-    s.color(c.alpha(0.25f + age * 0.6f));
-    s.ring(xp, yp, reach);
-  } else if (kind == 5 || kind == 6) {
-    float width = kind == 6 ? 3.0f + 2 * (count - 1) : 2.0f;
-    s.line(ox, oy, ox + dx * reach, oy + dy * reach, width, c.alpha(0.65f));
-    s.line(ox, oy, ox + dx * reach, oy + dy * reach, 1, col::white.alpha(0.8f));
-  } else if (kind != 2) {
-    if (kind == 1)
-      s.line(ox, oy, x, y, 1, c.alpha(0.4f));
-    s.color(c);
+  double ex = ox + dx * reach, ey = oy + dy * reach;
+  if (kind == 2) {
+    float fade = std::min({1.0f, age * 4, (3 - age) * 2});
+    s.ring(xp, yp, reach, c.alpha(0.55f * fade));
+    s.ring(xp, yp, reach * 0.62f, c.alpha(0.3f * fade));
+    for (int i = 0; i < 6; i++) {
+      float a = age * 0.8f + TAU * i / 6;
+      s.particle(atlas::pt::Rune, xp + std::cos(a) * reach * 0.81f,
+                 yp + std::sin(a) * reach * 0.81f, c.alpha(0.75f * fade), 1,
+                 a + PI * 0.5f);
+    }
+    s.particle(atlas::pt::Rune, xp, yp, col::white.alpha(0.8f * fade), 2,
+               -age * 0.5f);
+  } else if (kind == 4) {
+    float k = std::min(1.0f, age / 0.6f);
+    s.ring(xp, yp, reach * (1.5f - 0.5f * k), col::gold.alpha(0.3f + 0.5f * k));
+    if (k < 1) {
+      s.sprite(atlas::Shadow, xp, yp + 1, 8, 4, 0.5f + k, 0.5f + 0.6f * k);
+      s.particle(atlas::pt::Rock, xp + 40 * (1 - k), yp - 120 * (1 - k * k),
+                 col::white, 1.5f, age * 10);
+    }
+  } else if (kind == 5) {
+    float a = 1 - age / 0.3f;
+    s.line(ox, oy, ex, ey, 3, Color{0.2f, 0.45f, 0.15f, 0.8f * a});
+    s.line(ox, oy, ex, ey, 1, c.alpha(a));
+    for (double k = 10; k < reach; k += 7) {
+      double side = std::fmod(k, 14) < 7 ? 1 : -1;
+      double tx = ox + dx * k, ty = oy + dy * k;
+      s.line(tx, ty, tx - dy * 4 * side + dx * 2, ty + dx * 4 * side + dy * 2,
+             1, Color{0.85f, 1, 0.6f, a});
+    }
+  } else if (kind == 6) {
+    float a = std::min(1.0f, (0.65f - age) * 4), w = 2.0f + (count - 1);
+    double sx = -dy, sy = dx, shift = std::sin(age * 30) * 1.5;
+    const Color hues[] = {{1, 0.4f, 0.55f, 0.5f}, {0.4f, 1, 0.6f, 0.5f},
+                          {0.45f, 0.6f, 1, 0.5f}};
+    for (int i = 0; i < 3; i++) {
+      double o = (i - 1) * (w + 1) + shift * (i - 1);
+      s.line(ox + sx * o, oy + sy * o, ex + sx * o, ey + sy * o, w,
+             hues[i].alpha(0.5f * a));
+    }
+    s.line(ox, oy, ex, ey, std::max(1.0f, w - 1), col::white.alpha(0.9f * a));
+  } else if (kind == 7) {
+    s.color(c.alpha(0.4f));
+    s.center(atlas::Glow, xp, yp, 16 / float(atlas::Glow.w));
+    s.color(col::white);
+    s.particle(atlas::pt::Wisp, xp, yp, Color{0.75f, 1, 0.95f, 1}, 1,
+               float(std::atan2(-dx, dy)) + 0.2f * std::sin(age * 14));
+  } else {
+    if (kind == 1) {
+      double rx = x - ox, ry = y - oy;
+      for (int i = 0; i < 8; i += 2)
+        s.line(ox + rx * i / 8, oy + ry * i / 8 + std::sin(age * 9 + i) * 1.5,
+               ox + rx * (i + 1) / 8, oy + ry * (i + 1) / 8, 1,
+               Color{0.8f, 0.7f, 0.5f, 0.7f});
+    }
+    if (kind == 3)
+      for (int i = 2; i >= 1; i--) {
+        s.color(c.alpha(0.2f * float(3 - i)));
+        s.center(atlas::expansion(14 + kind), xp - dx * 6 * i, yp - dy * 6 * i,
+                 1, (age - 0.04f * i) * 18);
+      }
+    s.color(kind == 0 ? col::white : c);
     s.center(atlas::expansion(14 + kind), xp, yp, 1,
-             kind == 3 ? age * 18 : float(std::atan2(dy, dx)));
+             kind == 3 ? age * 18 : kind == 0 ? age * 12 : float(std::atan2(dy, dx)));
   }
   s.color(col::white);
 }

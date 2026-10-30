@@ -3,6 +3,8 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Shockwave.hpp"
+#include "particle/Flourish.hpp"
 #include "particle/Spark.hpp"
 #include "entity/pickup/Potion.hpp"
 #include "entity/projectile/Bomb.hpp"
@@ -20,6 +22,10 @@ Alchemist::Alchemist()
 
 void Alchemist::cast(Player &p) const {
   p.heal(25);
+  flourish::scatter(*p.level, p.x, p.bodyY(), atlas::pt::Bubble, col::white,
+                    10, 50, -60);
+  p.level->add<Shockwave>(p.x, p.bodyY(), 4, 36, 0.35f,
+                          Color{0.6f, 1, 0.4f, 0.8f}, false);
   for (int i = 0; i < 3; i++) {
     double dir = TAU * i / 3 + rng.range(0, 1), r = rng.range(50, 90);
     p.level->add<Bomb>(p.x, p.bodyY(), p.x + std::cos(dir) * r,

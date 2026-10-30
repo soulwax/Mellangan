@@ -28,4 +28,8 @@ public:
 private:
   bool hitBefore(entt::entity id) const;
   void strike(Enemy &e);
+  void born();
+  void trail();
+  void blast();
+  void impact(Enemy &e);
 };

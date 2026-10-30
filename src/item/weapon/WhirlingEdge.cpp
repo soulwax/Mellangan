@@ -20,7 +20,8 @@ void WhirlingEdge::tick(Player &p) {
   p.level
       ->add<Sweep>(p, 30.0f + 6 * (at(level, 3) + at(level, 5)),
                    (14.0f + 6 * (at(level, 2) + at(level, 4))) * p.might *
-                       power)
+                       power,
+                   SweepStyle::Steel)
       ->source = this;
   Sound::slash.play(0.3f);
 }

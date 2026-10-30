@@ -41,6 +41,7 @@ public:
 
   WorldMode worldMode = WorldMode::Classic;
   std::string seedCode, arm;
+  int heroPick = -1;
   std::vector<PastWorld> history;
   Codex codex;
   float best = 0;

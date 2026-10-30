@@ -22,6 +22,14 @@ void Knife::tick() {
 }
 
 void Knife::render(Screen &s) {
+  double cy = player.bodyY();
+  for (int i = 2; i >= 1; i--) {
+    float a = angle - i * 0.22f;
+    s.color(Color{0.8f, 0.88f, 1, 0.18f * float(3 - i)});
+    s.center(atlas::tile(atlas::t::Dagger), player.x + std::cos(a) * 34,
+             cy + std::sin(a) * 34, 1, a + PI);
+  }
+  s.color(col::white);
   s.center(atlas::tile(atlas::t::Dagger), xp, yp, 1, angle + PI);
 }
 

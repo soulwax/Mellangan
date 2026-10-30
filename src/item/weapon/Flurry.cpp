@@ -16,7 +16,7 @@ Flurry::Flurry()
 void Flurry::tick(Player &p) {
   if (pending > 0 && (gap -= DT) <= 0) {
     pending--, gap = 0.12f, side = -side;
-    p.level->add<Slash>(p, side, dmg, 0.9f)->source = this;
+    p.level->add<Slash>(p, side, dmg, 0.9f, SlashStyle::Flurry)->source = this;
     Sound::slash.play(0.2f);
   }
   if ((cd -= DT) > 0)

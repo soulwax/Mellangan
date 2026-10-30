@@ -6,6 +6,46 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.7] - 2026-10-30
+
+### Changed
+
+- Each blade has its own trail. The Moon Blade sheds silver crescents and glints (violet once evolved), Crusader Strike is a gold double cleave that throws sparks, pebbles and dust, and Flurry and Dance of Blades scatter pink petals.
+- Whirling Edge and Riposte spin a ring of ghostly swords trailing petals instead of the Reaper's scythe; the Reaper's Scythe and Death's Embrace leave crimson ghost blades in dark smoke, and the Knight's Rally sweeps in gold sparks.
+- Hunter's Bow arrows trail a green wind streak and shed leaves, Piercing Shots are heavy steel arrows that ring out at every foe they pass through, and Scattershot fans out a burst of feathers.
+- Hurled Axes leave a spinning afterimage and knock out chips, Chakrams whirl inside a blue ring trailing sparks, Glaive thrusts streak the air, Orbiting Knives leave a short motion blur, and the Censer releases drifting puffs of incense.
+- Melee slashes are a crisp pixel crescent instead of a soft gradient.
+- The eight newer weapons each have their own look:
+  - Ricochet Sling stones kick up dust and pebbles at every bounce.
+  - Harpoons trail a rope and splash droplets.
+  - Ground Sigil is a turning rune circle that ripples frost on every pulse.
+  - Boomerangs leave an afterimage and gusts of wind.
+  - Mortar shells drop onto a gold landing ring with a smoke trail and blast a smoking crater.
+  - Thorn Lash is a thorny vine that sheds leaves.
+  - Prism Beam is a shimmering three-colour ray that sparkles at its end.
+  - Spirit Swarm sends trailing teal wisps that mark what they hit.
+- Every class skill has a signature moment:
+  - Blink leaves a violet afterimage, a trail of stars and an arcane sigil where you land.
+  - Volley fans out leaves with a burst of wind.
+  - Rally wraps you in a golden shield for exactly as long as you are untouchable, over a sunburst.
+  - Elixir bubbles up green.
+  - Thunderclap marks the ground beneath you with a storm sigil.
+  - Death's Embrace pulls crimson souls out of every foe it catches, in a burst of dark smoke.
+  - Sanctuary is a gold sunburst that lifts holy glints.
+  - Dance of Blades and Broadside leave an afterimage and a trail of petals or sea spray along the dash.
+  - Rootbound lashes green vines to every foe it slows and throws leaves.
+  - Sentry lands with a ring and flying chips.
+  - Revelation sweeps a violet wave and stars the foes it marks.
+
+### Added
+
+- Developer flag `--hero N` (with `--dev`) starts runs as class N (0 Mage … 11 Corsair) without changing the saved class choice.
+
+### Fixed
+
+- Savanna, Ashlands, Crystal Fields, Fungal Wood, Badlands and Taiga have their own ground again (straw, ash, crystal moss, mycelium, lava, red clay and needles). Since 0.5.0 they drew a dark empty floor, because the standalone expansion art tool dropped the ground sets from the atlas. The tool now runs the full pipeline, and the atlas check rejects empty bands.
+- Effects that carry information (lightning arcs, rings, ground marks, healing motes) no longer disappear at random with reduced particles turned on.
+
 ## [0.5.6] - 2026-10-29
 
 ### Added

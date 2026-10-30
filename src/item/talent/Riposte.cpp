@@ -15,6 +15,6 @@ float Riposte::guard(Player &p, float damage) {
   if (!rng.chance(0.08f * level))
     return damage;
   p.invuln = std::max(p.invuln, 0.4f);
-  p.level->add<Sweep>(p, 40, 30 * p.might)->source = this;
+  p.level->add<Sweep>(p, 40, 30 * p.might, SweepStyle::Steel)->source = this;
   return 0;
 }

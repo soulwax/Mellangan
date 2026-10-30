@@ -104,11 +104,14 @@ def slash(w, h):
     def fn(x, y):
         d1 = math.hypot(x - c1x, y - cy)
         d2 = math.hypot(x - c2x, y - cy)
-        inside = smoothstep(r1 + 0.8, r1 - 0.8, d1) * smoothstep(r2 - 0.8, r2 + 0.8, d2)
+        if d1 > r1 or d2 < r2:
+            return 0, 0, 0, 0
         tip = clamp01(1 - abs(y - cy) / (h / 2))
-        edge = smoothstep(r1 - 5, r1, d1)
-        v = 0.7 + 0.3 * edge
-        return v, v, v, inside * (tip ** 0.6)
+        if tip < 0.12:
+            return 0, 0, 0, 0
+        edge = r1 - d1 < 1.5
+        v = 1.0 if edge else 0.72
+        return v, v, v, 1.0 if edge or tip > 0.45 else 0.55
 
     return field(w, h, fn)
 

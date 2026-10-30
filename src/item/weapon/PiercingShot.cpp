@@ -26,7 +26,7 @@ void PiercingShot::tick(Player &p) {
     double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x) + i * 0.08;
     p.level
         ->add<Arrow>(p.x, p.bodyY(), std::cos(dir) * 420, std::sin(dir) * 420,
-                     dmg, 8 + 4 * at(level, 3))
+                     dmg, 8 + 4 * at(level, 3), ArrowStyle::Piercing)
         ->source = this;
   }
   Sound::bow.play(0.4f);

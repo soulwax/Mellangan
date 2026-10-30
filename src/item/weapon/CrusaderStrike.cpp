@@ -19,7 +19,7 @@ void CrusaderStrike::tick(Player &p) {
   cd = (level >= 4 ? 1.8f : 2.4f) * p.haste * pace;
   float dmg = (34.0f + 12 * (at(level, 2) + at(level, 5))) * p.might * power,
         scale = 1.5f + 0.25f * (at(level, 3) + at(level, 5));
-  p.level->add<Slash>(p, 1, dmg, scale)->source = this;
-  p.level->add<Slash>(p, -1, dmg, scale)->source = this;
+  p.level->add<Slash>(p, 1, dmg, scale, SlashStyle::Crusader)->source = this;
+  p.level->add<Slash>(p, -1, dmg, scale, SlashStyle::Crusader)->source = this;
   Sound::slash.play(0.4f);
 }

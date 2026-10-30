@@ -3,6 +3,7 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Flourish.hpp"
 #include "particle/Spark.hpp"
 
 namespace {
@@ -23,6 +24,10 @@ void Priestess::cast(Player &p) const {
     if (xd * xd + yd * yd < 90 * 90)
       e.hurt(40 * p.might, xd, yd, 220);
   });
-  Spark::burst(*p.level, p.x, p.bodyY(), {1, 0.92f, 0.6f, 1}, 30, 170, true);
+  constexpr Color HOLY{1, 0.9f, 0.55f, 1};
+  flourish::sigil(*p.level, p.x, p.bodyY(), 90, HOLY, 16);
+  flourish::scatter(*p.level, p.x, p.bodyY(), atlas::pt::HolyGlint, HOLY, 12,
+                    40, -50);
+  Spark::burst(*p.level, p.x, p.bodyY(), HOLY, 12, 170, true);
   Sound::nova.play(0.5f, 0);
 }

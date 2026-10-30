@@ -5,6 +5,12 @@
 #include "entity/projectile/Arrow.hpp"
 #include "entity/projectile/Bolt.hpp"
 #include "level/Level.hpp"
+#include "particle/debris/Chip.hpp"
+#include "particle/Shockwave.hpp"
+#include "particle/Mark.hpp"
+#include "particle/Flourish.hpp"
+#include "particle/Drift.hpp"
+#include "particle/Arc.hpp"
 #include "particle/Spark.hpp"
 
 namespace {
@@ -101,13 +107,22 @@ void ExpansionHero::cast(Player &p) const {
         return;
       e.afflict(StatusKind::Chill, 2, 0.65f);
       e.hurt(28 * p.might, xd, yd, 75);
+      double d = std::max(1.0, std::sqrt(xd * xd + yd * yd));
+      p.level->add<Arc>(std::vector<ArcNode>{{p.x + xd / d * 12, p.y + yd / d * 12},
+                                             {e.x, e.y}},
+                        0.3f, Color{0.35f, 0.75f, 0.25f, 1});
     });
-    Spark::burst(*p.level, p.x, p.bodyY(), {0.45f, 0.9f, 0.4f, 1}, 24, 125,
-                 true);
+    flourish::sigil(*p.level, p.x, p.y, 85, Color{0.45f, 0.9f, 0.4f, 1}, 0);
+    flourish::scatter(*p.level, p.x, p.bodyY(), atlas::pt::Leaf, col::white, 12,
+                      90, 30);
     Sound::nova.play(0.4f);
   } else if (variant == 1) {
     p.level->add<Sentry>(p.x, p.y, 16 * p.might);
-    Spark::burst(*p.level, p.x, p.y, col::gold, 15, 75, true);
+    p.level->add<Shockwave>(p.x, p.y, 4, 30, 0.3f, col::gold, false);
+    for (int i = 0; i < 6 && Debris::room(); i++)
+      p.level->add<Chip>(p.x, p.y, 4, atlas::pt::Pebble,
+                         Color{1, 0.85f, 0.55f, 1}, 1);
+    Spark::burst(*p.level, p.x, p.y, col::gold, 8, 75, true);
     Sound::cast.play(0.4f);
   } else if (variant == 2) {
     p.level->enemiesNear(p.x, p.y, 184, [&](Enemy &e) {
@@ -115,24 +130,40 @@ void ExpansionHero::cast(Player &p) const {
       if (xd * xd + yd * yd <= 160 * 160) {
         e.afflict(StatusKind::Marked, 5, 0.35f);
         e.afflict(StatusKind::Chill, 1, 0.2f);
+        if (rng.chance(0.5f))
+          p.level->add<Mark>(e.x, e.bodyY() - 12, 1.2f, atlas::pt::ArcaneStar,
+                             Color{0.85f, 0.7f, 1, 1}, 1, 0);
       }
     });
-    Spark::burst(*p.level, p.x, p.bodyY(), {0.8f, 0.6f, 1, 1}, 32, 200, true);
+    p.level->add<Shockwave>(p.x, p.bodyY(), 10, 160, 0.6f,
+                            Color{0.8f, 0.6f, 1, 0.8f});
+    flourish::sigil(*p.level, p.x, p.bodyY(), 50, Color{0.8f, 0.6f, 1, 1}, 8);
     Sound::cast.play(0.5f);
   } else {
     double dir = std::atan2(p.yAim, p.xAim);
     for (int i = -2; i <= 2; i++) {
       double a = dir + i * 0.16;
       p.level->add<Arrow>(p.x, p.bodyY(), std::cos(a) * 270,
-                          std::sin(a) * 270, 24 * p.might, 3);
+                          std::sin(a) * 270, 24 * p.might, 3,
+                          ArrowStyle::Piercing);
     }
+    double x0 = p.x, y0 = p.bodyY();
+    flourish::echo(*p.level, p.x, p.y, sprite(), Color{0.4f, 0.85f, 1, 1});
     for (int i = 0; i < 8; i++) {
       p.x += std::cos(dir) * 4;
       p.y += std::sin(dir) * 4;
       p.level->collide(p.x, p.y, p.radius);
     }
     p.invuln = std::max(p.invuln, 0.6f);
-    Spark::burst(*p.level, p.x, p.bodyY(), {0.4f, 0.85f, 1, 1}, 16, 90, false);
+    flourish::streak(*p.level, x0, y0, p.x, p.bodyY(), atlas::pt::Puff,
+                     Color{0.85f, 0.95f, 1, 0.6f}, 5);
+    for (int i = 0; i < 6 && Drift::room(); i++) {
+      Drift *d = p.level->add<Drift>(x0, y0, -std::cos(dir) * 60 + rng.range(-30, 30),
+                                     -std::sin(dir) * 60 - rng.range(20, 50),
+                                     atlas::pt::FrostGlint,
+                                     Color{0.4f, 0.85f, 1, 1}, 0.45f);
+      d->gravity = 200, d->drag = 0.5f, d->scale = 0.6f;
+    }
     Sound::axe.play(0.5f);
   }
 }

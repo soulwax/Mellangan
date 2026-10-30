@@ -125,6 +125,9 @@ def validate(atlas):
     px = atlas.load()
     if px is not None and atlas.size == (width, height):
         for band in BANDS:
+            box = (band.x, band.y, band.x + band.width, band.y + band.height)
+            if atlas.crop(box).getbbox() is None:
+                errors.append(f"{band.name} band is empty; a generator step dropped it")
             for row in range(band.rows):
                 for col in range(band.cols):
                     x = band.x + col * CELL

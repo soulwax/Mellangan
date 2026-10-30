@@ -17,7 +17,10 @@ Player::Player() : upgrades(Upgrade::all()) { hp = maxHp = 100; }
 Player::~Player() = default;
 
 void Player::onAdded() {
-  hero = &heroOf(level->game.codex);
+  Game &g = level->game;
+  hero = g.dev && g.heroPick >= 0 && g.heroPick < HERO_COUNT
+             ? HEROES[g.heroPick]
+             : &heroOf(g.codex);
   hero->equip(*this);
   for (auto &u : upgrades)
     if (std::strcmp(u->name, hero->weapon) == 0)

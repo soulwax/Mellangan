@@ -151,6 +151,8 @@ int main(int argc, char **argv) {
       game.bench.enabled |= std::string_view(argv[i]) == "--bench";
       if (std::string_view(argv[i]) == "--arm" && i + 1 < argc)
         game.arm = argv[++i];
+      if (std::string_view(argv[i]) == "--hero" && i + 1 < argc)
+        game.heroPick = std::atoi(argv[++i]);
     }
     if (game.dev)
       spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world "

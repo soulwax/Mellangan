@@ -3,6 +3,7 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Flourish.hpp"
 #include "particle/Spark.hpp"
 
 namespace {
@@ -28,10 +29,16 @@ void burst(Player &p) {
 } // namespace
 
 void Mage::cast(Player &p) const {
+  constexpr Color ARCANE{0.72f, 0.45f, 1, 1};
+  double x0 = p.x, y0 = p.bodyY();
   burst(p);
+  flourish::echo(*p.level, p.x, p.y, sprite(), ARCANE);
   p.x += p.xAim * 90, p.y += p.yAim * 90;
   p.level->collide(p.x, p.y, p.radius);
   p.invuln = std::max(p.invuln, 0.4f);
+  flourish::streak(*p.level, x0, y0, p.x, p.bodyY(), atlas::pt::ArcaneStar,
+                   ARCANE, 7);
+  flourish::sigil(*p.level, p.x, p.bodyY(), 60, ARCANE, 6);
   burst(p);
   Sound::cast.play(0.6f, 0);
 }

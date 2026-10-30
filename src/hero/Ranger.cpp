@@ -3,6 +3,8 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Shockwave.hpp"
+#include "particle/Drift.hpp"
 #include "particle/Spark.hpp"
 #include "entity/projectile/Arrow.hpp"
 
@@ -23,7 +25,15 @@ void Ranger::cast(Player &p) const {
     double dir = aim + (i - 5) * 0.09;
     p.level->add<Arrow>(p.x, p.bodyY(), std::cos(dir) * 360,
                         std::sin(dir) * 360, 18 * p.might, 3);
+    if (i % 2 == 0 && Drift::room()) {
+      Drift *d = p.level->add<Drift>(p.x, p.bodyY(), std::cos(dir) * 110,
+                                     std::sin(dir) * 110, atlas::pt::Leaf,
+                                     col::white, rng.range(0.5f, 0.8f));
+      d->spin = rng.range(-4, 4), d->sway = 10, d->gravity = 20;
+    }
   }
+  p.level->add<Shockwave>(p.x, p.bodyY(), 8, 40, 0.3f,
+                          Color{0.6f, 0.95f, 0.5f, 0.7f}, false);
   Sound::bow.play(0.7f, 0);
 }
 

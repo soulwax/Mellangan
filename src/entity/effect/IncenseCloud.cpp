@@ -4,6 +4,7 @@
 
 #include "entity/enemy/Enemy.hpp"
 #include "level/Level.hpp"
+#include "particle/Drift.hpp"
 #include "particle/Spark.hpp"
 
 IncenseCloud::IncenseCloud(double x, double y, double vx, double vy, float radius,
@@ -31,7 +32,15 @@ void IncenseCloud::tick() {
     });
   }
 
-  if (rng.chance(0.8f) && Spark::alive < 500) {
+  if (rng.chance(0.13f) && Drift::room()) {
+    float dir = rng.range(0, TAU), r = std::sqrt(rng.range(0.0f, 1.0f)) * radius;
+    Drift *d = level->add<Drift>(x + std::cos(dir) * r, y + std::sin(dir) * r,
+                                 rng.range(-4, 4), -rng.range(6, 14),
+                                 atlas::pt::Puff, Color{1, 0.92f, 0.7f, 0.4f},
+                                 rng.range(0.8f, 1.3f));
+    d->grow = 1.1f, d->scale = 0.7f, d->sway = 6, d->spin = rng.range(-1, 1);
+  }
+  if (rng.chance(0.3f) && Spark::alive < 500) {
     float dir = rng.range(0, TAU), r = std::sqrt(rng.range(0.0f, 1.0f)) * radius;
     level->add<Spark>(x + std::cos(dir) * r, y + std::sin(dir) * r,
                       rng.range(-4, 4), -rng.range(10, 24),
@@ -42,7 +51,7 @@ void IncenseCloud::tick() {
 
 void IncenseCloud::render(Screen &s) {
   float fade = std::min(1.0f, life * 1.8f) * std::min(1.0f, (maxLife - life) * 5.0f);
-  s.color(Color{0.95f, 0.8f, 0.35f, 0.12f * fade});
+  s.color(Color{0.95f, 0.8f, 0.35f, 0.08f * fade});
   s.center(atlas::Glow, xp, yp, radius * 2.2f / atlas::Glow.w);
   s.color(col::white);
 }

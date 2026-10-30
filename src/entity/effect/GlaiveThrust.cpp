@@ -57,6 +57,14 @@ void GlaiveThrust::tick() {
 void GlaiveThrust::render(Screen &s) {
   float ext = std::sin(std::min(t, 1.0f) * PI) * reach;
   float rot = float(std::atan2(dy, dx)) + PI * 0.25f;
+  float a = 0.45f * (1 - std::min(t, 1.0f));
+  double by = player.bodyY();
+  for (int i = -1; i <= 1; i++) {
+    double ox = -dy * 4 * i, oy = dx * 4 * i, from = 8 + 6 * std::abs(i);
+    s.line(player.x + dx * from + ox, by + dy * from + oy,
+           player.x + dx * (ext - 4) + ox, by + dy * (ext - 4) + oy,
+           i == 0 ? 2.0f : 1.0f, Color{1, 0.95f, 0.8f, i == 0 ? a : a * 0.6f});
+  }
   s.center(atlas::frontier(atlas::fr::Glaive), player.x + dx * ext,
            player.bodyY() + dy * ext, 1.25f, rot);
   if (doubleEnded) {

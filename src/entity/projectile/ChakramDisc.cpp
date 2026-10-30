@@ -4,6 +4,7 @@
 
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Spark.hpp"
 
 ChakramDisc::ChakramDisc(double x, double y, double vx, double vy, float damage,
                          int pierce)
@@ -34,9 +35,14 @@ void ChakramDisc::tick() {
   y += ya * DT;
   rot += 24 * DT;
   collide();
+  if (rng.chance(0.4f) && Spark::alive < 600)
+    level->add<Spark>(x, y, -xa * 0.1, -ya * 0.1, Color{0.55f, 0.85f, 1, 1},
+                      0.25f, 0.35f, false);
 }
 
 void ChakramDisc::render(Screen &s) {
+  float whirl = 0.5f + 0.25f * std::sin(rot * 2);
+  s.ring(xp, yp, 8, Color{0.6f, 0.88f, 1, whirl});
   s.center(atlas::frontier(atlas::fr::Chakram), xp, yp, 1, rot);
 }
 

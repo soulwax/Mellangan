@@ -4,6 +4,7 @@
 #include "entity/Player.hpp"
 #include "entity/projectile/Arrow.hpp"
 #include "level/Level.hpp"
+#include "particle/Drift.hpp"
 
 Scattershot::Scattershot()
     : Upgrade("Scattershot", atlas::town(atlas::tt::Bow),
@@ -23,8 +24,15 @@ void Scattershot::tick(Player &p) {
     double dir = TAU * i / n + p.level->time;
     p.level
         ->add<Arrow>(p.x, p.bodyY(), std::cos(dir) * 300, std::sin(dir) * 300,
-                     dmg, 2 + 2 * at(level, 5))
+                     dmg, 2 + 2 * at(level, 5), ArrowStyle::Scatter)
         ->source = this;
+    if (i % 2 == 0 && Drift::room()) {
+      Drift *d = p.level->add<Drift>(p.x, p.bodyY(), std::cos(dir) * 70,
+                                     std::sin(dir) * 70, atlas::pt::Feather,
+                                     col::white, rng.range(0.5f, 0.8f));
+      d->rot = float(dir) + PI * 0.75f, d->spin = rng.range(-2, 2);
+      d->sway = 8, d->gravity = 25;
+    }
   }
   Sound::bow.play(0.3f);
 }

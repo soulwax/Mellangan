@@ -190,7 +190,8 @@ constexpr Sprite digit(int d) { return {float(176 + d * 5), 220, 5, 7}; }
 namespace pt {
 constexpr int IceShard = 32, Snowflake = 33, FrostGlint = 34, Rock = 35,
               Pebble = 36, MeteorCore = 37, Ember = 38, ArcaneStar = 39,
-              Wisp = 40, Rune = 41, HolyGlint = 42, Coin = 43, Bubble = 44;
+              Wisp = 40, Rune = 41, HolyGlint = 42, Coin = 43, Bubble = 44, Petal = 45,
+              Leaf = 46, Feather = 47, Puff = 48, Crescent = 49;
 } // namespace pt
 
 namespace tt {

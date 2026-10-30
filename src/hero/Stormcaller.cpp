@@ -4,6 +4,7 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Flourish.hpp"
 #include "particle/Spark.hpp"
 #include "entity/effect/Strike.hpp"
 
@@ -34,7 +35,7 @@ void strike(Player &p, int count, float damage) {
 
 void Stormcaller::cast(Player &p) const {
   strike(p, 6, 50);
-  p.level->game.onExplosion();
+  flourish::sigil(*p.level, p.x, p.bodyY(), 90, Color{0.6f, 0.82f, 1, 1}, 6);  p.level->game.onExplosion();
 }
 
 void Stormcaller::slay(Player &p, Enemy &) const {

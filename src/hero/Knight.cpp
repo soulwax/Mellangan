@@ -3,6 +3,8 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
+#include "particle/Flourish.hpp"
+#include "entity/effect/Ward.hpp"
 #include "particle/Spark.hpp"
 #include "entity/effect/Sweep.hpp"
 
@@ -18,9 +20,11 @@ Knight::Knight()
             {"Moon Blade", "Iron Buckler", "Heartroot"}}) {}
 
 void Knight::cast(Player &p) const {
-  p.level->add<Sweep>(p, 54, 45 * p.might);
+  p.level->add<Sweep>(p, 54, 45 * p.might, SweepStyle::Rally);
   p.invuln = std::max(p.invuln, 1.5f);
-  Spark::burst(*p.level, p.x, p.bodyY(), col::gold, 20, 120, true);
+  p.level->add<Ward>(p, 1.5f);
+  flourish::sigil(*p.level, p.x, p.bodyY(), 70, col::gold, 12);
+  Spark::burst(*p.level, p.x, p.bodyY(), col::gold, 10, 120, true);
   Sound::scythe.play(0.6f, 0);
 }
 

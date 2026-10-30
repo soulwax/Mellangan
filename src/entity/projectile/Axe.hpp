@@ -12,4 +12,5 @@ public:
 
 private:
   float rot = 0, spin;
+  size_t chopped = 0;
 };

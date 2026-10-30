@@ -920,8 +920,11 @@ def catalogue(atlas, path, zoom=1):
 def main():
     root = Path(__file__).resolve().parent.parent
     atlas_path = root / "res" / "atlas.png"
+    from make_frontier import add_frontier
+    from make_grounds import add_grounds
+
     before = Image.open(atlas_path).convert("RGBA")
-    after = add_expansion(add_sprites(before))
+    after = add_expansion(add_frontier(add_grounds(add_sprites(before))))
     errors = validate(after)
     if errors:
         raise RuntimeError("invalid atlas layout:\n" + "\n".join(errors))
