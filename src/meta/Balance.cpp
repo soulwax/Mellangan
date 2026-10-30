@@ -48,11 +48,10 @@ const char *const NAMES[] = {"too_young", "not_too_rough", "hurt_me_plenty",
                              "ultra_violence", "nightmare"};
 const char *const TITLES[] = {"I'M TOO YOUNG TO DIE", "HEY, NOT TOO ROUGH",
                               "HURT ME PLENTY", "ULTRA-VIOLENCE", "NIGHTMARE!"};
-const char *const BLURBS[] = {"the night forgives almost everything",
-                              "a gentle night to learn the land",
-                              "the night as it was meant to be",
-                              "for those who walked it many times",
-                              "foes are swift, elites are many"};
+const char *const BLURBS[] = {"I play with dolls like a little girl",
+                              "be gentle, senpai", "I like it rough",
+                              "I like it rougher",
+                              "Give it to me hard and fast, daddy"};
 static_assert(std::size(NAMES) == int(Difficulty::Count));
 
 std::string trim(const std::string &s) {
@@ -96,7 +95,8 @@ void Balance::load(const std::string &text, Difficulty tier) {
     size_t eq = line.find('=');
     if (eq == std::string::npos)
       continue;
-    std::string key = trim(line.substr(0, eq)), value = trim(line.substr(eq + 1));
+    std::string key = trim(line.substr(0, eq)),
+                value = trim(line.substr(eq + 1));
     bool known = false;
     for (const Field &f : FIELDS)
       if (key == f.key)
