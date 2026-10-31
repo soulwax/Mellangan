@@ -40,6 +40,7 @@ BANDS = (
     Band("expansion actors", 0, 624, 24, 2),
     Band("expansion biome props", 0, 660, 24, 2),
     Band("expansion biome grounds", 0, 696, 24, 5),
+    Band("dirt rims", 0, 786, 24, 6),
 )
 
 EXPANSION_ACTORS = {

@@ -10,6 +10,9 @@ public:
   Sprite transitionGround(int kind) const override {
     return atlas::biomeGround(index, kind);
   }
+  Sprite dirtRim(int offset) const override {
+    return atlas::dirtEdge(6 + index, offset);
+  }
 };
 
 const Biome *expansionBiome(int index);

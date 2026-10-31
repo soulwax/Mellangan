@@ -382,7 +382,7 @@ void Level::renderFloor(Screen &s) {
       return;
     int mask = int(sky.poolAt(x, y - 1)) | sky.poolAt(x, y + 1) << 1 |
                sky.poolAt(x - 1, y) << 2 | sky.poolAt(x + 1, y) << 3;
-    s.color({0.5f * shade, 0.58f * shade, 0.76f * shade, 0.94f});
+    s.color({0.4f * shade, 0.47f * shade, 0.64f * shade, 0.94f});
     s.sprite(atlas::waterRim(world::rim(mask)), x * 16, y * 16, 0, 0);
   };
   auto settle = [&](int x, int y, float shade) {

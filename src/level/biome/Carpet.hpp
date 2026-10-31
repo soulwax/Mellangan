@@ -10,6 +10,9 @@ public:
   Sprite transitionGround(int kind) const override {
     return atlas::carpet(set, kind);
   }
+  Sprite dirtRim(int offset) const override {
+    return atlas::dirtEdge(set < atlas::cp::Lava ? set : set - 1, offset);
+  }
 
 protected:
   BiomeId self;

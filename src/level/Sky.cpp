@@ -107,12 +107,23 @@ float Sky::local(float x, float y) const {
 }
 
 float Sky::lowland(int x, int y) {
-  return clampf(0.5f + noise_fbm(x * 0.07f + 13.1f, y * 0.07f - 4.7f, 2, 917),
-                0, 1);
+  struct Slot {
+    int x, y;
+    uint32_t salt;
+    float v;
+  };
+  static Slot cache[4096];
+  Slot &c = cache[(hash2(x, y) ^ noise_salt) & 4095];
+  if (c.x != x || c.y != y || c.salt != noise_salt + 1)
+    c = {x, y, noise_salt + 1,
+         clampf(0.5f + noise_fbm(x * 0.07f + 13.1f, y * 0.07f - 4.7f, 2, 917),
+                0, 1)};
+  return c.v;
 }
 
 float Sky::puddle(int x, int y) const {
-  if (laid != Front::Rain || cover <= 0.02f || hash2(x * 7 + 1, y * 13 + 5) % 2)
+  if (laid != Front::Rain || cover <= 0.02f || hash2(x * 7 + 1, y * 13 + 5) % 2 ||
+      poolAt(x, y))
     return 0;
   return clampf((lowland(x, y) - 0.66f + 0.32f * cover) * 7, 0, 1) * cover;
 }
@@ -123,7 +134,7 @@ float Sky::flood() const {
 
 bool Sky::poolAt(int x, int y) const {
   float depth = flood();
-  return depth > 0 && lowland(x, y) > 0.9f - 0.34f * depth;
+  return depth > 0 && lowland(x, y) > 0.92f - 0.2f * depth;
 }
 
 int Sky::sway(double x, double y, float time) const {

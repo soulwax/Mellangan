@@ -6,7 +6,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.5.10] - 2026-10-30
+## [0.5.10] - 2026-10-31
 
 ### Added
 
@@ -94,7 +94,7 @@ All notable changes to Mellangan are documented here. The format follows
 ### Changed
 
 - Region events are defined in one table, which makes each event easy to tune.
-- The world is calmer. Biomes now form large, coherent regions about four screens across, with organic borders, instead of a patchwork of thin strips and stray patches. The ten newer biomes form their own wild lands rather than ribbons running through everything else, and the dark lands (Ashlands, Crystal Fields, Fungal Wood and Barrows) no longer have green meadow holes inside them. The ten newer biomes also no longer scatter grass-rimmed dirt patches across their ground. The map has about 92% fewer biome borders, and the start area stays gentle. World layouts differ from earlier versions.
+- The world is calmer. Biomes now form large, coherent regions about four screens across, with organic borders, instead of a patchwork of thin strips and stray patches. The ten newer biomes form their own wild lands rather than ribbons running through everything else, and the dark lands (Ashlands, Crystal Fields, Fungal Wood and Barrows) no longer have green meadow holes inside them. The ten newer biomes also no longer scatter grass-rimmed dirt patches across their ground. Mines, ruins and camps in lands without grass no longer sit in a green frame: their dirt yards now blend into the local ground (ash, crystal moss, mycelium, red clay, needles, straw and each of the ten newer grounds), and the dirt itself takes on that land's tone. The map has about 92% fewer biome borders, and the start area stays gentle. World layouts differ from earlier versions.
 
 ## [0.5.9] - 2026-10-30
 
