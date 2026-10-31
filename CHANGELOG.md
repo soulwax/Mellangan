@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.11] - 2026-10-31
+
 ### Added
 
 - The Mage gains seven signature weapons (Ember Lance, Hoarfrost Fan, Arcane Orbit, Starfall, Void Rift, Seeker Runes, Flame Ring) and four new skills (Time Warp, Mana Surge, Arcane Missiles, Singularity), each with its own icon and effects.

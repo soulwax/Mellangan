@@ -17,9 +17,9 @@ Enemies can have their own type of attacks, upgrades, passives and abilities.
 
 | Title screen | Class selection |
 | --- | --- |
-| ![Mellangan title screen and world selection](static/screenshots/01-title.png) | ![Choosing the Mage class](static/screenshots/02-classes.png) |
+| [![Mellangan title screen and world selection](static/screenshots/01-title.png)](static/screenshots/01-title.png) | [![Choosing the Mage class](static/screenshots/02-classes.png)](static/screenshots/02-classes.png) |
 | Combat and exploration | Upgrades |
-| ![Surviving enemies in the savanna](static/screenshots/03-combat.png) | ![Choosing a level-up upgrade during a run](static/screenshots/04-upgrades.png) |
+| [![Surviving enemies in the savanna](static/screenshots/03-combat.png)](static/screenshots/03-combat.png) | [![Choosing a level-up upgrade during a run](static/screenshots/04-upgrades.png)](static/screenshots/04-upgrades.png) |
 
 ## Building
 
@@ -173,6 +173,7 @@ effects scene without loading or saving player progress.
 `./build/bin/Debug/MellanganApp.exe --test-encounter-view` previews a biome challenge without saving progress.
 `./build/bin/Debug/MellanganApp.exe --test-combat-view` previews combat indicators; V switches particle detail.
 `./build/bin/Debug/MellanganApp.exe --test-arsenal-view` shows the Mage with every recipe weapon at tier 5 against waves of foes and cycles its five skills; 1-5 casts one.
+`./build/bin/Release/MellanganApp.exe --capture-screenshots` captures the 1440x810 screenshot suite into `static/screenshots/`.
 
 - `src/SpriteObject.hpp` – root of everything in the world: position, velocity, pixel position and a sprite
 - `src/entity` – `SpriteObject` → `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, and `Pool.c`
