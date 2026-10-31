@@ -262,15 +262,30 @@ void Game::newGame(bool reroll) {
     armPlayer();
   if (dev && biomePick >= 0 && biomePick < BIOME_COUNT)
     visitBiome();
-  if (dev && lakePick)
-    for (int r = 0, found = 0; r < 2000 && !found; r += 4)
-      for (int i = 0, n = std::max(1, r); i < n && !found; i++) {
+  auto seek = [&](auto fits) {
+    for (int r = 0; r < 2000; r += 4)
+      for (int i = 0, n = std::max(1, r); i < n; i++) {
         double a = TAU * i / n;
         int x = int(std::cos(a) * r), y = int(std::sin(a) * r);
-        if (world::isWater(x, y) && world::isWater(x, y - 2) && !world::isWater(x, y + 3)) {
-          atX = x, atY = y, atPick = found = 1;
+        if (fits(x, y)) {
+          atX = x, atY = y, atPick = true;
+          return;
         }
       }
+  };
+  if (dev && lakePick)
+    seek([](int x, int y) {
+      return world::isWater(x, y) && world::isWater(x, y - 2) &&
+             !world::isWater(x, y + 3);
+    });
+  if (dev && cliffPick)
+    seek([](int x, int y) {
+      for (int dx = -2; dx <= 2; dx++)
+        if (world::heightAt(x + dx, y - 1) <= world::heightAt(x + dx, y))
+          return false;
+      return world::heightAt(x, y + 2) == world::heightAt(x, y) &&
+             !world::isWater(x, y + 2);
+    });
   if (dev && atPick) {
     Player &p = *level->player;
     p.x = atX * 16 + 8, p.y = atY * 16 + 8, xCam = p.x, yCam = p.y;

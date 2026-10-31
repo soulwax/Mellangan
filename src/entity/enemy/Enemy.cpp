@@ -309,6 +309,8 @@ void Enemy::move() {
   spdMul *= status.movement();
   if (!type.floats && level->surfaceAt(x, y) == 1)
     spdMul *= is(EnemyKind::MireLeech) ? 1.2f : 0.5f;
+  if (!type.floats)
+    spdMul *= level->climb(x, y, xWant, yWant);
   x += (xWant * level->pace * spdMul + xa) * DT;
   y += (yWant * level->pace * spdMul + ya) * DT;
   static const double KNOCK_DECAY = std::exp(-9 * DT);

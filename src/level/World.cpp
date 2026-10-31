@@ -37,8 +37,20 @@ enum : uint32_t {
   HAS_RAW_WATER = 1 << 18,
   RAW_WATER = 1 << 19,
   HAS_WATER = 1 << 20,
-  WATER = 1 << 21
+  WATER = 1 << 21,
+  HAS_LEVEL = 1 << 22,
+  LEVEL_SHIFT = 23,
+  HAS_RAW_LEVEL = 1 << 25,
+  RAW_LEVEL_SHIFT = 26
 };
+
+int levelNoise(int x, int y) {
+  float n = noise_fbm(x * 0.0075f - 91.3f, y * 0.0075f + 57.1f, 3, 1301);
+  float d = std::sqrt(float(x) * x + float(y) * y);
+  float lift = clampf((d - 18) / 42, 0, 1);
+  n *= lift * lift * (3 - 2 * lift);
+  return n > 0.34f ? 2 : n > 0.14f ? 1 : 0;
+}
 
 const float LAKES[BIOME_COUNT] = {
     0,     0.04f, 0.02f, -0.06f, 0,     0,     0.02f, 0.16f, -1,
@@ -165,12 +177,22 @@ bool rawDirt(int x, int y) {
 
 bool rawDirtAt(int x, int y, const void *) { return rawDirt(x, y); }
 
+int rawLevel(int x, int y) {
+  TileMemo *m = memoAt(x, y);
+  if (!(m->bits & HAS_RAW_LEVEL)) {
+    int level = levelNoise(x, y);
+    m = memoAt(x, y);
+    m->bits |= HAS_RAW_LEVEL | uint32_t(level) << RAW_LEVEL_SHIFT;
+  }
+  return int(m->bits >> RAW_LEVEL_SHIFT & 3);
+}
+
 bool rawWater(int x, int y) {
   TileMemo *m = memoAt(x, y);
   if (!(m->bits & HAS_RAW_WATER)) {
     Structure s;
     BiomeId b = biomeAt(x, y);
-    bool wet = (std::abs(x) > 10 || std::abs(y) > 10) &&
+    bool wet = (std::abs(x) > 10 || std::abs(y) > 10) && heightAt(x, y) == 0 &&
                !structureAt(x, y, s, 2) && !BIOMES[b]->fixedGround(x, y) &&
                lake(x, y, 0);
     m = memoAt(x, y);
@@ -200,15 +222,30 @@ bool rollStructure(int rx, int ry, Structure *out) {
   int cx = rx * REGION + REGION / 2, cy = ry * REGION + REGION / 2;
   BiomeId id = biomeAt(cx, cy);
   const Biome *b = BIOMES[id];
-  if (int(h % 100) >= b->structureChance || lake(cx, cy, 0.08f))
+  if (int(h % 100) >= b->structureChance || lake(cx, cy, 0.0f))
     return false;
 
   StructureKind kind = pickKind(b, h >> 8);
   int w, ht;
   STRUCTURES[int(kind)].size(h, &w, &ht);
   int spanX = REGION - 4 - w, spanY = REGION - 4 - ht;
-  int x = rx * REGION + 2 + int((h >> 18) % uint32_t(spanX + 1)),
-      y = ry * REGION + 2 + int((h >> 24) % uint32_t(spanY + 1));
+  auto level = [&](int x, int y) {
+    int ground = heightAt(x + w / 2, y + ht / 2);
+    for (int corner = 0; corner < 4; corner++)
+      if (heightAt(corner & 1 ? x + w + 1 : x - 2,
+                   corner & 2 ? y + ht + 1 : y - 2) != ground)
+        return false;
+    return true;
+  };
+  int x = 0, y = 0, tries = 0;
+  for (uint32_t pick = h; tries < 4; tries++, pick = hash2(int(pick), tries)) {
+    x = rx * REGION + 2 + int((pick >> 18) % uint32_t(spanX + 1));
+    y = ry * REGION + 2 + int((pick >> 24) % uint32_t(spanY + 1));
+    if (level(x, y))
+      break;
+  }
+  if (tries == 4)
+    return false;
   if (x - 1 < 6 && x + w + 1 > -6 && y - 1 < 6 && y + ht + 1 > -6)
     return false; // keep the spawn clear
 
@@ -324,6 +361,24 @@ bool isWater(int x, int y) {
     m->bits |= HAS_WATER | (wet ? uint32_t(WATER) : 0u);
   }
   return m->bits & WATER;
+}
+
+int block(int v) { return (v - (v < 0 ? 2 : 0)) / 3; }
+
+int heightAt(int x, int y) {
+  TileMemo *m = memoAt(x, y);
+  if (!(m->bits & HAS_LEVEL)) {
+    int bx = block(x), by = block(y);
+    int level = rawLevel(bx * 3 + 1, by * 3 + 1);
+    m = memoAt(x, y);
+    m->bits |= HAS_LEVEL | uint32_t(level) << LEVEL_SHIFT;
+  }
+  return int(m->bits >> LEVEL_SHIFT & 3);
+}
+
+bool isRamp(int x, int y) {
+  return heightAt(x, y) > heightAt(x, y + 1) &&
+         hash2(block(x) * 13 + 7, y * 29 - 3) % 4 == 0;
 }
 
 bool isIce(int x, int y) {

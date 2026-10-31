@@ -178,6 +178,10 @@ constexpr Sprite waterEdge(int set, int offset) {
   int i = 144 + set * 9 + offset / 12 * 3 + offset % 12;
   return {float((i % 24) * 18 + 1), float(786 + (i / 24) * 18 + 1), 16, 16};
 }
+constexpr Sprite cliff(int offset) {
+  int i = 297 + offset / 12 * 3 + offset % 12;
+  return {float((i % 24) * 18 + 1), float(786 + (i / 24) * 18 + 1), 16, 16};
+}
 constexpr Sprite biomeGround(int set, int cell) {
   return {float(((set % 2) * 12 + cell) * 18 + 1),
           float(696 + (set / 2) * 18 + 1), 16, 16};

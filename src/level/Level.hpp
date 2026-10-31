@@ -108,6 +108,7 @@ public:
   float strike();
   void reflect(Screen &s);
   int surfaceAt(double x, double y) const;
+  float climb(double x, double y, double dx, double dy) const;
   bool swimming(const SpriteObject *e) const;
   static bool unvisited(const Structure *s, const void *level);
 

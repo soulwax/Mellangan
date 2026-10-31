@@ -9,3 +9,4 @@
 - **Particle sprites** (`particles.png`): from [dittany](https://github.com/soulwax/dittany) by soulwax.
 - **UI font** (`font.png`): from [Vulkan2D](https://github.com/PaoloMazzon/Vulkan2D) by Paolo Mazzon, zlib license.
 - **Weather sprites** (`weather.png`): cloud, fog and splash shapes pixelated from the NS1 Fog, Snow and Rain Light VFX packs by `tools/make_weather.py`; ripples, drops and flakes are drawn by the same script.
+- **Cliff walls** (`atlas.png`, rims band): from the sunken-patch tiles of [DuskMoon](https://github.com/soulwax/DuskMoon) by soulwax, with the grass cut out by `tools/make_rims.py` (source: `tools/source/duskmoon_cliffs.png`).

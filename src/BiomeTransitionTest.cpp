@@ -656,11 +656,24 @@ int mapBiomes(const char *path) {
     for (int i = 0; i < SIDE; i++) {
       int x = (i - SIDE / 2) * STEP, y = (j - SIDE / 2) * STEP;
       Color c = world::isWater(x, y) ? Color{0.1f, 0.25f, 0.85f, 1}
-                                     : BIOMES[world::biomeAt(x, y)]->debug;
+                                     : BIOMES[world::biomeAt(x, y)]->debug *
+                                           (0.7f + 0.2f * world::heightAt(x, y));
       unsigned char *o = &rgb[(j * SIDE + i) * 3];
-      o[0] = (unsigned char)(c.r * 255), o[1] = (unsigned char)(c.g * 255),
-      o[2] = (unsigned char)(c.b * 255);
+      o[0] = (unsigned char)(clampf(c.r, 0, 1) * 255),
+      o[1] = (unsigned char)(clampf(c.g, 0, 1) * 255),
+      o[2] = (unsigned char)(clampf(c.b, 0, 1) * 255);
     }
+  int kinds[int(StructureKind::Count)]{}, sites = 0;
+  for (int ry = -40; ry < 40; ry++)
+    for (int rx = -40; rx < 40; rx++) {
+      Structure st;
+      if (world::structureIn(rx, ry, st))
+        kinds[int(st.kind)]++, sites++;
+    }
+  std::printf("%d sites in 6400 regions:", sites);
+  for (int k = 0; k < int(StructureKind::Count); k++)
+    std::printf(" %s %d", Structure{StructureKind(k)}.name(), kinds[k]);
+  std::printf("\n");
   FILE *f = std::fopen(path, "wb");
   if (!f)
     return 1;

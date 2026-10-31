@@ -101,7 +101,13 @@ All notable changes to Mellangan are documented here. The format follows
   - Ice is slippery.
   - Foes swim slowly too, except Mire Leeches, which are faster in water; bats, ghosts and other flyers pass straight over. A lake is a place to break a chase, or a trap if the wrong foes follow.
   - Water glints in your torchlight, rain rings on lakes, and lakes mirror what stands in and beside them.
-- Dev: `--at X,Y` starts a `--dev` run on a tile, and `--lake` at the nearest lakeshore.
+- Cliffs and plateaus. The land now rises in broad, blocky plateaus, up to two levels high, edged by long, even earthen cliffs with clean corners:
+  - A plateau's south face shows as a tall wall casting a short shadow, and its other edges as rocky lips.
+  - Higher ground is lit a little brighter, so height reads at a glance.
+  - Climbing a cliff is a slow scramble for you and for every walking foe, while ramps (three-tile openings in the south faces) and jumping down cost nothing. High ground buys you a moment.
+  - Flyers ignore height.
+  - Lakes only form in the lowlands, and building sites only stand on level ground, never across a cliff.
+- Dev: `--at X,Y` starts a `--dev` run on a tile, `--lake` at the nearest lakeshore, and `--cliff` just below the nearest cliff.
 
 ### Changed
 

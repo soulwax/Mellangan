@@ -396,8 +396,36 @@ void Level::renderFloor(Screen &s) {
     s.sprite(mask == 15 ? white : atlas::snowRim(world::rim(mask)), x * 16,
              y * 16, 0, 0);
   };
+  auto wall = [&](int x, int y, float shade) {
+    int level = world::heightAt(x, y);
+    if (world::heightAt(x, y - 1) > level && !world::isRamp(x, y - 1))
+      s.rect(x * 16, y * 16, 16, 4, {0.02f, 0.02f, 0.06f, 0.3f});
+    if (level == 0)
+      return;
+    auto top = [&](int nx, int ny) { return world::heightAt(nx, ny) >= level; };
+    int mask = int(top(x, y - 1)) | (top(x, y + 1) || world::isRamp(x, y)) << 1 |
+               top(x - 1, y) << 2 | top(x + 1, y) << 3;
+    Color t = BIOMES[world::biomeAt(x, y)]->tint;
+    s.color({shade * t.r * 0.92f, shade * t.g * 0.9f, shade * t.b * 0.9f, 1});
+    if (mask != 15) {
+      s.sprite(atlas::cliff(world::rim(mask)), x * 16, y * 16, 0, 0);
+      return;
+    }
+    static const int CORNERS[4][5] = {
+        {-1, 1, 24, 0, 8}, {1, 1, 26, 12, 8}, {-1, -1, 0, 0, 0}, {1, -1, 2, 12, 0}};
+    bool ramp = world::isRamp(x, y);
+    for (const auto &c : CORNERS) {
+      if (top(x + c[0], y + c[1]) || (c[1] > 0 && ramp))
+        continue;
+      Sprite piece = atlas::cliff(c[2]);
+      piece.x += float(c[3]), piece.y += float(c[4]), piece.w = 4,
+          piece.h = c[1] > 0 ? 8.0f : 4.0f;
+      s.sprite(piece, x * 16 + c[3], y * 16 + c[4], 0, 0);
+    }
+  };
   eachVisibleTile(s, [&](int x, int y) {
-    float n = world::groundShade(x, y), shade = 0.8f + 0.2f * n;
+    float n = world::groundShade(x, y),
+          shade = (0.8f + 0.2f * n) * (0.94f + 0.1f * world::heightAt(x, y));
     int own = int(world::biomeAt(x, y));
     Structure st;
     bool wet = world::isWater(x, y);
@@ -412,6 +440,7 @@ void Level::renderFloor(Screen &s) {
       s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
       if (snowing)
         settle(x, y, shade);
+      wall(x, y, shade);
       return;
     }
     world::GroundBlend blend = world::groundBlend(x, y);
@@ -450,6 +479,7 @@ void Level::renderFloor(Screen &s) {
       pool(x, y, shade);
     if (snowing)
       settle(x, y, shade);
+    wall(x, y, shade);
   });
   s.color(col::white);
 }
@@ -464,8 +494,9 @@ void Level::scatter(Screen &s) {
     for (int gx = 0; gx < SOLID_W; gx++) {
       int x = solidX + gx, y = solidY + gy;
       uint8_t f = world::isWater(x, y) ? world::isIce(x, y) ? 2 : 1 : 0;
+      f |= uint8_t(world::heightAt(x, y) << 2 | world::isRamp(x, y) << 4);
       surfaces[gy * SOLID_W + gx] = f;
-      waterInView |= f != 0;
+      waterInView |= (f & 3) != 0;
     }
   Prop p;
   eachVisibleTile(
@@ -510,7 +541,24 @@ int Level::surfaceAt(double x, double y) const {
   int gx = int(std::floor(x / 16)) - solidX, gy = int(std::floor((y - 2) / 16)) - solidY;
   if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H)
     return 0;
-  return surfaces[gy * SOLID_W + gx];
+  return surfaces[gy * SOLID_W + gx] & 3;
+}
+
+float Level::climb(double x, double y, double dx, double dy) const {
+  double d = std::sqrt(dx * dx + dy * dy);
+  if (d < 1e-3)
+    return 1;
+  auto cell = [&](double px, double py) -> int {
+    int gx = int(std::floor(px / 16)) - solidX,
+        gy = int(std::floor((py - 2) / 16)) - solidY;
+    return gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H
+               ? -1
+               : surfaces[gy * SOLID_W + gx];
+  };
+  int here = cell(x, y), ahead = cell(x + dx / d * 7, y + dy / d * 7);
+  if (here < 0 || ahead < 0 || (ahead >> 2 & 3) <= (here >> 2 & 3) || ahead & 16)
+    return 1;
+  return 0.35f;
 }
 
 bool Level::swimming(const SpriteObject *e) const {
@@ -596,8 +644,9 @@ void Level::reflect(Screen &s) {
     SpriteObject *e = drawn[k & 0xFFFFFF];
     int tx = int(std::floor(e->x / 16)), ty = int(std::floor(e->y / 16));
     auto wet = [&](int x, int y) {
-      return sky.poolAt(x, y) || surfaces[std::clamp(y - solidY, 0, SOLID_H - 1) * SOLID_W +
-                                          std::clamp(x - solidX, 0, SOLID_W - 1)] == 1;
+      return sky.poolAt(x, y) ||
+             (surfaces[std::clamp(y - solidY, 0, SOLID_H - 1) * SOLID_W +
+                       std::clamp(x - solidX, 0, SOLID_W - 1)] & 3) == 1;
     };
     if (!wet(tx, ty + 1) || (!wet(tx, ty) && !wet(tx, ty + 2)))
       continue;

@@ -8,6 +8,9 @@ Layout: band at y=786, 24 columns. Set s (0-5 carpets straw, ash, crystal moss, 
 6-15 expansion grounds 0-9) owns cells s*9 .. s*9+8, the edge set row by row. Mirrors atlas::dirtEdge.
 Lake edges follow from cell 144: the frontier water edges with grass swapped for the same 16 grounds, then a 17th
 set for frozen lakes, ice ringed by snow. Set s owns cells 144 + s*9 .. +8. Mirrors atlas::waterEdge.
+Cells 297-305 hold the cliff set: the owner's DuskMoon sunken-patch walls (tools/source/duskmoon_cliffs.png),
+flipped so the tall face is on the south and with the grass cut out, so the walls overlay any ground. The set sits on
+the plateau's own tiles: its centre is the plateau top, its rim the plateau's edges. Mirrors atlas::cliff.
 
 Usage: python tools/make_rims.py [--preview out.png]   (make_assets.py and make_expansion.py call add_rims too)
 """
@@ -19,6 +22,8 @@ from PIL import Image
 from make_grounds import CELL, green, slot, town
 
 RIM_Y = 786
+CLIFF_CELL = 297
+CLIFF_SOURCE = Path(__file__).resolve().parent / "source" / "duskmoon_cliffs.png"
 WATER_CELL = 144
 FROST_SET = 16
 CARPETS = (0, 1, 2, 3, 5, 6)
@@ -105,6 +110,17 @@ def add_rims(atlas):
                 tile = lake(crop(atlas, water_slot(row * 12 + col)), ground)
                 out.paste(ice(tile) if s == FROST_SET else tile,
                           rim_slot(0, WATER_CELL + s * 9 + row * 3 + col))
+    walls = Image.open(CLIFF_SOURCE).convert("RGBA").transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+    for row in range(3):
+        for col in range(3):
+            tile = walls.crop((col * 16, row * 16, col * 16 + 16, row * 16 + 16))
+            px = tile.load()
+            for y in range(16):
+                for x in range(16):
+                    r, g, b, a = px[x, y]
+                    if a and green(r, g, b):
+                        px[x, y] = (0, 0, 0, 0)
+            out.paste(tile, rim_slot(0, CLIFF_CELL + row * 3 + col))
     return out
 
 
