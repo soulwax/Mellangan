@@ -9,6 +9,7 @@
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
+#include "item/skill/Skill.hpp"
 #include "menu/Menu.hpp"
 
 namespace {
@@ -97,6 +98,8 @@ UpgradeStyle getUpgradeStyle(const Upgrade *up, const Player &p, bool evolving) 
 
   if (up->rare)
     return {2, {1.0f, 0.58f, 0.16f, 1.0f}, isClass, "RELIC"};
+  if (up->skill)
+    return {4, {0.45f, 0.92f, 1.0f, 1.0f}, true, "SKILL"};
 
   int nextTier = evolving ? 5 : up->level + 1;
   Color col;
@@ -192,13 +195,13 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
     p.pendingTreasures--, treasure = true;
   int owned[2] = {0, 0};
   for (auto &u : all)
-    if (u->level > 0 && !u->rare)
+    if (u->level > 0 && !u->rare && !u->skill)
       owned[u->weapon]++;
   std::vector<Upgrade *> relics;
   for (auto &u : all)
     if (u->rare && !u->maxed())
       relics.push_back(u.get());
-    else if (!u->rare && !u->maxed() &&
+    else if (!u->rare && !u->skill && !u->maxed() &&
              (u->level > 0 || owned[u->weapon] < Upgrade::SLOTS) &&
              (!u->owner || (p.hero && std::strcmp(u->owner, p.hero->name) == 0)))
       choices.push_back(u.get());
@@ -224,7 +227,14 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
   for (auto &u : all)
     if (u->canEvolve(p))
       ready.push_back(u.get());
-  if (treasure && !ready.empty())
+  std::vector<Upgrade *> skills;
+  for (auto &u : all)
+    if (u->skill && u.get() != p.skill && p.hero && u->owner &&
+        std::strcmp(u->owner, p.hero->name) == 0)
+      skills.push_back(u.get());
+  if (!skills.empty() && choices.front() && p.lvl >= 4 && rng.chance(0.2f)) {
+    choices.push_back(skills[rng.irange(0, int(skills.size()) - 1)]);
+  } else if (treasure && !ready.empty())
     evolveSlot = int(choices.size()),
     choices.push_back(ready[rng.irange(0, int(ready.size()) - 1)]);
   else if (!relics.empty() && (treasure || rng.chance(0.03f)))
@@ -343,6 +353,11 @@ void LevelUpMenu::render(Screen &s) {
     if (evolving) {
       s.text("EVOLVE", tagRight - Screen::textWidth("EVOLVE", small), y + 5.0f * u,
              small, col::xp.alpha(in));
+    } else if (up && up->skill) {
+      std::string tagStr = fmt::format("SKILL  REPLACES {}",
+                                       p.skill ? p.skill->name : "NONE");
+      s.text(tagStr, tagRight - Screen::textWidth(tagStr, small), y + 5.0f * u,
+             small, tierCol.alpha(in));
     } else if (up && up->rare) {
       s.text("RELIC", tagRight - Screen::textWidth("RELIC", small), y + 5.0f * u,
              small, tierCol.alpha(in));

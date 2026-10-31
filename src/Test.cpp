@@ -28,6 +28,7 @@
 #include "particle/debris/Debris.hpp"
 #include "ExpansionEnemyTest.hpp"
 #include "ExpansionTest.hpp"
+#include "ArsenalTest.hpp"
 
 static void testPoolAllocAndFree() {
   void *ptrs[1024]; // 8kB total storage
@@ -437,6 +438,7 @@ int runTests() {
   testStatusDamage();
   testExpansionEnemies();
   testExpansionContent();
+  testArsenal();
   testBiomeTransitions();
   testBiomeEncounters();
   testBalance();

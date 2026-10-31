@@ -6,6 +6,7 @@
 #include "entity/Mob.hpp"
 
 class Upgrade;
+class Skill;
 
 class Hero;
 
@@ -22,6 +23,7 @@ public:
   int tile = atlas::t::Wizard, heroCount = 0;
   float heroTimer = 0, skillTime = 0;
   const Hero *hero = nullptr;
+  Skill *skill = nullptr;
   std::vector<std::unique_ptr<Upgrade>> upgrades;
 
   Player();

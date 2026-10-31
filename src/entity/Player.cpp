@@ -6,6 +6,7 @@
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "item/Upgrade.hpp"
+#include "item/skill/Skill.hpp"
 #include "level/Level.hpp"
 #include "hero/Hero.hpp"
 #include "particle/Spark.hpp"
@@ -24,6 +25,11 @@ void Player::onAdded() {
   hp = maxHp = g.balance.playerHp;
   xpBase = g.balance.xpBase, xpGrowth = g.balance.xpGrowth;
   hero->equip(*this);
+  for (auto &u : upgrades)
+    if (u->skill && u->owner && std::strcmp(u->owner, hero->name) == 0) {
+      u->levelUp(*this);
+      break;
+    }
   for (auto &u : upgrades)
     if (std::strcmp(u->name, hero->weapon) == 0)
       return u->levelUp(*this);
@@ -70,6 +76,8 @@ void Player::tick() {
   skillTime = std::max(0.0f, skillTime - DT);
   if (hero)
     hero->tick(*this);
+  if (skill)
+    skill->active(*this);
   hp = std::min(maxHp, hp + regen * DT);
 
   for (auto &u : upgrades)
@@ -146,8 +154,12 @@ void Player::hurt(float damage, bool periodic) {
 void Player::cast() {
   if (!hero || dead() || skillTime > 0)
     return;
-  hero->cast(*this);
-  skillTime = hero->cooldown * haste;
+  float wait = (skill ? skill->cooldown : hero->cooldown) * haste;
+  if (skill)
+    skill->use(*this);
+  else
+    hero->cast(*this);
+  skillTime = wait;
   for (auto &up : upgrades)
     if (up->level > 0)
       up->cast(*this);

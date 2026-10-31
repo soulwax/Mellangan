@@ -45,6 +45,8 @@
 #include "item/weapon/StormRod.hpp"
 #include "item/weapon/ExpansionWeapons.hpp"
 #include "item/relic/ExpansionRelics.hpp"
+#include "item/skill/Skill.hpp"
+#include "item/weapon/Recipe.hpp"
 
 namespace {
 namespace t = atlas::t;
@@ -175,6 +177,9 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
     u.push_back(std::make_unique<ExpansionWeapon>(i));
   for (int i=0;i<8;i++)
     u.push_back(std::make_unique<ExpansionRelic>(i));
+  for (const Recipe &r : RECIPES)
+    u.push_back(std::make_unique<RecipeWeapon>(r));
+  addSkills(u);
   return u;
 }
 
