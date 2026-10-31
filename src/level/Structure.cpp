@@ -341,8 +341,8 @@ bool landmarkDirt(const Structure *s, int lx, int ly) {
   int dx = lx - 3, dy = ly - 4;
   if (s->kind == StructureKind::FallenStar)
     return dx * dx + dy * dy * 2 <= 7;
-  if (s->kind == StructureKind::Colossus || s->kind == StructureKind::Shipwreck)
-    return dx * dx + dy * dy <= 3 && hash2(int(s->seed) + lx, ly) % 3;
+  if (s->kind == StructureKind::Colossus)
+    return dx * dx + dy * dy * 3 <= 4;
   if (s->kind == StructureKind::EmberForge)
     return dx * dx + dy * dy <= 2;
   return false;

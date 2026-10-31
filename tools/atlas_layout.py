@@ -43,6 +43,7 @@ BANDS = (
     Band("dirt and water rims", 0, 786, 24, 13),
     Band("arsenal", 0, 1020, 24, 12),
     Band("landmarks", 0, 1236, 24, 5),
+    Band("cliffs", 0, 1326, 24, 3),
 )
 
 EXPANSION_ACTORS = {

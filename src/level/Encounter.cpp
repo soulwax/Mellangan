@@ -326,12 +326,13 @@ void coals(Level *level, const Structure *s) {
 void frozen(Level *level, const Structure *s) {
   Player &p = *level->player;
   p.armor += 0.5f;
+  p.traits.add(Trait::Frosted);
   level->enemiesNear(p.x, p.y, 220, [&](Enemy &e) {
     e.afflict(StatusKind::Chill, 6, 0.85f);
   });
   level->add<Shockwave>(s->centerX(), footY(s) - 20, 6, 200, 0.7f,
                         Color{0.75f, 0.9f, 1, 1})->spokes = 12;
-  level->game.announce("THE ICE HARDENS YOUR SKIN: +0.5 ARMOUR");
+  level->game.announce("THE ICE CLAIMS YOU: +0.5 ARMOUR, A FREEZING TRAIL");
   Sound::nova.play(0.5f, 0);
 }
 

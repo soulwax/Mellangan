@@ -394,7 +394,7 @@ int heightAt(int x, int y) {
 
 bool isRamp(int x, int y) {
   return heightAt(x, y) > heightAt(x, y + 1) &&
-         hash2(block(x) * 13 + 7, y * 29 - 3) % 4 == 0;
+         hash2(block(x) * 13 + 7, y * 29 - 3) % 3 == 0;
 }
 
 bool isIce(int x, int y) {
@@ -469,7 +469,8 @@ bool propAt(int x, int y, Prop &p) {
   Structure st;
   if (structureAt(x, y, st, 1))
     return structureProp(&st, x - st.x, y - st.y, &p);
-  if ((std::abs(x) < 4 && std::abs(y) < 4) || isDirt(x, y) || isWater(x, y))
+  if ((std::abs(x) < 4 && std::abs(y) < 4) || isDirt(x, y) || isWater(x, y) ||
+      isRamp(x, y) || isRamp(x, y - 1))
     return false;
 
   uint32_t h = hash2(x * 7 + 3, y * 13 + 1);

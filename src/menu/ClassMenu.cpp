@@ -280,6 +280,7 @@ void ClassMenu::render(Screen &s) {
   float pad = 12 * u, line = 13 * u, body = u, gut = 22 * u;
   Color tint = openPick ? h.tint : col::muted;
   const std::vector<Chip> traits = chips(h);
+  bool dense = false;
   auto card = [&](bool draw) {
     float y = top;
     float big = std::min(2 * u, std::floor((w - 46 * u) / Screen::textWidth(h.name, 1)));
@@ -345,19 +346,22 @@ void ClassMenu::render(Screen &s) {
              col::white.alpha(0.85f * in), draw) + 6 * u;
 
     label("ARSENAL");
-    for (auto &up : game.level->player->upgrades)
-      if (up->owner && std::string_view(up->owner) == h.name) {
-        if (draw) {
-          s.sprite(up->icon, cx, y - u, 0, 0, u, u);
-          s.text(up->name, cx + gut, y, body,
-                 (up->weapon ? col::white : tint).alpha(in));
-          if (!up->weapon)
-            s.text("talent", cx + cw - Screen::textWidth("talent", small),
-                   y + 3 * u, small, col::muted.alpha(in));
-        }
-        y += line;
+    float colW = (cw - 6 * u) / 2, step = dense ? 18 * u : 12 * u, iconScale = 0.75f * u;
+    int n = 0;
+    for (auto &up : game.level->player->upgrades) {
+      if (!up->owner || std::string_view(up->owner) != h.name)
+        continue;
+      float ix = dense ? cx + (n % 8) * step : cx + (n % 2) * (colW + 6 * u),
+            iy = y + (dense ? n / 8 : n / 2) * step;
+      if (draw) {
+        s.sprite(up->icon, ix, iy - u, 0, 0, iconScale, iconScale);
+        if (!dense)
+          s.text(Screen::fit(up->name, colW - 16 * u, small), ix + 14 * u, iy + u,
+                 small, (up->weapon ? col::white : tint).alpha(in));
       }
-    y += 6 * u;
+      n++;
+    }
+    y += ((n + (dense ? 7 : 1)) / (dense ? 8 : 2)) * step + 6 * u;
 
     label("NATURE");
     float chipX = cx;
@@ -387,6 +391,8 @@ void ClassMenu::render(Screen &s) {
   };
 
   float tall = card(false);
+  if (top + tall > s.h - 30 * u)
+    dense = true, tall = card(false);
   s.rect(x, top, w, tall, {0.03f, 0.025f, 0.06f, 0.95f * in});
   s.frame(x, top, w, tall, u, tint.alpha(0.35f * in));
   for (int k = 2; k < 4; k++)

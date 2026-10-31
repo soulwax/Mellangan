@@ -23,14 +23,6 @@ bool inside(const SDL_FRect &r, const Input &in) {
   return SDL_PointInRectFloat(&m, &r);
 }
 
-std::string fit(std::string_view text, float width, float size) {
-  int chars = std::max(0, int(width / (8 * size)));
-  if (int(text.size()) <= chars)
-    return std::string(text);
-  if (chars <= 3)
-    return std::string(chars, '.');
-  return std::string(text.substr(0, chars - 3)) + "...";
-}
 
 const char *const FOES[Codex::KINDS] = {
     "BAT",        "RAT",        "SLIME",      "SCORPION",
@@ -76,7 +68,7 @@ void CodexMenu::render(Screen &s) {
   float u = s.u, small = std::max(1.0f, u - 1), pad = 14 * u, row = 18 * small;
   s.rect(0, 0, s.w, s.h, {0.02f, 0.02f, 0.05f, 0.92f});
   s.text("CODEX", pad, pad, 2 * u, col::gold);
-  s.text(fit(fmt::format("{} runs   {} dawn{}   best {}   best streak {}   {} slain",
+  s.text(Screen::fit(fmt::format("{} runs   {} dawn{}   best {}   best streak {}   {} slain",
                      c.runs, c.dawns, c.dawns == 1 ? "" : "s",
                      clockText(c.bestTime), c.bestStreak, c.kills()), s.w - 2 * pad, small),
          pad, pad + 36 * u, small, col::muted);
@@ -95,7 +87,7 @@ void CodexMenu::render(Screen &s) {
     bool known = c.biomes >> b & 1;
     if (known)
       s.rect(x, y + 4 * small, 8 * small, 8 * small, Chart::tone(BiomeId(b)));
-    s.text(fit(known ? Chart::title(BiomeId(b)) : "? ? ?", colW - 20 * small, small), x + 12 * small, y, small,
+    s.text(Screen::fit(known ? Chart::title(BiomeId(b)) : "? ? ?", colW - 20 * small, small), x + 12 * small, y, small,
            known ? col::white : col::muted * 0.6f);
   }
 
@@ -119,7 +111,7 @@ void CodexMenu::render(Screen &s) {
     s.color(col::white.alpha(known ? 1 : 0.15f));
     s.sprite(up->icon, x, y - 2 * small, 0, 0, small, small);
     s.color(col::white);
-    s.text(fit(known ? up->name : "? ? ?", colW - 28 * small, small), x + 20 * small, y, small,
+    s.text(Screen::fit(known ? up->name : "? ? ?", colW - 28 * small, small), x + 20 * small, y, small,
            known ? col::gold : col::muted * 0.6f);
     y += relicRow;
   }
@@ -133,7 +125,7 @@ void CodexMenu::render(Screen &s) {
     bool known = c.slain[k] > 0;
     std::string n = known ? std::to_string(c.slain[k]) : "";
     float countWidth = Screen::textWidth(n, small);
-    s.text(fit(known ? FOES[k] : "? ? ?", colW - 16 * small - countWidth, small), x, y, small,
+    s.text(Screen::fit(known ? FOES[k] : "? ? ?", colW - 16 * small - countWidth, small), x, y, small,
            known ? col::white : col::muted * 0.6f);
     if (known) {
       s.text(n, x + colW - 8 * small - countWidth, y, small,
@@ -152,7 +144,7 @@ void CodexMenu::render(Screen &s) {
     std::string n = known ? std::to_string(c.entered[k]) : "";
     float countWidth = Screen::textWidth(n, small);
     const char *name = STRUCTURES[k].name ? STRUCTURES[k].name : "UNKNOWN SITE";
-    s.text(fit(known ? name : "? ? ?", colW - 16 * small - countWidth, small), x, y, small,
+    s.text(Screen::fit(known ? name : "? ? ?", colW - 16 * small - countWidth, small), x, y, small,
            known ? col::white : col::muted * 0.6f);
     if (known) {
       s.text(n, x + colW - 8 * small - countWidth, y, small,

@@ -43,7 +43,7 @@ public:
   WorldMode worldMode = WorldMode::Classic;
   std::string seedCode, arm;
   int heroPick = -1, biomePick = -1, atX = 0, atY = 0;
-  bool atPick = false, lakePick = false, cliffPick = false;
+  bool atPick = false, lakePick = false, cliffPick = false, rampPick = false;
   int landmarkPick = -1;
   Balance balance;
   Difficulty difficulty = Difficulty::HurtMePlenty;
@@ -98,6 +98,9 @@ private:
   void render();
   void renderHud();
   void renderCompass();
+  void renderLandmarks();
+  bool edge(double wx, double wy, float &xe, float &ye, float &xn,
+            float &yn) const;
   void renderMinimap();
   friend void captureScreenshotSuite(SDL_Window *window, const std::string &base);
 };

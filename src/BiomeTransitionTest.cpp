@@ -674,6 +674,32 @@ int mapBiomes(const char *path) {
   for (int k = 0; k < int(StructureKind::Count); k++)
     std::printf(" %s %d", Structure{StructureKind(k)}.name(), kinds[k]);
   std::printf("\n");
+  int walks = 64, met = 0, landmarks = 0;
+  const double LENGTH = 2000, SIGHT = 14, TILES_PER_SECOND = 74.0 / 16;
+  for (int w = 0; w < walks; w++) {
+    double a = TAU * w / walks, x = std::cos(a * 7) * 600, y = std::sin(a * 5) * 600;
+    std::vector<std::pair<int, int>> seen;
+    for (double d = 0; d < LENGTH; d += 4) {
+      int px = int(x + std::cos(a) * d), py = int(y + std::sin(a) * d);
+      int rx = world::regionOf(px), ry = world::regionOf(py);
+      for (int j = ry - 1; j <= ry + 1; j++)
+        for (int i = rx - 1; i <= rx + 1; i++) {
+          Structure st;
+          if (!world::structureIn(i, j, st))
+            continue;
+          double dx = st.x + st.w / 2.0 - px, dy = st.y + st.h / 2.0 - py;
+          if (dx * dx + dy * dy > SIGHT * SIGHT ||
+              std::find(seen.begin(), seen.end(), std::make_pair(i, j)) != seen.end())
+            continue;
+          seen.push_back({i, j});
+          met++, landmarks += st.landmark();
+        }
+    }
+  }
+  double seconds = LENGTH * walks / std::max(1, met) / TILES_PER_SECOND;
+  std::printf("pacing: %d sites (%d landmarks) on %d straight walks of %.0f tiles, "
+              "one every %.1f s\n",
+              met, landmarks, walks, LENGTH, seconds);
   FILE *f = std::fopen(path, "wb");
   if (!f)
     return 1;

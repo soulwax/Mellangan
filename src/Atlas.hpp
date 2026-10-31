@@ -184,13 +184,19 @@ constexpr Sprite waterEdge(int set, int offset) {
   int i = 144 + set * 9 + offset / 12 * 3 + offset % 12;
   return {float((i % 24) * 18 + 1), float(786 + (i / 24) * 18 + 1), 16, 16};
 }
-constexpr Sprite cliff(int offset) {
-  int i = 297 + offset / 12 * 3 + offset % 12;
-  return {float((i % 24) * 18 + 1), float(786 + (i / 24) * 18 + 1), 16, 16};
+constexpr Sprite cliff(int material, int offset) {
+  int cell = offset / 12 * 3 + offset % 12;
+  int i = material ? (material - 1) * 9 + cell : 297 + cell;
+  return {float((i % 24) * 18 + 1),
+          float((material ? 1326 : 786) + (i / 24) * 18 + 1), 16, 16};
 }
 constexpr Sprite landmark(int index, int row, int col) {
-  int i = index * 12 + row * 3 + col;
-  return {float((i % 24) * 18 + 1), float(1236 + (i / 24.0f) * 18 + 1), 16, 16};
+  int i = index * 12 + row * 3 + col, cellRow = i / 24;
+  return {float((i % 24) * 18 + 1), float(1236 + cellRow * 18 + 1), 16, 16};
+}
+constexpr Sprite stairs(int material, int part) {
+  int i = 45 + material * 3 + part;
+  return {float((i % 24) * 18 + 1), float(1326 + (i / 24) * 18 + 1), 16, 16};
 }
 constexpr Sprite biomeGround(int set, int cell) {
   return {float(((set % 2) * 12 + cell) * 18 + 1),

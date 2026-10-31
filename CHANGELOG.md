@@ -21,9 +21,38 @@ All notable changes to Mellangan are documented here. The format follows
   - **The Frozen Giant**, a figure sealed in ice in the snowfields and taiga. The cold hardens your skin (+0.5 armour) and freezes nearby foes in place.
 
   Each land favours its own kind, but any landmark can turn up anywhere.
+- Landmarks can be spotted from afar. The nearest landmark you have not yet visited, within about 70 tiles, shows a small marker at the edge of the screen with its name and distance, in its own colour and brighter as you approach. The marker disappears once the landmark is on screen, and markers stay clear of the top display.
+- Elite foes now carry a trait instead of a plain gold tint. Each shows as a coloured ring and a matching glow, and each has a counter:
+  - **Hasted** (pale yellow): 40% faster. Keep your distance.
+  - **Vampiric** (red): heals when it hits you. Kill it quickly.
+  - **Warded** (blue, double ring): its ward soaks most damage for five hits, then breaks with a burst. Hit it often.
+  - **Splitting** (green): bursts into two smaller copies when it dies. Clear space first.
+  - **Volatile** (flickering orange): explodes shortly after death, with a telegraphed circle. Step out.
+  - **Frosted** (ice blue): leaves a freezing trail that chills you. Don't follow its path.
+- Traits are not only for foes: the Frozen Giant now also gives you the Frosted trait, so you leave a freezing trail that chills foes that walk your path.
+- High ground matters. Your attacks deal 15% more damage to foes standing below you, so a plateau is worth holding (flyers excepted).
 - Dev: `--landmark N` starts a `--dev` run beside the nearest landmark of kind N (0 tree, 1 star, 2 colossus, 3 monolith, 4 spire, 5 mushroom, 6 wreck, 7 gate, 8 forge, 9 frozen giant).
 
+### Changed
+
+- Announcements are half the size, on a slimmer plate, so they cover less of the fight.
+
+- Cliffs now match their land:
+  - ice in the Snowfields, the Taiga and Crystal Fields;
+  - sandstone in deserts, badlands and salt flats;
+  - basalt in the Ashlands, the Ember Fen and the Hollow Caverns;
+  - mossy stone in green woods, mires and jungles;
+  - grey stone in barrows, heaths and ruins.
+
+  Meadows keep their earthen walls. Each material has a lit west side, a shaded east side and a striated south face. A stretch of cliff keeps one material even where two lands meet.
+- Ramps are now real stairs. Every few blocks along a plateau's south face, a flight of steps three tiles wide climbs to the top, built from the cliff's own stone (or timber in the meadows), with side walls at its ends. Walk up them at full speed, while scrambling up a bare cliff stays slow. Trees and rocks never block a stairway.
+- Dev: `--cliff` combined with `--biome N` starts below a cliff inside that biome, and `--ramp` starts at the foot of the nearest stairs.
+
 ### Fixed
+
+- Landmarks no longer look fractured. Their upper parts were drawn from the wrong rows of the sprite sheet, mixing pieces of different landmarks. Tall landmarks also no longer pop out of view when their base is just below the screen edge, and the Colossus and Shipwreck no longer sit on scattered dirt squares.
+
+- The class card on the class picker no longer runs off the bottom of the screen. Each class's arsenal is laid out in two compact columns, with talents in the class colour. A class with a very large arsenal shows it as a grid of icons.
 
 - Arsenal icons drew as lake-shore tiles. The arsenal and the new lake and cliff tiles had both claimed the same part of the sprite sheet when they were merged; the arsenal now has its own space.
 

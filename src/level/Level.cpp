@@ -9,16 +9,17 @@
 #include "Workers.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "entity/pickup/Chest.hpp"
+#include "hero/Hero.hpp"
 #include "level/Encounter.hpp"
 #include "level/ExpansionEncounter.hpp"
 #include "level/Flavour.hpp"
-#include "hero/Hero.hpp"
-#include "entity/pickup/Chest.hpp"
 #include "particle/Arc.hpp"
 #include "particle/Drift.hpp"
 #include "particle/Shockwave.hpp"
 #include "particle/Spark.hpp"
 #include "particle/VisualDetail.hpp"
+
 
 namespace {
 uint32_t orderedBits(float f) {
@@ -210,7 +211,8 @@ void Level::climate() {
   pace = f.foes * (o ? o->foes : 1) * game.balance.enemySpeed;
   xpMul = f.xp * (o ? o->xp : 1) * game.balance.xp;
   eliteMul = o ? o->elite : 1;
-  kindleRate = (o ? o->kindle : 1) * (player->hero ? player->hero->devotion() : 1);
+  kindleRate =
+      (o ? o->kindle : 1) * (player->hero ? player->hero->devotion() : 1);
   if (streak > 0 && (streakTime -= DT) <= 0)
     streak = 0;
   if (player->dead())
@@ -277,8 +279,8 @@ float Level::strike() {
     return -1;
   std::vector<ArcNode> bolt;
   for (int i = 0; i <= 6; i++)
-    bolt.push_back({x + (i > 0 && i < 6 ? rng.range(-9, 9) : 0),
-                    y - 170 + i * 170 / 6.0});
+    bolt.push_back(
+        {x + (i > 0 && i < 6 ? rng.range(-9, 9) : 0), y - 170 + i * 170 / 6.0});
   Color storm{0.75f, 0.85f, 1, 1};
   add<Arc>(std::move(bolt), 0.3f, storm);
   add<Shockwave>(x, y, 4, 34, 0.35f, storm);
@@ -306,7 +308,7 @@ void Level::explore() {
   entered |= 1u << int(s.kind);
   game.codex.entered[int(s.kind)]++;
   const EncounterDef *e = &ENCOUNTERS[int(s.kind)];
-  if (!expansionEncounter(*this,s)) {
+  if (!expansionEncounter(*this, s)) {
     game.announce(e->banner);
     e->enter(this, &s);
   }
@@ -403,23 +405,39 @@ void Level::renderFloor(Screen &s) {
     if (level == 0)
       return;
     auto top = [&](int nx, int ny) { return world::heightAt(nx, ny) >= level; };
-    int mask = int(top(x, y - 1)) | (top(x, y + 1) || world::isRamp(x, y)) << 1 |
+    int mask = int(top(x, y - 1)) |
+               (top(x, y + 1) || world::isRamp(x, y)) << 1 |
                top(x - 1, y) << 2 | top(x + 1, y) << 3;
-    Color t = BIOMES[world::biomeAt(x, y)]->tint;
+    static const int MATERIALS[BIOME_COUNT] = {0, 5, 0, 1, 1, 3, 0, 5, 2,
+                                               5, 2, 4, 3, 5, 2, 3, 2, 0,
+                                               1, 1, 4, 0, 1, 2, 4, 1};
+    auto centre = [](int v) { return (v - (v < 0 ? 2 : 0)) / 3 * 3 + 1; };
+    int biome = world::biomeAt(centre(x), centre(y)), material = MATERIALS[biome];
+    Color t = material ? Color{1, 1, 1, 1} : BIOMES[biome]->tint;
     s.color({shade * t.r * 0.92f, shade * t.g * 0.9f, shade * t.b * 0.9f, 1});
-    if (mask != 15) {
-      s.sprite(atlas::cliff(world::rim(mask)), x * 16, y * 16, 0, 0);
+    if (world::isRamp(x, y)) {
+      int part = !world::isRamp(x - 1, y)   ? 0
+                 : !world::isRamp(x + 1, y) ? 2
+                                            : 1;
+      s.color({shade, shade, shade, 1});
+      s.sprite(atlas::stairs(material, part), x * 16, y * 16, 0, 0);
       return;
     }
-    static const int CORNERS[4][5] = {
-        {-1, 1, 24, 0, 8}, {1, 1, 26, 12, 8}, {-1, -1, 0, 0, 0}, {1, -1, 2, 12, 0}};
+    if (mask != 15) {
+      s.sprite(atlas::cliff(material, world::rim(mask)), x * 16, y * 16, 0, 0);
+      return;
+    }
+    static const int CORNERS[4][5] = {{-1, 1, 24, 0, 8},
+                                      {1, 1, 26, 12, 8},
+                                      {-1, -1, 0, 0, 0},
+                                      {1, -1, 2, 12, 0}};
     bool ramp = world::isRamp(x, y);
     for (const auto &c : CORNERS) {
       if (top(x + c[0], y + c[1]) || (c[1] > 0 && ramp))
         continue;
-      Sprite piece = atlas::cliff(c[2]);
-      piece.x += float(c[3]), piece.y += float(c[4]), piece.w = 4,
-          piece.h = c[1] > 0 ? 8.0f : 4.0f;
+      Sprite piece = atlas::cliff(material, c[2]);
+      piece.x += float(c[3]), piece.y += float(c[4]),
+          piece.w = 4, piece.h = c[1] > 0 ? 8.0f : 4.0f;
       s.sprite(piece, x * 16 + c[3], y * 16 + c[4], 0, 0);
     }
   };
@@ -430,7 +448,8 @@ void Level::renderFloor(Screen &s) {
     Structure st;
     bool wet = world::isWater(x, y);
     bool protectedGround = wet || world::structureAt(x, y, st) ||
-                           world::isDirt(x, y) || BIOMES[own]->fixedGround(x, y);
+                           world::isDirt(x, y) ||
+                           BIOMES[own]->fixedGround(x, y);
     if (protectedGround) {
       Color t = world::groundTint(x, y);
       if (wet)
@@ -461,9 +480,9 @@ void Level::renderFloor(Screen &s) {
       s.color({shade * t.r, shade * 0.97f * t.g,
                (shade * 0.93f + 0.04f * (1 - n)) * t.b, alpha});
       int variant = int(roll % 100);
-      int kind = variant < BIOMES[id]->flowers
-                     ? 2
-                     : variant < BIOMES[id]->flowers + BIOMES[id]->tufts ? 1 : 0;
+      int kind = variant < BIOMES[id]->flowers                       ? 2
+                 : variant < BIOMES[id]->flowers + BIOMES[id]->tufts ? 1
+                                                                     : 0;
       if (id == BIOME_DESERT)
         kind = variant < 10 ? 1 : variant < 15 ? 2 : 0;
       else if (id == BIOME_ASHLANDS || id == BIOME_CRYSTAL ||
@@ -514,7 +533,7 @@ void Level::scatter(Screen &s) {
         if (p.solid > 0)
           solids[(y - solidY) * SOLID_W + x - solidX] = p.solid;
       },
-      3, 2);
+      3, 4);
 }
 
 void Level::collide(double &x, double &y, float radius) const {
@@ -538,10 +557,18 @@ void Level::collide(double &x, double &y, float radius) const {
 }
 
 int Level::surfaceAt(double x, double y) const {
-  int gx = int(std::floor(x / 16)) - solidX, gy = int(std::floor((y - 2) / 16)) - solidY;
+  int gx = int(std::floor(x / 16)) - solidX,
+      gy = int(std::floor((y - 2) / 16)) - solidY;
   if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H)
     return 0;
   return surfaces[gy * SOLID_W + gx] & 3;
+}
+
+int Level::heightAt(double x, double y) const {
+  int gx = int(std::floor(x / 16)) - solidX, gy = int(std::floor((y - 2) / 16)) - solidY;
+  if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H)
+    return 0;
+  return surfaces[gy * SOLID_W + gx] >> 2 & 3;
 }
 
 float Level::climb(double x, double y, double dx, double dy) const {
@@ -556,7 +583,8 @@ float Level::climb(double x, double y, double dx, double dy) const {
                : surfaces[gy * SOLID_W + gx];
   };
   int here = cell(x, y), ahead = cell(x + dx / d * 7, y + dy / d * 7);
-  if (here < 0 || ahead < 0 || (ahead >> 2 & 3) <= (here >> 2 & 3) || ahead & 16)
+  if (here < 0 || ahead < 0 || (ahead >> 2 & 3) <= (here >> 2 & 3) ||
+      ahead & 16)
     return 1;
   return 0.35f;
 }
@@ -588,7 +616,7 @@ void Level::render(Screen &s) {
   prof_begin(PROF_FLOOR);
   renderFloor(s);
   sky.renderGround(s);
-  events.render(s,*this);
+  events.render(s, *this);
   prof_end(PROF_FLOOR);
   prof_begin(PROF_SORT);
   drawn.clear(), keys.clear();
@@ -646,7 +674,8 @@ void Level::reflect(Screen &s) {
     auto wet = [&](int x, int y) {
       return sky.poolAt(x, y) ||
              (surfaces[std::clamp(y - solidY, 0, SOLID_H - 1) * SOLID_W +
-                       std::clamp(x - solidX, 0, SOLID_W - 1)] & 3) == 1;
+                       std::clamp(x - solidX, 0, SOLID_W - 1)] &
+              3) == 1;
     };
     if (!wet(tx, ty + 1) || (!wet(tx, ty) && !wet(tx, ty + 2)))
       continue;

@@ -180,6 +180,7 @@ int main(int argc, char **argv) {
         game.biomePick = std::atoi(argv[++i]);
       game.lakePick |= std::string_view(argv[i]) == "--lake";
       game.cliffPick |= std::string_view(argv[i]) == "--cliff";
+      game.rampPick |= std::string_view(argv[i]) == "--ramp";
       if (std::string_view(argv[i]) == "--landmark" && i + 1 < argc)
         game.landmarkPick = std::atoi(argv[++i]);
       if (std::string_view(argv[i]) == "--at" && i + 1 < argc)
@@ -188,7 +189,7 @@ int main(int argc, char **argv) {
     if (game.dev)
       spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world "
                    "debug, F9 warp to nearest structure, F10 next weather; --arm \"A,B!\" "
-                   "starts runs with those upgrades, --biome N starts in biome N, --at X,Y on tile X,Y, --lake at the nearest lakeshore, --cliff below the nearest cliff, --landmark N by landmark N");
+                   "starts runs with those upgrades, --biome N starts in biome N, --at X,Y on tile X,Y, --lake at the nearest lakeshore, --cliff below the nearest cliff, --ramp below the nearest stairs, --landmark N by landmark N");
     if (game.dev) {
       constexpr ouroboros::Ouroboros council;
       int n = int(SDL_GetTicks() % 1000);

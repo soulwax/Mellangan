@@ -279,8 +279,16 @@ void Game::newGame(bool reroll) {
       return world::isWater(x, y) && world::isWater(x, y - 2) &&
              !world::isWater(x, y + 3);
     });
+  if (dev && rampPick)
+    seek([&](int x, int y) {
+      return world::isRamp(x, y - 1) && world::isRamp(x - 1, y - 1) &&
+             world::isRamp(x + 1, y - 1) && !world::isWater(x, y + 1) &&
+             (biomePick < 0 || world::biomeAt(x, y) == biomePick);
+    });
   if (dev && cliffPick)
-    seek([](int x, int y) {
+    seek([&](int x, int y) {
+      if (biomePick >= 0 && world::biomeAt(x, y) != biomePick)
+        return false;
       for (int dx = -2; dx <= 2; dx++)
         if (world::heightAt(x + dx, y - 1) <= world::heightAt(x + dx, y))
           return false;
@@ -558,25 +566,74 @@ void Game::render() {
   }
 }
 
+bool Game::edge(double wx, double wy, float &xe, float &ye, float &xn,
+                float &yn) const {
+  const Screen &s = screen;
+  float k = s.scale, u = s.u;
+  float xo = std::floor((s.w - s.vw * k) / 2),
+        yo = std::floor((s.h - s.vh * k) / 2);
+  float xm = xo + s.vw * k * 0.5f, ym = yo + s.vh * k * 0.5f;
+  float xd = xo + float(wx - xView) * k - xm, yd = yo + float(wy - yView) * k - ym,
+        dd = std::max(1.0f, std::sqrt(xd * xd + yd * yd));
+  float xh = s.vw * k * 0.5f - 18 * u,
+        yh = s.vh * k * 0.5f - (yd < 0 ? 84 : 18) * u;
+  float fit = std::min({1.0f, xd != 0 ? xh / std::abs(xd) : 1e9f,
+                        yd != 0 ? yh / std::abs(yd) : 1e9f});
+  xe = xm + xd * fit, ye = ym + yd * fit, xn = xd / dd, yn = yd / dd;
+  if (fit >= 1)
+    xn = 0, yn = 1;
+  return fit < 1;
+}
+
+void Game::renderLandmarks() {
+  if (menu)
+    return;
+  Player &p = *level->player;
+  int rx = world::regionOf(int(std::floor(p.x / 16))),
+      ry = world::regionOf(int(std::floor(p.y / 16)));
+  Structure best;
+  double bestD = 1e18;
+  for (int y = ry - 4; y <= ry + 4; y++)
+    for (int x = rx - 4; x <= rx + 4; x++) {
+      Structure site;
+      if (!world::structureIn(x, y, site) || !site.landmark() ||
+          level->visited(site))
+        continue;
+      double xd = site.centerX() - p.x, yd = site.centerY() - p.y;
+      if (xd * xd + yd * yd < bestD)
+        bestD = xd * xd + yd * yd, best = site;
+    }
+  double tiles = std::sqrt(bestD) / 16, bx = best.centerX(),
+         by = (best.y + 5) * 16.0;
+  if (bx > xView - 24 && bx < xView + screen.vw + 24 && by > yView &&
+      by - 64 < yView + screen.vh)
+    return;
+  float xe, ye, xn, yn;
+  if (tiles > 72 || !edge(best.centerX(), best.centerY() - 24, xe, ye, xn, yn))
+    return;
+  Screen &s = screen;
+  float u = s.u, small = std::max(1.0f, u - 1);
+  float fade = clampf(float((72 - tiles) / 24), 0, 1) * 0.8f;
+  Color c = best.debugColor().alpha(fade * (0.8f + 0.2f * std::sin(time * 2)));
+  float r = 4 * u;
+  for (int i = 0; i < 4; i++) {
+    float a = float(TAU / 4 * i), b = float(TAU / 4 * (i + 1));
+    s.line(xe + std::cos(a) * r, ye + std::sin(a) * r, xe + std::cos(b) * r,
+           ye + std::sin(b) * r, u, c);
+  }
+  std::string tag = fmt::format("{} {:.0f}", best.name(), tiles);
+  float half = Screen::textWidth(tag, small) * 0.5f + 4 * u;
+  s.textCenter(tag, clampf(xe - xn * 16 * u, half, s.w - half),
+               ye - yn * 16 * u - 8 * small, small, c.alpha(c.a * 0.85f));
+}
+
 void Game::renderCompass() {
   Night &n = level->night;
   if (!n.hasBeacon || menu)
     return;
   Screen &s = screen;
-  float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
-  float xo = std::floor((s.w - s.vw * k) / 2),
-        yo = std::floor((s.h - s.vh * k) / 2);
-  float xm = xo + s.vw * k * 0.5f, ym = yo + s.vh * k * 0.5f;
-  float xt = xo + float(n.beacon.centerX() - xView) * k,
-        yt = yo + float(n.beacon.centerY() - 24 - yView) * k;
-  float xd = xt - xm, yd = yt - ym,
-        dd = std::max(1.0f, std::sqrt(xd * xd + yd * yd));
-  float xh = s.vw * k * 0.5f - 18 * u, yh = s.vh * k * 0.5f - 18 * u;
-  float fit = std::min({1.0f, xd != 0 ? xh / std::abs(xd) : 1e9f,
-                        yd != 0 ? yh / std::abs(yd) : 1e9f});
-  float xe = xm + xd * fit, ye = ym + yd * fit, xn = xd / dd, yn = yd / dd;
-  if (fit >= 1)
-    xn = 0, yn = 1;
+  float u = s.u, small = std::max(1.0f, u - 1), xe, ye, xn, yn;
+  edge(n.beacon.centerX(), n.beacon.centerY() - 24, xe, ye, xn, yn);
   Color c = col::gold.alpha(0.75f + 0.25f * std::sin(time * 5));
   s.line(xe, ye, xe - xn * 8 * u - yn * 5 * u, ye - yn * 8 * u + xn * 5 * u,
          2 * u, c);
@@ -651,6 +708,7 @@ void Game::renderHud() {
     s.rect(kx, ky, kw, 4 * u, col::panel);
     s.rect(kx, ky, kw * n.kindling, 4 * u, col::gold);
   }
+  renderLandmarks();
   renderCompass();
   renderMinimap();
 
@@ -742,8 +800,8 @@ void Game::renderHud() {
 
   if (bannerTime > 0 && !menu) {
     float a = std::min({1.0f, bannerTime * 2, (3 - bannerTime) * 4});
-    float size = 2 * u, y = s.h * 0.22f;
-    float pw = Screen::textWidth(banner, size) + 24 * u, ph = 16 * size + 8 * u;
+    float size = u, y = s.h * 0.22f;
+    float pw = Screen::textWidth(banner, size) + 14 * u, ph = 16 * size + 6 * u;
     float px = std::floor(s.w / 2 - pw / 2), py = y - 2 * u;
     s.rect(px, py, pw, ph, col::panel.alpha(0.72f * a));
     s.rect(px, py, pw, u, col::gold.alpha(0.55f * a));

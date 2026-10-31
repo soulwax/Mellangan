@@ -59,7 +59,7 @@ void Player::tick() {
   double k = damp(surface == 1 ? 6 : surface == 2 ? 2.5f : 18, DT);
   float v = speed * level->step * status.movement() *
             (surface == 1 ? 0.55f : surface == 2 ? 1.05f : 1) *
-            level->climb(x, y, xd, yd);
+            level->climb(x, y, xd, yd) * traits.speed();
   xa += (xd * v - xa) * k;
   ya += (yd * v - ya) * k;
   double px = x, py = y;
@@ -73,6 +73,7 @@ void Player::tick() {
   if (xd != 0 || yd != 0)
     xAim = xd, yAim = yd;
   invuln = std::max(0.0f, invuln - DT);
+  traits.tick(*this);
   skillTime = std::max(0.0f, skillTime - DT);
   if (hero)
     hero->tick(*this);
@@ -91,6 +92,7 @@ void Player::render(Screen &s) {
   if (dead())
     return;
   bool blink = invuln > 0 && std::fmod(invuln, 0.12f) < 0.06f;
+  traits.render(s, *this, radius, animT);
   float move = float(std::sqrt(xa * xa + ya * ya) / speed);
   drawBody(s, xp, yp, hero ? hero->sprite() : atlas::tile(tile), false, move, col::white,
            blink ? 0.7f : 0.0f, {1, 0.25f, 0.25f, 1});
@@ -127,7 +129,8 @@ void Player::hurt(float damage, bool periodic) {
   if ((!periodic && invuln > 0) || dead() || god)
     return;
   if (!periodic)
-    damage *= status.incoming() * level->game.balance.damageTaken;
+    damage = traits.incoming(*this, damage * status.incoming() *
+                                        level->game.balance.damageTaken);
   if (hero && (damage = hero->guard(*this, damage)) <= 0)
     return;
   for (auto &up : upgrades)

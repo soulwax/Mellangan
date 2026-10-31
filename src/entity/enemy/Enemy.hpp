@@ -81,6 +81,8 @@ public:
   bool is(EnemyKind k) const { return kind() == int(k); }
   Sprite sprite() const;
   void makeElite(float health = 4);
+  bool hostile() const override { return true; }
+  void split() override;
   void makeBoss(float health, float damage);
   void think();
   void move();

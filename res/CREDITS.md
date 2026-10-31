@@ -11,3 +11,4 @@
 - **Weather sprites** (`weather.png`): cloud, fog and splash shapes pixelated from the NS1 Fog, Snow and Rain Light VFX packs by `tools/make_weather.py`; ripples, drops and flakes are drawn by the same script.
 - **Cliff walls** (`atlas.png`, rims band): from the sunken-patch tiles of [DuskMoon](https://github.com/soulwax/DuskMoon) by soulwax, with the grass cut out by `tools/make_rims.py` (source: `tools/source/duskmoon_cliffs.png`).
 - **Landmark sprites** (`atlas.png`, landmarks band): painted by `tools/make_landmarks.py`.
+- **Cliff materials** (`atlas.png`, cliffs band): stone, sandstone, ice, basalt and mossy stone painted by `tools/make_cliffs.py`.

@@ -1,4 +1,5 @@
 #include "entity/enemy/Enemy.hpp"
+#include "entity/enemy/Hazard.hpp"
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
@@ -307,6 +308,7 @@ void Enemy::move() {
     spdMul = 1.35f;
   }
   spdMul *= status.movement();
+  spdMul *= traits.speed();
   if (!type.floats && level->surfaceAt(x, y) == 1)
     spdMul *= is(EnemyKind::MireLeech) ? 1.2f : 0.5f;
   if (!type.floats)
@@ -376,6 +378,8 @@ void Enemy::tick() {
   if (removed)
     return;
   act();
+  if (!type.floats)
+    traits.tick(*this);
   Player &p = *level->player;
   double xd = p.x - x, yd = p.y - y, dist = std::sqrt(xd * xd + yd * yd);
   float reach = type.radius + 5;
@@ -383,15 +387,30 @@ void Enemy::tick() {
     x = p.x - xd / dist * reach;
     y = p.y - yd / dist * reach;
     p.felledBy = name();
+    bool lands = p.invuln <= 0 && !p.god;
+    float before = p.hp;
     p.hurt(type.damage * damageMul);
+    if (lands)
+      traits.landed(*this, std::max(before - p.hp, maxHp * 0.1f));
   }
 }
 
 void Enemy::makeElite(float health) {
   elite = true;
+  traits.add(Trait(int(roll() * int(Trait::Count)) % int(Trait::Count)));
   hp = maxHp *= health;
   scale *= 1.35f;
   radius *= 1.3f;
+}
+
+void Enemy::split() {
+  for (int i = 0; i < 2; i++) {
+    auto e = Enemy::create(EnemyKind(kind()), 1, damageMul);
+    e->hp = e->maxHp = maxHp / 8;
+    e->x = x + (i ? 8 : -8), e->y = y, e->aware = true;
+    level->add(std::move(e));
+  }
+  Spark::burst(*level, x, bodyY(), TRAITS[int(Trait::Splitting)].color, 8, 60, false);
 }
 
 void Enemy::makeBoss(float health, float damage) {
@@ -409,8 +428,12 @@ void Enemy::render(Screen &s) {
     s.ring(xp, yp, radius + 10, Color{0.9f, 0.15f, 0.2f, beat * 0.4f});
   }
   Color c = tint();
-  if (elite)
-    c = {c.r, c.g * 0.85f, c.b * 0.45f, c.a};
+  traits.render(s, *this, radius, age);
+  if (traits.any()) {
+    Color a = traits.tone();
+    c = {c.r * (0.7f + 0.3f * a.r), c.g * (0.7f + 0.3f * a.g),
+         c.b * (0.7f + 0.3f * a.b), c.a};
+  }
   if (const Goal *g = goals.front())
     if (float t = g->tell(*this); t > 0) {
       c = {c.r, c.g * (1 - 0.6f * t), c.b * (1 - 0.6f * t), c.a};
@@ -430,7 +453,7 @@ void Enemy::renderLight(Screen &s) {
   if (boss)
     s.glow(xp, yp - 7 * scale, 130, {0.35f, 0.06f, 0.08f, 1});
   if (elite)
-    s.glow(xp, yp - 7 * scale, 40 * scale, {0.12f, 0.09f, 0.02f, 1});
+    s.glow(xp, yp - 7 * scale, 40 * scale, traits.tone() * 0.12f);
 }
 
 void Enemy::renderShadow(Screen &s) { drawShadow(s, xp, yp, type.floats); }
@@ -466,11 +489,19 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
     xd = yd = 0;
   if (!periodic)
     damage *= status.incoming();
+  if (!periodic)
+    damage = traits.incoming(*this, damage);
+  if (src && !type.floats &&
+      level->heightAt(level->player->x, level->player->y) > level->heightAt(x, y))
+    damage *= 1.15f;
   bool crit = !periodic && rng.chance(0.08f + level->player->luck);
   if (crit)
     damage *= level->player->hero ? level->player->hero->edge() : 1.8f;
-  if (src)
+  if (src) {
     src->dealt += std::min(damage, std::max(hp, 0.0f));
+    if (!periodic)
+      level->player->traits.landed(*level->player, damage * 0.1f);
+  }
   level->totalDamage += damage;
   hp -= damage;
   flash = 0.1f;
@@ -511,6 +542,7 @@ void Enemy::die() {
     level->add<Potion>(x + 6, y);
   if (elite)
     level->game.hitStop(0.035f);
+  traits.died(*this, type.damage * damageMul * 2);
   if (boss) {
     level->add<Chest>(x, y);
     level->add<Shockwave>(x, bodyY(), 6, 90, 0.6f, Color{0.95f, 0.2f, 0.25f, 1})

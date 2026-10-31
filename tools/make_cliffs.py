@@ -9,8 +9,12 @@ tiles. The plateau top is left transparent, so the walls overlay any ground:
     corners     rounded, with the south face wrapping into the side faces
 Textures repeat every 16 px along each edge, so middle tiles join seamlessly when the set is laid out.
 
-Material 0 is the owner's DuskMoon earth (make_rims.py, cells 297-305). This script adds materials 1-5 after it, at
-cells 297 + m*9 of the rims band: stone, sandstone, ice, basalt, mossy stone. Mirrors atlas::cliff(material, offset).
+Material 0 is the owner's DuskMoon earth (make_rims.py, rims band cells 297-305). This script paints materials 1-5
+(stone, sandstone, ice, basalt, mossy stone) into the cliffs band at y=1326: material m owns cells (m-1)*9 .. +8, row by
+row. Mirrors atlas::cliff(material, offset).
+After them, cells 45 + m*3 .. +2 hold each material's stairs (left, middle, right), m 0-5 including DuskMoon earth:
+steps descending south, each a lit tread over a shaded riser, flanked by side walls at the ends. Mirrors
+atlas::stairs(material, part).
 
 Usage: python tools/make_cliffs.py [--preview out.png]   (make_assets.py calls add_cliffs too)
 """
@@ -22,7 +26,8 @@ from PIL import Image
 from make_grounds import CELL
 
 RIM_Y = 786
-FIRST_CELL = 297
+DUSKMOON_CELL = 297
+BAND_Y = 1326
 FACE = 14
 SIDE = 4
 
@@ -111,17 +116,50 @@ def paint(pal, moss, seed):
     return canvas
 
 
+EARTH = [(176, 124, 100), (140, 96, 74), (110, 74, 57), (82, 58, 48), (62, 47, 52)]
+STAIRS_CELL = 45
+
+
+def stairs(pal, part):
+    light, mid, dark, deep, outline = pal
+    tile = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = tile.load()
+    for y in range(16):
+        step = y % 4
+        tone = light if step == 0 else mid if step < 3 else dark
+        if y >= 12:
+            tone = {light: mid, mid: dark, dark: deep}[tone]
+        for x in range(16):
+            c = tone
+            if part == 0 and x < 3:
+                c = outline if x == 0 else dark if x == 1 else mid
+            elif part == 2 and x > 12:
+                c = outline if x == 15 else deep if x == 14 else dark
+            elif noise(x, y, 7 + part) > 0.9 and step in (1, 2):
+                c = dark
+            px[x, y] = (*c, 255)
+    return tile
+
+
+def stairs_slot(material, part):
+    i = STAIRS_CELL + material * 3 + part
+    return (i % 24) * CELL + 1, BAND_Y + (i // 24) * CELL + 1
+
+
 def cliff_slot(material, cell):
-    i = FIRST_CELL + material * 9 + cell
-    return (i % 24) * CELL + 1, RIM_Y + (i // 24) * CELL + 1
+    if material == 0:
+        i = DUSKMOON_CELL + cell
+        return (i % 24) * CELL + 1, RIM_Y + (i // 24) * CELL + 1
+    i = (material - 1) * 9 + cell
+    return (i % 24) * CELL + 1, BAND_Y + (i // 24) * CELL + 1
 
 
 def rows():
-    return (FIRST_CELL + (len(MATERIALS) + 1) * 9 + 23) // 24
+    return (STAIRS_CELL + (len(MATERIALS) + 1) * 3 + 23) // 24
 
 
 def add_cliffs(atlas):
-    out = Image.new("RGBA", (atlas.width, max(atlas.height, RIM_Y + rows() * CELL)), (0, 0, 0, 0))
+    out = Image.new("RGBA", (atlas.width, max(atlas.height, BAND_Y + rows() * CELL)), (0, 0, 0, 0))
     out.paste(atlas, (0, 0))
     for m, (name, pal, moss) in enumerate(MATERIALS, start=1):
         canvas = paint(pal, moss, m * 97)
@@ -129,15 +167,21 @@ def add_cliffs(atlas):
             for col in range(3):
                 tile = canvas.crop((col * 16, row * 16, col * 16 + 16, row * 16 + 16))
                 out.paste(tile, cliff_slot(m, row * 3 + col))
+    for m, pal in enumerate([EARTH] + [p for _, p, _ in MATERIALS]):
+        for part in range(3):
+            out.paste(stairs(pal, part), stairs_slot(m, part))
     return out
 
 
 def preview(atlas, path, zoom=6):
-    img = Image.new("RGBA", ((len(MATERIALS) + 1) * 52, 52), (90, 150, 80, 255))
+    img = Image.new("RGBA", ((len(MATERIALS) + 1) * 52, 72), (90, 150, 80, 255))
     for m in range(len(MATERIALS) + 1):
         for cell in range(9):
             x, y = cliff_slot(m, cell)
             img.alpha_composite(atlas.crop((x, y, x + 16, y + 16)), (m * 52 + cell % 3 * 16 + 2, cell // 3 * 16 + 2))
+        for part in range(3):
+            x, y = stairs_slot(m, part)
+            img.alpha_composite(atlas.crop((x, y, x + 16, y + 16)), (m * 52 + part * 16 + 2, 54))
     img.resize((img.width * zoom, img.height * zoom), Image.Resampling.NEAREST).save(path)
 
 

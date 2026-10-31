@@ -76,6 +76,14 @@ public:
   static float textWidth(std::string_view s, float size) {
     return float(s.size()) * 8 * size;
   }
+  static std::string fit(std::string_view text, float width, float size) {
+    int chars = std::max(0, int(width / (8 * size)));
+    if (int(text.size()) <= chars)
+      return std::string(text);
+    if (chars <= 3)
+      return std::string(chars, '.');
+    return std::string(text.substr(0, chars - 3)) + "...";
+  }
   bool visible(double x, double y, float margin) const;
 
 private:
