@@ -49,8 +49,10 @@ void Player::tick() {
   double dd = std::sqrt(xd * xd + yd * yd);
   if (dd > 0)
     xd /= dd, yd /= dd;
-  double k = damp(18, DT);
-  float v = speed * level->step * status.movement();
+  int surface = level->surfaceAt(x, y);
+  double k = damp(surface == 1 ? 6 : surface == 2 ? 2.5f : 18, DT);
+  float v = speed * level->step * status.movement() *
+            (surface == 1 ? 0.55f : surface == 2 ? 1.05f : 1);
   xa += (xd * v - xa) * k;
   ya += (yd * v - ya) * k;
   double px = x, py = y;

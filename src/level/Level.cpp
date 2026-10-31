@@ -400,10 +400,13 @@ void Level::renderFloor(Screen &s) {
     float n = world::groundShade(x, y), shade = 0.8f + 0.2f * n;
     int own = int(world::biomeAt(x, y));
     Structure st;
-    bool protectedGround = world::structureAt(x, y, st) || world::isDirt(x, y) ||
-                           BIOMES[own]->fixedGround(x, y);
+    bool wet = world::isWater(x, y);
+    bool protectedGround = wet || world::structureAt(x, y, st) ||
+                           world::isDirt(x, y) || BIOMES[own]->fixedGround(x, y);
     if (protectedGround) {
       Color t = world::groundTint(x, y);
+      if (wet)
+        shade *= world::isIce(x, y) ? 0.95f : 0.82f;
       s.color({shade * t.r, shade * 0.97f * t.g,
                (shade * 0.93f + 0.04f * (1 - n)) * t.b, 1});
       s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
@@ -456,6 +459,14 @@ void Level::scatter(Screen &s) {
   std::fill(std::begin(solids), std::end(solids), 0.0f);
   solidX = int(std::floor(s.xOffset / 16.0)) - 3,
   solidY = int(std::floor(s.yOffset / 16.0)) - 3;
+  waterInView = false;
+  for (int gy = 0; gy < SOLID_H; gy++)
+    for (int gx = 0; gx < SOLID_W; gx++) {
+      int x = solidX + gx, y = solidY + gy;
+      uint8_t f = world::isWater(x, y) ? world::isIce(x, y) ? 2 : 1 : 0;
+      surfaces[gy * SOLID_W + gx] = f;
+      waterInView |= f != 0;
+    }
   Prop p;
   eachVisibleTile(
       s,
@@ -495,6 +506,21 @@ void Level::collide(double &x, double &y, float radius) const {
     }
 }
 
+int Level::surfaceAt(double x, double y) const {
+  int gx = int(std::floor(x / 16)) - solidX, gy = int(std::floor((y - 2) / 16)) - solidY;
+  if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H)
+    return 0;
+  return surfaces[gy * SOLID_W + gx];
+}
+
+bool Level::swimming(const SpriteObject *e) const {
+  if (!waterInView || surfaceAt(e->x, e->y) != 1)
+    return false;
+  if (auto *en = dynamic_cast<const Enemy *>(e))
+    return !en->type.floats;
+  return dynamic_cast<const Player *>(e) != nullptr;
+}
+
 bool Level::blocks(double x, double y) const {
   int tx = int(std::floor(x / 16)), ty = int(std::floor(y / 16));
   for (int yt = ty - 1; yt <= ty + 1; yt++)
@@ -529,7 +555,7 @@ void Level::render(Screen &s) {
     queue(&p);
   radixSort(keys, keysTmp);
   prof_end(PROF_SORT);
-  if (sky.flood() > 0)
+  if (sky.flood() > 0 || waterInView)
     reflect(s);
   prof_begin(PROF_DRAW);
   bool shadows = false;
@@ -543,10 +569,22 @@ void Level::render(Screen &s) {
         float width, height = e->occlusion(width);
         if (height > 0)
           lights.cast(s, e->x, e->y, width, height);
+        if (swimming(e)) {
+          int frame = 2 + (int(time * 3 + e->x * 0.1) & 1);
+          s.sky(atlas::wx::ripple(frame), e->x, e->y - 2,
+                Color{0.75f, 0.85f, 1, 0.55f}, 1.6f, 1.2f);
+          continue;
+        }
         e->drawShadow(s);
       }
     }
-    drawn[k & 0xFFFFFF]->draw(s);
+    SpriteObject *e = drawn[k & 0xFFFFFF];
+    if (swimming(e)) {
+      s.submerge(std::floor(e->y) - 5);
+      e->draw(s);
+      s.emerge();
+    } else
+      e->draw(s);
   }
   sky.render(s, air);
   prof_end(PROF_DRAW);
@@ -557,12 +595,16 @@ void Level::reflect(Screen &s) {
   for (uint64_t k : keys) {
     SpriteObject *e = drawn[k & 0xFFFFFF];
     int tx = int(std::floor(e->x / 16)), ty = int(std::floor(e->y / 16));
-    if (!sky.poolAt(tx, ty) || !sky.poolAt(tx, ty + 1))
+    auto wet = [&](int x, int y) {
+      return sky.poolAt(x, y) || surfaces[std::clamp(y - solidY, 0, SOLID_H - 1) * SOLID_W +
+                                          std::clamp(x - solidX, 0, SOLID_W - 1)] == 1;
+    };
+    if (!wet(tx, ty + 1) || (!wet(tx, ty) && !wet(tx, ty + 2)))
       continue;
     Prop *prop = dynamic_cast<Prop *>(e);
     if (!prop && !dynamic_cast<Entity *>(e))
       continue;
-    if (prop && prop->count > 1 && !sky.poolAt(tx, ty + 2))
+    if (prop && prop->count > 1 && !wet(tx, ty + 2))
       continue;
     bool crowd = dynamic_cast<Enemy *>(e);
     if (crowd && shown >= 48)

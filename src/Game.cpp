@@ -262,6 +262,20 @@ void Game::newGame(bool reroll) {
     armPlayer();
   if (dev && biomePick >= 0 && biomePick < BIOME_COUNT)
     visitBiome();
+  if (dev && lakePick)
+    for (int r = 0, found = 0; r < 2000 && !found; r += 4)
+      for (int i = 0, n = std::max(1, r); i < n && !found; i++) {
+        double a = TAU * i / n;
+        int x = int(std::cos(a) * r), y = int(std::sin(a) * r);
+        if (world::isWater(x, y) && world::isWater(x, y - 2) && !world::isWater(x, y + 3)) {
+          atX = x, atY = y, atPick = found = 1;
+        }
+      }
+  if (dev && atPick) {
+    Player &p = *level->player;
+    p.x = atX * 16 + 8, p.y = atY * 16 + 8, xCam = p.x, yCam = p.y;
+    spdlog::info("dev: starting at tile ({}, {})", atX, atY);
+  }
   setMenu(nullptr);
   best = 0, beatBest = false;
   if (level->omen >= 0)

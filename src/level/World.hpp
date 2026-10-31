@@ -34,6 +34,8 @@ struct GroundBlend {
 
 GroundBlend groundBlend(int x, int y);
 bool isDirt(int x, int y);
+bool isWater(int x, int y);
+bool isIce(int x, int y);
 Sprite groundTile(int x, int y);
 float groundShade(int x, int y);
 Color groundTint(int x, int y);

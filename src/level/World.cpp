@@ -33,8 +33,26 @@ enum : uint32_t {
   HAS_RAW = 1 << 10,
   HAS_RAW_DIRT = 1 << 11,
   RAW_DIRT = 1 << 12,
-  RAW_SHIFT = 13
+  RAW_SHIFT = 13,
+  HAS_RAW_WATER = 1 << 18,
+  RAW_WATER = 1 << 19,
+  HAS_WATER = 1 << 20,
+  WATER = 1 << 21
 };
+
+const float LAKES[BIOME_COUNT] = {
+    0,     0.04f, 0.02f, -0.06f, 0,     0,     0.02f, 0.16f, -1,
+    0.08f, -0.12f, -1,   0,      0.06f, -1,    0.04f, -1,    0.2f,
+    0.06f, 0.14f, 0.08f, 0.02f,  0,     -1,    0.06f, 0};
+
+bool lake(int x, int y, float margin) {
+  GroundBlend g = groundBlend(x, y);
+  float bias = 0;
+  for (int i = 0; i < g.count; i++)
+    bias += LAKES[g.biome[i]] * g.weight[i];
+  return noise_fbm(x * 0.011f + 41.7f, y * 0.011f - 13.3f, 3, 1201) <
+         -0.3f + bias + margin;
+}
 struct TileMemo {
   int32_t x, y;
   uint32_t bits, epoch;
@@ -147,6 +165,22 @@ bool rawDirt(int x, int y) {
 
 bool rawDirtAt(int x, int y, const void *) { return rawDirt(x, y); }
 
+bool rawWater(int x, int y) {
+  TileMemo *m = memoAt(x, y);
+  if (!(m->bits & HAS_RAW_WATER)) {
+    Structure s;
+    BiomeId b = biomeAt(x, y);
+    bool wet = (std::abs(x) > 10 || std::abs(y) > 10) &&
+               !structureAt(x, y, s, 2) && !BIOMES[b]->fixedGround(x, y) &&
+               lake(x, y, 0);
+    m = memoAt(x, y);
+    m->bits |= HAS_RAW_WATER | (wet ? uint32_t(RAW_WATER) : 0u);
+  }
+  return m->bits & RAW_WATER;
+}
+
+bool rawWaterAt(int x, int y, const void *) { return rawWater(x, y); }
+
 bool patchDirt(int x, int y) { return smoothPatch(rawDirtAt, nullptr, x, y); }
 
 // Dirt rim tile offset from a 4-bit neighbour mask (n, s, w, e): a lone side
@@ -164,8 +198,9 @@ constexpr uint8_t RIM[16] = {
 bool rollStructure(int rx, int ry, Structure *out) {
   uint32_t h = hash2(rx * 31 + 7, ry * 17 - 3);
   int cx = rx * REGION + REGION / 2, cy = ry * REGION + REGION / 2;
-  const Biome *b = BIOMES[biomeAt(cx, cy)];
-  if (int(h % 100) >= b->structureChance)
+  BiomeId id = biomeAt(cx, cy);
+  const Biome *b = BIOMES[id];
+  if (int(h % 100) >= b->structureChance || lake(cx, cy, 0.08f))
     return false;
 
   StructureKind kind = pickKind(b, h >> 8);
@@ -281,6 +316,20 @@ bool isDirt(int x, int y) {
   return m->bits & DIRT;
 }
 
+bool isWater(int x, int y) {
+  TileMemo *m = memoAt(x, y);
+  if (!(m->bits & HAS_WATER)) {
+    bool wet = smoothPatch(rawWaterAt, nullptr, x, y);
+    m = memoAt(x, y);
+    m->bits |= HAS_WATER | (wet ? uint32_t(WATER) : 0u);
+  }
+  return m->bits & WATER;
+}
+
+bool isIce(int x, int y) {
+  return isWater(x, y) && BIOMES[biomeAt(x, y)]->winter();
+}
+
 int rim(int mask) { return RIM[mask & 15]; }
 
 bool winterAt(int x, int y) { return BIOMES[biomeAt(x, y)]->winter(); }
@@ -297,6 +346,11 @@ Sprite groundTile(int x, int y) {
   const Biome *b = BIOMES[biomeAt(x, y)];
   if (structureAt(x, y, st) && structureGround(&st, x - st.x, y - st.y, &out))
     return b->frost(out);
+  if (isWater(x, y)) {
+    int mask = int(isWater(x, y - 1)) | isWater(x, y + 1) << 1 |
+               isWater(x - 1, y) << 2 | isWater(x + 1, y) << 3;
+    return b->lakeRim(RIM[mask]);
+  }
   if (!isDirt(x, y)) {
     if (b->ground(x, y, &out))
       return out;
@@ -344,7 +398,7 @@ bool propAt(int x, int y, Prop &p) {
   Structure st;
   if (structureAt(x, y, st, 1))
     return structureProp(&st, x - st.x, y - st.y, &p);
-  if ((std::abs(x) < 4 && std::abs(y) < 4) || isDirt(x, y))
+  if ((std::abs(x) < 4 && std::abs(y) < 4) || isDirt(x, y) || isWater(x, y))
     return false;
 
   uint32_t h = hash2(x * 7 + 3, y * 13 + 1);

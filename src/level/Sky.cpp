@@ -123,7 +123,7 @@ float Sky::lowland(int x, int y) {
 
 float Sky::puddle(int x, int y) const {
   if (laid != Front::Rain || cover <= 0.02f || hash2(x * 7 + 1, y * 13 + 5) % 2 ||
-      poolAt(x, y))
+      poolAt(x, y) || world::isWater(x, y))
     return 0;
   return clampf((lowland(x, y) - 0.66f + 0.32f * cover) * 7, 0, 1) * cover;
 }
@@ -347,7 +347,8 @@ void Sky::renderGround(Screen &s) const {
     if (!d.landed || d.idle)
       continue;
     int dx = int(std::floor(d.x / 16)), dy = int(std::floor(d.y / 16));
-    bool pool = f.fall == Rain && (puddle(dx, dy) > 0.25f || poolAt(dx, dy));
+    bool pool = f.fall == Rain &&
+                (puddle(dx, dy) > 0.25f || poolAt(dx, dy) || world::isWater(dx, dy));
     if (f.fall == Rain && d.age < 0.1f)
       s.sky(atlas::wx::splash(d.age < 0.05f ? 0 : 1), d.x, d.y - 3,
             f.tint.alpha((pool ? 0.7f : 0.45f) * d.depth));
@@ -451,18 +452,21 @@ bool Sky::snowAt(int x, int y) const {
 }
 
 void Sky::renderLight(Screen &s) const {
-  if (laid != Front::Rain || cover < 0.1f)
-    return;
   int x0 = int(std::floor((cx - 96) / 16)), y0 = int(std::floor((cy - 72) / 16));
   for (int y = y0; y <= y0 + 9; y++)
     for (int x = x0; x <= x0 + 12; x++) {
       float a = puddle(x, y);
-      if (poolAt(x, y)) {
-        float dx = x * 16 + 8 - cx, dy = y * 16 + 8 - cy;
+      if (poolAt(x, y) || (world::isWater(x, y) && !world::isIce(x, y))) {
+        uint32_t g = hash2(x * 5 + 2, y * 11 + 7);
+        if (g % 3)
+          continue;
+        float gx = x * 16 + 2 + float(g >> 8 & 11), gy = y * 16 + 2 + float(g >> 12 & 11);
+        float dx = gx - cx, dy = gy - cy;
         float near = clampf(1 - std::sqrt(dx * dx + dy * dy) / 120, 0, 1);
-        float shine = near * 0.35f + flash * 0.9f;
+        float shine = (near * 0.35f + flash * 0.9f) *
+                      (0.7f + 0.3f * std::sin(ox * 0.05f + float(g & 63)));
         if (shine > 0.04f)
-          s.glow(x * 16 + 8, y * 16 + 8, 20, Color{0.4f, 0.5f, 0.72f, 1} * shine);
+          s.glow(gx, gy, 12, Color{0.4f, 0.5f, 0.72f, 1} * shine);
         continue;
       }
       if (a < 0.3f)

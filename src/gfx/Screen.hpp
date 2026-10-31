@@ -51,6 +51,8 @@ public:
   void color(Color c);
   void mirror(double axis, Color veil) { mirrorY = axis, this->veil = veil, mirrored = true; }
   void unmirror() { mirrored = false; }
+  void submerge(double line) { waterline = line, sunk = true; }
+  void emerge() { sunk = false; }
   void sprite(const Sprite &s, double x, double y, float xo, float yo,
               float xs = 1, float ys = 1, float rot = 0);
   void center(const Sprite &s, double x, double y, float scale = 1,
@@ -83,7 +85,8 @@ private:
   VK2DShader post = nullptr;
   Color current, veil;
   double mirrorY = 0;
-  bool mirrored = false;
+  bool mirrored = false, sunk = false;
+  double waterline = 0;
   int lightBudget = 0;
 
   void glyphs(std::string_view s, double x, double y, float size);

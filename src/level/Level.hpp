@@ -107,6 +107,8 @@ public:
   bool visited(const Structure &s) const;
   float strike();
   void reflect(Screen &s);
+  int surfaceAt(double x, double y) const;
+  bool swimming(const SpriteObject *e) const;
   static bool unvisited(const Structure *s, const void *level);
 
 private:
@@ -125,6 +127,8 @@ private:
   std::vector<Enemy *> cells;
   double xGrid = 0, yGrid = 0;
   float solids[SOLID_H * SOLID_W]{};
+  uint8_t surfaces[SOLID_W * SOLID_H]{};
+  bool waterInView = false;
   int solidX = 0, solidY = 0;
   std::unordered_set<uint64_t> visits;
 

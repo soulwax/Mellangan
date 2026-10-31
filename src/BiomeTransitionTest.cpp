@@ -654,8 +654,9 @@ int mapBiomes(const char *path) {
   std::vector<unsigned char> rgb(SIDE * SIDE * 3);
   for (int j = 0; j < SIDE; j++)
     for (int i = 0; i < SIDE; i++) {
-      Color c = BIOMES[world::biomeAt((i - SIDE / 2) * STEP,
-                                      (j - SIDE / 2) * STEP)]->debug;
+      int x = (i - SIDE / 2) * STEP, y = (j - SIDE / 2) * STEP;
+      Color c = world::isWater(x, y) ? Color{0.1f, 0.25f, 0.85f, 1}
+                                     : BIOMES[world::biomeAt(x, y)]->debug;
       unsigned char *o = &rgb[(j * SIDE + i) * 3];
       o[0] = (unsigned char)(c.r * 255), o[1] = (unsigned char)(c.g * 255),
       o[2] = (unsigned char)(c.b * 255);

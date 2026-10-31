@@ -13,6 +13,9 @@ public:
   Sprite dirtRim(int offset) const override {
     return atlas::dirtEdge(set < atlas::cp::Lava ? set : set - 1, offset);
   }
+  Sprite lakeRim(int offset) const override {
+    return atlas::waterEdge(set < atlas::cp::Lava ? set : set - 1, offset);
+  }
 
 protected:
   BiomeId self;

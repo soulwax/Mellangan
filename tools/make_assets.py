@@ -35,8 +35,8 @@ PIPELINE = (
     ("sprite kit", (432, 552), add_sprites),
     ("grounds", (432, 624), add_grounds),
     ("frontier", (432, 624), add_frontier),
-    ("expansion", (432, 894), add_expansion),
-    ("dirt rims", (432, 894), add_rims),
+    ("expansion", (432, 1020), add_expansion),
+    ("dirt rims", (432, 1020), add_rims),
 )
 
 

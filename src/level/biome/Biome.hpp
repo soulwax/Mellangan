@@ -69,6 +69,7 @@ public:
   virtual Sprite grass(int kind) const;
   virtual Sprite transitionGround(int kind) const { return grass(kind); }
   virtual Sprite dirtRim(int offset) const;
+  virtual Sprite lakeRim(int offset) const { return atlas::waterRim(offset); }
   virtual Sprite frost(Sprite ground) const { return ground; }
   virtual void weather(Level &, double, double) const {}
   virtual bool ground(int, int, Sprite *) const { return false; }

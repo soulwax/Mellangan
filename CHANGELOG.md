@@ -91,6 +91,18 @@ All notable changes to Mellangan are documented here. The format follows
 - Seven new particle icons: maple leaf, raindrop, gust, seed fluff, falling star, butterfly and spore.
 - Dev: `--biome N` starts a `--dev` run inside biome N, F10 cycles the weather, and `--biome-map <file.ppm>` writes a map of the world's biomes.
 
+- Lakes. Ponds and lakes dot the world, gathered in hollows rather than scattered as puddles:
+  - The Mire, the Floodplain and the Sunken Ruins are rich in water; deserts, badlands and the Ashlands stay dry.
+  - Lakes keep clear of the start and of every building site, so shrines are always on dry land.
+  - Each land rings its lakes with its own ground (ash, moss, clay and so on).
+  - Lakes in the Snowfields freeze into ice.
+- Swimming:
+  - You can wade into any lake and swim at a little over half speed, with a floaty glide, sunk to the waist with a wake around you.
+  - Ice is slippery.
+  - Foes swim slowly too, except Mire Leeches, which are faster in water; bats, ghosts and other flyers pass straight over. A lake is a place to break a chase, or a trap if the wrong foes follow.
+  - Water glints in your torchlight, rain rings on lakes, and lakes mirror what stands in and beside them.
+- Dev: `--at X,Y` starts a `--dev` run on a tile, and `--lake` at the nearest lakeshore.
+
 ### Changed
 
 - Region events are defined in one table, which makes each event easy to tune.

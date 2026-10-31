@@ -42,7 +42,8 @@ public:
 
   WorldMode worldMode = WorldMode::Classic;
   std::string seedCode, arm;
-  int heroPick = -1, biomePick = -1;
+  int heroPick = -1, biomePick = -1, atX = 0, atY = 0;
+  bool atPick = false, lakePick = false;
   Balance balance;
   Difficulty difficulty = Difficulty::HurtMePlenty;
   std::string base;

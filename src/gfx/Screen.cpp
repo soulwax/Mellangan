@@ -163,9 +163,14 @@ void Screen::sprite(const Sprite &s, double x, double y, float xo, float yo,
                     float xs, float ys, float rot) {
   if (mirrored)
     y = 2 * mirrorY - y, ys = -ys, rot = -rot;
+  float h = s.h;
+  if (sunk && ys > 0) {
+    h = std::min(s.h, float((waterline - (y - yo * ys)) / ys));
+    if (h <= 0)
+      return;
+  }
   float xp = float(x - xOffset - xo * xs), yp = float(y - yOffset - yo * ys);
-  vk2dRendererDrawTexture(atlas, xp, yp, xs, ys, rot, xo, yo, s.x, s.y, s.w,
-                          s.h);
+  vk2dRendererDrawTexture(atlas, xp, yp, xs, ys, rot, xo, yo, s.x, s.y, s.w, h);
 }
 
 void Screen::center(const Sprite &s, double x, double y, float sc, float rot) {
@@ -191,7 +196,7 @@ bool Screen::loadSilhouette(const std::string &path) {
 void Screen::flash(const Sprite &s, double x, double y, float xo, float yo,
                    float xs, float ys, float rot, float amount, Color c) {
   sprite(s, x, y, xo, yo, xs, ys, rot);
-  if (amount <= 0 || mirrored)
+  if (amount <= 0 || mirrored || sunk)
     return;
   Color prev = current;
   color({c.r, c.g, c.b, prev.a * std::min(amount, 1.0f)});

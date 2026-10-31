@@ -13,6 +13,9 @@ public:
   Sprite dirtRim(int offset) const override {
     return atlas::dirtEdge(6 + index, offset);
   }
+  Sprite lakeRim(int offset) const override {
+    return atlas::waterEdge(6 + index, offset);
+  }
 };
 
 const Biome *expansionBiome(int index);
