@@ -1,10 +1,12 @@
 #include "level/Spawner.hpp"
 
 #include "Game.hpp"
+#include <spdlog/fmt/fmt.h>
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/SupplyBarrel.hpp"
 #include "level/Level.hpp"
+#include "entity/enemy/Boss.hpp"
 #include "level/Flavour.hpp"
 #include "level/biome/Biome.hpp"
 #include "particle/Spark.hpp"
@@ -19,6 +21,21 @@ const WaveDef WAVE_DEFS[Spawner::WAVES] = {
     {"THE PACK HUNTS", 100},     {"AMBUSH!", 120},
     {"THE DEAD RISE", 150},      {"THE LAND STIRS", 90},
 };
+const char *const NAMES[] = {"GRISK", "MORGRA", "VAEL", "UTHRAK", "SELKA",
+                             "BRANNOCH", "ISKRA", "DOLM", "HEXWYN", "KORR",
+                             "AMSEL", "TOVRIK", "NYX", "RUSKA", "OSSIAN",
+                             "MALVEK"};
+const char *const EPITHETS[] = {"THE HOLLOW",   "IRONHIDE",     "BONEGNAW",
+                                "THE UNBOWED",  "OF THE MIRE",  "ASHEN",
+                                "THE PALE",     "STORMBORN",    "THE GLUTTON",
+                                "NIGHTSTRIDER", "THE CROWNED",  "OF MANY SCARS"};
+const char *const ARMS[] = {"Arcane Staff",   "Orbiting Knives", "Frost Nova",
+                            "Chain Lightning", "Hurled Axe",      "Hunter's Bow",
+                            "Warding Halo",   "Storm Rod"};
+bool crownable(EnemyKind k) {
+  return k < EnemyKind::Mimic && k != EnemyKind::Cyclops && k != EnemyKind::Thief &&
+         k != EnemyKind::Skeleton && k != EnemyKind::Alpha;
+}
 } // namespace
 
 void Spawner::tick() {
@@ -106,6 +123,17 @@ void Spawner::tick() {
       level.game.announce("RENEGADES ON YOUR TRAIL");
     }
   }
+  if (t >= nextChampion * o.champions) {
+    nextChampion += rng.range(150, 230);
+    bool alive = false;
+    level.each<Enemy>([&](Enemy &e) { alive |= e.title && !e.def; });
+    if (!alive) {
+      double x, y;
+      ring(rng.range(300, 340), x, y);
+      if (Enemy *c = champion(x, y))
+        level.game.announce(fmt::format("A CHAMPION STALKS: {}", c->title));
+    }
+  }
   if (t >= nextBarrel) {
     nextBarrel += 20;
     auto b = std::make_unique<SupplyBarrel>();
@@ -117,17 +145,12 @@ void Spawner::tick() {
     bosses++;
     double x, y;
     ring(300, x, y);
-    struct BossDef {
-      EnemyKind kind;
-      const char *arrival;
-    };
-    static const BossDef BOSSES[] = {
-        {EnemyKind::Cyclops, "A CYCLOPS APPROACHES"},
-        {EnemyKind::Alpha, "THE PACK LORD HOWLS"},
-        {EnemyKind::Necromancer, "THE LICH RISES"}};
-    const BossDef &def = BOSSES[(bosses - 1) % 3];
-    spawn(def.kind, x, y, true, def.kind != EnemyKind::Cyclops);
-    level.game.announce(def.arrival);
+    const BossDef *def = bossFor(world::biomeAt(int(std::floor(level.player->x / 16)),
+                                                int(std::floor(level.player->y / 16))));
+    if (!def || rng.chance(0.3f))
+      def = &BOSS_DEFS[(bosses - 1) % 3];
+    spawn(def->kind, x, y, true, def->kind != EnemyKind::Cyclops);
+    level.game.announce(def->arrival);
     Sound::boss.play(0.8f, 0);
   }
 }
@@ -215,6 +238,31 @@ void Spawner::wave(int index, int count) {
   Sound::horde.play(0.7f, 0);
 }
 
+Enemy *Spawner::champion(double x, double y) {
+  uint32_t foes = BIOMES[world::biomeAt(int(std::floor(x / 16)),
+                                        int(std::floor(y / 16)))]->foes;
+  std::vector<EnemyKind> pick;
+  for (int k = 0; k < int(EnemyKind::Count); k++)
+    if ((foes & foe(EnemyKind(k))) && crownable(EnemyKind(k)))
+      pick.push_back(EnemyKind(k));
+  if (pick.empty())
+    for (int k = 0; k < int(EnemyKind::Cyclops); k++)
+      if (Enemy::typeOf(EnemyKind(k)).unlockAt <= level.time)
+        pick.push_back(EnemyKind(k));
+  if (pick.empty())
+    pick.push_back(EnemyKind::Rat);
+  Enemy *e = spawn(pick[rng.irange(0, int(pick.size()) - 1)], x, y, true);
+  if (!e)
+    return nullptr;
+  level.titles.push_back(fmt::format("{} {}", NAMES[rng.irange(0, int(std::size(NAMES)) - 1)],
+                                     EPITHETS[rng.irange(0, int(std::size(EPITHETS)) - 1)]));
+  e->crown(level.titles.back().c_str());
+  e->might = 0.5f, e->haste = 1.6f;
+  e->grant(ARMS[rng.irange(0, int(std::size(ARMS)) - 1)], 2);
+  level.bossIds.push_back(e->id);
+  return e;
+}
+
 Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
                       bool boss) {
   std::lock_guard<std::mutex> lock(spawnMutex);
@@ -237,8 +285,10 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   }
   Enemy *made = e.get();
   Entity *added = level.add(std::move(e));
-  if (boss || kind == EnemyKind::Cyclops)
+  if (boss || kind == EnemyKind::Cyclops) {
+    made->rule(bossOf(kind));
     level.bossIds.push_back(added->id);
+  }
   entt::entity alphaId = added->id;
 
   if (kind == EnemyKind::Alpha) {

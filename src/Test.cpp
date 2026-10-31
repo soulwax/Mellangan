@@ -1,5 +1,8 @@
 #undef NDEBUG
 #include <cassert>
+#ifdef _WIN32
+#include <stdlib.h>
+#endif
 
 #include "Test.hpp"
 #include "BiomeTransitionTest.hpp"
@@ -22,6 +25,9 @@
 #include "entity/enemy/Enemy.hpp"
 #include "item/skill/Skill.hpp"
 #include "level/Flavour.hpp"
+#include "entity/enemy/Boss.hpp"
+#include "entity/Trait.hpp"
+#include "entity/pickup/Chest.hpp"
 #include "entity/enemy/Renegade.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "entity/projectile/Arrow.hpp"
@@ -677,7 +683,8 @@ static void testRunVariety() {
     assert(cast);
     game.level.reset();
   }
-  for (EnemyKind k : {EnemyKind::Necromancer, EnemyKind::Alpha, EnemyKind::Cyclops}) {
+  for (const BossDef &d : BOSS_DEFS) {
+    EnemyKind k = d.kind;
     Game game;
     game.level = std::make_unique<Level>(game);
     Level &level = *game.level;
@@ -686,7 +693,7 @@ static void testRunVariety() {
     for (auto &up : p.upgrades)
       up->level = 0;
     Enemy *e = level.spawner.spawn(k, p.x + 60, p.y, true, k != EnemyKind::Cyclops);
-    assert(e && e->castCount >= 2);
+    assert(e && e->castCount >= 2 && e->def == &d && e->title == d.title);
     level.each<Enemy>([&](Enemy &o) {
       if (&o != e)
         o.remove();
@@ -694,7 +701,7 @@ static void testRunVariety() {
     float hp = p.hp;
     double px = p.x, py = p.y;
     int casts = 0;
-    for (int i = 0; i < 2400 && casts < 3; i++) {
+    for (int i = 0; i < 4800 && (casts < 3 || p.hp >= hp); i++) {
       p.invuln = 0, p.x = px, p.y = py;
       e->x = px + 60, e->y = py;
       bool winding = e->wind > 0;
@@ -702,9 +709,124 @@ static void testRunVariety() {
       casts += winding && e->wind <= 0;
     }
     assert(casts >= 2 && p.hp < hp);
+    int before = int(level.count<Enemy>());
+    e->hp = e->maxHp * 0.6f;
+    level.tick();
+    assert(e->phase == 1 && e->castCount == d.phases[1].count);
+    if (d.minions)
+      assert(int(level.count<Enemy>()) > before);
+    e->hp = e->maxHp * 0.3f;
+    level.tick();
+    assert(e->phase == 2);
     game.level.reset();
   }
-  std::cout << "[TEST] Waves, omens, skilled elites and boss rotations: PASS" << std::endl;
+  assert(bossFor(BIOME_SNOW)->kind == EnemyKind::Iceback &&
+         bossFor(BIOME_ASHLANDS)->kind == EnemyKind::CinderGolem);
+  for (int n = 0; n < 6; n++) {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    level.time = 300;
+    Enemy *c = level.spawner.champion(p.x + 200, p.y);
+    assert(c && c->title && std::strlen(c->title) > 4 && c->elite && c->castCount == 1);
+    int traits = 0;
+    for (int t = 0; t < int(Trait::Count); t++)
+      traits += c->traits.has(Trait(t));
+    assert(traits == 2 && !c->upgrades.empty() && c->upgrades[0]->level >= 1 &&
+           c->upgrades[0]->hostile());
+    assert(std::find(level.bossIds.begin(), level.bossIds.end(), c->id) !=
+           level.bossIds.end());
+    std::string name = c->name();
+    const char *title = c->title;
+    int chests = 0;
+    c->hurt(1e9f, 0, 0, 0);
+    level.tick();
+    for (auto [id, o] : level.reg.view<Owned>().each())
+      chests += dynamic_cast<Chest *>(o.self.get()) != nullptr;
+    assert(chests >= 1 && name == title);
+    game.level.reset();
+  }
+  std::cout << "[TEST] Waves, omens, skilled elites, boss rotations and champions: PASS"
+            << std::endl;
+}
+
+static void testNewTraits() {
+  auto setup = [](Game &game, Trait t, double dx) {
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    p.hp = p.maxHp = 1e6f, p.luck = -1;
+    for (auto &up : p.upgrades)
+      up->level = 0;
+    auto made = Enemy::create(EnemyKind::Knight, 50, 1);
+    Enemy *e = made.get();
+    e->x = p.x + dx, e->y = p.y, e->aware = false, e->plan = nullptr;
+    e->traits.add(t);
+    level.add(std::move(made));
+    level.tick();
+    return e;
+  };
+  {
+    Game game;
+    Enemy *e = setup(game, Trait::Thorned, 30);
+    Player &p = *game.level->player;
+    float hp = p.hp;
+    p.invuln = 0;
+    e->hurt(50, 0, 0, 0);
+    assert(p.hp < hp);
+    game.level.reset();
+  }
+  {
+    Game game;
+    Enemy *e = setup(game, Trait::Regenerating, 200);
+    e->hurt(e->maxHp * 0.5f, 0, 0, 0);
+    float hp = e->hp;
+    for (int i = 0; i < 300; i++)
+      game.level->tick();
+    assert(e->hp > hp);
+    game.level.reset();
+  }
+  {
+    Game game;
+    Enemy *e = setup(game, Trait::Blinking, 200);
+    double x = e->x, y = e->y;
+    e->hurt(5, 0, 0, 0);
+    assert(std::abs(e->x - x) + std::abs(e->y - y) > 20);
+    game.level.reset();
+  }
+  {
+    Game game;
+    Enemy *e = setup(game, Trait::Phasing, 200);
+    e->traits.cycle = 3.5f;
+    assert(e->traits.veiled() && e->traits.incoming(*e, 100) < 20);
+    e->traits.cycle = 1;
+    assert(!e->traits.veiled() && e->traits.incoming(*e, 100) == 100);
+    game.level.reset();
+  }
+  {
+    Game game;
+    setup(game, Trait::Brooding, 200);
+    int before = int(game.level->count<Enemy>());
+    for (int i = 0; i < 480; i++)
+      game.level->tick();
+    assert(int(game.level->count<Enemy>()) > before);
+    game.level.reset();
+  }
+  {
+    Game game;
+    Enemy *e = setup(game, Trait::Gravitic, 100);
+    Player &p = *game.level->player;
+    double ex = e->x, ey = e->y, x0 = p.x;
+    for (int i = 0; i < 60; i++) {
+      e->x = ex, e->y = ey;
+      game.level->tick();
+    }
+    assert(p.x > x0 + 5);
+    game.level.reset();
+  }
+  std::cout << "[TEST] Thorned, regenerating, blinking, phasing, brooding and gravitic traits: PASS"
+            << std::endl;
 }
 
 static void testNewFoes() {
@@ -801,6 +923,10 @@ static void testLevelLifecycleAndSimulation() {
 }
 
 int runTests() {
+#ifdef _WIN32
+  _set_error_mode(_OUT_TO_STDERR);
+  _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+#endif
   std::cout << "[TEST] Running memory leak & stability tests..." << std::endl;
   testPoolAllocAndFree();
   std::cout << "[TEST] Pool alloc/free & edge cases: PASS" << std::endl;
@@ -825,6 +951,7 @@ int runTests() {
   testArtsBothSides();
   testGeneralSkills();
   testRunVariety();
+  testNewTraits();
   testNewFoes();
   std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"

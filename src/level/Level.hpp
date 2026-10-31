@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -65,6 +66,7 @@ public:
 
   std::vector<std::unique_ptr<SpriteObject>> particles;
   std::vector<std::unique_ptr<Upgrade>> retired;
+  std::deque<std::string> titles;
 
   Entity *add(std::unique_ptr<Entity> e);
   SpriteObject *spawn(std::unique_ptr<SpriteObject> p);

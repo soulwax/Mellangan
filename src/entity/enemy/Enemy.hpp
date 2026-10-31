@@ -43,6 +43,7 @@ enum class EnemyKind {
 };
 
 class Enemy;
+struct BossDef;
 
 struct Cast {
   void (*fn)(Enemy &);
@@ -107,8 +108,14 @@ public:
   float castTime = 5, wind = 0;
   const Cast *casts = nullptr, *winding = nullptr;
   int castCount = 0;
+  const char *title = nullptr;
+  const BossDef *def = nullptr;
+  int phase = 0;
   void makeBoss(float health, float damage);
   void learn();
+  void crown(const char *name);
+  void rule(const BossDef &d);
+  void enrage();
   void channel();
   void think();
   void move();

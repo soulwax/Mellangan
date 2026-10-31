@@ -62,6 +62,37 @@ All notable changes to Mellangan are documented here. The format follows
   - the Pack Lord adds War Cry;
   - the Cyclops casts Volley and Ground Slam.
 
+- Champions: named foes that walk the land. From about two minutes in, a champion may appear, announced as "A CHAMPION STALKS: MORGRA THE HOLLOW". Each one is built at random, so no two are alike:
+  - a foe native to the land, with a crown ring and a golden glow;
+  - two traits, one general skill and a real weapon from your arsenal;
+  - its name on the boss bar, and a gold arrow with its name and distance when it is off screen.
+
+  Only one walks at a time. Each always drops a chest, and your death screen names it if it fells you.
+- A new omen, **Champion's Hour**: champions come far more often.
+- Six new bosses, one for each family of lands. A boss now usually matches the land you stand in, and the classic three still turn up anywhere:
+  - **The Frost Colossus** (snow, taiga): slams, nets and icy comets, with frost wisps;
+  - **The Glass Tyrant** (deserts, badlands, salt flats, glass desert): lunges, charges and fans of glass shards, with dust vultures;
+  - **The Spore Mother** (fungal wood, caverns, jungle): poison clouds, roots and a drag that pulls you in, with sporelings;
+  - **The Cinder King** (ashlands, ember fen): powder kegs, rings of fire, falling comets and mines, with ember imps;
+  - **The Bog Witch** (mire, floodplain): drags you in through poison and calls pillars of light, with mire leeches;
+  - **The Storm Herald** (storm steppe, starfall basin, crystal fields): thunder, chain lightning and comets, with cultists.
+- Every boss now fights in three phases, including the Cyclops, the Pack Lord and the Lich. At two thirds and one third health it enrages: it calls minions, raises a brief ward and switches to a harsher set of attacks. Two marks on the boss bar show where each phase begins. Bosses also burst into gems when they fall.
+
+- Six new elite traits, doubling the pool that elites and champions draw from. Each has a mark and a counter:
+  - **Thorned** (spiky olive ring): hitting it up close stings back, so fight it from range;
+  - **Regenerating** (green): heals once it has been left alone for a moment, so keep the pressure on;
+  - **Blinking** (violet): jumps away when struck, but blasts and auras still reach it;
+  - **Phasing** (pale): turns translucent and nearly untouchable for one second in every four, so time your strikes;
+  - **Brooding** (amber): sheds weak copies of itself every eight seconds, so kill it fast;
+  - **Gravitic** (indigo, pulsing ring): slowly drags you toward it, so keep moving.
+
+### Fixed
+
+- The boss bar always shows the real boss, even when a champion is also on the field.
+- Off-screen markers (shrine, landmark, champion) no longer overlap the boss bar.
+- A failed test now prints its error and exits instead of opening a dialog that blocks scripted runs.
+- In Release builds, tests now actually check their assertions. One test used to spin forever there, which left a black window open and locked the build.
+
 ### Changed
 
 - From level 4, a level-up offers a skill a little more often (one time in four, up from one in five). The offer draws from your class's skills and the general ones.

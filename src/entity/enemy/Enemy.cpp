@@ -1,8 +1,10 @@
 #include "entity/enemy/Enemy.hpp"
+#include "entity/enemy/Boss.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "entity/Ability.hpp"
 
 #include "Game.hpp"
+#include <spdlog/fmt/fmt.h>
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/AlphaWolf.hpp"
@@ -99,30 +101,6 @@ const EnemyType TYPES[] = {
 };
 constexpr int ELITE_XP = 6;
 
-const Cast LICH[] = {
-    {[](Enemy &e) { ability::blink(e, 80, 0.6f * e.type.damage, {0.72f, 0.45f, 1, 1}); },
-     6, 320, {0.72f, 0.45f, 1, 1}},
-    {[](Enemy &e) { ability::thunder(e, 4, 0.5f * e.type.damage); }, 7, 320,
-     {0.55f, 0.75f, 1, 1}},
-    {[](Enemy &e) { ability::comet(e, 3, 0.5f * e.type.damage); }, 8, 320,
-     {0.85f, 0.75f, 1, 1}},
-};
-const Cast PACK_LORD[] = {
-    {[](Enemy &e) {
-       ability::nova(e, 70, 0.5f * e.type.damage, e.maxHp * 0.03f,
-                     {0.95f, 0.25f, 0.3f, 1});
-     },
-     6, 120, {0.95f, 0.25f, 0.3f, 1}},
-    {[](Enemy &e) { ability::dance(e, 70, 0.5f * e.type.damage, {0.95f, 0.25f, 0.3f, 1}); },
-     6, 200, {1, 0.45f, 0.5f, 1}},
-    {[](Enemy &e) { ability::warcry(e, 140, 4); }, 9, 140, {1, 0.4f, 0.3f, 1}},
-};
-const Cast CYCLOPS[] = {
-    {[](Enemy &e) { ability::volley(e, 7, 0.16, 200, 0.4f * e.type.damage, 1); }, 7,
-     320, {0.6f, 0.95f, 0.5f, 1}},
-    {[](Enemy &e) { ability::quake(e, 110, 0.6f * e.type.damage); }, 8, 110,
-     {0.85f, 0.65f, 0.4f, 1}},
-};
 const Cast SKILLS[] = {
     {[](Enemy &e) { ability::warcry(e, 110, 4); }, 9, 110, {1, 0.4f, 0.3f, 1}},
     {[](Enemy &e) { ability::quake(e, 80, 14); }, 8, 80, {0.85f, 0.65f, 0.4f, 1}},
@@ -239,8 +217,7 @@ std::unique_ptr<Enemy> Enemy::create(EnemyKind kind, float hpMul,
   else if (kind == EnemyKind::Ghost)
     e = std::make_unique<Ghost>(t, hpMul, damageMul);
   else if (kind == EnemyKind::Cyclops)
-    e = std::make_unique<Cyclops>(t, hpMul, damageMul),
-    e->casts = CYCLOPS, e->castCount = int(std::size(CYCLOPS));
+    e = std::make_unique<Cyclops>(t, hpMul, damageMul);
   else if (kind == EnemyKind::Wolf)
     e = std::make_unique<Wolf>(t, hpMul, damageMul);
   else if (kind == EnemyKind::Alpha)
@@ -439,6 +416,8 @@ void Enemy::tick() {
     aim(xAim, yAim);
     tickKit();
   }
+  if (def && phase < 2 && hp < maxHp * float(2 - phase) / 3)
+    enrage();
   if (castCount)
     channel();
   if (removed)
@@ -464,6 +443,46 @@ void Enemy::makeElite(float health) {
   hp = maxHp *= health;
   scale *= 1.35f;
   radius *= 1.3f;
+}
+
+void Enemy::crown(const char *name) {
+  title = name;
+  if (!elite)
+    makeElite(8);
+  else
+    hp = maxHp *= 2;
+  for (int i = 0; i < 8; i++) {
+    Trait t = Trait(int(roll() * int(Trait::Count)) % int(Trait::Count));
+    if (!traits.has(t)) {
+      traits.add(t);
+      break;
+    }
+  }
+  learn();
+  scale *= 1.15f, radius *= 1.1f;
+  aware = true;
+}
+
+void Enemy::rule(const BossDef &d) {
+  def = &d, title = d.title, phase = 0;
+  casts = d.phases[0].casts, castCount = d.phases[0].count;
+  castTime = 4;
+}
+
+void Enemy::enrage() {
+  phase++;
+  casts = def->phases[phase].casts, castCount = def->phases[phase].count;
+  castTime = 1.2f, wind = 0, winding = nullptr, frenzy = 2;
+  shield(2);
+  for (int i = 0, n = def->minions ? def->minions + phase : 0; i < n; i++) {
+    double a = TAU * i / n;
+    level->spawner.spawn(def->minion, x + std::cos(a) * 40, y + std::sin(a) * 40);
+  }
+  level->add<Shockwave>(x, bodyY(), 8, 90, 0.5f, def->tone);
+  Spark::burst(*level, x, bodyY(), def->tone, 24, 140, true);
+  level->game.hitStop(0.06f);
+  level->game.announce(fmt::format("{} ENRAGES", def->title));
+  Sound::boss.play(0.6f, 0);
 }
 
 void Enemy::learn() {
@@ -511,11 +530,6 @@ void Enemy::split() {
 
 void Enemy::makeBoss(float health, float damage) {
   boss = true;
-  if (is(EnemyKind::Necromancer))
-    casts = LICH, castCount = int(std::size(LICH));
-  else if (is(EnemyKind::Alpha))
-    casts = PACK_LORD, castCount = int(std::size(PACK_LORD));
-  castTime = 4;
   hp = maxHp = health;
   damageMul *= damage;
   scale *= 2.2f;
@@ -523,6 +537,11 @@ void Enemy::makeBoss(float health, float damage) {
 }
 
 void Enemy::render(Screen &s) {
+  if (title && !def) {
+    float beat = 0.55f + 0.3f * std::sin(animT * 4);
+    s.ring(xp, yp, radius + 7, col::gold.alpha(beat));
+    s.ring(xp, yp - 18 * scale, 3, col::gold.alpha(0.9f));
+  }
   if (boss) {
     float beat = 0.5f + 0.25f * std::sin(age * 5);
     s.ring(xp, yp, radius + 6, Color{0.9f, 0.15f, 0.2f, beat});
@@ -538,7 +557,7 @@ void Enemy::render(Screen &s) {
   if (traits.any()) {
     Color a = traits.tone();
     c = {c.r * (0.7f + 0.3f * a.r), c.g * (0.7f + 0.3f * a.g),
-         c.b * (0.7f + 0.3f * a.b), c.a};
+         c.b * (0.7f + 0.3f * a.b), c.a * (traits.veiled() ? 0.35f : 1)};
   }
   if (const Goal *g = goals.front())
     if (float t = g->tell(*this); t > 0) {
@@ -560,6 +579,8 @@ void Enemy::renderLight(Screen &s) {
     s.glow(xp, yp - 7 * scale, 130, {0.35f, 0.06f, 0.08f, 1});
   if (elite)
     s.glow(xp, yp - 7 * scale, 40 * scale, traits.tone() * 0.12f);
+  if (title && !def)
+    s.glow(xp, yp - 7 * scale, 70, Color{0.35f, 0.26f, 0.06f, 1});
   if (wind > 0 && winding)
     s.glow(xp, yp - 6 * scale, 50 * scale, winding->tone * 0.25f);
 }
@@ -571,6 +592,8 @@ Sprite Enemy::sprite() const {
 }
 
 const char *Enemy::name() const {
+  if (title)
+    return title;
   static const char *const NAMES[] = {
       "a bat",          "a rat",           "a slime",
       "a scorpion",     "a spider",        "a ghost",
@@ -662,8 +685,19 @@ void Enemy::die() {
     Spark::burst(*level, x, bodyY(), type.blood, 30, 150, true);
     level->game.hitStop(0.12f);
     level->game.onExplosion();
-    level->game.announce(is(EnemyKind::Alpha) ? "THE PACK LORD FALLS"
-                                              : "THE LICH CRUMBLES");
+    level->game.announce(def ? def->fall
+                             : is(EnemyKind::Alpha) ? "THE PACK LORD FALLS"
+                                                    : "THE LICH CRUMBLES");
+    for (int i = 0; i < 8; i++)
+      Gem::drop(*level, x + rng.range(-20, 20), y + rng.range(-14, 14),
+                30 * level->xpMul);
+  }
+  if (title && !def) {
+    level->add<Chest>(x, y);
+    level->add<Shockwave>(x, bodyY(), 6, 70, 0.5f, col::gold.alpha(0.9f));
+    Spark::burst(*level, x, bodyY(), col::gold, 24, 130, true);
+    level->game.hitStop(0.08f);
+    level->game.announce(fmt::format("{} IS SLAIN", title));
   }
   if (rng.chance(1 / 150.0f))
     level->add<Potion>(x, y);

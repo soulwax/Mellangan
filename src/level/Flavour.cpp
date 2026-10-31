@@ -50,6 +50,8 @@ const Omen OMENS[OMEN_COUNT] = {
      {0.55f, 0.55f, 0.95f, 1}, 1, 1, 1, 1.2f, 0.6f},
     {"QUIET HOURS", "gentle waves, sparse rewards", 1, 0.95f, 0.85f, 0.7f, 1.3f,
      {0.8f, 0.9f, 0.85f, 1}, 0, 1, 1.15f, 0.7f, 1.3f, 1.5f},
+    {"CHAMPION'S HOUR", "named foes walk the land", 1, 1, 1.1f, 1, 1,
+     {1, 0.8f, 0.35f, 1}, 1, 1, 1, 1, 1, 1, 1, 0.35f, 0.4f},
 };
 
 const Omen CALM{"", "", 1, 1, 1, 1, 1, col::white, 0};

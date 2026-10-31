@@ -99,6 +99,7 @@ private:
   void renderHud();
   void renderCompass();
   void renderLandmarks();
+  void renderChampions();
   bool edge(double wx, double wy, float &xe, float &ye, float &xn,
             float &yn) const;
   void renderMinimap();

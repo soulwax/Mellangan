@@ -576,7 +576,7 @@ bool Game::edge(double wx, double wy, float &xe, float &ye, float &xn,
   float xd = xo + float(wx - xView) * k - xm, yd = yo + float(wy - yView) * k - ym,
         dd = std::max(1.0f, std::sqrt(xd * xd + yd * yd));
   float xh = s.vw * k * 0.5f - 18 * u,
-        yh = s.vh * k * 0.5f - (yd < 0 ? 84 : 18) * u;
+        yh = s.vh * k * 0.5f - (yd < 0 ? 84 : level->bossIds.empty() ? 18 : 46) * u;
   float fit = std::min({1.0f, xd != 0 ? xh / std::abs(xd) : 1e9f,
                         yd != 0 ? yh / std::abs(yd) : 1e9f});
   xe = xm + xd * fit, ye = ym + yd * fit, xn = xd / dd, yn = yd / dd;
@@ -625,6 +625,31 @@ void Game::renderLandmarks() {
   float half = Screen::textWidth(tag, small) * 0.5f + 4 * u;
   s.textCenter(tag, clampf(xe - xn * 16 * u, half, s.w - half),
                ye - yn * 16 * u - 8 * small, small, c.alpha(c.a * 0.85f));
+}
+
+void Game::renderChampions() {
+  if (menu)
+    return;
+  Screen &s = screen;
+  Player &p = *level->player;
+  float u = s.u, small = std::max(1.0f, u - 1);
+  for (entt::entity id : level->bossIds) {
+    Enemy *e = level->get<Enemy>(id);
+    if (!e || e->removed || !e->title || !s.visible(e->x, e->y, 600) ||
+        s.visible(e->x, e->y, 8))
+      continue;
+    float xe, ye, xn, yn;
+    if (!edge(e->x, e->bodyY(), xe, ye, xn, yn))
+      continue;
+    Color c = col::gold.alpha(0.7f + 0.3f * std::sin(time * 6));
+    s.line(xe, ye, xe - xn * 7 * u - yn * 4 * u, ye - yn * 7 * u + xn * 4 * u, 2 * u, c);
+    s.line(xe, ye, xe - xn * 7 * u + yn * 4 * u, ye - yn * 7 * u - xn * 4 * u, 2 * u, c);
+    double xs = e->x - p.x, ys = e->y - p.y;
+    std::string tag = fmt::format("{} {:.0f}", e->title, std::sqrt(xs * xs + ys * ys) / 16);
+    float half = Screen::textWidth(tag, small) * 0.5f + 4 * u;
+    s.textCenter(tag, clampf(xe - xn * 18 * u, half, s.w - half),
+                 ye - yn * 18 * u - 8 * small, small, c);
+  }
 }
 
 void Game::renderCompass() {
@@ -709,6 +734,7 @@ void Game::renderHud() {
     s.rect(kx, ky, kw * n.kindling, 4 * u, col::gold);
   }
   renderLandmarks();
+  renderChampions();
   renderCompass();
   renderMinimap();
 
@@ -748,10 +774,12 @@ void Game::renderHud() {
                            }),
             ids.end());
   if (!ids.empty() && !p.dead()) {
-    Enemy &b = *level->get<Enemy>(ids.front());
-    const char *name = b.is(EnemyKind::Alpha)         ? "THE PACK LORD"
-                       : b.is(EnemyKind::Necromancer) ? "THE LICH"
-                                                      : "THE CYCLOPS";
+    Enemy *top = level->get<Enemy>(ids.front());
+    for (entt::entity id : ids)
+      if (Enemy *e = level->get<Enemy>(id); e->def && !top->def)
+        top = e;
+    Enemy &b = *top;
+    const char *name = b.name();
     float bw = 160 * u, bx = (s.w - bw) / 2, by = s.h - 22 * u;
     float k = clampf(b.hp / b.maxHp, 0, 1);
     s.textCenter(ids.size() > 1 ? fmt::format("{}  +{}", name, ids.size() - 1)
@@ -760,6 +788,10 @@ void Game::renderHud() {
     s.rect(bx - u, by - u, bw + 2 * u, 6 * u, col::panel);
     s.rect(bx, by, bw * k, 4 * u, Color{0.85f, 0.12f, 0.18f, 1});
     s.rect(bx, by, bw * k, u, Color{1, 0.5f, 0.5f, 0.6f});
+    if (b.def)
+      for (int i = 1; i < 3; i++)
+        s.rect(bx + bw * i / 3 - u * 0.5f, by - u, u, 6 * u,
+               (i > 2 - b.phase ? col::muted : col::white).alpha(0.8f));
   }
   float low = 1 - clampf(p.hp / (p.maxHp * 0.3f), 0, 1);
   if (low > 0 && !p.dead()) {
