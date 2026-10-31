@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.12] - 2026-10-31
+
 ### Added
 
 - Landmarks: rare, towering sights that give you a reason to travel. About every second stretch of 80 by 80 tiles holds one, never near the start, always on level, dry ground, with a light you can spot at night and a marker on your map once sighted. Each has a first-visit reward:
