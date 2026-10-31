@@ -564,11 +564,13 @@ void Level::reflect(Screen &s) {
       continue;
     if (prop && prop->count > 1 && !sky.poolAt(tx, ty + 2))
       continue;
-    s.mirror(std::floor(e->y), {0.55f, 0.66f, 0.9f, 0.42f});
+    bool crowd = dynamic_cast<Enemy *>(e);
+    if (crowd && shown >= 48)
+      continue;
+    s.mirror(std::floor(e->y), {0.55f, 0.66f, 0.9f, crowd ? 0.26f : 0.42f});
     e->draw(s);
     s.unmirror();
-    if (++shown >= 80)
-      break;
+    shown += crowd;
   }
   s.color(col::white);
 }
