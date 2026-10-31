@@ -48,7 +48,7 @@ ExpansionWeapon::ExpansionWeapon(int kind)
               DESCRIPTIONS[std::clamp(kind, 0, 7)], true),
       kind(std::clamp(kind, 0, 7)) {}
 
-void ExpansionWeapon::tick(Player &p) {
+void ExpansionWeapon::tick(Mob &p) {
   if ((cd -= DT) > 0 || p.dead())
     return;
   cd = COOLDOWN[kind] * (level >= 4 ? 0.75f : 1) * p.haste * pace;
@@ -58,7 +58,7 @@ void ExpansionWeapon::tick(Player &p) {
                 kind == 5 ? 80.0f + 35 * at(level, 3) :
                 kind == 6 ? 160.0f + 60 * at(level, 3) :
                             130.0f + 50 * at(level, 3);
-  auto targets = p.level->nearest(p.x, p.y, 240, 4);
+  auto targets = p.level->nearestFoes(p, p.x, p.y, 240, 4);
   double dx = p.xAim, dy = p.yAim;
   if (!targets.empty()) {
     dx = targets.front()->x - p.x;
@@ -104,7 +104,7 @@ bool ExpansionAttack::hitBefore(entt::entity id) const {
   return std::find(hits.begin(), hits.end(), id) != hits.end();
 }
 
-void ExpansionAttack::strike(Enemy &e) {
+void ExpansionAttack::strike(Mob &e) {
   hits.push_back(e.id);
   impact(e);
   if (kind == 1 || kind == 7)
@@ -115,11 +115,11 @@ void ExpansionAttack::strike(Enemy &e) {
     e.afflict(StatusKind::Poison, 2.0f, damage * 0.2f * count, source);
   if (kind == 4)
     e.afflict(StatusKind::Burn, 1.5f, damage * 0.12f, source);
-  e.hurt(damage, dx, dy, kind == 1 ? -110.0f * count : 30.0f, source);
+  e.strike(damage, dx, dy, kind == 1 ? -110.0f * count : 30.0f, source);
 }
 
 void ExpansionAttack::tick() {
-  Player &p = *level->player;
+  Mob &p = source && source->holder ? *source->holder : *level->player;
   if (p.dead())
     return remove();
   if (age == 0)
@@ -141,8 +141,8 @@ void ExpansionAttack::tick() {
   if (kind == 7 || (kind == 3 && returning)) {
     double tx = p.x, ty = p.bodyY();
     if (kind == 7) {
-      auto nearby = level->nearest(x, y, 260, 24);
-      for (Enemy *e : nearby)
+      auto nearby = level->nearestFoes(source && source->hostile(), x, y, 260, 24);
+      for (Mob *e : nearby)
         if (!hitBefore(e->id)) {
           tx = e->x, ty = e->bodyY();
           break;
@@ -168,11 +168,11 @@ void ExpansionAttack::tick() {
       level->add<Shockwave>(x, y, reach * 0.25f, reach, 0.4f,
                             Color{0.75f, 0.85f, 1, 0.7f}, false);
   }
-  Enemy *bounced = nullptr;
+  Mob *bounced = nullptr;
   double cx = line ? ox + dx * reach * 0.5 : x;
   double cy = line ? oy + dy * reach * 0.5 : y;
   float scan = line ? reach * 0.5f + 40 : area ? reach + 32 : radius + 32;
-  level->enemiesNear(cx, cy, scan, [&](Enemy &e) {
+  level->foes(source && source->hostile(), cx, cy, scan, [&](Mob &e) {
     if (removed || bounced || hitBefore(e.id))
       return;
     double ex = e.x - (line ? ox : x), ey = e.bodyY() - (line ? oy : y);
@@ -192,9 +192,9 @@ void ExpansionAttack::tick() {
       remove();
   });
   if (kind == 0 && bounced && !removed) {
-    auto nearby = level->nearest(x, y, 170, 24);
-    Enemy *target = nullptr;
-    for (Enemy *e : nearby)
+    auto nearby = level->nearestFoes(source && source->hostile(), x, y, 170, 24);
+    Mob *target = nullptr;
+    for (Mob *e : nearby)
       if (!hitBefore(e->id)) {
         target = e;
         break;
@@ -277,7 +277,7 @@ void ExpansionAttack::blast() {
   Spark::burst(*level, x, y, c, 8, reach * 2, true);
 }
 
-void ExpansionAttack::impact(Enemy &e) {
+void ExpansionAttack::impact(Mob &e) {
   Color c = TINTS[kind];
   if (kind == 0) {
     for (int i = 0; i < 3 && Debris::room(); i++)

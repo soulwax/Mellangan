@@ -5,7 +5,7 @@
 class Scythe : public Upgrade {
 public:
   Scythe();
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
 
 private:
   float cd = 1;

@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "entity/enemy/Enemy.hpp"
+#include "item/Upgrade.hpp"
 #include "level/Level.hpp"
 #include "particle/Drift.hpp"
 #include "particle/Spark.hpp"
@@ -24,11 +25,11 @@ void IncenseCloud::tick() {
 
   if ((timer -= DT) <= 0) {
     timer = 0.35f;
-    level->enemiesNear(x, y, radius + 20, [&](Enemy &e) {
+    level->foes((source && source->hostile()), x, y, radius + 20, [&](Mob &e) {
       double xd = e.x - x, yd = e.y - y;
       float r = radius + e.radius;
       if (xd * xd + yd * yd < r * r)
-        e.hurt(damage, 0, 0, 0, source);
+        e.strike(damage, 0, 0, 0, source);
     });
   }
 

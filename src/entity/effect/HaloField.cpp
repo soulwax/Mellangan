@@ -6,7 +6,9 @@
 #include "particle/Spark.hpp"
 
 void HaloField::tick() {
-  x = player.x, y = player.y;
+  if (!level->mob(ownerId))
+    return remove();
+  x = owner.x, y = owner.y;
   spin += DT * 0.9f;
   if (rng.chance(0.8f) && Spark::alive < 500) {
     float angle = rng.range(0, TAU);
@@ -21,7 +23,7 @@ void HaloField::tick() {
 void HaloField::render(Screen &s) {
   constexpr Color LILAC{0.78f, 0.62f, 1, 1};
   float r = halo.range(), flare = halo.pulse;
-  double cy = player.bodyY();
+  double cy = owner.bodyY();
   s.ring(xp, cy, r, LILAC.alpha(0.2f + 0.45f * flare));
   for (int i = 0; i < 6; i++) {
     float a = spin + TAU * i / 6;

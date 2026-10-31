@@ -5,5 +5,5 @@
 class Riposte : public Upgrade {
 public:
   Riposte();
-  float guard(Player &p, float damage) override;
+  float guard(Mob &p, float damage) override;
 };

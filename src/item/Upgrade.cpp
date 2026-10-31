@@ -1,5 +1,7 @@
 #include "item/Upgrade.hpp"
 
+#include "entity/Mob.hpp"
+
 #include <cstring>
 
 #include "entity/Player.hpp"
@@ -67,10 +69,15 @@ const char *const EVOLUTIONS[][3] = {
     {"Glaive", "Iron Buckler", "Dragonslayer Glaive"},
     {"Censer", "Heartroot", "Sanctified Thurible"}};
 
-void phoenix(Player &p) { p.revives++; }
-void grove(Player &p) { p.maxHp += 60, p.hp += 60, p.regen += 1.5f; }
-void frozen(Player &p) { p.haste -= 0.25f, p.speed += 11; }
-void signet(Player &p) { p.might += 0.5f, p.armor += 2; }
+void phoenix(Mob &p) {
+  if (Player *pl = p.asPlayer())
+    pl->revives++;
+  else
+    p.traits.add(Trait::Warded);
+}
+void grove(Mob &p) { p.maxHp += 60, p.hp += 60, p.regen += 1.5f; }
+void frozen(Mob &p) { p.haste -= 0.25f, p.speed += 11; }
+void signet(Mob &p) { p.might += 0.5f, p.armor += 2; }
 } // namespace
 
 std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
@@ -85,25 +92,25 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   u.push_back(std::make_unique<Bow>());
   u.push_back(std::make_unique<Scythe>());
   auto passive = [&](const char *name, Sprite icon, const char *desc,
-                     float Player::*stat, float amount) {
+                     float Mob::*stat, float amount) {
     u.push_back(std::make_unique<Passive>(name, icon, desc, stat, amount));
   };
   passive("Quicksilver", atlas::tile(t::PotionBlue), "+10% movement speed",
-          &Player::speed, 7.4f);
+          &Mob::speed, 7.4f);
   passive("Heartroot", atlas::tile(t::PotionRed), "+20 max health",
-          &Player::maxHp, 20);
-  passive("Ogre Hammer", atlas::tile(t::Hammer), "+10% damage", &Player::might,
+          &Mob::maxHp, 20);
+  passive("Ogre Hammer", atlas::tile(t::Hammer), "+10% damage", &Mob::might,
           0.1f);
   passive("Hourglass Tonic", atlas::tile(t::PotionGreen),
-          "-7% weapon cooldowns", &Player::haste, -0.07f);
+          "-7% weapon cooldowns", &Mob::haste, -0.07f);
   passive("Lodestone", atlas::tile(t::Coin), "+30% pickup range",
-          &Player::magnet, 8.4f);
+          &Mob::magnet, 8.4f);
   passive("Iron Buckler", atlas::tile(t::Shield), "Take 1 less damage per hit",
-          &Player::armor, 1);
+          &Mob::armor, 1);
   passive("Troll Blood", atlas::tile(t::VialGreen),
-          "Regenerate 0.3 health/second", &Player::regen, 0.3f);
+          "Regenerate 0.3 health/second", &Mob::regen, 0.3f);
   passive("Lucky Key", atlas::town(tt::Key), "+4% critical hit chance",
-          &Player::luck, 0.04f);
+          &Mob::luck, 0.04f);
   u.push_back(std::make_unique<FrostNova>());
   u.push_back(std::make_unique<PiercingShot>());
   u.push_back(std::make_unique<Judgement>());
@@ -132,26 +139,26 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   u.push_back(std::make_unique<Glaive>());
   u.push_back(std::make_unique<Censer>());
   auto kin = [&](const char *owner, const char *name, Sprite icon,
-                 const char *desc, float Player::*stat, float amount) {
+                 const char *desc, float Mob::*stat, float amount) {
     passive(name, icon, desc, stat, amount);
     u.back()->owner = owner;
   };
   kin("MAGE", "Arcane Mind", atlas::tile(128), "-6% weapon cooldowns",
-      &Player::haste, -0.06f);
+      &Mob::haste, -0.06f);
   kin("RANGER", "Fleet Foot", atlas::kit(kt::Fern), "+8% movement speed",
-      &Player::speed, 6);
+      &Mob::speed, 6);
   kin("KNIGHT", "Oathbound", atlas::tile(74), "+25 max health",
-      &Player::maxHp, 25);
+      &Mob::maxHp, 25);
   kin("ALCHEMIST", "Distillation", atlas::kit(kt::Glowshrooms),
-      "Regenerate 0.4 health/second", &Player::regen, 0.4f);
+      "Regenerate 0.4 health/second", &Mob::regen, 0.4f);
   kin("STORMCALLER", "Conduit", atlas::kit(kt::Lavender),
-      "+5% critical hit chance", &Player::luck, 0.05f);
+      "+5% critical hit chance", &Mob::luck, 0.05f);
   kin("REAPER", "Bloodlust", atlas::kit(kt::Roses), "+8% damage",
-      &Player::might, 0.08f);
+      &Mob::might, 0.08f);
   kin("PRIESTESS", "Grace", atlas::kit(kt::CallaLilies),
-      "Take 0.5 less damage per hit", &Player::armor, 0.5f);
+      "Take 0.5 less damage per hit", &Mob::armor, 0.5f);
   kin("DUELIST", "Keen Eye", atlas::kit(kt::Snowdrops),
-      "+5% critical hit chance", &Player::luck, 0.05f);
+      "+5% critical hit chance", &Mob::luck, 0.05f);
   for (auto &w : u)
     for (auto &e : EVOLUTIONS)
       if (std::strcmp(w->name, e[0]) == 0)
@@ -183,7 +190,7 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   return u;
 }
 
-bool Upgrade::canEvolve(const Player &p) const {
+bool Upgrade::canEvolve(const Mob &p) const {
   if (!partner || evolved || level < MAX_LEVEL)
     return false;
   for (auto &u : p.upgrades)

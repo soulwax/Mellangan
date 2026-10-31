@@ -19,19 +19,19 @@ Radiance::Radiance()
   owner = "PRIESTESS";
 }
 
-void Radiance::tick(Player &p) {
+void Radiance::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 2.4f : 3.2f) * p.haste * pace;
   float r = 55.0f + 12 * (at(level, 3) + at(level, 5)),
         dmg = (14.0f + 6 * (at(level, 2) + at(level, 5))) * p.might * power;
   int hit = 0;
-  p.level->enemiesNear(p.x, p.y, r + 24, [&](Enemy &e) {
+  p.level->foes(p, p.x, p.y, r + 24, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
     float rr = r + e.radius;
     if (xd * xd + yd * yd >= rr * rr)
       return;
-    e.hurt(dmg, xd, yd, 90, this);
+    e.strike(dmg, xd, yd, 90, this);
     if (hit++ < 8)
       p.level->add<Mote>(e.x, e.bodyY(), atlas::pt::HolyGlint, HOLY,
                          rng.range(0.45f, 0.65f));

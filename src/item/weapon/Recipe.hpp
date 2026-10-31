@@ -33,10 +33,10 @@ extern const std::vector<Recipe> RECIPES;
 class RecipeWeapon : public Upgrade {
 public:
   explicit RecipeWeapon(const Recipe &r);
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
   int count() const;
   float reach() const;
-  float damage(const Player &p) const;
+  float damage(const Mob &p) const;
 
   const Recipe &r;
   float cd = 0.5f;
@@ -63,11 +63,11 @@ public:
 
 private:
   bool hitBefore(entt::entity id) const;
-  void strike(Enemy &e, double xd, double yd);
+  void strike(Mob &e, double xd, double yd);
   void blast(float radius, float dmg);
   void trail();
   void steer(float range);
 };
 
-void fireRecipe(const Recipe &r, Player &p, Upgrade *source, float damage,
+void fireRecipe(const Recipe &r, Mob &p, Upgrade *source, float damage,
                 float reach, int count);

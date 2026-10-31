@@ -12,6 +12,7 @@ public:
         poolDamage(poolDamage), poolTime(poolTime), style(style) {
     x = x0, y = y0;
   }
+  bool hostile = false;
   int layer() const override { return 2; }
   void tick() override;
   void render(Screen &s) override;

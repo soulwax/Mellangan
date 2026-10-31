@@ -12,19 +12,19 @@ FireBomb::FireBomb()
                "Throws one more bomb"},
               true) {}
 
-void FireBomb::tick(Player &p) {
+void FireBomb::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 2.4f : 3.0f) * p.haste * pace;
   int n = 1 + at(level, 3) + at(level, 5);
-  auto targets = p.level->nearest(p.x, p.y, 200, 12);
+  auto targets = p.level->nearestFoes(p, p.x, p.y, 200, 12);
   for (int i = 0; i < n; i++) {
     double xt, yt;
     if (targets.empty()) {
       double dir = rng.range(0, TAU), r = rng.range(50, 110);
       xt = p.x + std::cos(dir) * r, yt = p.y + std::sin(dir) * r;
     } else {
-      Enemy *e = targets[rng.irange(0, int(targets.size()) - 1)];
+      Mob *e = targets[rng.irange(0, int(targets.size()) - 1)];
       xt = e->x, yt = e->y;
     }
     p.level

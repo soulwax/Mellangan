@@ -5,5 +5,5 @@
 class Overcharge : public Upgrade {
 public:
   Overcharge();
-  void cast(Player &p) override;
+  void cast(Mob &p) override;
 };

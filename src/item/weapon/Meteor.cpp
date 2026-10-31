@@ -13,15 +13,15 @@ Meteor::Meteor()
   owner = "MAGE";
 }
 
-void Meteor::tick(Player &p) {
+void Meteor::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  auto targets = p.level->nearest(p.x, p.y, 260, 12);
+  auto targets = p.level->nearestFoes(p, p.x, p.y, 260, 12);
   if (targets.empty())
     return void(cd = 0.3f);
   cd = (level >= 4 ? 3.2f : 4.2f) * p.haste * pace;
   for (int i = 0; i <= at(level, 5); i++) {
-    Enemy *e = targets[rng.irange(0, int(targets.size()) - 1)];
+    Mob *e = targets[rng.irange(0, int(targets.size()) - 1)];
     p.level
         ->add<MeteorRock>(e->x, e->y,
                           (50.0f + 20 * at(level, 2)) * p.might * power,

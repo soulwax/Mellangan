@@ -13,15 +13,15 @@ AcidFlask::AcidFlask()
   owner = "ALCHEMIST";
 }
 
-void AcidFlask::tick(Player &p) {
+void AcidFlask::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = 2.2f * p.haste * pace;
-  auto targets = p.level->nearest(p.x, p.y, 220, 6);
+  auto targets = p.level->nearestFoes(p, p.x, p.y, 220, 6);
   for (int i = 0, n = 1 + at(level, 4) + at(level, 5); i < n; i++) {
     double xt = p.x + rng.range(-80, 80), yt = p.y + rng.range(-60, 60);
     if (!targets.empty()) {
-      Enemy *e = targets[rng.irange(0, int(targets.size()) - 1)];
+      Mob *e = targets[rng.irange(0, int(targets.size()) - 1)];
       xt = e->x, yt = e->y;
     }
     p.level

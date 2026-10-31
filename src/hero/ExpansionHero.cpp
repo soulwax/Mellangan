@@ -45,8 +45,10 @@ const HeroData DATA[] = {
 class Sentry : public Entity {
 public:
   float life = 6, timer = 0, damage;
+  bool hostile;
 
-  Sentry(double x, double y, float damage) : damage(damage) {
+  Sentry(double x, double y, float damage, bool hostile)
+      : damage(damage), hostile(hostile) {
     this->x = x;
     this->y = y;
   }
@@ -57,16 +59,16 @@ public:
     if ((timer -= DT) > 0)
       return;
     timer = 0.45f;
-    auto targets = level->nearest(x, y, 220, 1);
+    auto targets = level->nearestFoes(hostile, x, y, 220, 1);
     if (targets.empty())
       return;
-    Enemy &e = *targets.front();
+    Mob &e = *targets.front();
     double xd = e.x - x, yd = e.bodyY() - (y - 7);
     double d = std::sqrt(xd * xd + yd * yd);
     if (d < 1e-5)
       return;
     level->add<Bolt>(x, y - 7, xd / d * 190, yd / d * 190, damage, 1,
-                     e.id, BoltStyle::Tinker);
+                     e.id, BoltStyle::Tinker)->hostile = hostile;
     Spark::burst(*level, x, y - 7, col::gold, 3, 30, true);
   }
 
@@ -89,24 +91,24 @@ ExpansionHero::ExpansionHero(int variant)
 
 Sprite ExpansionHero::sprite() const { return atlas::expansion(10 + variant); }
 
-void ExpansionHero::equip(Player &p) const {
+void ExpansionHero::equip(Mob &p) const {
   Hero::equip(p);
   if (variant == 0)
     p.status.immune |= 1u << int(StatusKind::Poison);
 }
 
-void ExpansionHero::cast(Player &p) const {
+void ExpansionHero::cast(Mob &p) const {
   if (p.dead())
     return;
   if (variant == 0) {
-    p.heal(8);
-    p.level->enemiesNear(p.x, p.y, 110, [&](Enemy &e) {
+    p.mend(8);
+    p.level->foes(p, p.x, p.y, 110, [&](Mob &e) {
       double xd = e.x - p.x, yd = e.y - p.y;
       float reach = 85 + e.radius;
       if (xd * xd + yd * yd > reach * reach)
         return;
       e.afflict(StatusKind::Chill, 2, 0.65f);
-      e.hurt(28 * p.might, xd, yd, 75);
+      e.strike(28 * p.might, xd, yd, 75);
       double d = std::max(1.0, std::sqrt(xd * xd + yd * yd));
       p.level->add<Arc>(std::vector<ArcNode>{{p.x + xd / d * 12, p.y + yd / d * 12},
                                              {e.x, e.y}},
@@ -117,7 +119,7 @@ void ExpansionHero::cast(Player &p) const {
                       90, 30);
     Sound::nova.play(0.4f);
   } else if (variant == 1) {
-    p.level->add<Sentry>(p.x, p.y, 16 * p.might);
+    p.level->add<Sentry>(p.x, p.y, 16 * p.might, p.hostile());
     p.level->add<Shockwave>(p.x, p.y, 4, 30, 0.3f, col::gold, false);
     for (int i = 0; i < 6 && Debris::room(); i++)
       p.level->add<Chip>(p.x, p.y, 4, atlas::pt::Pebble,
@@ -125,7 +127,7 @@ void ExpansionHero::cast(Player &p) const {
     Spark::burst(*p.level, p.x, p.y, col::gold, 8, 75, true);
     Sound::cast.play(0.4f);
   } else if (variant == 2) {
-    p.level->enemiesNear(p.x, p.y, 184, [&](Enemy &e) {
+    p.level->foes(p, p.x, p.y, 184, [&](Mob &e) {
       double xd = e.x - p.x, yd = e.y - p.y;
       if (xd * xd + yd * yd <= 160 * 160) {
         e.afflict(StatusKind::Marked, 5, 0.35f);
@@ -145,7 +147,7 @@ void ExpansionHero::cast(Player &p) const {
       double a = dir + i * 0.16;
       p.level->add<Arrow>(p.x, p.bodyY(), std::cos(a) * 270,
                           std::sin(a) * 270, 24 * p.might, 3,
-                          ArrowStyle::Piercing);
+                          ArrowStyle::Piercing)->hostile = p.hostile();
     }
     double x0 = p.x, y0 = p.bodyY();
     flourish::echo(*p.level, p.x, p.y, sprite(), Color{0.4f, 0.85f, 1, 1});
@@ -154,7 +156,7 @@ void ExpansionHero::cast(Player &p) const {
       p.y += std::sin(dir) * 4;
       p.level->collide(p.x, p.y, p.radius);
     }
-    p.invuln = std::max(p.invuln, 0.6f);
+    p.shield(0.6f);
     flourish::streak(*p.level, x0, y0, p.x, p.bodyY(), atlas::pt::Puff,
                      Color{0.85f, 0.95f, 1, 0.6f}, 5);
     for (int i = 0; i < 6 && Drift::room(); i++) {
@@ -168,7 +170,7 @@ void ExpansionHero::cast(Player &p) const {
   }
 }
 
-void ExpansionHero::slay(Player &p, Enemy &) const {
+void ExpansionHero::slay(Mob &p, Enemy &) const {
   if (variant == 1 && ++p.heroCount % 15 == 0)
-    p.heal(8);
+    p.mend(8);
 }

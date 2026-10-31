@@ -7,6 +7,7 @@
 #include "Atlas.hpp"
 
 class Enemy;
+class Mob;
 class Player;
 
 class Upgrade {
@@ -21,6 +22,9 @@ public:
   int level = 0;
   float dealt = 0, power = 1, pace = 1;
   const char *partner = nullptr, *evolvedName = nullptr, *owner = nullptr;
+  Mob *holder = nullptr;
+  bool foe = false;
+  bool hostile() const { return foe; }
 
   Upgrade(const char *name, Sprite icon,
           std::array<const char *, MAX_LEVEL> desc, bool weapon)
@@ -28,13 +32,13 @@ public:
   virtual ~Upgrade() = default;
 
   bool maxed() const { return level >= (rare ? 1 : MAX_LEVEL); }
-  bool canEvolve(const Player &p) const;
+  bool canEvolve(const Mob &p) const;
   void evolve() { evolved = true, name = evolvedName, power = 2, pace = 0.7f; }
-  virtual void levelUp(Player &) { level++; }
-  virtual void tick(Player &) {}
-  virtual void slay(Player &, Enemy &) {}
-  virtual float guard(Player &, float damage) { return damage; }
-  virtual void cast(Player &) {}
+  virtual void levelUp(Mob &) { level++; }
+  virtual void tick(Mob &) {}
+  virtual void slay(Mob &, Enemy &) {}
+  virtual float guard(Mob &, float damage) { return damage; }
+  virtual void cast(Mob &) {}
 
   static std::vector<std::unique_ptr<Upgrade>> all();
 

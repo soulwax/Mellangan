@@ -13,7 +13,7 @@ Chakram::Chakram()
                "+1 chakram", "+10 damage, faster return", "+1 chakram"},
               true) {}
 
-void Chakram::tick(Player &p) {
+void Chakram::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = 2.0f * p.haste * pace;

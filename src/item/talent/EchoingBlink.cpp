@@ -10,11 +10,11 @@ EchoingBlink::EchoingBlink()
   owner = "MAGE";
 }
 
-void EchoingBlink::cast(Player &p) {
-  p.level->enemiesNear(p.x, p.y, 90, [&](Enemy &e) {
+void EchoingBlink::cast(Mob &p) {
+  p.level->foes(p, p.x, p.y, 90, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.y - p.y;
     if (xd * xd + yd * yd < 70 * 70)
-      e.hurt(20.0f * level * p.might, xd, yd, 120, this);
+      e.strike(20.0f * level * p.might, xd, yd, 120, this);
   });
   p.skillTime *= 1 - 0.08f * level;
 }

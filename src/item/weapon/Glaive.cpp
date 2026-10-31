@@ -14,7 +14,7 @@ Glaive::Glaive()
                "Thrusts strike both forward and behind"},
               true) {}
 
-void Glaive::tick(Player &p) {
+void Glaive::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 1.1f : 1.45f) * p.haste * pace;

@@ -10,13 +10,13 @@ Halo::Halo()
                "Wider and hotter", "Wider, pulses faster", "Wider and hotter"},
               true) {}
 
-void Halo::levelUp(Player &p) {
+void Halo::levelUp(Mob &p) {
   Upgrade::levelUp(p);
   if (level == 1)
     p.level->add<HaloField>(*this, p);
 }
 
-void Halo::tick(Player &p) {
+void Halo::tick(Mob &p) {
   pulse *= std::exp(-6 * DT);
   if ((timer -= DT) > 0)
     return;
@@ -25,10 +25,10 @@ void Halo::tick(Player &p) {
   float r = range(),
         dmg =
             (5.0f + 2 * (at(level, 2) + at(level, 3) + at(level, 5))) * p.might * power;
-  p.level->enemiesNear(p.x, p.y, r + 24, [&](Enemy &e) {
+  p.level->foes(p, p.x, p.y, r + 24, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
     float rr = r + e.radius;
     if (xd * xd + yd * yd < rr * rr)
-      e.hurt(dmg, e.x - p.x, e.y - p.y, 25, this);
+      e.strike(dmg, e.x - p.x, e.y - p.y, 25, this);
   });
 }

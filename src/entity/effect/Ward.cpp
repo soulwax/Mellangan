@@ -1,9 +1,15 @@
 #include "entity/effect/Ward.hpp"
 
-#include "entity/Player.hpp"
+#include "entity/Mob.hpp"
+#include "level/Level.hpp"
 
 namespace {
 constexpr Color SHIELD{1, 0.9f, 0.55f, 1};
+}
+
+Ward::Ward(const Mob &owner, float life)
+    : owner(owner.id), cy(owner.bodyY()), life(life), maxLife(life) {
+  x = owner.x, y = owner.y + 1;
 }
 
 float Ward::fade() const {
@@ -11,15 +17,15 @@ float Ward::fade() const {
 }
 
 void Ward::tick() {
-  x = player.x, y = player.y + 1;
+  Mob *m = level->mob(owner);
+  if (!m || m->hp <= 0 || (life -= DT) <= 0)
+    return remove();
+  x = m->x, y = m->y + 1, cy = m->bodyY();
   spin += DT * 4;
-  if ((life -= DT) <= 0 || player.dead())
-    remove();
 }
 
 void Ward::render(Screen &s) {
   float a = fade(), beat = 0.85f + 0.15f * std::sin(spin * 3);
-  double cy = player.bodyY();
   s.color(SHIELD.alpha(0.16f * a));
   s.center(atlas::Glow, xp, cy, 34 / float(atlas::Glow.w));
   s.color(col::white);
@@ -32,5 +38,5 @@ void Ward::render(Screen &s) {
 }
 
 void Ward::renderLight(Screen &s) {
-  s.glow(xp, player.bodyY(), 60, Color{0.3f, 0.26f, 0.1f, 1} * fade());
+  s.glow(xp, cy, 60, Color{0.3f, 0.26f, 0.1f, 1} * fade());
 }

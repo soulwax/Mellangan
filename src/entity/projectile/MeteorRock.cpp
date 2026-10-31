@@ -4,6 +4,7 @@
 #include "audio/Sound.hpp"
 #include "entity/effect/FirePool.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "item/Upgrade.hpp"
 #include "level/Level.hpp"
 #include "particle/Explosion.hpp"
 #include "particle/Mark.hpp"
@@ -28,11 +29,11 @@ void MeteorRock::tick() {
 }
 
 void MeteorRock::impact() {
-  level->enemiesNear(x, y, radius + 24, [&](Enemy &e) {
+  level->foes((source && source->hostile()), x, y, radius + 24, [&](Mob &e) {
     double xd = e.x - x, yd = e.y - y;
     float r = radius + e.radius;
     if (xd * xd + yd * yd < r * r)
-      e.hurt(damage, xd, yd, 120, source);
+      e.strike(damage, xd, yd, 120, source);
   });
   level->add<Explosion>(x, y, 0);
   level->add<Shockwave>(x, y, 6, radius * 1.5f, 0.4f, FIRE.alpha(0.9f));

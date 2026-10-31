@@ -8,9 +8,13 @@
 #include "particle/Spark.hpp"
 #include "particle/debris/Chip.hpp"
 
-Slash::Slash(Player &p, float side, float damage, float scale, SlashStyle style)
-    : Projectile(p.x, p.bodyY(), 0, 0, 0.22f, damage, 90, 9999), player(p),
-      side(side), scale(scale), style(style) {}
+Slash::Slash(const Mob &owner, float side, float damage, float scale,
+             SlashStyle style)
+    : Projectile(owner.x, owner.bodyY(), 0, 0, 0.22f, damage, 90, 9999),
+      owner(owner.id), cx(owner.x), cy(owner.bodyY()), foot(owner.y), side(side),
+      scale(scale), style(style) {
+  hostile = owner.hostile();
+}
 
 Color Slash::tone() const {
   if (style == SlashStyle::Crusader)
@@ -51,7 +55,7 @@ void Slash::emit() {
     d->scale = petal ? 0.9f : 0.6f;
   }
   if (style == SlashStyle::Crusader) {
-    double gx = x, gy = player.y;
+    double gx = x, gy = foot;
     for (int i = 0; i < 3 && Debris::room(); i++)
       level->add<Chip>(gx, gy, 2, atlas::pt::Pebble, col::white, 0.9);
     if (Drift::room()) {
@@ -65,14 +69,16 @@ void Slash::emit() {
 void Slash::tick() {
   if ((life -= DT) <= 0)
     return remove();
-  x = player.x + side * 16 * scale;
-  y = player.bodyY();
+  if (Mob *m = level->mob(owner))
+    cx = m->x, cy = m->bodyY(), foot = m->y;
+  x = cx + side * 16 * scale;
+  y = cy;
   if (!emitted)
     emit();
   collide();
 }
 
-bool Slash::touches(const Enemy &e) const {
+bool Slash::touches(const Mob &e) const {
   double xd = e.x - x, yd = e.bodyY() - y;
   float rx = 14 * scale + e.radius * 0.5f, ry = 24 * scale;
   return (xd * xd) / (rx * rx) + (yd * yd) / (ry * ry) <= 1;

@@ -5,13 +5,13 @@
 
 class Passive : public Upgrade {
 public:
-  Passive(const char *name, Sprite icon, const char *desc, float Player::*stat,
+  Passive(const char *name, Sprite icon, const char *desc, float Mob::*stat,
           float amount)
       : Upgrade(name, icon, {desc, desc, desc, desc, desc}, false), stat(stat),
         amount(amount) {}
-  void levelUp(Player &p) override;
+  void levelUp(Mob &p) override;
 
 private:
-  float Player::*stat;
+  float Mob::*stat;
   float amount;
 };

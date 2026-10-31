@@ -13,7 +13,7 @@ WhirlingEdge::WhirlingEdge()
   owner = "DUELIST";
 }
 
-void WhirlingEdge::tick(Player &p) {
+void WhirlingEdge::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 1.2f : 1.6f) * p.haste * pace;

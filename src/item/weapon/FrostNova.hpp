@@ -5,7 +5,7 @@
 class FrostNova : public Upgrade {
 public:
   FrostNova();
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
 
 private:
   float cd = 1;

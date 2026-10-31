@@ -11,10 +11,10 @@ Knives::Knives()
                "Faster spin, +4 damage"},
               true) {}
 
-void Knives::levelUp(Player &p) {
+void Knives::levelUp(Mob &p) {
   Upgrade::levelUp(p);
   while (spawned < count())
     p.level->add<Knife>(*this, p, spawned++)->source = this;
 }
 
-void Knives::tick(Player &) { angle += (level >= 5 ? 4.6f : 3.4f) * DT / pace; }
+void Knives::tick(Mob &) { angle += (level >= 5 ? 4.6f : 3.4f) * DT / pace; }

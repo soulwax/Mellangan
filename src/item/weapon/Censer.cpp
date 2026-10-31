@@ -14,7 +14,7 @@ Censer::Censer()
                "+2 incense clouds"},
               true) {}
 
-void Censer::tick(Player &p) {
+void Censer::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = 2.2f * p.haste * pace;

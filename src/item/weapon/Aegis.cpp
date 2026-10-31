@@ -14,7 +14,7 @@ Aegis::Aegis()
   owner = "PRIESTESS";
 }
 
-void Aegis::tick(Player &p) {
+void Aegis::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (9.0f - 1.5f * (at(level, 3) + at(level, 5))) * p.haste * pace;

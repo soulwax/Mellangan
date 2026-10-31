@@ -32,7 +32,7 @@ void Bolt::tick() {
   age += DT;
   if ((life -= DT) <= 0)
     return remove();
-  if (Enemy *e = level->get<Enemy>(target)) {
+  if (Mob *e = level->mob(target)) {
     double xd = e->x - x, yd = e->bodyY() - y;
     double dd = std::sqrt(xd * xd + yd * yd);
     if (dd > 1e-5) {

@@ -1,12 +1,10 @@
 #include "hero/Knight.hpp"
 
-#include "audio/Sound.hpp"
+#include "entity/Ability.hpp"
+
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
-#include "particle/Flourish.hpp"
-#include "entity/effect/Ward.hpp"
 #include "particle/Spark.hpp"
-#include "entity/effect/Sweep.hpp"
 
 namespace {
 bool slayer(const Codex &c) { return c.kills() >= 1000; }
@@ -19,20 +17,15 @@ Knight::Knight()
             "A sweeping blow, then a moment of invulnerability", 9,
             {"Moon Blade", "Iron Buckler", "Heartroot"}}) {}
 
-void Knight::cast(Player &p) const {
-  p.level->add<Sweep>(p, 54, 45 * p.might, SweepStyle::Rally);
-  p.invuln = std::max(p.invuln, 1.5f);
-  p.level->add<Ward>(p, 1.5f);
-  flourish::sigil(*p.level, p.x, p.bodyY(), 70, col::gold, 12);
-  Spark::burst(*p.level, p.x, p.bodyY(), col::gold, 10, 120, true);
-  Sound::scythe.play(0.6f, 0);
+void Knight::cast(Mob &p) const {
+  ability::rally(p, 54, 45, 1.5f);
 }
 
-void Knight::tick(Player &p) const {
+void Knight::tick(Mob &p) const {
   p.heroTimer = std::max(0.0f, p.heroTimer - DT);
 }
 
-float Knight::guard(Player &p, float damage) const {
+float Knight::guard(Mob &p, float damage) const {
   if (p.heroTimer > 0)
     return damage;
   p.heroTimer = 6;

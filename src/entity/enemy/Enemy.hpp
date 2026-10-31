@@ -49,7 +49,7 @@ struct EnemyType {
 class Enemy : public Mob {
 public:
   const EnemyType &type;
-  float damageMul, knifeCooldown = 0;
+  float damageMul;
   bool elite = false;
   const Plan *plan = nullptr;
   GoalQueue goals;
@@ -83,12 +83,14 @@ public:
   void makeElite(float health = 4);
   bool hostile() const override { return true; }
   void split() override;
-  float power() const override { return damageMul; }
+  float power() const override { return damageMul * might; }
   void aim(double &ax, double &ay) const override;
-  void strike(float damage, double xd, double yd, float force) override {
-    hurt(damage, xd, yd, force);
+  void strike(float damage, double xd, double yd, float force,
+              Upgrade *src = nullptr) override {
+    hurt(damage, xd, yd, force, src);
   }
   Sprite body() const override { return sprite(); }
+  void shield(float) override { traits.ward = std::max(traits.ward, 3); }
   float castTime = 5;
   void makeBoss(float health, float damage);
   void think();

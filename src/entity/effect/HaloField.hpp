@@ -1,13 +1,12 @@
 #pragma once
 
-#include "entity/Entity.hpp"
+#include "entity/Mob.hpp"
 
 class Halo;
-class Player;
 
 class HaloField : public Entity {
 public:
-  HaloField(const Halo &halo, const Player &p) : halo(halo), player(p) {}
+  HaloField(const Halo &halo, const Mob &p) : halo(halo), owner(p), ownerId(p.id) {}
   int layer() const override { return 0; }
   void tick() override;
   void render(Screen &s) override;
@@ -15,6 +14,7 @@ public:
 
 private:
   const Halo &halo;
-  const Player &player;
+  const Mob &owner;
+  entt::entity ownerId;
   float spin = 0;
 };

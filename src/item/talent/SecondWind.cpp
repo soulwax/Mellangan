@@ -10,7 +10,7 @@ SecondWind::SecondWind()
   owner = "RANGER";
 }
 
-void SecondWind::slay(Player &p, Enemy &) {
+void SecondWind::slay(Mob &p, Enemy &) {
   if (p.skillTime > 0 && rng.chance(0.03f * level))
     p.skillTime = 0;
 }

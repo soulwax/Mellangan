@@ -2,18 +2,19 @@
 
 #include "entity/Entity.hpp"
 
-class Player;
+class Mob;
 
 class Ward : public Entity {
 public:
-  Ward(const Player &p, float life) : player(p), life(life), maxLife(life) {}
+  Ward(const Mob &owner, float life);
   int layer() const override { return 2; }
   void tick() override;
   void render(Screen &s) override;
   void renderLight(Screen &s) override;
 
 private:
-  const Player &player;
+  entt::entity owner;
+  double cy;
   float life, maxLife, spin = 0;
   float fade() const;
 };

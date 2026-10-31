@@ -5,7 +5,7 @@
 class StaticField : public Upgrade {
 public:
   StaticField();
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
 
 private:
   float cd = 1;

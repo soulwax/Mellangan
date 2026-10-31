@@ -10,16 +10,16 @@ public:
 
   Skill(const char *name, Sprite icon, const char *desc, const char *owner,
         float cooldown);
-  virtual void use(Player &p) = 0;
-  virtual void active(Player &) {}
-  virtual void unequip(Player &) {}
-  void levelUp(Player &p) override;
+  virtual void use(Mob &p) = 0;
+  virtual void active(Mob &) {}
+  virtual void unequip(Mob &) {}
+  void levelUp(Mob &p) override;
 };
 
 class HeroSkill : public Skill {
 public:
   explicit HeroSkill(const Hero &hero);
-  void use(Player &p) override;
+  void use(Mob &p) override;
 
   const Hero &hero;
 };

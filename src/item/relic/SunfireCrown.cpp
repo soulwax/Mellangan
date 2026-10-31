@@ -13,16 +13,16 @@ SunfireCrown::SunfireCrown()
   rare = true;
 }
 
-void SunfireCrown::tick(Player &p) {
+void SunfireCrown::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = 3 * p.haste;
   float r = 140, dmg = 80 * p.might;
-  p.level->enemiesNear(p.x, p.y, r + 24, [&](Enemy &e) {
+  p.level->foes(p, p.x, p.y, r + 24, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
     float rr = r + e.radius;
     if (xd * xd + yd * yd < rr * rr)
-      e.hurt(dmg, xd, yd, 160, this);
+      e.strike(dmg, xd, yd, 160, this);
   });
   Spark::burst(*p.level, p.x, p.bodyY(), col::gold, 36, 200, true);
   p.level->add<Explosion>(p.x, p.y, 4, 8);

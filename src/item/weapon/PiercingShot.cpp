@@ -13,14 +13,14 @@ PiercingShot::PiercingShot()
   owner = "RANGER";
 }
 
-void PiercingShot::tick(Player &p) {
+void PiercingShot::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  auto targets = p.level->nearest(p.x, p.y, 300, 1);
+  auto targets = p.level->nearestFoes(p, p.x, p.y, 300, 1);
   if (targets.empty())
     return void(cd = 0.2f);
   cd = (level >= 4 ? 1.2f : 1.6f) * p.haste * pace;
-  Enemy *e = targets.front();
+  Mob *e = targets.front();
   float dmg = (30.0f + 10 * (at(level, 2) + at(level, 4))) * p.might * power;
   for (int i = 0; i <= at(level, 5); i++) {
     double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x) + i * 0.08;

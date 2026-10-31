@@ -13,7 +13,7 @@ Flurry::Flurry()
   owner = "DUELIST";
 }
 
-void Flurry::tick(Player &p) {
+void Flurry::tick(Mob &p) {
   if (pending > 0 && (gap -= DT) <= 0) {
     pending--, gap = 0.12f, side = -side;
     p.level->add<Slash>(p, side, dmg, 0.9f, SlashStyle::Flurry)->source = this;

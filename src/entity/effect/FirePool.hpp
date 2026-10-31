@@ -11,6 +11,7 @@ public:
       : damage(damage), life(duration), maxLife(duration), style(style) {
     this->x = x, this->y = y, this->radius = radius;
   }
+  bool hostile = false;
   int layer() const override { return 0; }
   void tick() override;
   void render(Screen &s) override;

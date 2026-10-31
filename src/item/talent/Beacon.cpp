@@ -10,11 +10,11 @@ Beacon::Beacon()
   owner = "PRIESTESS";
 }
 
-void Beacon::cast(Player &p) {
-  p.heal(10.0f * level);
-  p.level->enemiesNear(p.x, p.y, 130, [&](Enemy &e) {
+void Beacon::cast(Mob &p) {
+  p.mend(10.0f * level);
+  p.level->foes(p, p.x, p.y, 130, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.y - p.y;
     if (xd * xd + yd * yd < 110 * 110)
-      e.hurt(15.0f * level * p.might, xd, yd, 120, this);
+      e.strike(15.0f * level * p.might, xd, yd, 120, this);
   });
 }

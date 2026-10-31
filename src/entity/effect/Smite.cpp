@@ -1,6 +1,7 @@
 #include "entity/effect/Smite.hpp"
 
 #include "entity/enemy/Enemy.hpp"
+#include "item/Upgrade.hpp"
 #include "level/Level.hpp"
 #include "particle/Mark.hpp"
 #include "particle/Shockwave.hpp"
@@ -24,11 +25,11 @@ void Smite::tick() {
 
 void Smite::strike() {
   struck = true;
-  level->enemiesNear(x, y, radius + 24, [&](Enemy &e) {
+  level->foes((source && source->hostile()), x, y, radius + 24, [&](Mob &e) {
     double xd = e.x - x, yd = e.bodyY() - y;
     float r = radius + e.radius;
     if (xd * xd + yd * yd < r * r)
-      e.hurt(damage, e.x - x, e.y - y, 50, source);
+      e.strike(damage, e.x - x, e.y - y, 50, source);
   });
   level->add<Shockwave>(x, y, 4, radius * 1.7f, 0.35f, HOLY.alpha(0.9f));
   level->add<Mark>(x, y, 1.1f, atlas::Ring, HOLY.alpha(0.6f),

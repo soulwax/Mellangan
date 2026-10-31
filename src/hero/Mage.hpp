@@ -5,6 +5,6 @@
 class Mage : public Hero {
 public:
   Mage();
-  void cast(Player &p) const override;
+  void cast(Mob &p) const override;
   float wisdom() const override { return 1.15f; }
 };

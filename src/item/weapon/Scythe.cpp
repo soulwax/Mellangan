@@ -11,7 +11,7 @@ Scythe::Scythe()
                "+10 damage, faster sweeps", "Longer reach, +10 damage"},
               true) {}
 
-void Scythe::tick(Player &p) {
+void Scythe::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 2.0f : 2.8f) * p.haste * pace;

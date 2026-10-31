@@ -5,5 +5,5 @@
 class VolatileMix : public Upgrade {
 public:
   VolatileMix();
-  void slay(Player &p, Enemy &e) override;
+  void slay(Mob &p, Enemy &e) override;
 };

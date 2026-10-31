@@ -6,7 +6,7 @@
 class ExpansionWeapon : public Upgrade {
 public:
   explicit ExpansionWeapon(int kind);
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
   int kind;
   float cd = 0.4f;
 };
@@ -27,9 +27,9 @@ public:
 
 private:
   bool hitBefore(entt::entity id) const;
-  void strike(Enemy &e);
+  void strike(Mob &e);
   void born();
   void trail();
   void blast();
-  void impact(Enemy &e);
+  void impact(Mob &e);
 };

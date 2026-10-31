@@ -4,13 +4,13 @@
 
 #include "entity/Entity.hpp"
 
-class Player;
+class Mob;
 
 enum class SweepStyle { Reap, Steel, Rally };
 
 class Sweep : public Entity {
 public:
-  Sweep(const Player &p, float reach, float damage,
+  Sweep(const Mob &owner, float reach, float damage,
         SweepStyle style = SweepStyle::Reap);
   int layer() const override { return 2; }
   void tick() override;
@@ -18,7 +18,9 @@ public:
   void renderLight(Screen &s) override;
 
 private:
-  const Player &player;
+  entt::entity owner;
+  bool hostile;
+  double cx, cy;
   float reach, damage, angle, start, t = 0;
   SweepStyle style;
   std::vector<entt::entity> hits;

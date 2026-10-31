@@ -5,5 +5,5 @@
 class Beacon : public Upgrade {
 public:
   Beacon();
-  void cast(Player &p) override;
+  void cast(Mob &p) override;
 };

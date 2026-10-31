@@ -12,7 +12,7 @@ Blade::Blade()
                "+6 damage, wider arc"},
               true) {}
 
-void Blade::tick(Player &p) {
+void Blade::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 1.05f : 1.3f) * p.haste * pace;

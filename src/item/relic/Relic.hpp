@@ -4,16 +4,16 @@
 
 class Relic : public Upgrade {
 public:
-  Relic(const char *name, Sprite icon, const char *desc, void (*grant)(Player &))
+  Relic(const char *name, Sprite icon, const char *desc, void (*grant)(Mob &))
       : Upgrade(name, icon, {desc, desc, desc, desc, desc}, false),
         grant(grant) {
     rare = true;
   }
-  void levelUp(Player &p) override {
+  void levelUp(Mob &p) override {
     Upgrade::levelUp(p);
     grant(p);
   }
 
 private:
-  void (*grant)(Player &);
+  void (*grant)(Mob &);
 };

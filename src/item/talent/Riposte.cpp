@@ -11,7 +11,7 @@ Riposte::Riposte()
   owner = "DUELIST";
 }
 
-float Riposte::guard(Player &p, float damage) {
+float Riposte::guard(Mob &p, float damage) {
   if (!rng.chance(0.08f * level))
     return damage;
   p.invuln = std::max(p.invuln, 0.4f);

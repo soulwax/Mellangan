@@ -5,7 +5,7 @@
 class CrusaderStrike : public Upgrade {
 public:
   CrusaderStrike();
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
 
 private:
   float cd = 1;

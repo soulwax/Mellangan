@@ -14,6 +14,6 @@ Priestess::Priestess()
             "Heal 35 and drive back the dark", 14,
             {"Warding Halo", "Heartroot", "Troll Blood"}}) {}
 
-void Priestess::cast(Player &p) const {
+void Priestess::cast(Mob &p) const {
   ability::nova(p, 90, 40, 35, {1, 0.9f, 0.55f, 1});
 }

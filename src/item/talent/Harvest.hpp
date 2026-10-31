@@ -5,5 +5,5 @@
 class Harvest : public Upgrade {
 public:
   Harvest();
-  void slay(Player &p, Enemy &e) override;
+  void slay(Mob &p, Enemy &e) override;
 };

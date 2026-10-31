@@ -9,10 +9,11 @@
 #include "particle/Drift.hpp"
 #include "particle/Spark.hpp"
 
-Sweep::Sweep(const Player &p, float reach, float damage, SweepStyle style)
-    : player(p), reach(reach), damage(damage), angle(rng.range(0, TAU)),
-      start(angle), style(style) {
-  x = p.x, y = p.bodyY();
+Sweep::Sweep(const Mob &owner, float reach, float damage, SweepStyle style)
+    : owner(owner.id), hostile(owner.hostile()), cx(owner.x), cy(owner.bodyY()),
+      reach(reach), damage(damage), angle(rng.range(0, TAU)), start(angle),
+      style(style) {
+  x = cx, y = cy;
 }
 
 Color Sweep::tone() const {
@@ -61,26 +62,37 @@ void Sweep::trail() {
 }
 
 void Sweep::tick() {
+  Mob *m = level->mob(owner);
+  if (!m)
+    return remove();
+  cx = m->x, cy = m->bodyY();
   t += DT / 0.45f;
   angle = start + TAU * std::min(t, 1.0f);
-  x = player.x + std::cos(angle) * reach;
-  y = player.bodyY() + std::sin(angle) * reach;
-  level->enemiesNear(x, y, 40, [&](Enemy &e) {
+  x = cx + std::cos(angle) * reach;
+  y = cy + std::sin(angle) * reach;
+  auto cut = [&](Mob &e) {
     double xd = e.x - x, yd = e.bodyY() - y;
     float r = 13 + e.radius;
     if (xd * xd + yd * yd >= r * r ||
         std::find(hits.begin(), hits.end(), e.id) != hits.end())
       return;
     hits.push_back(e.id);
-    e.hurt(damage, e.x - player.x, e.y - player.y, 120, source);
-  });
+    if (hostile)
+      e.strike(damage, e.x - cx, e.y - cy, 120);
+    else
+      static_cast<Enemy &>(e).hurt(damage, e.x - cx, e.y - cy, 120, source);
+  };
+  if (hostile)
+    cut(*level->player);
+  else
+    level->enemiesNear(x, y, 40, [&](Enemy &e) { cut(e); });
   trail();
   if (t >= 1)
     remove();
 }
 
 void Sweep::render(Screen &s) {
-  int xc = int(std::floor(player.x)), yc = int(std::floor(player.bodyY()));
+  int xc = int(std::floor(cx)), yc = int(std::floor(cy));
   Color c = tone();
   Sprite b = blade();
   float tilt = style == SweepStyle::Reap ? PI * 0.75f : PI * 0.25f;

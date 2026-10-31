@@ -5,5 +5,5 @@
 class EchoingBlink : public Upgrade {
 public:
   EchoingBlink();
-  void cast(Player &p) override;
+  void cast(Mob &p) override;
 };

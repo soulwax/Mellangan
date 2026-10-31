@@ -1,6 +1,9 @@
 #include "entity/effect/FirePool.hpp"
 
+#include "entity/Player.hpp"
+
 #include "entity/enemy/Enemy.hpp"
+#include "item/Upgrade.hpp"
 #include "level/Level.hpp"
 #include "particle/Mark.hpp"
 #include "particle/Spark.hpp"
@@ -15,6 +18,16 @@ void FirePool::tick() {
     return remove();
   if ((timer -= DT) <= 0) {
     timer = 0.4f;
+    if (hostile || (source && source->hostile())) {
+      Player &p = *level->player;
+      double xd = p.x - x, yd = p.y - y;
+      float r = radius + p.radius;
+      if (!p.dead() && xd * xd + yd * yd < r * r) {
+        p.felledBy = "a burning pool";
+        p.afflict(StatusKind::Burn, 1.2f, damage * 0.4f);
+        p.hurt(damage, true);
+      }
+    } else
     level->enemiesNear(x, y, radius + 24, [&](Enemy &e) {
       double xd = e.x - x, yd = e.y - y;
       float r = radius + e.radius;

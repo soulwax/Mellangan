@@ -4,12 +4,13 @@
 
 #include "entity/Entity.hpp"
 
-class Enemy;
+class Mob;
 
 class Projectile : public Entity {
 public:
   float life, maxLife, damage, knock;
   int pierce;
+  bool hostile = false;
   std::vector<entt::entity> hits;
 
   Projectile(double x, double y, double xa, double ya, float life, float damage,
@@ -23,8 +24,8 @@ public:
 
 protected:
   void collide();
-  virtual bool touches(const Enemy &e) const;
-  virtual void push(const Enemy &, double &xd, double &yd) const {
+  virtual bool touches(const Mob &e) const;
+  virtual void push(const Mob &, double &xd, double &yd) const {
     xd = xa, yd = ya;
   }
   virtual void spent() {}

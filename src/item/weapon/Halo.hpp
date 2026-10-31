@@ -8,8 +8,8 @@ public:
 
   Halo();
   float range() const { return 30.0f + 7 * (level - 1); }
-  void levelUp(Player &p) override;
-  void tick(Player &p) override;
+  void levelUp(Mob &p) override;
+  void tick(Mob &p) override;
 
 private:
   float timer = 0;

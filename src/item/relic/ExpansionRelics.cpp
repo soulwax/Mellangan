@@ -36,10 +36,10 @@ ExpansionRelic::ExpansionRelic(int kind)
   rare = true;
 }
 
-void ExpansionRelic::pulse(Player &p, double x, double y, float damage,
+void ExpansionRelic::pulse(Mob &p, double x, double y, float damage,
                            int status) {
   int left = kind == 0 ? 16 : 6;
-  p.level->enemiesNear(x, y, 115, [&](Enemy &e) {
+  p.level->foes(p, x, y, 115, [&](Mob &e) {
     double dx = e.x - x, dy = e.bodyY() - y;
     if (left <= 0 || dx * dx + dy * dy > 100 * 100)
       return;
@@ -48,12 +48,12 @@ void ExpansionRelic::pulse(Player &p, double x, double y, float damage,
       e.afflict(StatusKind(status), 3, status == int(StatusKind::Chill) ?
                                     0.35f : 5 * p.might, this);
     if (damage > 0)
-      e.hurt(damage * p.might, dx, dy, 60, this);
+      e.strike(damage * p.might, dx, dy, 60, this);
   });
   Spark::burst(*p.level, x, y, kind == 3 ? col::heal : col::gold, 10, 100, true);
 }
 
-void ExpansionRelic::tick(Player &p) {
+void ExpansionRelic::tick(Mob &p) {
   cd = std::max(0.0f, cd - DT);
   if (kind == 2) {
     p.level->kindleRate *= 1.25f;
@@ -76,13 +76,13 @@ void ExpansionRelic::tick(Player &p) {
   } else if (kind == 7 && delay > 0) {
     delay -= DT;
     if (delay <= 0) {
-      p.heal(stored);
+      p.mend(stored);
       stored = 0;
     }
   }
 }
 
-void ExpansionRelic::slay(Player &p, Enemy &e) {
+void ExpansionRelic::slay(Mob &p, Enemy &e) {
   if (cd > 0)
     return;
   if (kind == 0 && p.level->streak > 0 && p.level->streak % 10 == 0) {
@@ -98,7 +98,7 @@ void ExpansionRelic::slay(Player &p, Enemy &e) {
   }
 }
 
-float ExpansionRelic::guard(Player &p, float damage) {
+float ExpansionRelic::guard(Mob &p, float damage) {
   if (cd > 0)
     return damage;
   if (kind == 1 && p.hp <= p.maxHp * 0.3f) {
@@ -114,7 +114,7 @@ float ExpansionRelic::guard(Player &p, float damage) {
   return damage;
 }
 
-void ExpansionRelic::cast(Player &p) {
+void ExpansionRelic::cast(Mob &p) {
   if (kind != 4 || cd > 0)
     return;
   cd = 8;

@@ -13,7 +13,7 @@ CrusaderStrike::CrusaderStrike()
   owner = "KNIGHT";
 }
 
-void CrusaderStrike::tick(Player &p) {
+void CrusaderStrike::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 1.8f : 2.4f) * p.haste * pace;

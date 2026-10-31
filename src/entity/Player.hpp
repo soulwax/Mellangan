@@ -12,19 +12,13 @@ class Hero;
 
 class Player : public Mob {
 public:
-  double xAim = 1, yAim = 0;
-  float invuln = 0;
   int lvl = 1, pendingLevels = 0, pendingTreasures = 0, revives = 0;
   const char *felledBy = nullptr;
   float exp = 0, expNext = 5, xpBase = 6, xpGrowth = 1.08f;
-  float speed = 74, might = 1, haste = 1, magnet = 28, armor = 0, regen = 0,
-        luck = 0;
   bool god = false;
-  int tile = atlas::t::Wizard, heroCount = 0;
-  float heroTimer = 0, skillTime = 0;
+  int tile = atlas::t::Wizard;
   const Hero *hero = nullptr;
   Skill *skill = nullptr;
-  std::vector<std::unique_ptr<Upgrade>> upgrades;
 
   Player();
   ~Player() override;
@@ -38,13 +32,14 @@ public:
   void hurt(float damage, bool periodic = false);
   void rise();
   void cast();
-  void heal(float amount);
-  float power() const override { return might; }
-  void aim(double &ax, double &ay) const override { ax = xAim, ay = yAim; }
-  void strike(float damage, double, double, float) override { hurt(damage); }
-  void mend(float amount) override { heal(amount); }
+  void heal(float amount) { mend(amount); }
+  Player *asPlayer() override { return this; }
+  void strike(float damage, double, double, float, Upgrade * = nullptr) override {
+    hurt(damage);
+  }
+  void mend(float amount) override;
+  void shield(float seconds) override { invuln = std::max(invuln, seconds); }
   Sprite body() const override;
   void gainXp(float amount);
-  bool dead() const { return hp <= 0; }
   double torchX() const { return x + facing * 6; }
 };

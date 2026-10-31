@@ -11,7 +11,7 @@ AxeThrow::AxeThrow()
                "+10 damage, more pierce", "Throws one more axe"},
               true) {}
 
-void AxeThrow::tick(Player &p) {
+void AxeThrow::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = 2.3f * p.haste * pace;

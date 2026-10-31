@@ -10,11 +10,11 @@ Retribution::Retribution()
   owner = "KNIGHT";
 }
 
-float Retribution::guard(Player &p, float damage) {
-  p.level->enemiesNear(p.x, p.y, 80, [&](Enemy &e) {
+float Retribution::guard(Mob &p, float damage) {
+  p.level->foes(p, p.x, p.y, 80, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.y - p.y;
     if (xd * xd + yd * yd < 60 * 60)
-      e.hurt(25.0f * level * p.might, xd, yd, 160, this);
+      e.strike(25.0f * level * p.might, xd, yd, 160, this);
   });
   return damage;
 }

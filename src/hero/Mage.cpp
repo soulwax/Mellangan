@@ -14,6 +14,6 @@ Mage::Mage()
             "Vanish and reappear ahead in an arcane burst", 6,
             {"Arcane Staff", "Hourglass Tonic", "Warding Halo"}}) {}
 
-void Mage::cast(Player &p) const {
+void Mage::cast(Mob &p) const {
   ability::blink(p, 90, 35, {0.72f, 0.45f, 1, 1});
 }

@@ -12,7 +12,7 @@ TempestEye::TempestEye()
   rare = true;
 }
 
-void TempestEye::tick(Player &p) {
+void TempestEye::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   Enemy *pool[64];
@@ -21,7 +21,7 @@ void TempestEye::tick(Player &p) {
     return void(cd = 0.2f);
   cd = 0.9f * p.haste;
   for (int i = 0; i < 3; i++) {
-    Enemy *e = pool[rng.irange(0, n - 1)];
+    Mob *e = pool[rng.irange(0, n - 1)];
     p.level->add<Strike>(e->x, e->y, 55 * p.might, 26)->source = this;
   }
   Sound::thunder.play(0.4f);

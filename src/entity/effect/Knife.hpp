@@ -1,14 +1,13 @@
 #pragma once
 
-#include "entity/Entity.hpp"
+#include "entity/Mob.hpp"
 
 class Knives;
-class Player;
 
 class Knife : public Entity {
 public:
-  Knife(const Knives &knives, const Player &p, int index)
-      : knives(knives), player(p), index(index) {}
+  Knife(const Knives &knives, const Mob &p, int index)
+      : knives(knives), owner(p), ownerId(p.id), index(index) {}
   int layer() const override { return 2; }
   void tick() override;
   void render(Screen &s) override;
@@ -16,7 +15,8 @@ public:
 
 private:
   const Knives &knives;
-  const Player &player;
+  const Mob &owner;
+  entt::entity ownerId;
   int index;
   float angle = 0;
 };

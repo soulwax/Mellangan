@@ -5,7 +5,7 @@
 class Knight : public Hero {
 public:
   Knight();
-  void cast(Player &p) const override;
-  void tick(Player &p) const override;
-  float guard(Player &p, float damage) const override;
+  void cast(Mob &p) const override;
+  void tick(Mob &p) const override;
+  float guard(Mob &p, float damage) const override;
 };

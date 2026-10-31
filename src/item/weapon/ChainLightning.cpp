@@ -18,10 +18,10 @@ ChainLightning::ChainLightning()
   owner = "STORMCALLER";
 }
 
-void ChainLightning::tick(Player &p) {
+void ChainLightning::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  auto targets = p.level->nearest(
+  auto targets = p.level->nearestFoes(p, 
       p.x, p.y, 260, 3 + at(level, 2) + at(level, 3) + at(level, 5));
   if (targets.empty())
     return void(cd = 0.2f);
@@ -30,22 +30,22 @@ void ChainLightning::tick(Player &p) {
   std::vector<ArcNode> chain{{p.x, p.bodyY()}};
   while (!targets.empty()) {
     auto next = std::min_element(targets.begin(), targets.end(),
-                                 [&](Enemy *a, Enemy *b) {
-                                   auto d = [&](Enemy *e) {
+                                 [&](Mob *a, Mob *b) {
+                                   auto d = [&](Mob *e) {
                                      double xd = e->x - chain.back().x,
                                             yd = e->bodyY() - chain.back().y;
                                      return xd * xd + yd * yd;
                                    };
                                    return d(a) < d(b);
                                  });
-    Enemy *e = *next;
+    Mob *e = *next;
     targets.erase(next);
     chain.push_back({e->x, e->bodyY()});
-    p.level->enemiesNear(e->x, e->y, 16 + 24, [&](Enemy &o) {
+    p.level->foes(p, e->x, e->y, 16 + 24, [&](Mob &o) {
       double xd = o.x - e->x, yd = o.bodyY() - e->y;
       float r = 16 + o.radius;
       if (xd * xd + yd * yd < r * r)
-        o.hurt(dmg, o.x - e->x, o.y - e->y, 50, this);
+        o.strike(dmg, o.x - e->x, o.y - e->y, 50, this);
     });
     Spark::burst(*p.level, chain.back().x, chain.back().y, STORM, 5, 70, false);
   }

@@ -67,21 +67,21 @@ float RecipeWeapon::reach() const {
   return r.reach * (area(r.form) ? 1 + 0.3f * (at(level, 3) + at(level, 5)) : 1);
 }
 
-float RecipeWeapon::damage(const Player &p) const {
+float RecipeWeapon::damage(const Mob &p) const {
   return r.damage * (1 + 0.5f * (at(level, 2) + at(level, 5))) * p.might * power;
 }
 
-void RecipeWeapon::tick(Player &p) {
+void RecipeWeapon::tick(Mob &p) {
   if ((cd -= DT) > 0 || p.dead())
     return;
   cd = r.cooldown * (level >= 4 ? 0.75f : 1) * p.haste * pace;
   fireRecipe(r, p, this, damage(p), reach(), count());
 }
 
-void fireRecipe(const Recipe &r, Player &p, Upgrade *source, float damage,
+void fireRecipe(const Recipe &r, Mob &p, Upgrade *source, float damage,
                 float reach, int count) {
   Level &level = *p.level;
-  auto targets = level.nearest(p.x, p.y, std::max(reach, 240.0f), 8);
+  auto targets = level.nearestFoes(p, p.x, p.y, std::max(reach, 240.0f), 8);
   double dx = p.xAim, dy = p.yAim;
   if (!targets.empty())
     dx = targets.front()->x - p.x, dy = targets.front()->bodyY() - p.bodyY();
@@ -121,7 +121,7 @@ void fireRecipe(const Recipe &r, Player &p, Upgrade *source, float damage,
     for (int i = 0; i < count; i++) {
       double x, y;
       if (!targets.empty()) {
-        Enemy *e = targets[size_t(i) % targets.size()];
+        Mob *e = targets[size_t(i) % targets.size()];
         x = e->x, y = e->bodyY();
       } else {
         float a = rng.range(0, TAU), k = rng.range(0.3f, 1.0f) * reach;
@@ -177,7 +177,7 @@ bool RecipeShot::hitBefore(entt::entity id) const {
   return std::find(hits.begin(), hits.end(), id) != hits.end();
 }
 
-void RecipeShot::strike(Enemy &e, double xd, double yd) {
+void RecipeShot::strike(Mob &e, double xd, double yd) {
   hits.push_back(e.id);
   unsigned p = r.payload;
   if (p & pay::Burn)
@@ -191,7 +191,7 @@ void RecipeShot::strike(Enemy &e, double xd, double yd) {
   float knock = p & pay::Pull ? -70.0f :
                 r.form == Form::Field ? 0.0f :
                 r.form == Form::Orbit ? 60.0f : 40.0f;
-  e.hurt(damage, xd, yd, knock, source);
+  e.strike(damage, xd, yd, knock, source);
   if (Spark::alive < 600)
     Spark::burst(*level, e.x, e.bodyY(), r.tint, 4, 60, false);
   if ((p & pay::Explode) && r.form != Form::Rain)
@@ -210,20 +210,20 @@ void RecipeShot::blast(float radius, float dmg) {
   level->add<Shockwave>(x, y, 3, radius, 0.3f, r.tint);
   if (Spark::alive < 600)
     Spark::burst(*level, x, y, r.tint, 8, radius * 2, true);
-  level->enemiesNear(x, y, radius + 16, [&](Enemy &e) {
+  level->foes(source && source->hostile(), x, y, radius + 16, [&](Mob &e) {
     double ex = e.x - x, ey = e.bodyY() - y;
     float rr = radius + e.radius;
     if (ex * ex + ey * ey >= rr * rr)
       return;
     if (r.payload & pay::Burn)
       e.afflict(StatusKind::Burn, 2.0f, dmg * 0.25f, source);
-    e.hurt(dmg, ex, ey, 70, source);
+    e.strike(dmg, ex, ey, 70, source);
   });
 }
 
 void RecipeShot::steer(float range) {
-  Enemy *target = nullptr;
-  for (Enemy *e : level->nearest(x, y, range, 12))
+  Mob *target = nullptr;
+  for (Mob *e : level->nearestFoes(source && source->hostile(), x, y, range, 12))
     if (!hitBefore(e->id)) {
       target = e;
       break;
@@ -256,7 +256,7 @@ void RecipeShot::trail() {
 }
 
 void RecipeShot::tick() {
-  Player &p = *level->player;
+  Mob &p = *level->player;
   if (p.dead())
     return remove();
   age += DT;
@@ -274,7 +274,7 @@ void RecipeShot::tick() {
   case Form::Bolt:
   case Form::Volley: {
     x += dx * speed * DT, y += dy * speed * DT;
-    level->enemiesNear(x, y, radius + 24, [&](Enemy &e) {
+    level->foes(source && source->hostile(), x, y, radius + 24, [&](Mob &e) {
       if (removed || hitBefore(e.id))
         return;
       double ex = e.x - x, ey = e.bodyY() - y;
@@ -293,7 +293,7 @@ void RecipeShot::tick() {
     dx = -std::sin(a), dy = std::cos(a);
     if ((pulse -= DT) <= 0)
       pulse = 0.6f, hits.clear();
-    level->enemiesNear(x, y, radius + 24, [&](Enemy &e) {
+    level->foes(source && source->hostile(), x, y, radius + 24, [&](Mob &e) {
       if (hitBefore(e.id))
         return;
       double ex = e.x - x, ey = e.bodyY() - y;
@@ -305,7 +305,7 @@ void RecipeShot::tick() {
   }
   case Form::Nova: {
     float ring = reach * std::min(1.0f, age / 0.35f);
-    level->enemiesNear(x, y, ring + 16, [&](Enemy &e) {
+    level->foes(source && source->hostile(), x, y, ring + 16, [&](Mob &e) {
       if (hitBefore(e.id))
         return;
       double ex = e.x - x, ey = e.bodyY() - y, d = std::hypot(ex, ey);
@@ -327,7 +327,7 @@ void RecipeShot::tick() {
       break;
     pulse = 0.5f;
     hits.clear();
-    level->enemiesNear(x, y, reach + 16, [&](Enemy &e) {
+    level->foes(source && source->hostile(), x, y, reach + 16, [&](Mob &e) {
       double ex = e.x - x, ey = e.bodyY() - y;
       float rr = reach + e.radius;
       if (ex * ex + ey * ey < rr * rr)

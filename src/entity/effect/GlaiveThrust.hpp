@@ -4,11 +4,11 @@
 
 #include "entity/Entity.hpp"
 
-class Player;
+class Mob;
 
 class GlaiveThrust : public Entity {
 public:
-  GlaiveThrust(const Player &p, double dirX, double dirY, float reach,
+  GlaiveThrust(const Mob &p, double dirX, double dirY, float reach,
                float damage, float force, bool doubleEnded);
   int layer() const override { return 2; }
   void tick() override;
@@ -16,7 +16,8 @@ public:
   void renderLight(Screen &s) override;
 
 private:
-  const Player &player;
+  const Mob &owner;
+  entt::entity ownerId;
   double dx, dy;
   float reach, damage, force, t = 0;
   bool doubleEnded;

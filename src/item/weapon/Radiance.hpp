@@ -5,7 +5,7 @@
 class Radiance : public Upgrade {
 public:
   Radiance();
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
 
 private:
   float cd = 1;

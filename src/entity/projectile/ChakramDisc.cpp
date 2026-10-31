@@ -1,4 +1,5 @@
 #include "entity/projectile/ChakramDisc.hpp"
+#include "item/Upgrade.hpp"
 
 #include <cmath>
 
@@ -17,7 +18,8 @@ void ChakramDisc::tick() {
   if (life <= 0)
     return remove();
   age += DT;
-  Player &p = *level->player;
+  Mob *holder = source ? source->holder : nullptr;
+  Mob &p = holder ? *holder : *level->player;
   double toX = p.x - x, toY = p.bodyY() - y;
   double d = std::sqrt(toX * toX + toY * toY);
 

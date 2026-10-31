@@ -5,7 +5,7 @@
 class Flurry : public Upgrade {
 public:
   Flurry();
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
 
 private:
   float cd = 1, gap = 0, dmg = 0, side = 1;

@@ -5,7 +5,7 @@
 class PiercingShot : public Upgrade {
 public:
   PiercingShot();
-  void tick(Player &p) override;
+  void tick(Mob &p) override;
 
 private:
   float cd = 1;

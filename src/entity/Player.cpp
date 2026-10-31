@@ -13,7 +13,10 @@
 #include "particle/TextParticle.hpp"
 #include "particle/debris/FlameDebris.hpp"
 
-Player::Player() : upgrades(Upgrade::all()) { hp = maxHp = 100; }
+Player::Player() {
+  upgrades = Upgrade::all();
+  hp = maxHp = 100;
+}
 
 Player::~Player() = default;
 
@@ -73,6 +76,7 @@ void Player::tick() {
   if (xd != 0 || yd != 0)
     xAim = xd, yAim = yd;
   invuln = std::max(0.0f, invuln - DT);
+  knifeCooldown -= DT;
   traits.tick(*this);
   skillTime = std::max(0.0f, skillTime - DT);
   if (hero)
@@ -185,7 +189,7 @@ void Player::rise() {
   Sound::nova.play(0.8f, 0);
 }
 
-void Player::heal(float amount) {
+void Player::mend(float amount) {
   hp = std::min(maxHp, hp + amount);
   TextParticle::pop(*level, x, bodyY(), int(amount), col::heal);
 }

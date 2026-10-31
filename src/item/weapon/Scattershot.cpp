@@ -14,7 +14,7 @@ Scattershot::Scattershot()
   owner = "RANGER";
 }
 
-void Scattershot::tick(Player &p) {
+void Scattershot::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 1.5f : 2.0f) * p.haste * pace;

@@ -13,16 +13,16 @@ Staff::Staff()
                "Fires one more bolt"},
               true) {}
 
-void Staff::tick(Player &p) {
+void Staff::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   int n = 1 + at(level, 3) + at(level, 5);
-  auto targets = p.level->nearest(p.x, p.y, 250, n);
+  auto targets = p.level->nearestFoes(p, p.x, p.y, 250, n);
   if (targets.empty())
     return void(cd = 0);
   cd = (level >= 2 ? 0.85f : 1.05f) * p.haste * pace;
   for (int i = 0; i < n; i++) {
-    Enemy *e = targets[i % targets.size()];
+    Mob *e = targets[i % targets.size()];
     float spread = i < int(targets.size()) ? 0 : rng.range(-0.35f, 0.35f);
     double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x) + spread;
     p.level

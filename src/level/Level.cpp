@@ -1,4 +1,5 @@
 #include "level/Level.hpp"
+#include "item/Upgrade.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -53,6 +54,8 @@ void eachVisibleTile(const Screen &s, F &&f, int before = 0, int after = 0) {
 }
 
 } // namespace
+
+Level::~Level() = default;
 
 Level::Level(Game &game) : game(game) {
   cellStart.assign(GRID * GRID + 1, 0);
@@ -356,6 +359,24 @@ void Level::buildGrid() {
   });
 }
 
+Mob *Level::playerIn(double x, double y, float r) {
+  double xd = player->x - x, yd = player->y - y;
+  return !player->dead() && xd * xd + yd * yd < double(r) * r ? player : nullptr;
+}
+
+std::vector<Mob *> Level::nearestFoes(bool hostile, double x, double y,
+                                      float range, int n) {
+  std::vector<Mob *> out;
+  if (hostile) {
+    if (Mob *m = playerIn(x, y, range); m && n > 0)
+      out.push_back(m);
+    return out;
+  }
+  for (Enemy *e : nearest(x, y, range, n))
+    out.push_back(e);
+  return out;
+}
+
 std::vector<Enemy *> Level::nearest(double x, double y, float range, int n) {
   std::vector<std::pair<double, Enemy *>> found;
   each<Enemy>([&](Enemy &e) {
@@ -562,6 +583,15 @@ int Level::surfaceAt(double x, double y) const {
   if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H)
     return 0;
   return surfaces[gy * SOLID_W + gx] & 3;
+}
+
+Mob *Level::mob(entt::entity id) {
+  if (!reg.valid(id))
+    return nullptr;
+  auto *o = reg.try_get<Owned>(id);
+  if (!o || !o->self || o->self->removed)
+    return nullptr;
+  return dynamic_cast<Mob *>(o->self.get());
 }
 
 void Level::foesOf(const Mob &self, double x, double y, double r,

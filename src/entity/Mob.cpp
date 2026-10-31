@@ -1,4 +1,8 @@
 #include "entity/Mob.hpp"
+
+#include <cstring>
+
+#include "item/Upgrade.hpp"
 #include "gfx/StatusVisual.hpp"
 
 void Mob::drawBody(Screen &s, int px, int py, Sprite body, bool floats, float move,
@@ -28,4 +32,28 @@ void Mob::drawBody(Screen &s, int px, int py, Sprite body, bool floats, float mo
 void Mob::drawShadow(Screen &s, int px, int py, bool floats) const {
   float k = scale * (floats ? 0.7f : 1.0f);
   s.sprite(atlas::Shadow, px, py + 1, 8, 4, k, k);
+}
+
+Mob::Mob() = default;
+Mob::~Mob() = default;
+
+void Mob::tickKit() {
+  for (auto &up : upgrades) {
+    up->holder = this;
+    if (up->level > 0)
+      up->tick(*this);
+  }
+}
+
+Upgrade *Mob::grant(const char *name, int levels) {
+  if (upgrades.empty())
+    upgrades = Upgrade::all();
+  for (auto &up : upgrades)
+    if (std::strcmp(up->name, name) == 0) {
+      up->holder = this, up->foe = hostile();
+      for (int i = 0; i < levels && !up->maxed(); i++)
+        up->levelUp(*this);
+      return up.get();
+    }
+  return nullptr;
 }

@@ -5,6 +5,6 @@
 class Priestess : public Hero {
 public:
   Priestess();
-  void cast(Player &p) const override;
+  void cast(Mob &p) const override;
   float devotion() const override { return 1.3f; }
 };

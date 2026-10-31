@@ -5,5 +5,5 @@
 class SecondWind : public Upgrade {
 public:
   SecondWind();
-  void slay(Player &p, Enemy &e) override;
+  void slay(Mob &p, Enemy &e) override;
 };

@@ -5,5 +5,5 @@
 class Retribution : public Upgrade {
 public:
   Retribution();
-  float guard(Player &p, float damage) override;
+  float guard(Mob &p, float damage) override;
 };

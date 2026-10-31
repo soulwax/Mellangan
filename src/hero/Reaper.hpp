@@ -5,6 +5,6 @@
 class Reaper : public Hero {
 public:
   Reaper();
-  void cast(Player &p) const override;
-  void slay(Player &p, Enemy &e) const override;
+  void cast(Mob &p) const override;
+  void slay(Mob &p, Enemy &e) const override;
 };

@@ -8,9 +8,9 @@ public:
 
   explicit ExpansionHero(int variant);
   Sprite sprite() const override;
-  void equip(Player &p) const override;
-  void cast(Player &p) const override;
-  void slay(Player &p, Enemy &e) const override;
+  void equip(Mob &p) const override;
+  void cast(Mob &p) const override;
+  void slay(Mob &p, Enemy &e) const override;
   float wisdom() const override { return variant == 2 ? 1.15f : 1.0f; }
   float edge() const override { return variant == 3 ? 2.2f : 1.8f; }
 };

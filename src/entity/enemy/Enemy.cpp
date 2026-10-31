@@ -381,14 +381,24 @@ void Enemy::tick() {
   act();
   if (!type.floats)
     traits.tick(*this);
+  if (!upgrades.empty()) {
+    aim(xAim, yAim);
+    tickKit();
+  }
   if (boss && (castTime -= DT) <= 0) {
     castTime = rng.range(6, 9);
-    if (is(EnemyKind::Necromancer))
+    bool alt = rng.chance(0.5f);
+    if (is(EnemyKind::Necromancer) && alt)
+      ability::thunder(*this, 4, 0.5f * type.damage);
+    else if (is(EnemyKind::Necromancer))
       ability::blink(*this, 80, 0.6f * type.damage, Color{0.72f, 0.45f, 1, 1});
+    else if (is(EnemyKind::Cyclops))
+      ability::volley(*this, 7, 0.16, 200, 0.4f * type.damage, 1);
+    else if (is(EnemyKind::Alpha) && alt)
+      ability::dance(*this, 70, 0.5f * type.damage, Color{0.95f, 0.25f, 0.3f, 1});
     else
       ability::nova(*this, 70, 0.5f * type.damage, maxHp * 0.03f,
-                    is(EnemyKind::Alpha) ? Color{0.95f, 0.25f, 0.3f, 1}
-                                         : Color{1, 0.85f, 0.45f, 1});
+                    Color{0.95f, 0.25f, 0.3f, 1});
   }
   Player &p = *level->player;
   double xd = p.x - x, yd = p.y - y, dist = std::sqrt(xd * xd + yd * yd);
@@ -538,6 +548,9 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
 
 void Enemy::die() {
   status.clear();
+  for (auto &up : upgrades)
+    up->holder = nullptr, level->retired.push_back(std::move(up));
+  upgrades.clear();
   remove();
   level->kills++;
   level->slain[kind()]++;

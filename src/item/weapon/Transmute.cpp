@@ -15,19 +15,22 @@ Transmute::Transmute()
   owner = "ALCHEMIST";
 }
 
-void Transmute::tick(Player &p) {
+void Transmute::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  auto targets = p.level->nearest(p.x, p.y, 200, 2);
+  auto targets = p.level->nearestFoes(p, p.x, p.y, 200, 2);
   if (targets.empty())
     return void(cd = 0.3f);
   cd = (level >= 4 ? 4.0f : 5.5f) * p.haste * pace;
   for (int i = 0; i <= at(level, 5) && i < int(targets.size()); i++) {
-    Enemy *e = targets[i];
+    Mob *e = targets[i];
     double x = e->x, y = e->y;
-    e->gilded = true;
-    e->hurt((110.0f + 40 * at(level, 2)) * p.might * power, 0, 0, 0, this);
-    e->gilded = e->removed;
+    Enemy *gold = p.hostile() ? nullptr : static_cast<Enemy *>(e);
+    if (gold)
+      gold->gilded = true;
+    e->strike((110.0f + 40 * at(level, 2)) * p.might * power, 0, 0, 0, this);
+    if (gold)
+      gold->gilded = gold->removed;
     if (e->removed)
       Gem::drop(*p.level, x, y, 2.0f + 2 * at(level, 3));
     p.level->add<Mark>(x, y - 8, 0.6f, atlas::pt::HolyGlint, col::gold, 1.5f);

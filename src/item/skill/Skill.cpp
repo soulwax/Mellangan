@@ -19,13 +19,18 @@ Skill::Skill(const char *name, Sprite icon, const char *desc,
   skill = true;
 }
 
-void Skill::levelUp(Player &p) {
-  if (p.skill == this)
+void Skill::levelUp(Mob &m) {
+  Player *p = m.asPlayer();
+  if (!p) {
+    level = 1;
     return;
-  if (p.skill)
-    p.skill->unequip(p);
-  p.skill = this;
-  p.skillTime = 0;
+  }
+  if (p->skill == this)
+    return;
+  if (p->skill)
+    p->skill->unequip(*p);
+  p->skill = this;
+  p->skillTime = 0;
 }
 
 HeroSkill::HeroSkill(const Hero &hero)
@@ -33,7 +38,7 @@ HeroSkill::HeroSkill(const Hero &hero)
             hero.cooldown),
       hero(hero) {}
 
-void HeroSkill::use(Player &p) { hero.cast(p); }
+void HeroSkill::use(Mob &p) { hero.cast(p); }
 
 namespace {
 constexpr Color ARCANE{0.72f, 0.45f, 1, 1}, FROST{0.6f, 0.85f, 1, 1};
@@ -50,8 +55,8 @@ public:
   TimeWarp()
       : Skill("TIME WARP", atlas::arsenal(192),
               "Slow every foe within 170 to a crawl for 3.5s", "MAGE", 12) {}
-  void use(Player &p) override {
-    p.level->enemiesNear(p.x, p.y, 190, [&](Enemy &e) {
+  void use(Mob &p) override {
+    p.level->foes(p, p.x, p.y, 190, [&](Mob &e) {
       double xd = e.x - p.x, yd = e.y - p.y;
       if (xd * xd + yd * yd < 170 * 170)
         e.afflict(StatusKind::Chill, 3.5f, 0.6f, this);
@@ -77,7 +82,7 @@ public:
   ManaSurge()
       : Skill("MANA SURGE", atlas::arsenal(193),
               "Weapons fire 35% faster for 5s", "MAGE", 14) {}
-  void use(Player &p) override {
+  void use(Mob &p) override {
     unequip(p);
     applied = std::max(0.0f, std::min(0.35f, p.haste - 0.2f));
     p.haste -= applied, time = 5;
@@ -85,7 +90,7 @@ public:
     flourish::sigil(*p.level, p.x, p.bodyY(), 40, ARCANE, 6);
     Sound::cast.play(0.6f, 0);
   }
-  void active(Player &p) override {
+  void active(Mob &p) override {
     if (time <= 0)
       return;
     time -= DT;
@@ -98,7 +103,7 @@ public:
     if (time <= 0)
       unequip(p);
   }
-  void unequip(Player &p) override {
+  void unequip(Mob &p) override {
     p.haste += applied;
     applied = 0, time = 0;
   }
@@ -112,7 +117,7 @@ public:
   ArcaneMissiles()
       : Skill("ARCANE MISSILES", atlas::arsenal(194),
               "Loose ten homing missiles that mark foes", "MAGE", 8) {}
-  void use(Player &p) override {
+  void use(Mob &p) override {
     fireRecipe(MISSILE, p, this, MISSILE.damage * p.might, MISSILE.reach,
                MISSILE.count);
     Spark::burst(*p.level, p.x, p.bodyY(), ARCANE, 12, 100, true);
@@ -126,7 +131,7 @@ public:
       : Skill("SINGULARITY", atlas::arsenal(195),
               "Open a rift ahead that pulls foes in, then collapses", "MAGE",
               16) {}
-  void use(Player &p) override {
+  void use(Mob &p) override {
     double x = p.x + p.xAim * 90, y = p.bodyY() + p.yAim * 90;
     RecipeShot *s = p.level->add<RecipeShot>(
         SINGULARITY, x, y, 1, 0, SINGULARITY.damage * p.might,

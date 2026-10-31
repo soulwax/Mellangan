@@ -32,6 +32,8 @@ template <class T> struct Is {
   T *self;
 };
 
+class Upgrade;
+
 class Level {
 public:
   Game &game;
@@ -57,8 +59,10 @@ public:
   BiomeEvents events;
   Sky sky;
   explicit Level(Game &game);
+  ~Level();
 
   std::vector<std::unique_ptr<SpriteObject>> particles;
+  std::vector<std::unique_ptr<Upgrade>> retired;
 
   Entity *add(std::unique_ptr<Entity> e);
   SpriteObject *spawn(std::unique_ptr<SpriteObject> p);
@@ -93,6 +97,23 @@ public:
   template <class F> void enemiesNear(double x, double y, float r, F &&f);
   int gather(double x, double y, float r, Enemy **out, int max) const;
   std::vector<Enemy *> nearest(double x, double y, float range, int n);
+  Mob *playerIn(double x, double y, float r);
+  std::vector<Mob *> nearestFoes(bool hostile, double x, double y, float range, int n);
+  std::vector<Mob *> nearestFoes(const Mob &self, double x, double y, float range,
+                                 int n) {
+    return nearestFoes(self.hostile(), x, y, range, n);
+  }
+  template <class F> void foes(bool hostile, double x, double y, float r, F &&f) {
+    if (hostile) {
+      if (Mob *m = playerIn(x, y, r))
+        f(*m);
+      return;
+    }
+    enemiesNear(x, y, r, [&](Enemy &e) { f(static_cast<Mob &>(e)); });
+  }
+  template <class F> void foes(const Mob &self, double x, double y, float r, F &&f) {
+    foes(self.hostile(), x, y, r, f);
+  }
 
   void tick();
   void render(Screen &s);
@@ -109,6 +130,7 @@ public:
   float strike();
   void reflect(Screen &s);
   int surfaceAt(double x, double y) const;
+  Mob *mob(entt::entity id);
   void foesOf(const Mob &self, double x, double y, double r,
               const std::function<void(Mob &)> &fn);
   int heightAt(double x, double y) const;

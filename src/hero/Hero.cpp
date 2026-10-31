@@ -30,8 +30,9 @@ const Hero *const HEROES[HERO_COUNT] = {
     &stormcaller, &reaper, &priestess, &duelist,
     &warden,&tinkerer,&oracle,&corsair};
 
-void Hero::equip(Player &p) const {
-  p.tile = tile;
+void Hero::equip(Mob &p) const {
+  if (Player *pl = p.asPlayer())
+    pl->tile = tile;
   p.hp = p.maxHp += hp;
   p.speed *= speed;
   p.might += might, p.haste += haste, p.magnet += magnet;

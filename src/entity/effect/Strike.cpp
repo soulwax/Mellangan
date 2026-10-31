@@ -1,6 +1,9 @@
 #include "entity/effect/Strike.hpp"
 
+#include "entity/Player.hpp"
+
 #include "entity/enemy/Enemy.hpp"
+#include "item/Upgrade.hpp"
 #include "level/Level.hpp"
 #include "particle/Mark.hpp"
 #include "particle/Shockwave.hpp"
@@ -19,12 +22,19 @@ Strike::Strike(double x, double y, float damage, float radius)
 void Strike::tick() {
   if (!struck) {
     struck = true;
-    level->enemiesNear(x, y, radius + 24, [&](Enemy &e) {
-      double xd = e.x - x, yd = e.bodyY() - y;
-      float r = radius + e.radius;
-      if (xd * xd + yd * yd < r * r)
-        e.hurt(damage, e.x - x, e.y - y, 50, source);
-    });
+    if (hostile || (source && source->hostile())) {
+      Player &p = *level->player;
+      double xd = p.x - x, yd = p.bodyY() - y;
+      float r = radius + p.radius;
+      if (!p.dead() && xd * xd + yd * yd < r * r)
+        p.felledBy = "a lightning strike", p.strike(damage, xd, yd, 50);
+    } else
+      level->enemiesNear(x, y, radius + 24, [&](Enemy &e) {
+        double xd = e.x - x, yd = e.bodyY() - y;
+        float r = radius + e.radius;
+        if (xd * xd + yd * yd < r * r)
+          e.hurt(damage, e.x - x, e.y - y, 50, source);
+      });
     Spark::burst(*level, x, y, {0.7f, 0.85f, 1, 1}, 18, 90, true);
     level->add<Shockwave>(x, y, 4, radius * 1.8f, 0.3f,
                           Color{0.75f, 0.88f, 1, 0.8f}, false);

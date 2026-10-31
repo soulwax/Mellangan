@@ -2,7 +2,9 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
+#include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "item/Upgrade.hpp"
 #include "level/Level.hpp"
 #include "particle/Explosion.hpp"
 #include "particle/Mark.hpp"
@@ -31,14 +33,21 @@ void Bomb::tick() {
 }
 
 void Bomb::burst() {
-  level->enemiesNear(x, y, 28 + 24, [&](Enemy &e) {
-    double xd = e.x - x, yd = e.y - y;
-    float r = 28 + e.radius;
-    if (xd * xd + yd * yd < r * r)
-      e.hurt(damage, xd, yd, 90, source);
-  });
-  level->add<FirePool>(x, y, poolRadius, poolDamage, poolTime, style)->source =
-      source;
+  if (hostile || (source && source->hostile())) {
+    Player &p = *level->player;
+    double xd = p.x - x, yd = p.y - y;
+    float r = 28 + p.radius;
+    if (!p.dead() && xd * xd + yd * yd < r * r)
+      p.felledBy = "a bomb", p.strike(damage, xd, yd, 90);
+  } else
+    level->enemiesNear(x, y, 28 + 24, [&](Enemy &e) {
+      double xd = e.x - x, yd = e.y - y;
+      float r = 28 + e.radius;
+      if (xd * xd + yd * yd < r * r)
+        e.hurt(damage, xd, yd, 90, source);
+    });
+  FirePool *pool = level->add<FirePool>(x, y, poolRadius, poolDamage, poolTime, style);
+  pool->source = source, pool->hostile = hostile || (source && source->hostile());
   if (style == PoolStyle::Acid) {
     level->add<Shockwave>(x, y, 3, poolRadius * 1.2f, 0.3f, ACID.alpha(0.8f),
                           false);

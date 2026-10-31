@@ -12,7 +12,7 @@ Bow::Bow()
                "Fires a third arrow"},
               true) {}
 
-void Bow::tick(Player &p) {
+void Bow::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   cd = (level >= 4 ? 0.6f : 0.85f) * p.haste * pace;

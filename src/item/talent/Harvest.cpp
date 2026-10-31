@@ -10,6 +10,6 @@ Harvest::Harvest()
   owner = "REAPER";
 }
 
-void Harvest::slay(Player &p, Enemy &) {
+void Harvest::slay(Mob &p, Enemy &) {
   p.skillTime = std::max(0.0f, p.skillTime - 0.15f * level);
 }
