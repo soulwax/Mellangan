@@ -28,6 +28,7 @@ public:
   int cells[BIOME_COUNT]{};
 
   int tick(double x, double y);
+  void unveil(double x, double y, int radius);
   void load(const std::string &path);
   void save(const std::string &path) const;
   int at(int cx, int cy) const;

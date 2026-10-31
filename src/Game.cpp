@@ -287,6 +287,16 @@ void Game::newGame(bool reroll) {
       return world::heightAt(x, y + 2) == world::heightAt(x, y) &&
              !world::isWater(x, y + 2);
     });
+  if (dev && landmarkPick >= 0)
+    for (int r = 0; r < 40 && !atPick; r++)
+      for (int ry = -r; ry <= r && !atPick; ry++)
+        for (int rx = -r; rx <= r && !atPick; rx++) {
+          Structure site;
+          if ((std::abs(rx) == r || std::abs(ry) == r) &&
+              world::structureIn(rx, ry, site) &&
+              int(site.kind) == int(StructureKind::AncientTree) + landmarkPick)
+            atX = site.x + 3, atY = site.y + site.h + 2, atPick = true;
+        }
   if (dev && atPick) {
     Player &p = *level->player;
     p.x = atX * 16 + 8, p.y = atY * 16 + 8, xCam = p.x, yCam = p.y;
@@ -336,6 +346,8 @@ void Game::setDifficulty(Difficulty d) {
   }
   reseed();
 }
+
+void Game::snapCamera() { xCam = level->player->x, yCam = level->player->y; }
 
 void Game::visitBiome() {
   Player &p = *level->player;

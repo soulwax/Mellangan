@@ -923,10 +923,11 @@ def main():
     from make_frontier import add_frontier
     from make_grounds import add_grounds
     from make_rims import add_rims
+    from make_landmarks import add_landmarks
     from make_arsenal import add_arsenal
 
     before = Image.open(atlas_path).convert("RGBA")
-    after = add_arsenal(add_rims(add_expansion(add_frontier(add_grounds(add_sprites(before))))))
+    after = add_landmarks(add_arsenal(add_rims(add_expansion(add_frontier(add_grounds(add_sprites(before)))))))
     errors = validate(after)
     if errors:
         raise RuntimeError("invalid atlas layout:\n" + "\n".join(errors))

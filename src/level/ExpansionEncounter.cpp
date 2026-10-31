@@ -111,7 +111,7 @@ void ExpansionChallenge::renderLight(Screen &s) {
 }
 
 bool expansionEncounter(Level &level, const Structure &site) {
-  if (site.kind == StructureKind::Shrine)
+  if (site.kind == StructureKind::Shrine || site.landmark())
     return false;
   int biome = int(world::biomeAt(site.x + site.w / 2, site.y + site.h / 2));
   bool setPiece = site.kind == StructureKind::Castle ||

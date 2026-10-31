@@ -57,6 +57,12 @@ const float LAKES[BIOME_COUNT] = {
     0.08f, -0.12f, -1,   0,      0.06f, -1,    0.04f, -1,    0.2f,
     0.06f, 0.14f, 0.08f, 0.02f,  0,     -1,    0.06f, 0};
 
+const int LANDMARKS[BIOME_COUNT] = {0, 0, 5, 7, 2, 9, 0, 5, 6, 0, 2, 8, 4,
+                                    5, 8, 9, 6, 6, 7, 3, 8, 0, 3, 4, 4, 1};
+constexpr int LANDMARK_KINDS = 10;
+
+int floorDiv(int v, int d) { return (v - (v < 0 ? d - 1 : 0)) / d; }
+
 bool lake(int x, int y, float margin) {
   GroundBlend g = groundBlend(x, y);
   float bias = 0;
@@ -222,10 +228,20 @@ bool rollStructure(int rx, int ry, Structure *out) {
   int cx = rx * REGION + REGION / 2, cy = ry * REGION + REGION / 2;
   BiomeId id = biomeAt(cx, cy);
   const Biome *b = BIOMES[id];
-  if (int(h % 100) >= b->structureChance || lake(cx, cy, 0.0f))
+  int realmX = floorDiv(rx, 4), realmY = floorDiv(ry, 4);
+  uint32_t realm = hash2(realmX * 91 + 5, realmY * 47 - 11);
+  bool landmark = rx == realmX * 4 + int(realm % 4) &&
+                  ry == realmY * 4 + int(realm >> 2 & 3) &&
+                  (realm >> 8) % 100 < 75 &&
+                  std::abs(realmX) + std::abs(realmY) > 1;
+  if ((!landmark && int(h % 100) >= b->structureChance) || lake(cx, cy, 0.0f))
     return false;
 
-  StructureKind kind = pickKind(b, h >> 8);
+  StructureKind kind =
+      landmark ? StructureKind(int(StructureKind::AncientTree) +
+                               (realm >> 16 & 1 ? LANDMARKS[id]
+                                                : int((realm >> 20) % LANDMARK_KINDS)))
+               : pickKind(b, h >> 8);
   int w, ht;
   STRUCTURES[int(kind)].size(h, &w, &ht);
   int spanX = REGION - 4 - w, spanY = REGION - 4 - ht;

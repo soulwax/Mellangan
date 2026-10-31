@@ -6,6 +6,27 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Landmarks: rare, towering sights that give you a reason to travel. About every second stretch of 80 by 80 tiles holds one, never near the start, always on level, dry ground, with a light you can spot at night and a marker on your map once sighted. Each has a first-visit reward:
+  - **The Ancient Tree**, a vast lantern-fruit oak among forests and meadows. Shelter under it to heal fully and gain 15 maximum health. Leaves and fireflies drift from its crown.
+  - **A Fallen Star**, half sunk in a scorched crater. Your arrival releases its light: a blast that throws foes back, a shower of gems and a chest.
+  - **The Colossus**, the skull and ribs of something enormous. Its dead rise around you, guarding a chest.
+  - **The Monolith**, a black obelisk carved with glowing runes on an old plaza. It charts the land around it on your map and tells a fragment of lore.
+  - **The Crystal Spire**, a towering cluster of amethyst in crystal lands. It rings with power: your class skill is ready at once, you gain 5% might, and a shard burst throws foes back.
+  - **The Great Mushroom**, a red-capped giant of the autumn, mire and fungal woods. Its spores mend you (+0.4 health per second for the run) and poison the foes around you.
+  - **A Shipwreck**, a hull stranded in deserts, salt flats and floodplains. Two chests of plunder and a scatter of gems.
+  - **The Ancient Gate**, a stone arch around a swirling portal. Step through and it carries you to the nearest shrine you have not yet kindled.
+  - **The Ember Forge**, an anvil over glowing coals in the ash and badlands. It tempers one of your weapons by a level.
+  - **The Frozen Giant**, a figure sealed in ice in the snowfields and taiga. The cold hardens your skin (+0.5 armour) and freezes nearby foes in place.
+
+  Each land favours its own kind, but any landmark can turn up anywhere.
+- Dev: `--landmark N` starts a `--dev` run beside the nearest landmark of kind N (0 tree, 1 star, 2 colossus, 3 monolith, 4 spire, 5 mushroom, 6 wreck, 7 gate, 8 forge, 9 frozen giant).
+
+### Fixed
+
+- Arsenal icons drew as lake-shore tiles. The arsenal and the new lake and cliff tiles had both claimed the same part of the sprite sheet when they were merged; the arsenal now has its own space.
+
 ## [0.5.11] - 2026-10-31
 
 ### Added

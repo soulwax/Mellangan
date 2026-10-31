@@ -231,3 +231,11 @@ void Chart::save(const std::string &path) const {
   if (SDL_SaveFile(tmp.c_str(), out.data(), out.size()))
     SDL_RenamePath(tmp.c_str(), path.c_str());
 }
+
+void Chart::unveil(double x, double y, int radius) {
+  int cx = cellOf(x), cy = cellOf(y);
+  for (int dy = -radius; dy <= radius; dy += SIGHT)
+    for (int dx = -radius; dx <= radius; dx += SIGHT)
+      if (dx * dx + dy * dy <= radius * radius)
+        reveal(cx + dx, cy + dy), survey(cx + dx, cy + dy);
+}

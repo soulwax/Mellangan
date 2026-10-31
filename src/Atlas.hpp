@@ -150,8 +150,9 @@ constexpr int Lingonberry = 22, LichenRock = 23, CottonGrass = 24,
               NeedleTuft = 25, ShelfStump = 26;
 constexpr int ToppledStone = 27, Altar = 28, MineCart = 29, OrePile = 30,
               LanternPost = 31, Timber = 32, RailAcross = 33, RailDown = 34;
-constexpr int Wolf = 35, Alpha = 36, Burrower = 37, Mound = 38, Necromancer = 39,
-              Skeleton = 40, Thief = 41, Chakram = 42, Glaive = 43, Censer = 44;
+constexpr int Wolf = 35, Alpha = 36, Burrower = 37, Mound = 38,
+              Necromancer = 39, Skeleton = 40, Thief = 41, Chakram = 42,
+              Glaive = 43, Censer = 44;
 } // namespace fr
 constexpr Sprite snowRim(int offset) {
   return {float(216 + (offset % 12) * 18 + 1),
@@ -163,13 +164,14 @@ constexpr Sprite expansion(int index) {
           16};
 }
 constexpr Sprite arsenal(int index) {
-  return {float((index % 24) * 18 + 1), float(894 + (index / 24) * 18 + 1), 16,
+  return {float((index % 24) * 18 + 1), float(1020 + (index / 24) * 18 + 1), 16,
           16};
 }
 namespace ex {
 constexpr int MireLeech = 0, RicochetSling = 14;
-constexpr int ShrineFury = 30, ShrineRoots = 31, ShrineVision = 32, ShrineFlame = 33;
-}
+constexpr int ShrineFury = 30, ShrineRoots = 31, ShrineVision = 32,
+              ShrineFlame = 33;
+} // namespace ex
 constexpr Sprite biomeProp(int index) {
   return {float((index % 24) * 18 + 1), float(660 + (index / 24) * 18 + 1), 16,
           16};
@@ -185,6 +187,10 @@ constexpr Sprite waterEdge(int set, int offset) {
 constexpr Sprite cliff(int offset) {
   int i = 297 + offset / 12 * 3 + offset % 12;
   return {float((i % 24) * 18 + 1), float(786 + (i / 24) * 18 + 1), 16, 16};
+}
+constexpr Sprite landmark(int index, int row, int col) {
+  int i = index * 12 + row * 3 + col;
+  return {float((i % 24) * 18 + 1), float(1236 + (i / 24.0f) * 18 + 1), 16, 16};
 }
 constexpr Sprite biomeGround(int set, int cell) {
   return {float(((set % 2) * 12 + cell) * 18 + 1),
@@ -206,15 +212,15 @@ constexpr Sprite digit(int d) { return {float(176 + d * 5), 220, 5, 7}; }
 namespace pt {
 constexpr int IceShard = 32, Snowflake = 33, FrostGlint = 34, Rock = 35,
               Pebble = 36, MeteorCore = 37, Ember = 38, ArcaneStar = 39,
-              Wisp = 40, Rune = 41, HolyGlint = 42, Coin = 43, Bubble = 44, Petal = 45,
-              Leaf = 46, Feather = 47, Puff = 48, Crescent = 49, Bone = 50,
-              MapleLeaf = 51, Rain = 52, Gust = 53, Fluff = 54, FallingStar = 55,
-              Butterfly = 56, Spore = 57;
+              Wisp = 40, Rune = 41, HolyGlint = 42, Coin = 43, Bubble = 44,
+              Petal = 45, Leaf = 46, Feather = 47, Puff = 48, Crescent = 49,
+              Bone = 50, MapleLeaf = 51, Rain = 52, Gust = 53, Fluff = 54,
+              FallingStar = 55, Butterfly = 56, Spore = 57;
 } // namespace pt
 
 namespace wx {
 constexpr Sprite Cloud{0, 0, 96, 96}, FogA{96, 0, 64, 64}, FogB{160, 0, 64, 64},
-                 Drop{64, 96, 1, 6};
+    Drop{64, 96, 1, 6};
 constexpr Sprite ripple(int f) { return {float(f * 8), 96, 8, 8}; }
 constexpr Sprite splash(int f) { return {float(32 + f * 8), 96, 8, 8}; }
 constexpr Sprite flake(int i) { return {float(48 + i * 4), 96, 4, 4}; }

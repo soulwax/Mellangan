@@ -11,6 +11,16 @@ enum class StructureKind {
   Castle,
   Stones,
   Mine,
+  AncientTree,
+  FallenStar,
+  Colossus,
+  Monolith,
+  CrystalSpire,
+  GreatMushroom,
+  Shipwreck,
+  AncientGate,
+  EmberForge,
+  FrozenGiant,
   Count
 };
 struct Structure {
@@ -23,6 +33,7 @@ struct Structure {
     return tx >= x - margin && ty >= y - margin && tx < x + w + margin &&
            ty < y + h + margin;
   }
+  bool landmark() const { return kind >= StructureKind::AncientTree; }
   double centerX() const { return (x + w * 0.5) * 16; }
   double centerY() const { return (y + h * 0.5) * 16; }
   const char *name() const;

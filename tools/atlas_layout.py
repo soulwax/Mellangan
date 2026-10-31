@@ -40,12 +40,9 @@ BANDS = (
     Band("expansion actors", 0, 624, 24, 2),
     Band("expansion biome props", 0, 660, 24, 2),
     Band("expansion biome grounds", 0, 696, 24, 5),
-<<<<<<< HEAD
     Band("dirt and water rims", 0, 786, 24, 13),
-=======
-    Band("dirt rims", 0, 786, 24, 6),
-    Band("arsenal", 0, 894, 24, 12),
->>>>>>> f64d14b4c4c01f36460e51003ea7a0a3a8b43869
+    Band("arsenal", 0, 1020, 24, 12),
+    Band("landmarks", 0, 1236, 24, 5),
 )
 
 EXPANSION_ACTORS = {
@@ -160,7 +157,7 @@ def validate_cpp_layout(path):
         "expansion": ("(index%24)*18+1", "624+(index/24)*18+1"),
         "biomeProp": ("(index%24)*18+1", "660+(index/24)*18+1"),
         "biomeGround": ("((set%2)*12+cell)*18+1", "696+(set/2)*18+1"),
-        "arsenal": ("(index%24)*18+1", "894+(index/24)*18+1"),
+        "arsenal": ("(index%24)*18+1", "1020+(index/24)*18+1"),
     }
     errors = []
     for name, terms in expected.items():
