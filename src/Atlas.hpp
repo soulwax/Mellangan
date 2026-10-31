@@ -162,6 +162,10 @@ constexpr Sprite expansion(int index) {
   return {float((index % 24) * 18 + 1), float(624 + (index / 24) * 18 + 1), 16,
           16};
 }
+constexpr Sprite arsenal(int index) {
+  return {float((index % 24) * 18 + 1), float(894 + (index / 24) * 18 + 1), 16,
+          16};
+}
 namespace ex {
 constexpr int MireLeech = 0, RicochetSling = 14;
 constexpr int ShrineFury = 30, ShrineRoots = 31, ShrineVision = 32, ShrineFlame = 33;

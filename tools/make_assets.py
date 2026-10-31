@@ -19,6 +19,7 @@ from make_flora import add_flora_band
 from make_frontier import add_frontier
 from make_grounds import add_grounds
 from make_rims import add_rims
+from make_arsenal import add_arsenal
 from make_sprites import add_sprites
 from make_winter import add_winter_band
 
@@ -35,8 +36,9 @@ PIPELINE = (
     ("sprite kit", (432, 552), add_sprites),
     ("grounds", (432, 624), add_grounds),
     ("frontier", (432, 624), add_frontier),
-    ("expansion", (432, 894), add_expansion),
-    ("dirt rims", (432, 894), add_rims),
+    ("expansion", (432, 1110), add_expansion),
+    ("dirt rims", (432, 1110), add_rims),
+    ("arsenal", (432, 1110), add_arsenal),
 )
 
 

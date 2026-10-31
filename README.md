@@ -172,6 +172,7 @@ effects scene without loading or saving player progress.
 `./build/bin/Debug/MellanganApp.exe --test-gui-view` previews the level-up and shrine menus without saving progress.
 `./build/bin/Debug/MellanganApp.exe --test-encounter-view` previews a biome challenge without saving progress.
 `./build/bin/Debug/MellanganApp.exe --test-combat-view` previews combat indicators; V switches particle detail.
+`./build/bin/Debug/MellanganApp.exe --test-arsenal-view` shows the Mage with every recipe weapon at tier 5 against waves of foes and cycles its five skills; 1-5 casts one.
 
 - `src/SpriteObject.hpp` – root of everything in the world: position, velocity, pixel position and a sprite
 - `src/entity` – `SpriteObject` → `Entity` → `Mob` → `Player` / `Enemy` (`Bat`, `Ghost`, `Cyclops`), projectiles, pickups, and `Pool.c`
@@ -195,6 +196,7 @@ effects scene without loading or saving player progress.
 - `tools/make_grounds.py` – carpet ground sets (straw, ash, crystal moss, mycelium, lava) for `Carpet` biomes
 - `tools/make_flora.py`, `tools/make_desert.py` – add the recoloured and hand-drawn plants, mud, sand and water tiles to `res/atlas.png`
 - `tools/make_winter.py` – adds the frosted winter band to `res/atlas.png` (also run by `make_assets.py`)
+- `tools/make_arsenal.py` – paints recipe weapon and skill icons into the arsenal band (chained by `make_expansion.py` and `make_assets.py`); `--preview out.png` writes them at 8x
 - `tools/footprint_preview.py` – composes a dumped structure footprint (ground and props) into a preview PNG
 - `tools/building_preview.py` – composes Tiny Town tile rows into a preview PNG, used to design buildings outside the game
 

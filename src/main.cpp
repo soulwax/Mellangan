@@ -11,6 +11,7 @@
 #include "Game.hpp"
 #include "Test.hpp"
 #include "BiomeTransitionTest.hpp"
+#include "ArsenalTest.hpp"
 #include "entity/Pool.h"
 #include "Version.hpp"
 #include "other/Ouroboros.hpp"
@@ -81,6 +82,16 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; i++)
     if (std::string_view(argv[i]) == "--capture-screenshots") {
       captureScreenshotSuite(window, base);
+      vk2dRendererQuit();
+      SDL_DestroyWindow(window);
+      SDL_Quit();
+      pool_shutdown();
+      return 0;
+    }
+
+  for (int i = 1; i < argc; i++)
+    if (std::string_view(argv[i]) == "--test-arsenal-view") {
+      viewArsenal(window, base);
       vk2dRendererQuit();
       SDL_DestroyWindow(window);
       SDL_Quit();

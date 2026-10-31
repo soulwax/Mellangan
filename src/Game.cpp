@@ -11,6 +11,7 @@
 #include "entity/enemy/Enemy.hpp"
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
+#include "item/skill/Skill.hpp"
 #include "level/Flavour.hpp"
 #include "level/Noise.h"
 #include "menu/DawnMenu.hpp"
@@ -677,14 +678,16 @@ void Game::renderHud() {
   float hw = 80 * u, hy = s.h - 12 * u;
   if (const Hero *h = p.hero) {
     float box = 22 * u, bx = 4 * u, by = hy - box - 8 * u;
-    float wait = p.skillTime / std::max(0.01f, h->cooldown * p.haste);
+    const Skill *sk = p.skill;
+    float wait = p.skillTime /
+                 std::max(0.01f, (sk ? sk->cooldown : h->cooldown) * p.haste);
     s.rect(bx, by, box, box, col::panel);
-    s.sprite(h->sprite(), bx + 3 * u, by + 3 * u, 0, 0, u, u);
+    s.sprite(sk ? sk->icon : h->sprite(), bx + 3 * u, by + 3 * u, 0, 0, u, u);
     if (wait > 0)
       s.rect(bx, by, box, box * wait, {0.02f, 0.02f, 0.05f, 0.7f});
     s.frame(bx, by, box, box, u,
             wait > 0 ? col::muted.alpha(0.4f) : h->tint.alpha(0.9f));
-    s.text(h->skill, bx + box + 5 * u, by + 2 * u, small,
+    s.text(sk ? sk->name : h->skill, bx + box + 5 * u, by + 2 * u, small,
            wait > 0 ? col::muted : h->tint);
     s.text(wait > 0 ? fmt::format("{:.0f}s", std::ceil(p.skillTime))
                     : std::string("SPACE"),
