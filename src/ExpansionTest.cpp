@@ -1,3 +1,6 @@
+#undef NDEBUG
+#include <cassert>
+
 #include "ExpansionTest.hpp"
 
 #include <cassert>

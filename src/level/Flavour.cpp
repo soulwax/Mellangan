@@ -32,17 +32,27 @@ const Flavour FLAVOURS[BIOME_COUNT] = {
 };
 
 const Omen OMENS[OMEN_COUNT] = {
-    {"BLOOD MOON",
-     "elites stalk, +50% xp",
-     1,
-     1,
-     1.5f,
-     3,
-     1,
-     {0.95f, 0.3f, 0.3f, 1}},
+    {"BLOOD MOON", "elites stalk, +50% xp", 1, 1, 1.5f, 3, 1,
+     {0.95f, 0.3f, 0.3f, 1}, 2},
     {"AURORA", "shrines kindle fast", 1, 1, 1, 1, 2, {0.45f, 1, 0.8f, 1}},
     {"GALE", "swift winds for all", 1.15f, 1.1f, 1, 1, 1, {0.75f, 0.85f, 1, 1}},
+    {"OUTLAW SEASON", "renegades ride early and often", 1, 1, 1.15f, 1, 1,
+     {1, 0.62f, 0.25f, 1}, 1, 1, 1, 1, 1, 0.4f},
+    {"MIMIC MOON", "chests may bite, gems run rich", 1, 1, 1.2f, 1, 1,
+     {1, 0.82f, 0.3f, 1}, 1, 1, 1, 1, 1, 1, 0.35f},
+    {"THE SWARM", "twice the horde, half as hardy", 1, 1, 1.1f, 1, 1,
+     {0.7f, 0.95f, 0.45f, 1}, 1, 0.6f, 0.8f, 2},
+    {"IRON NIGHT", "fewer foes, far tougher", 1, 1, 1.3f, 1.5f, 1,
+     {0.75f, 0.78f, 0.88f, 1}, 2, 1.7f, 1.6f},
+    {"WAR DRUMS", "every elite knows a skill", 1, 1, 1.2f, 1.8f, 1,
+     {0.95f, 0.45f, 0.3f, 1}, 2, 1, 1, 1, 1, 1, 1, 1},
+    {"LONG NIGHT", "waves come thick and fast", 1, 1, 1.15f, 1, 1,
+     {0.55f, 0.55f, 0.95f, 1}, 1, 1, 1, 1.2f, 0.6f},
+    {"QUIET HOURS", "gentle waves, sparse rewards", 1, 0.95f, 0.85f, 0.7f, 1.3f,
+     {0.8f, 0.9f, 0.85f, 1}, 0, 1, 1.15f, 0.7f, 1.3f, 1.5f},
 };
+
+const Omen CALM{"", "", 1, 1, 1, 1, 1, col::white, 0};
 
 const Air AIRS[BIOME_COUNT] = {
     {{1.04f, 1.03f, 0.96f, 1}, pt::Butterfly, {1, 0.96f, 0.72f, 0.95f}, 0.025f, 6, -4, 16, 0, 0.85f, 5},

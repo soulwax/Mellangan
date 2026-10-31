@@ -17,15 +17,15 @@ Smite::Smite(double x, double y, float damage, float radius) : damage(damage) {
 
 void Smite::tick() {
   t += DT;
-  if (!struck && t >= WINDUP)
+  if (!struck && t >= windup())
     strike();
-  if (t >= WINDUP + BEAM)
+  if (t >= windup() + BEAM)
     remove();
 }
 
 void Smite::strike() {
   struck = true;
-  level->foes((source && source->hostile()), x, y, radius + 24, [&](Mob &e) {
+  level->foes(hostile || (source && source->hostile()), x, y, radius + 24, [&](Mob &e) {
     double xd = e.x - x, yd = e.bodyY() - y;
     float r = radius + e.radius;
     if (xd * xd + yd * yd < r * r)
@@ -45,13 +45,13 @@ void Smite::strike() {
 
 void Smite::render(Screen &s) {
   if (!struck) {
-    float k = t / WINDUP;
+    float k = t / windup();
     s.ring(xp, yp, radius * (1.3f - 0.3f * k), HOLY.alpha(0.4f + 0.5f * k));
     s.particle(atlas::pt::Rune, xp, yp, HOLY.alpha(0.4f + 0.6f * k), 1.5f,
                k * 2);
     return;
   }
-  float k = (t - WINDUP) / BEAM, w = 14 * (1 - k) + 2, a = 1 - k * k;
+  float k = (t - windup()) / BEAM, w = 14 * (1 - k) + 2, a = 1 - k * k;
   for (int i = 0; i < 4; i++) {
     float top = yp - 60.0f * (i + 1), fade = 1 - i * 0.24f;
     s.rect(xp - w / 2 - 3, top, w + 6, 60, HOLY.alpha(0.3f * a * fade));
@@ -63,6 +63,6 @@ void Smite::render(Screen &s) {
 }
 
 void Smite::renderLight(Screen &s) {
-  float a = struck ? 1 - (t - WINDUP) / BEAM : t / WINDUP * 0.3f;
+  float a = struck ? 1 - (t - windup()) / BEAM : t / windup() * 0.3f;
   s.glow(xp, yp - 20, 170, Color{0.45f, 0.36f, 0.12f, 1} * a);
 }

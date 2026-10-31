@@ -34,7 +34,20 @@ enum class EnemyKind {
   MycelialBrute,
   EmberImp,
   CinderGolem,
+  Mimic,
+  Outlaw,
+  Berserker,
+  PitFighter,
+  Deserter,
   Count
+};
+
+class Enemy;
+
+struct Cast {
+  void (*fn)(Enemy &);
+  float every, range;
+  Color tone;
 };
 
 struct EnemyType {
@@ -91,8 +104,12 @@ public:
   }
   Sprite body() const override { return sprite(); }
   void shield(float) override { traits.ward = std::max(traits.ward, 3); }
-  float castTime = 5;
+  float castTime = 5, wind = 0;
+  const Cast *casts = nullptr, *winding = nullptr;
+  int castCount = 0;
   void makeBoss(float health, float damage);
+  void learn();
+  void channel();
   void think();
   void move();
   void push();

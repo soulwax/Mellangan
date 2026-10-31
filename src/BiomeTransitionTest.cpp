@@ -1,3 +1,6 @@
+#undef NDEBUG
+#include <cassert>
+
 #include "BiomeTransitionTest.hpp"
 
 #include <cassert>

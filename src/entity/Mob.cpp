@@ -46,14 +46,21 @@ void Mob::tickKit() {
 }
 
 Upgrade *Mob::grant(const char *name, int levels) {
-  if (upgrades.empty())
-    upgrades = Upgrade::all();
-  for (auto &up : upgrades)
-    if (std::strcmp(up->name, name) == 0) {
-      up->holder = this, up->foe = hostile();
-      for (int i = 0; i < levels && !up->maxed(); i++)
-        up->levelUp(*this);
-      return up.get();
-    }
-  return nullptr;
+  Upgrade *up = nullptr;
+  for (auto &u : upgrades)
+    if (std::strcmp(u->name, name) == 0)
+      up = u.get();
+  if (!up)
+    for (auto &u : Upgrade::all())
+      if (std::strcmp(u->name, name) == 0) {
+        upgrades.push_back(std::move(u));
+        up = upgrades.back().get();
+        break;
+      }
+  if (!up)
+    return nullptr;
+  up->holder = this, up->foe = hostile();
+  for (int i = 0; i < levels && !up->maxed(); i++)
+    up->levelUp(*this);
+  return up;
 }

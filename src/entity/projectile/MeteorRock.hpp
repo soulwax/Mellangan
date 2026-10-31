@@ -4,6 +4,8 @@
 
 class MeteorRock : public Entity {
 public:
+  bool hostile = false;
+
   MeteorRock(double x, double y, float damage, float radius, float burn)
       : damage(damage), radius(radius), burn(burn) {
     this->x = x, this->y = y;

@@ -29,7 +29,8 @@ void MeteorRock::tick() {
 }
 
 void MeteorRock::impact() {
-  level->foes((source && source->hostile()), x, y, radius + 24, [&](Mob &e) {
+  bool h = hostile || (source && source->hostile());
+  level->foes(h, x, y, radius + 24, [&](Mob &e) {
     double xd = e.x - x, yd = e.y - y;
     float r = radius + e.radius;
     if (xd * xd + yd * yd < r * r)
@@ -50,7 +51,8 @@ void MeteorRock::impact() {
     c->za = rng.range(1.2f, 2.2f);
   }
   Spark::burst(*level, x, y, FIRE, 10, 120, true);
-  level->add<FirePool>(x, y, radius, burn, 2)->source = source;
+  FirePool *pool = level->add<FirePool>(x, y, radius, burn, 2);
+  pool->source = source, pool->hostile = h;
   Sound::explosion.play(0.5f);
   level->game.onExplosion();
   remove();

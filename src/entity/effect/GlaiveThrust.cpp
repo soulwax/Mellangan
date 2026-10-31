@@ -31,7 +31,7 @@ void GlaiveThrust::tick() {
   y = owner.bodyY() + dy * ext;
 
   auto checkLine = [&](double sx, double sy, double ex, double ey) {
-    level->foes((source && source->hostile()), (sx + ex) * 0.5, (sy + ey) * 0.5, reach * 0.6f + 16, [&](Mob &e) {
+    level->foes(owner, (sx + ex) * 0.5, (sy + ey) * 0.5, reach * 0.6f + 16, [&](Mob &e) {
       if (std::find(hits.begin(), hits.end(), e.id) != hits.end())
         return;
       double vx = ex - sx, vy = ey - sy;

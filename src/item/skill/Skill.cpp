@@ -1,6 +1,7 @@
 #include "item/skill/Skill.hpp"
 
 #include "audio/Sound.hpp"
+#include "entity/Ability.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "hero/Hero.hpp"
@@ -142,6 +143,64 @@ public:
     Sound::orb.play(0.6f, 0);
   }
 };
+struct Art {
+  const char *name, *owner, *desc;
+  int icon;
+  float cooldown;
+  void (*use)(Mob &);
+};
+
+const Art ARTS[] = {
+    {"ARROW STORM", "RANGER", "Loose sixteen arrows in every direction", 196, 9,
+     [](Mob &p) { ability::volley(p, 16, TAU / 16, 230, 16, 2); }},
+    {"SHIELD CHARGE", "KNIGHT", "Charge ahead, battering every foe in your path",
+     197, 7, [](Mob &p) { ability::charge(p, 110, 40); }},
+    {"MIASMA", "ALCHEMIST", "Poison every foe within 120 for 5s", 198, 10,
+     [](Mob &p) { ability::miasma(p, 120, 10, 5); }},
+    {"CHAIN STORM", "STORMCALLER", "Lightning leaps between eight nearby foes",
+     199, 7, [](Mob &p) { ability::chain(p, 8, 260, 34); }},
+    {"DEATH GRIP", "REAPER", "Drag foes within 140 to you and chill them", 200,
+     9, [](Mob &p) { ability::grasp(p, 140, 22); }},
+    {"SACRED LIGHT", "PRIESTESS", "Call pillars of light down on six foes", 201,
+     8, [](Mob &p) { ability::smite(p, 6, 42); }},
+    {"LUNGE", "DUELIST", "Lunge forward with a long piercing thrust", 202, 5,
+     [](Mob &p) { ability::lunge(p, 100, 55); }},
+    {"BRAMBLES", "WARDEN", "Root foes within 110 in thorns for 2.5s", 203, 10,
+     [](Mob &p) { ability::entangle(p, 110, 16); }},
+    {"MINEFIELD", "TINKERER", "Scatter eight mines in a ring around you", 204,
+     12, [](Mob &p) { ability::mines(p, 8, 32); }},
+    {"COMET", "ORACLE", "Call three comets down on the nearest foes", 205, 11,
+     [](Mob &p) { ability::comet(p, 3, 60); }},
+    {"POWDER KEG", "CORSAIR", "Lob a keg that bursts into a wide fire", 206, 9,
+     [](Mob &p) { ability::keg(p, 70); }},
+    {"WAR CRY", nullptr, "Hurl back foes within 130; they take 30% more damage for 5s",
+     207, 10, [](Mob &p) { ability::warcry(p, 130, 5); }},
+    {"BANDAGE", nullptr, "Heal 30 and shake off burns, poison and chill", 208,
+     14, [](Mob &p) { ability::bandage(p, 30); }},
+    {"TUMBLE", nullptr, "Roll ahead, untouchable for a moment", 209, 4,
+     [](Mob &p) { ability::tumble(p, 70); }},
+    {"WHIRLWIND", nullptr, "Spin, cutting every foe within 64", 210, 6,
+     [](Mob &p) { ability::whirlwind(p, 64, 40); }},
+    {"GROUND SLAM", nullptr, "Shake the earth: damage and stun foes within 100",
+     211, 9, [](Mob &p) { ability::quake(p, 100, 35); }},
+    {"FIRE RING", nullptr, "Ring yourself in flame for 4s", 212, 12,
+     [](Mob &p) { ability::firering(p, 8, 14); }},
+    {"LODESTAR", nullptr, "Draw in every gem within 420", 213, 20,
+     [](Mob &p) { ability::lodestar(p, 420); }},
+    {"SNARE NET", nullptr, "Cast a net that binds foes ahead for 3s", 214, 8,
+     [](Mob &p) { ability::snare(p, 120, 10); }},
+};
+
+class ArtSkill : public Skill {
+public:
+  explicit ArtSkill(const Art &art)
+      : Skill(art.name, atlas::arsenal(art.icon), art.desc, art.owner,
+              art.cooldown),
+        art(art) {}
+  void use(Mob &p) override { art.use(p); }
+
+  const Art &art;
+};
 } // namespace
 
 void addSkills(std::vector<std::unique_ptr<Upgrade>> &u) {
@@ -151,4 +210,6 @@ void addSkills(std::vector<std::unique_ptr<Upgrade>> &u) {
   u.push_back(std::make_unique<ManaSurge>());
   u.push_back(std::make_unique<ArcaneMissiles>());
   u.push_back(std::make_unique<Singularity>());
+  for (const Art &a : ARTS)
+    u.push_back(std::make_unique<ArtSkill>(a));
 }

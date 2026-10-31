@@ -33,6 +33,7 @@ template <class T> struct Is {
 };
 
 class Upgrade;
+struct Omen;
 
 class Level {
 public:
@@ -47,6 +48,7 @@ public:
   uint32_t entered = 0, litBiomes = 0;
   float pace = 1, step = 1, xpMul = 1, eliteMul = 1, kindleRate = 1;
   int omen = -1;
+  const Omen &portent() const;
   Color air;
   float distanceRan = 0, totalDamage = 0;
   int handicaps = 0;

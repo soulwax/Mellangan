@@ -1,3 +1,6 @@
+#undef NDEBUG
+#include <cassert>
+
 #include "Test.hpp"
 #include "BiomeTransitionTest.hpp"
 #include "BiomeEncounterTest.hpp"
@@ -17,6 +20,9 @@
 #include "particle/VisualDetail.hpp"
 #include "gfx/StatusVisual.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "item/skill/Skill.hpp"
+#include "level/Flavour.hpp"
+#include "entity/enemy/Renegade.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "entity/projectile/Arrow.hpp"
 #include "entity/projectile/Bomb.hpp"
@@ -533,6 +539,225 @@ static void testFoeKits() {
             << std::endl;
 }
 
+static void testArtsBothSides() {
+  const char *const ARTS[] = {"ARROW STORM", "SHIELD CHARGE", "MIASMA",
+                              "CHAIN STORM", "DEATH GRIP", "SACRED LIGHT",
+                              "LUNGE", "BRAMBLES", "MINEFIELD", "COMET",
+                              "POWDER KEG", "WAR CRY", "WHIRLWIND",
+                              "GROUND SLAM", "FIRE RING", "SNARE NET"};
+  for (const char *art : ARTS) {
+    for (int side = 0; side < 2; side++) {
+      Game game;
+      game.level = std::make_unique<Level>(game);
+      Level &level = *game.level;
+      Player &p = *level.player;
+      p.luck = -1, p.hp = p.maxHp = 1e6f;
+      Skill *skill = nullptr;
+      for (auto &up : p.upgrades)
+        if (up->skill && std::strcmp(up->name, art) == 0)
+          skill = static_cast<Skill *>(up.get());
+      assert(skill);
+      std::vector<Enemy *> foes;
+      for (double dx : {40.0, 75.0, 110.0, -75.0}) {
+        auto foe = Enemy::create(EnemyKind::Knight, 50, 1);
+        foe->x = p.x + dx, foe->y = p.y, foe->aware = false;
+        foes.push_back(foe.get());
+        level.add(std::move(foe));
+      }
+      Enemy *caster = foes[1], *bystander = foes[3];
+      double px = p.x, py = p.y;
+      level.tick();
+      level.tick();
+      float hp = p.hp, other = bystander->hp, before = 0;
+      for (Enemy *e : foes)
+        before += e->hp;
+      bool hit = false;
+      for (int cast = 0; cast < 15 && !hit; cast++) {
+        p.x = px, p.y = py, p.xAim = 1, p.yAim = 0;
+        caster->x = px + 75, caster->y = py;
+        skill->use(side ? static_cast<Mob &>(*caster) : p);
+        for (int i = 0; i < 120 && !hit; i++) {
+          p.invuln = 0;
+          level.tick();
+          float now = 0;
+          for (Enemy *e : foes)
+            now += e->removed ? 0 : e->hp;
+          hit = side ? p.hp < hp : now < before;
+        }
+      }
+      assert(hit);
+      if (side)
+        assert(bystander->hp == other);
+      game.level.reset();
+    }
+  }
+  std::cout << "[TEST] New class skills strike foes for the player and the player for foes: PASS"
+            << std::endl;
+}
+
+static void testGeneralSkills() {
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  auto use = [&](const char *name) {
+    for (auto &up : p.upgrades)
+      if (up->skill && std::strcmp(up->name, name) == 0) {
+        assert(!up->owner);
+        static_cast<Skill *>(up.get())->use(p);
+        return;
+      }
+    assert(false);
+  };
+  p.hp = p.maxHp - 40;
+  p.afflict(StatusKind::Poison, 5, 3);
+  use("BANDAGE");
+  assert(p.hp > p.maxHp - 15 && p.status.power(StatusKind::Poison) == 0);
+  double x0 = p.x;
+  p.xAim = 1, p.yAim = 0;
+  use("TUMBLE");
+  assert(p.x > x0 + 30 && p.invuln > 0);
+  Gem *g = level.add<Gem>(p.x + 300, p.y, 1);
+  level.tick();
+  assert(!g->magnet);
+  use("LODESTAR");
+  assert(g->magnet);
+  game.level.reset();
+  std::cout << "[TEST] General skills: bandage, tumble and lodestar for any class: PASS"
+            << std::endl;
+}
+
+static void testRunVariety() {
+  for (int w = 0; w < Spawner::WAVES; w++) {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    level.time = 400;
+    level.tick();
+    int before = int(level.count<Enemy>());
+    level.spawner.wave(w, 20);
+    level.tick();
+    assert(int(level.count<Enemy>()) > before);
+    game.level.reset();
+  }
+  for (int i = 0; i < OMEN_COUNT; i++) {
+    const Omen &o = OMENS[i];
+    assert(o.name && *o.name && o.hp > 0 && o.rate > 0 && o.horde > 0 &&
+           o.waves > 0 && o.bands > 0 && o.mimics > 0);
+  }
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    game.level->omen = -1;
+    assert(&game.level->portent() == &CALM);
+    game.level.reset();
+  }
+  for (int n = 0; n < 12; n++) {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    p.god = true;
+    auto made = Enemy::create(EnemyKind::Knight, 50, 1);
+    Enemy *e = made.get();
+    e->x = p.x + 40, e->y = p.y, e->aware = true;
+    e->makeElite(1);
+    e->learn();
+    assert(e->castCount == 1);
+    level.add(std::move(made));
+    bool wound = false, cast = false;
+    for (int i = 0; i < 1500 && !cast; i++) {
+      e->x = p.x + 40, e->y = p.y;
+      if (e->wind > 0)
+        wound = true;
+      else if (wound)
+        cast = true;
+      level.tick();
+    }
+    assert(cast);
+    game.level.reset();
+  }
+  for (EnemyKind k : {EnemyKind::Necromancer, EnemyKind::Alpha, EnemyKind::Cyclops}) {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    p.hp = p.maxHp = 1e6f;
+    for (auto &up : p.upgrades)
+      up->level = 0;
+    Enemy *e = level.spawner.spawn(k, p.x + 60, p.y, true, k != EnemyKind::Cyclops);
+    assert(e && e->castCount >= 2);
+    level.each<Enemy>([&](Enemy &o) {
+      if (&o != e)
+        o.remove();
+    });
+    float hp = p.hp;
+    double px = p.x, py = p.y;
+    int casts = 0;
+    for (int i = 0; i < 2400 && casts < 3; i++) {
+      p.invuln = 0, p.x = px, p.y = py;
+      e->x = px + 60, e->y = py;
+      bool winding = e->wind > 0;
+      level.tick();
+      casts += winding && e->wind <= 0;
+    }
+    assert(casts >= 2 && p.hp < hp);
+    game.level.reset();
+  }
+  std::cout << "[TEST] Waves, omens, skilled elites and boss rotations: PASS" << std::endl;
+}
+
+static void testNewFoes() {
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    auto made = Enemy::create(EnemyKind::Mimic, 1, 1);
+    Enemy *m = made.get();
+    m->x = p.x + 160, m->y = p.y, m->aware = false;
+    level.add(std::move(made));
+    for (int i = 0; i < 10; i++)
+      level.tick();
+    assert(m->buried && level.nearest(p.x, p.y, 400, 8).empty());
+    p.god = true;
+    for (int i = 0; i < 60 && m->buried; i++) {
+      p.x = m->x - 30, p.y = m->y;
+      level.tick();
+    }
+    assert(!m->buried && !level.nearest(p.x, p.y, 400, 8).empty());
+    game.level.reset();
+  }
+  for (int k = int(EnemyKind::Outlaw); k <= int(EnemyKind::Deserter); k++) {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    p.hp = p.maxHp = 1e6f;
+    for (auto &up : p.upgrades)
+      up->level = 0;
+    auto made = Enemy::create(EnemyKind(k), 50, 1);
+    auto *r = static_cast<Renegade *>(made.get());
+    r->x = p.x + 70, r->y = p.y, r->aware = true;
+    level.add(std::move(made));
+    level.tick();
+    assert(r->upgrades.size() == 1 && r->upgrades[0]->level > 0 &&
+           r->upgrades[0]->hostile());
+    float hp = p.hp;
+    bool wound = false;
+    double px = p.x, py = p.y;
+    for (int i = 0; i < 1500 && !(wound && p.hp < hp); i++) {
+      p.invuln = 0, p.x = px, p.y = py;
+      wound |= r->wind > 0;
+      level.tick();
+    }
+    assert(wound && p.hp < hp);
+    game.level.reset();
+  }
+  std::cout << "[TEST] Mimics lurk unseen until near; renegades carry kits and cast: PASS"
+            << std::endl;
+}
+
 static void testLevelLifecycleAndSimulation() {
   Game game;
   // run level lifecycle 3 times to check for leaks
@@ -597,6 +822,10 @@ int runTests() {
   testSidedAbilities();
   testSidedEffects();
   testFoeKits();
+  testArtsBothSides();
+  testGeneralSkills();
+  testRunVariety();
+  testNewFoes();
   std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"
             << std::endl;

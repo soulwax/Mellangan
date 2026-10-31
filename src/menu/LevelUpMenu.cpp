@@ -229,10 +229,10 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
       ready.push_back(u.get());
   std::vector<Upgrade *> skills;
   for (auto &u : all)
-    if (u->skill && u.get() != p.skill && p.hero && u->owner &&
-        std::strcmp(u->owner, p.hero->name) == 0)
+    if (u->skill && u.get() != p.skill && p.hero &&
+        (!u->owner || std::strcmp(u->owner, p.hero->name) == 0))
       skills.push_back(u.get());
-  if (!skills.empty() && choices.front() && p.lvl >= 4 && rng.chance(0.2f)) {
+  if (!skills.empty() && choices.front() && p.lvl >= 4 && rng.chance(0.25f)) {
     choices.push_back(skills[rng.irange(0, int(skills.size()) - 1)]);
   } else if (treasure && !ready.empty())
     evolveSlot = int(choices.size()),

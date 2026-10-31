@@ -15,5 +15,23 @@ void reap(Mob &caster, float reach, float damage);
 void bombs(Mob &caster, int count, float damage, float heal);
 void dance(Mob &caster, float reach, float damage, Color tone);
 void thunder(Mob &caster, int count, float damage);
+void charge(Mob &caster, float reach, float damage);
+void miasma(Mob &caster, float radius, float poison, float seconds);
+void chain(Mob &caster, int jumps, float reach, float damage);
+void grasp(Mob &caster, float radius, float damage);
+void smite(Mob &caster, int count, float damage);
+void lunge(Mob &caster, float reach, float damage);
+void entangle(Mob &caster, float radius, float damage);
+void mines(Mob &caster, int count, float damage);
+void comet(Mob &caster, int count, float damage);
+void keg(Mob &caster, float damage);
+void warcry(Mob &caster, float radius, float seconds);
+void bandage(Mob &caster, float amount);
+void tumble(Mob &caster, float reach);
+void whirlwind(Mob &caster, float reach, float damage);
+void quake(Mob &caster, float radius, float damage);
+void firering(Mob &caster, int count, float damage);
+void lodestar(Mob &caster, float radius);
+void snare(Mob &caster, float reach, float damage);
 
 } // namespace ability

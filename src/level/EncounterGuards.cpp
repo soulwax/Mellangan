@@ -38,7 +38,7 @@ std::unique_ptr<Enemy> guard(EnemyKind kind, float hp, float damage,
                              std::shared_ptr<ExpansionChallengeState> state, int slot) {
   const EnemyType &type = Enemy::typeOf(kind);
   std::unique_ptr<Enemy> out;
-  if (kind >= EnemyKind::MireLeech)
+  if (kind >= EnemyKind::MireLeech && kind <= EnemyKind::CinderGolem)
     out = std::make_unique<EncounterGuard<ExpansionEnemy>>(
         state, slot, type, hp, damage, int(kind) - int(EnemyKind::MireLeech));
   else if (kind == EnemyKind::Ghost)

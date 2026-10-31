@@ -5,10 +5,25 @@
 #include "entity/Player.hpp"
 #include "entity/enemy/SupplyBarrel.hpp"
 #include "level/Level.hpp"
+#include "level/Flavour.hpp"
 #include "level/biome/Biome.hpp"
+#include "particle/Spark.hpp"
+
+namespace {
+struct WaveDef {
+  const char *call;
+  float from;
+};
+const WaveDef WAVE_DEFS[Spawner::WAVES] = {
+    {"THE HORDE CLOSES IN", 0},  {"A SWARM DESCENDS", 60},
+    {"THE PACK HUNTS", 100},     {"AMBUSH!", 120},
+    {"THE DEAD RISE", 150},      {"THE LAND STIRS", 90},
+};
+} // namespace
 
 void Spawner::tick() {
   const Balance &b = level.game.balance;
+  const Omen &o = level.portent();
   float t = level.time;
   std::vector<EnemyKind> pool, common;
   for (int k = 0; k < int(EnemyKind::Count); k++)
@@ -46,7 +61,7 @@ void Spawner::tick() {
   };
 
   if ((timer -= DT) <= 0) {
-    timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp);
+    timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp) * o.rate;
     for (int i = 0, batch = 1 + int(t / b.batchEvery);
          i < batch && level.count<Enemy>() < int(b.enemyCap); i++) {
       double x, y;
@@ -55,16 +70,41 @@ void Spawner::tick() {
     }
   }
   if (t >= nextWave) {
-    nextWave += b.hordeEvery;
-    int count = std::min(int(b.hordeMax), int(b.hordeBase + t / b.hordeRamp));
-    double r = 270 + level.game.screen.reach();
-    for (int i = 0; i < count; i++) {
-      double dir = TAU * i / count;
-      spawn(pool.back(), level.player->x + std::cos(dir) * r,
-            level.player->y + std::sin(dir) * r);
+    nextWave += b.hordeEvery * o.waves;
+    int count = int(std::min(b.hordeMax, b.hordeBase + t / b.hordeRamp) * o.horde);
+    int open[WAVES], n = 0;
+    for (int i = 0; i < WAVES; i++)
+      if (WAVE_DEFS[i].from <= t && i != lastWave)
+        open[n++] = i;
+    wave(n ? open[rng.irange(0, n - 1)] : 0, count);
+  }
+  if (t >= nextMimic * o.mimics) {
+    nextMimic += rng.range(45, 75);
+    int mimics = 0;
+    level.each<Enemy>([&](Enemy &e) { mimics += e.is(EnemyKind::Mimic); });
+    if (mimics < (o.mimics < 1 ? 4 : 2)) {
+      double x, y;
+      ring(rng.range(150, 230), x, y);
+      spawn(EnemyKind::Mimic, x, y, false);
     }
-    level.game.announce("THE HORDE CLOSES IN");
-    Sound::horde.play(0.7f, 0);
+  }
+  if (t >= nextBand * o.bands) {
+    nextBand += rng.range(70, 110);
+    int renegades = 0;
+    level.each<Enemy>([&](Enemy &e) {
+      renegades += e.kind() >= int(EnemyKind::Outlaw);
+    });
+    if (renegades < 4) {
+      double x, y;
+      ring(rng.range(280, 310), x, y);
+      for (int i = 0, n = 2 + (t > 420) + (t > 720); i < n; i++) {
+        auto k = EnemyKind(int(EnemyKind::Outlaw) + rng.irange(0, 3));
+        if (Enemy::typeOf(k).unlockAt * o.bands > t)
+          k = EnemyKind::Outlaw;
+        spawn(k, x + rng.range(-24, 24), y + rng.range(-24, 24));
+      }
+      level.game.announce("RENEGADES ON YOUR TRAIL");
+    }
   }
   if (t >= nextBarrel) {
     nextBarrel += 20;
@@ -92,11 +132,95 @@ void Spawner::tick() {
   }
 }
 
-void Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
-                    bool boss) {
+void Spawner::wave(int index, int count) {
+  lastWave = index;
+  float t = level.time;
+  Player &p = *level.player;
+  double reach = level.game.screen.reach(), r = 270 + reach;
+  std::vector<EnemyKind> common;
+  for (int k = 0; k < int(EnemyKind::Cyclops); k++)
+    if (Enemy::typeOf(EnemyKind(k)).unlockAt <= t)
+      common.push_back(EnemyKind(k));
+  if (common.empty())
+    common.push_back(EnemyKind::Bat);
+  auto around = [&](EnemyKind k, int n, double radius, double from, double arc) {
+    for (int i = 0; i < n; i++) {
+      double dir = from + arc * (i + 0.5) / n;
+      spawn(k, p.x + std::cos(dir) * radius, p.y + std::sin(dir) * radius);
+    }
+  };
+  switch (index) {
+  case 1: {
+    around(common[rng.irange(0, std::min(1, int(common.size()) - 1))],
+           count * 3 / 2, r, 0, TAU);
+    for (int i = 0; i < 2; i++) {
+      double dir = rng.range(0, TAU);
+      if (Enemy *e = spawn(common.back(), p.x + std::cos(dir) * r,
+                           p.y + std::sin(dir) * r))
+        if (!e->elite)
+          e->makeElite(level.game.balance.eliteHp);
+    }
+    break;
+  }
+  case 2: {
+    double dir = rng.range(0, TAU);
+    for (int i = 0, n = std::max(1, count / 10); i < n; i++)
+      spawn(EnemyKind::Alpha, p.x + std::cos(dir + i * 0.4) * r,
+            p.y + std::sin(dir + i * 0.4) * r);
+    break;
+  }
+  case 3: {
+    double ahead = p.xa * p.xa + p.ya * p.ya > 100 ? std::atan2(p.ya, p.xa)
+                                                   : rng.range(0, TAU);
+    for (int i = 0; i < count; i++) {
+      double dir = ahead - TAU / 6 + TAU / 3 * (i + 0.5) / count,
+             d = 190 + reach + rng.range(0, 40);
+      spawn(common[rng.irange(0, int(common.size()) - 1)],
+            p.x + std::cos(dir) * d, p.y + std::sin(dir) * d);
+    }
+    break;
+  }
+  case 4: {
+    for (int i = 0, n = count * 2 / 3; i < n; i++) {
+      double dir = TAU * i / n, d = rng.range(130, 170);
+      double x = p.x + std::cos(dir) * d, y = p.y + std::sin(dir) * d;
+      spawn(EnemyKind::Skeleton, x, y);
+      if (Spark::alive < 500)
+        Spark::burst(level, x, y, Color{0.85f, 0.85f, 0.8f, 1}, 4, 40, false);
+    }
+    double dir = rng.range(0, TAU);
+    spawn(EnemyKind::Necromancer, p.x + std::cos(dir) * r, p.y + std::sin(dir) * r);
+    break;
+  }
+  case 5: {
+    uint32_t foes = BIOMES[world::biomeAt(int(std::floor(p.x / 16)),
+                                          int(std::floor(p.y / 16)))]->foes;
+    std::vector<EnemyKind> local;
+    for (int k = 0; k < int(EnemyKind::Count); k++)
+      if ((foes & foe(EnemyKind(k))) && k != int(EnemyKind::Cyclops) &&
+          k != int(EnemyKind::Alpha) && k != int(EnemyKind::Thief))
+        local.push_back(EnemyKind(k));
+    if (local.empty())
+      local = common;
+    for (int i = 0; i < count; i++) {
+      double dir = TAU * i / count;
+      spawn(local[i % local.size()], p.x + std::cos(dir) * r, p.y + std::sin(dir) * r);
+    }
+    break;
+  }
+  default:
+    around(common.back(), count, r, 0, TAU);
+  }
+  level.game.announce(WAVE_DEFS[index].call);
+  Sound::horde.play(0.7f, 0);
+}
+
+Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
+                      bool boss) {
   std::lock_guard<std::mutex> lock(spawnMutex);
   const Balance &b = level.game.balance;
-  float hpMul = b.enemyHp * (1 + level.time / b.enemyHpRamp);
+  const Omen &o = level.portent();
+  float hpMul = b.enemyHp * (1 + level.time / b.enemyHpRamp) * o.hp;
   float dmgMul = b.enemyDamage * (1 + level.time / b.enemyDamageRamp);
   float bossHp = 1 + (bosses - 1) * b.bossHpStep;
   if (kind == EnemyKind::Cyclops)
@@ -106,8 +230,12 @@ void Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   if (boss)
     e->makeBoss(Enemy::typeOf(EnemyKind::Cyclops).hp * hpMul * bossHp, 1.6f);
   else if (kind != EnemyKind::Cyclops && level.time > b.eliteStart &&
-      rng.chance((b.eliteBase + level.time / b.eliteRamp) * level.eliteMul))
+      rng.chance((b.eliteBase + level.time / b.eliteRamp) * level.eliteMul)) {
     e->makeElite(b.eliteHp);
+    if (rng.chance(o.skilled))
+      e->learn();
+  }
+  Enemy *made = e.get();
   Entity *added = level.add(std::move(e));
   if (boss || kind == EnemyKind::Cyclops)
     level.bossIds.push_back(added->id);
@@ -126,6 +254,7 @@ void Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
       level.add(std::move(w));
     }
   }
+  return made;
 }
 
 void Spawner::ring(float dist, double &x, double &y) const {

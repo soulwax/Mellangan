@@ -9,6 +9,7 @@
 #include "entity/enemy/ai/Hide.hpp"
 #include "entity/enemy/ai/Howl.hpp"
 #include "entity/enemy/ai/LookOut.hpp"
+#include "entity/enemy/ai/Lurk.hpp"
 #include "entity/enemy/ai/Melee.hpp"
 #include "entity/enemy/ai/Raise.hpp"
 #include "entity/enemy/ai/Ranged.hpp"
@@ -43,6 +44,8 @@ const Howl HOWL{0.6f, 7.5f};
 const Burrow BURROW{2.8f, 0.75f, 2.4f};
 const Raise RAISE{0.85f, 5.5f};
 const Escape ESCAPE{10.0f};
+const Lurk LURK{46};
+const Approach SHOOTING_RANGE{170, {1, 0, 0, 30, 3, false}};
 
 const Plan PLANS[] = {
     {{&FLUTTER}, {}},
@@ -71,6 +74,11 @@ const Plan PLANS[] = {
     {{&MARCH}, {}},
     {{&SCUTTLE}, {}},
     {{&LUMBER}, {}},
+    {{&LURK, &CHARGE, &BITE}, {}},
+    {{&SHOOTING_RANGE}, {&FALTER}},
+    {{&MARCH, &CLEAVE}, {&FALTER}},
+    {{&FLANK, &BITE}, {&FALTER}},
+    {{&GUARD, &MARCH, &CLEAVE}, {&FALTER}},
 };
 
 } // namespace

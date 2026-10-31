@@ -6,6 +6,67 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.13] - 2026-10-31
+
+### Added
+
+- Five new foes:
+  - **Mimic.** From about a minute in, a chest may wait in the grass ahead of you. Weapons ignore it, but it rattles as you draw close and springs at you if you step within reach. It bites hard, dies in a shower of coins and often leaves a potion.
+  - **Renegade adventurers.** From about three minutes in, small bands of rogue adventurers hunt you, announced by "RENEGADES ON YOUR TRAIL". They carry the same weapons you do, and before each special move they glow and flash rings for a moment, so you can step aside:
+    - the **Outlaw** keeps its distance with a Hunter's Bow and lobs powder kegs at your feet;
+    - the **Berserker** hurls axes and makes shield charges;
+    - the **Pit Fighter** circles with orbiting knives and lunges;
+    - the **Deserter** wears a warding halo and rallies with a sweeping cut behind a ward.
+
+    Renegades often drop a potion.
+- Eleven new class skills, one more for every class that had only one. They appear on level-up from level 4, like the Mage's extra skills:
+  - Ranger, **Arrow Storm**: sixteen arrows in every direction;
+  - Knight, **Shield Charge**: charge ahead, battering every foe in your path;
+  - Alchemist, **Miasma**: poison every foe within reach for five seconds;
+  - Stormcaller, **Chain Storm**: lightning leaps between eight nearby foes;
+  - Reaper, **Death Grip**: drag nearby foes to you and chill them;
+  - Priestess, **Sacred Light**: pillars of light fall on six foes;
+  - Duelist, **Lunge**: a long, piercing thrust;
+  - Warden, **Brambles**: root nearby foes in thorns;
+  - Tinkerer, **Minefield**: a ring of mines around you;
+  - Oracle, **Comet**: three comets on the nearest foes;
+  - Corsair, **Powder Keg**: a keg that bursts into a wide fire.
+- Eight general skills that every class can learn, so a skill offer is no longer mostly the Mage's:
+  - **War Cry**: hurl back nearby foes; they take 30% more damage for five seconds;
+  - **Bandage**: heal 30 and shake off burns, poison and chill;
+  - **Tumble**: roll ahead, untouchable for a moment;
+  - **Whirlwind**: spin, cutting every foe around you;
+  - **Ground Slam**: shake the earth, damaging and stunning nearby foes;
+  - **Fire Ring**: ring yourself in flame for four seconds;
+  - **Lodestar**: draw in every gem nearby;
+  - **Snare Net**: bind the foes ahead of you for three seconds.
+
+- Seven new omens, and most runs now begin under one (about 85%, up from 20%). Each run reads differently:
+  - **Outlaw Season**: renegades ride early and often;
+  - **Mimic Moon**: more mimics, and gems run richer;
+  - **The Swarm**: twice the horde, half as hardy;
+  - **Iron Night**: fewer foes, far tougher, more elites;
+  - **War Drums**: elites are common, and every one knows a skill;
+  - **Long Night**: waves come thick and fast;
+  - **Quiet Hours**: gentle waves and fewer elites, but leaner experience.
+- The minute wave is no longer always the same ring of the strongest foe. It now rotates through six kinds, never the same twice in a row:
+  - **The Horde Closes In**: the classic ring;
+  - **A Swarm Descends**: a large ring of weak foes guarding two elites;
+  - **The Pack Hunts**: alpha wolves and their packs from one side;
+  - **Ambush!**: a wall of mixed foes across your path;
+  - **The Dead Rise**: skeletons climb out close around you, with a necromancer behind them;
+  - **The Land Stirs**: a ring of the foes native to the land you stand in.
+- Elites can know a skill: War Cry, Ground Slam, Snare Net, Tumble, Fire Ring, Whirlwind, Bandage or Miasma. About a third of elites have one, and all of them do under War Drums. They glow and flash rings before casting, like renegades.
+- Bosses have wider rotations, and every boss cast now shows the same warning:
+  - the Lich adds Comet;
+  - the Pack Lord adds War Cry;
+  - the Cyclops casts Volley and Ground Slam.
+
+### Changed
+
+- From level 4, a level-up offers a skill a little more often (one time in four, up from one in five). The offer draws from your class's skills and the general ones.
+- A foe given a single weapon now carries only that weapon, instead of a full copy of every weapon in the game.
+
 ## [0.5.12] - 2026-10-31
 
 ### Added

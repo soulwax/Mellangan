@@ -63,11 +63,13 @@ Level::Level(Game &game) : game(game) {
   player = add<Player>();
   flush();
   Bounty::roll(bounties, 3);
-  if (rng.chance(0.2f)) {
+  if (rng.chance(0.85f)) {
     omen = rng.irange(0, OMEN_COUNT - 1);
-    handicaps += (omen == 0 ? 2 : 1);
+    handicaps += OMENS[omen].handicap;
   }
 }
+
+const Omen &Level::portent() const { return omen >= 0 ? OMENS[omen] : CALM; }
 
 SpriteObject *Level::spawn(std::unique_ptr<SpriteObject> p) {
   std::lock_guard<std::mutex> lock(addMutex);

@@ -9,7 +9,9 @@
 #include "entity/enemy/Burrower.hpp"
 #include "entity/enemy/Cyclops.hpp"
 #include "entity/enemy/Ghost.hpp"
+#include "entity/enemy/Mimic.hpp"
 #include "entity/enemy/Necromancer.hpp"
+#include "entity/enemy/Renegade.hpp"
 #include "entity/enemy/Thief.hpp"
 #include "entity/enemy/ExpansionEnemy.hpp"
 #include "entity/enemy/Wolf.hpp"
@@ -89,8 +91,50 @@ const EnemyType TYPES[] = {
     {7,130,24,12,10,1.3f,9,0.3f,{0.6f,0.4f,0.7f,1},false,150,atlas::expansion},
     {8,36,45,7,6,1,5,0.8f,{1,0.4f,0.2f,1},false,110,atlas::expansion},
     {9,160,22,16,10,1.4f,12,0.25f,{0.7f,0.3f,0.1f,1},false,190,atlas::expansion},
+    {92, 60, 66, 14, 7, 1.1f, 12, 0.6f, {0.8f, 0.3f, 0.3f, 1}, false, 60},
+    {85, 45, 40, 8, 6, 1, 8, 0.9f, {0.65f, 0.08f, 0.1f, 1}, false, 150},
+    {87, 110, 40, 16, 7, 1.15f, 12, 0.5f, {0.65f, 0.08f, 0.1f, 1}, false, 180},
+    {88, 70, 58, 12, 6, 1.05f, 10, 0.7f, {0.65f, 0.08f, 0.1f, 1}, false, 210},
+    {98, 130, 30, 16, 7, 1.1f, 12, 0.4f, {0.65f, 0.08f, 0.1f, 1}, false, 240},
 };
 constexpr int ELITE_XP = 6;
+
+const Cast LICH[] = {
+    {[](Enemy &e) { ability::blink(e, 80, 0.6f * e.type.damage, {0.72f, 0.45f, 1, 1}); },
+     6, 320, {0.72f, 0.45f, 1, 1}},
+    {[](Enemy &e) { ability::thunder(e, 4, 0.5f * e.type.damage); }, 7, 320,
+     {0.55f, 0.75f, 1, 1}},
+    {[](Enemy &e) { ability::comet(e, 3, 0.5f * e.type.damage); }, 8, 320,
+     {0.85f, 0.75f, 1, 1}},
+};
+const Cast PACK_LORD[] = {
+    {[](Enemy &e) {
+       ability::nova(e, 70, 0.5f * e.type.damage, e.maxHp * 0.03f,
+                     {0.95f, 0.25f, 0.3f, 1});
+     },
+     6, 120, {0.95f, 0.25f, 0.3f, 1}},
+    {[](Enemy &e) { ability::dance(e, 70, 0.5f * e.type.damage, {0.95f, 0.25f, 0.3f, 1}); },
+     6, 200, {1, 0.45f, 0.5f, 1}},
+    {[](Enemy &e) { ability::warcry(e, 140, 4); }, 9, 140, {1, 0.4f, 0.3f, 1}},
+};
+const Cast CYCLOPS[] = {
+    {[](Enemy &e) { ability::volley(e, 7, 0.16, 200, 0.4f * e.type.damage, 1); }, 7,
+     320, {0.6f, 0.95f, 0.5f, 1}},
+    {[](Enemy &e) { ability::quake(e, 110, 0.6f * e.type.damage); }, 8, 110,
+     {0.85f, 0.65f, 0.4f, 1}},
+};
+const Cast SKILLS[] = {
+    {[](Enemy &e) { ability::warcry(e, 110, 4); }, 9, 110, {1, 0.4f, 0.3f, 1}},
+    {[](Enemy &e) { ability::quake(e, 80, 14); }, 8, 80, {0.85f, 0.65f, 0.4f, 1}},
+    {[](Enemy &e) { ability::snare(e, 110, 4); }, 10, 110, {0.85f, 0.78f, 0.6f, 1}},
+    {[](Enemy &e) { ability::tumble(e, 70); }, 6, 220, {0.8f, 0.85f, 1, 1}},
+    {[](Enemy &e) { ability::firering(e, 6, 5); }, 11, 90, {1, 0.5f, 0.15f, 1}},
+    {[](Enemy &e) { ability::whirlwind(e, 56, 12); }, 7, 56, {0.85f, 0.9f, 1, 1}},
+    {[](Enemy &e) { ability::bandage(e, e.maxHp * 0.2f); }, 12, 240,
+     {0.5f, 1, 0.6f, 1}},
+    {[](Enemy &e) { ability::miasma(e, 90, 3, 4); }, 10, 90, {0.55f, 0.95f, 0.35f, 1}},
+};
+constexpr float WIND = 0.6f;
 
 void puffs(Level &level, double x, double y, Color c, int n, float speed,
            float rise) {
@@ -124,6 +168,10 @@ bool signature(Level &level, EnemyKind k, double x, double y, double body,
   case EnemyKind::MycelialBrute:
     puffs(level, x, body, Color{0.78f, 0.95f, 0.55f, 0.5f},
           k == EnemyKind::Sporeling ? 5 : 9, 35 * scale, 6);
+    return true;
+  case EnemyKind::Mimic:
+    chips(level, x, y, 6, atlas::pt::Coin, col::white, 8, 1.4);
+    chips(level, x, y, 6, atlas::pt::Pebble, Color{0.7f, 0.45f, 0.25f, 1}, 5, 1.2);
     return true;
   case EnemyKind::Burrower:
     chips(level, x, y, 4, atlas::pt::Rock, col::white, 4, 1.3);
@@ -181,12 +229,18 @@ std::unique_ptr<Enemy> Enemy::create(EnemyKind kind, float hpMul,
                                      float damageMul) {
   const EnemyType &t = typeOf(kind);
   std::unique_ptr<Enemy> e;
-  if (kind >= EnemyKind::MireLeech)
+  if (kind >= EnemyKind::Outlaw)
+    e = std::make_unique<Renegade>(t, hpMul, damageMul,
+                                   int(kind) - int(EnemyKind::Outlaw));
+  else if (kind == EnemyKind::Mimic)
+    e = std::make_unique<Mimic>(t, hpMul, damageMul);
+  else if (kind >= EnemyKind::MireLeech)
     e = std::make_unique<ExpansionEnemy>(t,hpMul,damageMul,int(kind)-int(EnemyKind::MireLeech));
   else if (kind == EnemyKind::Ghost)
     e = std::make_unique<Ghost>(t, hpMul, damageMul);
   else if (kind == EnemyKind::Cyclops)
-    e = std::make_unique<Cyclops>(t, hpMul, damageMul);
+    e = std::make_unique<Cyclops>(t, hpMul, damageMul),
+    e->casts = CYCLOPS, e->castCount = int(std::size(CYCLOPS));
   else if (kind == EnemyKind::Wolf)
     e = std::make_unique<Wolf>(t, hpMul, damageMul);
   else if (kind == EnemyKind::Alpha)
@@ -385,21 +439,10 @@ void Enemy::tick() {
     aim(xAim, yAim);
     tickKit();
   }
-  if (boss && (castTime -= DT) <= 0) {
-    castTime = rng.range(6, 9);
-    bool alt = rng.chance(0.5f);
-    if (is(EnemyKind::Necromancer) && alt)
-      ability::thunder(*this, 4, 0.5f * type.damage);
-    else if (is(EnemyKind::Necromancer))
-      ability::blink(*this, 80, 0.6f * type.damage, Color{0.72f, 0.45f, 1, 1});
-    else if (is(EnemyKind::Cyclops))
-      ability::volley(*this, 7, 0.16, 200, 0.4f * type.damage, 1);
-    else if (is(EnemyKind::Alpha) && alt)
-      ability::dance(*this, 70, 0.5f * type.damage, Color{0.95f, 0.25f, 0.3f, 1});
-    else
-      ability::nova(*this, 70, 0.5f * type.damage, maxHp * 0.03f,
-                    Color{0.95f, 0.25f, 0.3f, 1});
-  }
+  if (castCount)
+    channel();
+  if (removed)
+    return;
   Player &p = *level->player;
   double xd = p.x - x, yd = p.y - y, dist = std::sqrt(xd * xd + yd * yd);
   float reach = type.radius + 5;
@@ -423,6 +466,33 @@ void Enemy::makeElite(float health) {
   radius *= 1.3f;
 }
 
+void Enemy::learn() {
+  if (castCount)
+    return;
+  casts = &SKILLS[int(roll() * std::size(SKILLS)) % int(std::size(SKILLS))];
+  castCount = 1;
+  castTime = casts->every * (0.3f + 0.4f * roll());
+}
+
+void Enemy::channel() {
+  if (wind > 0) {
+    if ((wind -= DT) <= 0 && winding)
+      winding->fn(*this);
+    return;
+  }
+  if ((castTime -= DT) > 0)
+    return;
+  const Cast &c = casts[castCount > 1 ? int(roll() * castCount) % castCount : 0];
+  const Player &p = *level->player;
+  double xd = p.x - x, yd = p.y - y;
+  if (!aware || p.dead() || xd * xd + yd * yd > c.range * c.range) {
+    castTime = 0.4f;
+    return;
+  }
+  winding = &c, wind = boss ? WIND * 1.4f : WIND;
+  castTime = c.every * (0.85f + 0.35f * roll());
+}
+
 void Enemy::aim(double &ax, double &ay) const {
   const Player &p = *level->player;
   double xd = p.x - x, yd = p.y - y, d = std::max(1e-3, std::sqrt(xd * xd + yd * yd));
@@ -441,6 +511,11 @@ void Enemy::split() {
 
 void Enemy::makeBoss(float health, float damage) {
   boss = true;
+  if (is(EnemyKind::Necromancer))
+    casts = LICH, castCount = int(std::size(LICH));
+  else if (is(EnemyKind::Alpha))
+    casts = PACK_LORD, castCount = int(std::size(PACK_LORD));
+  castTime = 4;
   hp = maxHp = health;
   damageMul *= damage;
   scale *= 2.2f;
@@ -452,6 +527,11 @@ void Enemy::render(Screen &s) {
     float beat = 0.5f + 0.25f * std::sin(age * 5);
     s.ring(xp, yp, radius + 6, Color{0.9f, 0.15f, 0.2f, beat});
     s.ring(xp, yp, radius + 10, Color{0.9f, 0.15f, 0.2f, beat * 0.4f});
+  }
+  if (wind > 0 && winding) {
+    float k = 1 - wind / (boss ? WIND * 1.4f : WIND), r = radius + 8;
+    s.ring(xp, yp - 6 * scale, r + 8 - 8 * k, winding->tone.alpha(0.35f + 0.6f * k));
+    s.ring(xp, yp - 6 * scale, r + 14 - 12 * k, winding->tone.alpha(0.25f * k));
   }
   Color c = tint();
   traits.render(s, *this, radius, age);
@@ -480,6 +560,8 @@ void Enemy::renderLight(Screen &s) {
     s.glow(xp, yp - 7 * scale, 130, {0.35f, 0.06f, 0.08f, 1});
   if (elite)
     s.glow(xp, yp - 7 * scale, 40 * scale, traits.tone() * 0.12f);
+  if (wind > 0 && winding)
+    s.glow(xp, yp - 6 * scale, 50 * scale, winding->tone * 0.25f);
 }
 
 void Enemy::renderShadow(Screen &s) { drawShadow(s, xp, yp, type.floats); }
@@ -497,7 +579,8 @@ const char *Enemy::name() const {
       "a burrower",     "a necromancer",   "a skeleton",
       "a treasure thief", "a mire leech", "a bog lantern", "a glass mantis",
       "a dust vulture", "a frost wisp", "an iceback", "a sporeling",
-      "a mycelial brute", "an ember imp", "a cinder golem"
+      "a mycelial brute", "an ember imp", "a cinder golem", "a mimic",
+      "an outlaw", "a berserker", "a pit fighter", "a deserter"
   };
   return NAMES[&type - TYPES];
 }

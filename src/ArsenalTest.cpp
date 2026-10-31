@@ -1,3 +1,6 @@
+#undef NDEBUG
+#include <cassert>
+
 #include "ArsenalTest.hpp"
 
 #include <cassert>
@@ -65,7 +68,7 @@ void skills() {
     game.level = std::make_unique<Level>(game);
     for (auto &u : game.level->player->upgrades)
       if (u->skill && std::strcmp(u->name, h->skill) == 0 &&
-          std::strcmp(u->owner, h->name) == 0)
+          u->owner && std::strcmp(u->owner, h->name) == 0)
         found++, assert(!u->rare && !u->weapon);
     assert(found == 1);
   }
@@ -83,7 +86,7 @@ void skills() {
   int mage = 0;
   for (auto &u : p.upgrades) {
     auto *s = dynamic_cast<Skill *>(u.get());
-    if (!s || std::strcmp(s->owner, "MAGE") != 0)
+    if (!s || !s->owner || std::strcmp(s->owner, "MAGE") != 0)
       continue;
     mage++;
     s->levelUp(p);
@@ -135,7 +138,7 @@ void viewArsenal(SDL_Window *window, const std::string &base) {
       while (!w->maxed())
         w->levelUp(p);
     if (auto *s = dynamic_cast<Skill *>(u.get());
-        s && std::strcmp(s->owner, p.hero->name) == 0)
+        s && s->owner && std::strcmp(s->owner, p.hero->name) == 0)
       skills.push_back(s);
   }
   size_t pick = 0;
