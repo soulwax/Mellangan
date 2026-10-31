@@ -201,3 +201,5 @@ void Player::gainXp(float amount) {
     expNext = float(std::min(next, double(std::numeric_limits<float>::max())));
   }
 }
+
+Sprite Player::body() const { return hero ? hero->sprite() : atlas::tile(tile); }

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -108,6 +109,8 @@ public:
   float strike();
   void reflect(Screen &s);
   int surfaceAt(double x, double y) const;
+  void foesOf(const Mob &self, double x, double y, double r,
+              const std::function<void(Mob &)> &fn);
   int heightAt(double x, double y) const;
   float climb(double x, double y, double dx, double dy) const;
   bool swimming(const SpriteObject *e) const;

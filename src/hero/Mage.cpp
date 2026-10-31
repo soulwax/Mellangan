@@ -1,10 +1,7 @@
 #include "hero/Mage.hpp"
 
-#include "audio/Sound.hpp"
+#include "entity/Ability.hpp"
 #include "entity/Player.hpp"
-#include "level/Level.hpp"
-#include "particle/Flourish.hpp"
-#include "particle/Spark.hpp"
 
 namespace {
 bool always(const Codex &) { return true; }
@@ -17,28 +14,6 @@ Mage::Mage()
             "Vanish and reappear ahead in an arcane burst", 6,
             {"Arcane Staff", "Hourglass Tonic", "Warding Halo"}}) {}
 
-namespace {
-void burst(Player &p) {
-  p.level->enemiesNear(p.x, p.y, 80, [&](Enemy &e) {
-    double xd = e.x - p.x, yd = e.y - p.y;
-    if (xd * xd + yd * yd < 60 * 60)
-      e.hurt(35 * p.might, xd, yd, 140);
-  });
-  Spark::burst(*p.level, p.x, p.bodyY(), {0.78f, 0.55f, 1, 1}, 18, 140, true);
-}
-} // namespace
-
 void Mage::cast(Player &p) const {
-  constexpr Color ARCANE{0.72f, 0.45f, 1, 1};
-  double x0 = p.x, y0 = p.bodyY();
-  burst(p);
-  flourish::echo(*p.level, p.x, p.y, sprite(), ARCANE);
-  p.x += p.xAim * 90, p.y += p.yAim * 90;
-  p.level->collide(p.x, p.y, p.radius);
-  p.invuln = std::max(p.invuln, 0.4f);
-  flourish::streak(*p.level, x0, y0, p.x, p.bodyY(), atlas::pt::ArcaneStar,
-                   ARCANE, 7);
-  flourish::sigil(*p.level, p.x, p.bodyY(), 60, ARCANE, 6);
-  burst(p);
-  Sound::cast.play(0.6f, 0);
+  ability::blink(p, 90, 35, {0.72f, 0.45f, 1, 1});
 }

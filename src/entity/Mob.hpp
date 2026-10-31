@@ -12,6 +12,11 @@ public:
 
   virtual bool hostile() const { return false; }
   virtual void split() {}
+  virtual float power() const { return 1; }
+  virtual void aim(double &ax, double &ay) const { ax = facing, ay = 0; }
+  virtual void strike(float, double, double, float) {}
+  virtual void mend(float amount) { hp = std::min(maxHp, hp + amount); }
+  virtual Sprite body() const { return {}; }
 
   bool afflict(StatusKind kind, float duration, float power,
                Upgrade *src = nullptr) {

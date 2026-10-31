@@ -564,6 +564,17 @@ int Level::surfaceAt(double x, double y) const {
   return surfaces[gy * SOLID_W + gx] & 3;
 }
 
+void Level::foesOf(const Mob &self, double x, double y, double r,
+                   const std::function<void(Mob &)> &fn) {
+  if (!self.hostile()) {
+    enemiesNear(x, y, r, [&](Enemy &e) { fn(e); });
+    return;
+  }
+  double xd = player->x - x, yd = player->y - y;
+  if (!player->dead() && xd * xd + yd * yd < r * r)
+    fn(*player);
+}
+
 int Level::heightAt(double x, double y) const {
   int gx = int(std::floor(x / 16)) - solidX, gy = int(std::floor((y - 2) / 16)) - solidY;
   if (gx < 0 || gy < 0 || gx >= SOLID_W || gy >= SOLID_H)

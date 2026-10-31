@@ -39,6 +39,11 @@ public:
   void rise();
   void cast();
   void heal(float amount);
+  float power() const override { return might; }
+  void aim(double &ax, double &ay) const override { ax = xAim, ay = yAim; }
+  void strike(float damage, double, double, float) override { hurt(damage); }
+  void mend(float amount) override { heal(amount); }
+  Sprite body() const override;
   void gainXp(float amount);
   bool dead() const { return hp <= 0; }
   double torchX() const { return x + facing * 6; }

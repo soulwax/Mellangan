@@ -83,6 +83,13 @@ public:
   void makeElite(float health = 4);
   bool hostile() const override { return true; }
   void split() override;
+  float power() const override { return damageMul; }
+  void aim(double &ax, double &ay) const override;
+  void strike(float damage, double xd, double yd, float force) override {
+    hurt(damage, xd, yd, force);
+  }
+  Sprite body() const override { return sprite(); }
+  float castTime = 5;
   void makeBoss(float health, float damage);
   void think();
   void move();

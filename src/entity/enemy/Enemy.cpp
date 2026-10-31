@@ -1,5 +1,6 @@
 #include "entity/enemy/Enemy.hpp"
 #include "entity/enemy/Hazard.hpp"
+#include "entity/Ability.hpp"
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
@@ -380,6 +381,15 @@ void Enemy::tick() {
   act();
   if (!type.floats)
     traits.tick(*this);
+  if (boss && (castTime -= DT) <= 0) {
+    castTime = rng.range(6, 9);
+    if (is(EnemyKind::Necromancer))
+      ability::blink(*this, 80, 0.6f * type.damage, Color{0.72f, 0.45f, 1, 1});
+    else
+      ability::nova(*this, 70, 0.5f * type.damage, maxHp * 0.03f,
+                    is(EnemyKind::Alpha) ? Color{0.95f, 0.25f, 0.3f, 1}
+                                         : Color{1, 0.85f, 0.45f, 1});
+  }
   Player &p = *level->player;
   double xd = p.x - x, yd = p.y - y, dist = std::sqrt(xd * xd + yd * yd);
   float reach = type.radius + 5;
@@ -401,6 +411,12 @@ void Enemy::makeElite(float health) {
   hp = maxHp *= health;
   scale *= 1.35f;
   radius *= 1.3f;
+}
+
+void Enemy::aim(double &ax, double &ay) const {
+  const Player &p = *level->player;
+  double xd = p.x - x, yd = p.y - y, d = std::max(1e-3, std::sqrt(xd * xd + yd * yd));
+  ax = xd / d, ay = yd / d;
 }
 
 void Enemy::split() {

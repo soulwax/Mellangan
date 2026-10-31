@@ -29,6 +29,7 @@ All notable changes to Mellangan are documented here. The format follows
   - **Splitting** (green): bursts into two smaller copies when it dies. Clear space first.
   - **Volatile** (flickering orange): explodes shortly after death, with a telegraphed circle. Step out.
   - **Frosted** (ice blue): leaves a freezing trail that chills you. Don't follow its path.
+- Bosses now use class skills. Every few seconds the Lich blinks toward you in an arcane burst, as the Mage does. The Cyclops and the Pack Lord unleash a nova that throws you back and mends them a little.
 - Traits are not only for foes: the Frozen Giant now also gives you the Frosted trait, so you leave a freezing trail that chills foes that walk your path.
 - High ground matters. Your attacks deal 15% more damage to foes standing below you, so a plateau is worth holding (flyers excepted).
 - Dev: `--landmark N` starts a `--dev` run beside the nearest landmark of kind N (0 tree, 1 star, 2 colossus, 3 monolith, 4 spire, 5 mushroom, 6 wreck, 7 gate, 8 forge, 9 frozen giant).
