@@ -20,6 +20,7 @@ public:
   std::vector<Item> bag;
   std::array<Item, GEAR> gear{};
   std::array<bool, GEAR> worn{};
+  std::array<int, GEAR> gearLevels{};
   int lvl = 1, pendingLevels = 0, pendingTreasures = 0, revives = 0;
   const char *felledBy = nullptr;
   float exp = 0, expNext = 5, xpBase = 6, xpGrowth = 1.08f;
@@ -50,4 +51,13 @@ public:
   Sprite body() const override;
   void gainXp(float amount);
   double torchX() const { return x + facing * 6; }
+
+  bool fits(const Item &item) const;
+  bool equip(size_t bagIndex);
+  bool unequip(int slot);
+  Item strip(int slot);
+
+private:
+  void wear(int slot, const Item &item);
+  void shed(int slot);
 };

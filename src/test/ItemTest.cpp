@@ -10,6 +10,7 @@
 #include "entity/Player.hpp"
 #include "entity/pickup/ItemDrop.hpp"
 #include "item/Upgrade.hpp"
+#include "entity/enemy/Enemy.hpp"
 #include "item/loot/Loot.hpp"
 #include "level/Level.hpp"
 #include "menu/InventoryMenu.hpp"
@@ -208,4 +209,81 @@ void testInventory() {
   std::cout << "[TEST] Inventory equips, swaps, fills both charms, refuses other classes' gear, "
                "unequips and drops: PASS"
             << std::endl;
+}
+
+void testEquipStats() {
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  auto affix = [](Stat stat) {
+    for (int i = 0; i < AFFIX_COUNT; i++)
+      if (AFFIXES[i].stat == stat)
+        return i;
+    assert(false);
+    return 0;
+  };
+  auto ring = [&](std::initializer_list<std::pair<Stat, float>> stats) {
+    Item item;
+    for (size_t i = 0; i < itemBases().size(); i++)
+      if (itemBases()[i].slots & slot::Charm) {
+        item.base = int(i);
+        break;
+      }
+    for (auto [stat, v] : stats)
+      item.rolls[item.count++] = Roll{affix(stat), 0, v};
+    item.rarity = Rarity::Rare;
+    return item;
+  };
+
+  float might = p.might, maxHp = p.maxHp, speed = p.speed, armor = p.armor;
+  p.bag = {ring({{Stat::Damage, 20}, {Stat::Life, 30}, {Stat::Speed, 10}, {Stat::Armour, 3},
+                 {Stat::ResistBurn, 50}})};
+  assert(p.equip(0));
+  assert(std::abs(p.might - might - 0.2f) < 1e-3f && std::abs(p.maxHp - maxHp - 30) < 1e-3f);
+  assert(p.speed > speed && p.armor == armor + 3);
+  p.status.apply(StatusKind::Burn, 2, 0.4f);
+  assert(p.status.power(StatusKind::Burn) < 0.21f);
+  float hp = p.hp;
+  p.invuln = 0, p.bonus.block = 100;
+  p.hurt(10);
+  assert(p.hp == hp);
+  p.bonus.block = 0;
+  assert(p.unequip(GearCharm));
+  assert(std::abs(p.might - might) < 1e-3f && std::abs(p.maxHp - maxHp) < 1e-3f);
+  assert(std::abs(p.speed - speed) < 1e-3f && p.armor == armor);
+  assert(std::abs(p.status.resist[int(StatusKind::Burn)]) < 1e-3f);
+
+  bool granted = false;
+  for (size_t i = 0; i < itemBases().size() && !granted; i++) {
+    Item item;
+    item.base = int(i);
+    if (!item.def().grants || !p.fits(item))
+      continue;
+    Upgrade *up = p.upgrade(item.def().grants);
+    if (!up || up->level != 0)
+      continue;
+    p.bag = {item};
+    assert(p.equip(0) && up->level == item.tier + 1);
+    assert(p.unequip(item.gearSlot()) && up->level == 0);
+    granted = true;
+  }
+  assert(granted);
+
+  p.bag = {ring({{Stat::Thorns, 5}})};
+  assert(p.equip(0) && p.bonus.thorns == 5);
+  p.maxHp = p.hp = 1e6f;
+  auto made = Enemy::create(EnemyKind::Rat, 4, 1);
+  Enemy *e = made.get();
+  e->x = p.x, e->y = p.y;
+  level.add(std::move(made));
+  float full = e->hp;
+  for (int i = 0; i < 120 && e->hp >= full && !e->removed; i++) {
+    e->x = p.x, e->y = p.y, p.invuln = 0;
+    level.tick();
+  }
+  assert(e->removed || e->hp < full);
+  game.level.reset();
+  std::cout << "[TEST] Equipped items move stats both ways, resist, grant levels, block and "
+               "thorns: PASS" << std::endl;
 }

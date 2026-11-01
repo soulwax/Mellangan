@@ -143,7 +143,7 @@ void RecipeShot::tick() {
     return remove();
   }
   form().trail(*this);
-  form().tick(*this, p, child ? r.speed * 1.3f : r.speed);
+  form().tick(*this, p, (child ? r.speed * 1.3f : r.speed) * (1 + p.bonus.shotSpeed / 100));
 }
 
 void RecipeShot::render(Screen &s) { form().render(*this, s); }

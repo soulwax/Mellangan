@@ -108,6 +108,7 @@ void ItemDrop::renderLight(Screen &s) {
 void ItemDrop::spill(Level &level, double x, double y, Source source, int mlvl) {
   LootRoll roll{source, mlvl};
   roll.night = !level.night.dawn;
+  roll.magicFind = level.player->bonus.magicFind, roll.goldFind = level.player->bonus.goldFind;
   auto drops = rollLoot(roll, rng);
   bool crowded = level.count<ItemDrop>() >= 120;
   for (Drop &d : drops) {

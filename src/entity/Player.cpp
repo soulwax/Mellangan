@@ -122,7 +122,7 @@ void Player::renderLight(Screen &s) {
     return s.glow(xp, yb, 200, {0.25f, 0.05f, 0.05f, 1});
   float f = flicker(level->time, 0),
         reach = (1 + 0.08f * std::min(level->night.lit, 8)) *
-                (1 - 0.45f * std::min(1.0f, dim));
+                (1 - 0.45f * std::min(1.0f, dim)) * (1 + bonus.light / 100);
   int xt = xp + int(facing * 6), yt = yp - 13;
   Color warm{0.34f * f, 0.27f * f * f, 0.17f * f * f, 1},
       core{0.22f * f, 0.16f * f * f, 0.08f * f, 1};
@@ -135,9 +135,14 @@ void Player::renderLight(Screen &s) {
 void Player::hurt(float damage, bool periodic) {
   if ((!periodic && invuln > 0) || dead() || god)
     return;
+  if (!periodic && bonus.block > 0 && rng.chance(bonus.block / 100)) {
+    invuln = std::max(invuln, 0.25f);
+    return Spark::burst(*level, x, bodyY(), col::white, 6, 50, true);
+  }
   if (!periodic)
     damage = traits.incoming(*this, damage * status.incoming() *
-                                        level->game.balance.damageTaken);
+                                        level->game.balance.damageTaken *
+                                        (1 + bonus.hunted / 100));
   if (hero && (damage = hero->guard(*this, damage)) <= 0)
     return;
   for (auto &up : upgrades)
@@ -201,6 +206,7 @@ void Player::mend(float amount) {
 void Player::gainXp(float amount) {
   if (hero)
     amount *= hero->wisdom();
+  amount *= 1 + bonus.wisdom / 100;
   exp += amount;
   while (exp >= expNext) {
     exp -= expNext;

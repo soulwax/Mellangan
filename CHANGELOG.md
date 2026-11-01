@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.15] - 2026-11-01
+
 ### Added
 
 - `BiomeViewer`, a separate tool that shows the whole generated world for any seed, with refresh, zoom, structure sites, copy to clipboard and PNG export.
@@ -15,7 +17,8 @@ All notable changes to Mellangan are documented here. The format follows
 - Three new weapon forms for upcoming weapons: whips that crack harder at the tip, walls that hold foes back, and spirals.
 - Run rules for future modes: day and night cycles, spawn and horde scaling, safe zones, fixed omens and threat by place. The dawn run is unchanged.
 - Diablo-style loot on the ground behind the `--loot` dev flag: items pop out of fallen foes, rares and better cast a light beam, names show in their rarity colour and stack without overlapping, Alt shows every label, and walking over an item bags it.
-- An inventory screen on `I`: a paper doll with weapon, off-hand, armour and two charm slots, a 32-slot bag, Diablo-style tooltips with affixes, curses, class requirements and a green and red comparison against what you wear, and dropping items back on the ground. Equipped items have no effect yet.
+- An inventory screen on `I`: a paper doll with weapon, off-hand, armour and two charm slots, a 32-slot bag, Diablo-style tooltips with affixes, curses, class requirements and a green and red comparison against what you wear, and dropping items back on the ground.
+- Equipped items now count: affixes raise damage, life, speed, armour, resistances, block, thorns, life leech, magic and gold find, experience, light, projectiles, area and projectile speed, add on-hit burn, chill, poison, bleed and shock, and boost damage against bosses, champions or at night. A weapon item grants its ability at tier level, and taking gear off restores everything exactly.
 - The groundwork of a Diablo-style item system: item bases from every weapon plus off-hands, armour and charms; 30 affix families in five tiers; seeded magic, rare and night-touched rolls with magic find; treasure classes per source; item save lines; and `--loot-sim` to check drop rates. Not yet visible in play.
 
 ### Changed

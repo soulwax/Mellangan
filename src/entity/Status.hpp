@@ -19,6 +19,7 @@ public:
   std::array<StatusEffect, int(StatusKind::Count)> effects{};
   uint32_t immune = 0;
   bool moving = false;
+  std::array<float, int(StatusKind::Count)> resist{};
 
   bool apply(StatusKind kind, float duration, float power,
              Upgrade *source = nullptr) {
@@ -28,7 +29,8 @@ public:
         power <= 0)
       return false;
     auto &e = effects[i];
-    power = std::min(power, cap(kind));
+    float r = std::clamp(resist[i], 0.0f, 0.75f);
+    power = std::min(power * (1 - r), cap(kind)), duration *= 1 - r;
     if (kind == StatusKind::Bleed && e.time > 0) {
       e.power = std::min(cap(kind), e.power + power);
       e.source = source;

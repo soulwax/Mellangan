@@ -23,6 +23,7 @@ void testNewFoes();
 void testNewPayloads();
 void testNewStatuses();
 void testItems();
+void testEquipStats();
 void testGreenwoodFoes();
 void testRunRules();
 void testShapeForms();

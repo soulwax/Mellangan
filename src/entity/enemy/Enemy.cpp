@@ -26,6 +26,7 @@
 #include "item/Upgrade.hpp"
 #include "entity/projectile/Orb.hpp"
 #include "level/Level.hpp"
+#include "particle/Arc.hpp"
 #include "particle/TextParticle.hpp"
 #include "particle/DeathEffect.hpp"
 #include "particle/Drift.hpp"
@@ -256,6 +257,8 @@ void Enemy::tick() {
     p.hurt(type.damage * damageMul * status.outgoing() * contactBonus(p));
     if (lands)
       traits.landed(*this, std::max(before - p.hp, maxHp * 0.1f));
+    if (lands && p.bonus.thorns > 0)
+      hurt(p.bonus.thorns, x - p.x, y - p.y, 20, nullptr, true);
   }
 }
 
@@ -314,6 +317,29 @@ Sprite Enemy::sprite() const {
   return type.art ? type.art(type.tile) : atlas::tile(type.tile);
 }
 
+void Enemy::onHit(float damage, Upgrade *src) {
+  Player &p = *level->player;
+  const ItemStats &b = p.bonus;
+  if (b.burn > 0 && rng.chance(b.burn / 100))
+    afflict(StatusKind::Burn, 2, damage * 0.2f, src);
+  if (b.chill > 0 && rng.chance(b.chill / 100))
+    afflict(StatusKind::Chill, 1.2f, 0.3f, src);
+  if (b.poison > 0 && rng.chance(b.poison / 100))
+    afflict(StatusKind::Poison, 3, damage * 0.15f, src);
+  if (b.bleed > 0 && rng.chance(b.bleed / 100))
+    afflict(StatusKind::Bleed, 3, damage * 0.12f, src);
+  if (b.leech > 0)
+    p.mend(std::min(damage * b.leech / 100, 0.5f));
+  if (b.shock > 0 && rng.chance(b.shock / 100))
+    for (Enemy *o : level->nearest(x, y, 80, 3))
+      if (o != this && !o->removed) {
+        level->add<Arc>(std::vector<ArcNode>{{x, bodyY()}, {o->x, o->bodyY()}}, 0.2f,
+                        Color{0.6f, 0.8f, 1, 1});
+        o->hurt(damage * 0.5f, o->x - x, o->y - y, 0, nullptr, true);
+        break;
+      }
+}
+
 void Enemy::hurt(float damage, double xd, double yd, float force,
                  Upgrade *src, bool periodic) {
   if (removed)
@@ -333,6 +359,11 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   bool crit = !periodic && rng.chance(0.08f + level->player->luck);
   if (crit)
     damage *= level->player->hero ? level->player->hero->edge() : 1.8f;
+  if (src && !src->hostile())
+    damage *= 1 + ((boss || def ? level->player->bonus.bossDamage : 0) +
+                   (elite || title ? level->player->bonus.eliteDamage : 0) +
+                   (level->night.dawn ? 0 : level->player->bonus.nightDamage)) /
+                      100;
   if (src) {
     src->dealt += std::min(damage, std::max(hp, 0.0f));
     if (!periodic)
@@ -349,6 +380,8 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   float f = force * type.knockResist * (boss ? 0.15f : elite ? 0.5f : 1.0f);
   xa += xd * f;
   ya += yd * f;
+  if (src && !src->hostile() && !periodic)
+    onHit(damage, src);
   TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)),
                     crit ? col::gold : col::white);
   Sound::hit.play(0.35f);

@@ -143,6 +143,7 @@ protected:
 
 private:
   void act();
+  void onHit(float damage, Upgrade *src);
   void adopt();
   Sense sense() const;
   void next(const Sense &s);

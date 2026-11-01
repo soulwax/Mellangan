@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entity/Entity.hpp"
+#include "entity/ItemStats.hpp"
 #include "entity/Status.hpp"
 #include "entity/Trait.hpp"
 
@@ -20,6 +21,7 @@ public:
         regen = 0, luck = 0, heroTimer = 0, skillTime = 0, knifeCooldown = 0;
   int heroCount = 0;
   std::vector<std::unique_ptr<Upgrade>> upgrades;
+  ItemStats bonus;
 
   Mob();
   ~Mob() override;

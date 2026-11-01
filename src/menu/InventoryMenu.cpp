@@ -2,8 +2,6 @@
 
 #include <spdlog/fmt/fmt.h>
 
-#include <cstring>
-
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -14,11 +12,6 @@
 namespace {
 
 constexpr int SLOTS = GEAR + InventoryMenu::COLS * InventoryMenu::ROWS;
-
-bool fits(const Player &p, const Item &item) {
-  const char *klass = item.def().klass;
-  return !klass || (p.hero && std::strcmp(klass, p.hero->name) == 0);
-}
 
 } // namespace
 
@@ -61,42 +54,25 @@ void InventoryMenu::move(int dx, int dy) {
 
 void InventoryMenu::activate() {
   Player &p = player();
-  if (selected < GEAR) {
-    if (!p.worn[selected] || int(p.bag.size()) >= Player::BAG)
-      return Sound::hurt.play(0.3f, 0);
-    p.bag.push_back(p.gear[selected]);
-    p.worn[selected] = false;
-    return Sound::select.play(0.5f, 0, 0.9f);
-  }
-  size_t k = size_t(selected - GEAR);
-  if (k >= p.bag.size())
-    return;
-  Item item = p.bag[k];
-  if (!fits(p, item))
+  bool done = selected < GEAR ? p.unequip(selected) : p.equip(size_t(selected - GEAR));
+  if (!done)
     return Sound::hurt.play(0.3f, 0);
-  int slot = item.gearSlot();
-  if (slot == GearCharm && p.worn[GearCharm] && !p.worn[GearCharm2])
-    slot = GearCharm2;
-  if (p.worn[slot])
-    p.bag[k] = p.gear[slot];
-  else
-    p.bag.erase(p.bag.begin() + long(k));
-  p.gear[slot] = item, p.worn[slot] = true;
-  Sound::confirm.play(0.5f, 0);
+  (selected < GEAR ? Sound::select : Sound::confirm).play(0.5f, 0);
 }
 
 void InventoryMenu::dropSelected() {
   Player &p = player();
-  const Item *item = at(selected);
-  if (!item)
+  if (!at(selected))
     return;
-  Item copy = *item;
-  if (selected < GEAR)
-    p.worn[selected] = false;
-  else
+  Item item;
+  if (selected < GEAR) {
+    item = p.strip(selected);
+  } else {
+    item = p.bag[size_t(selected - GEAR)];
     p.bag.erase(p.bag.begin() + (selected - GEAR));
+  }
   float a = rng.range(0, TAU);
-  game.level->add<ItemDrop>(p.x, p.y, Drop{DropKind::Item, 1, copy},
+  game.level->add<ItemDrop>(p.x, p.y, Drop{DropKind::Item, 1, item},
                             p.x + std::cos(a) * 26, p.y + std::sin(a) * 18);
   Sound::select.play(0.4f, 0, 0.7f);
 }
