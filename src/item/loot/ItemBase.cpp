@@ -7,7 +7,7 @@
 #include "item/weapon/Recipe.hpp"
 #include "item/weapon/form/FormBehavior.hpp"
 
-const char *const TIER_NAMES[TIERS] = {"Worn", "Fine", "Masterwork"};
+const char *const TIER_NAMES[TIER_COUNT] = {"Worn", "Fine", "Masterwork"};
 
 namespace {
 

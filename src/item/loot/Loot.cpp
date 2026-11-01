@@ -35,11 +35,11 @@ int pickBase(int ilvl, int &tier, Rng &rng) {
     return q > ilvl ? 0 : b.weight * (ilvl - q <= 10 ? 3 : 1);
   };
   for (const ItemBase &b : bases)
-    for (int t = 0; t < TIERS; t++)
+    for (int t = 0; t < TIER_COUNT; t++)
       total += weight(b, t);
   int r = rng.irange(0, std::max(0, total - 1));
   for (size_t i = 0; i < bases.size(); i++)
-    for (int t = 0; t < TIERS; t++)
+    for (int t = 0; t < TIER_COUNT; t++)
       if ((r -= weight(bases[i], t)) < 0)
         return tier = t, int(i);
   return tier = 0, 0;

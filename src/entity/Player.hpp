@@ -1,9 +1,11 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <vector>
 
 #include "entity/Mob.hpp"
+#include "item/loot/Item.hpp"
 
 class Upgrade;
 class Skill;
@@ -12,7 +14,12 @@ class Hero;
 
 class Player : public Mob {
 public:
+  static constexpr int BAG = 32;
   float dim = 0;
+  int gold = 0, materials = 0;
+  std::vector<Item> bag;
+  std::array<Item, GEAR> gear{};
+  std::array<bool, GEAR> worn{};
   int lvl = 1, pendingLevels = 0, pendingTreasures = 0, revives = 0;
   const char *felledBy = nullptr;
   float exp = 0, expNext = 5, xpBase = 6, xpGrowth = 1.08f;

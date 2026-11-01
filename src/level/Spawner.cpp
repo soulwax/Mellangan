@@ -176,9 +176,9 @@ void Spawner::tick() {
   trickle(t);
   if (t >= nextWave && level.rules.waves)
     horde(t);
-  if (t >= nextMimic * o.mimics)
+  if (t >= nextMimic * o.mimics && level.rules.waves)
     mimics();
-  if (t >= nextBand * o.bands)
+  if (t >= nextBand * o.bands && level.rules.waves)
     renegades(t);
   if (t >= nextChampion * o.champions && level.rules.bosses)
     champions();

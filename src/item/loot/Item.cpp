@@ -58,6 +58,32 @@ const char *rarityName(Rarity r) {
   return names[int(r)];
 }
 
+const char *gearName(int slot) {
+  constexpr const char *names[GEAR] = {"WEAPON", "OFF-HAND", "ARMOUR", "CHARM", "CHARM"};
+  return names[slot];
+}
+
+int Item::gearSlot() const {
+  unsigned s = def().slots;
+  return s & slot::Weapon ? GearWeapon : s & slot::Offhand ? GearOffhand
+                                     : s & slot::Armour   ? GearArmour
+                                                          : GearCharm;
+}
+
+float Item::implicit() const {
+  constexpr float SCALE[TIER_COUNT] = {1, 1.6f, 2.3f};
+  float v = def().amount * SCALE[tier] * (rarity == Rarity::Superior ? 1.15f : 1);
+  return std::round(v * 10) / 10;
+}
+
+float Item::stat(Stat s) const {
+  float total = def().implicit == s ? implicit() : 0;
+  for (int i = 0; i < count; i++)
+    if (AFFIXES[rolls[i].affix].stat == s)
+      total += rolls[i].value;
+  return total;
+}
+
 int Item::prefixes() const {
   int n = 0;
   for (int i = 0; i < count; i++)
@@ -168,7 +194,7 @@ bool Item::load(std::string_view line, Item &out) {
   if (!(in >> key >> item.tier >> item.ilvl >> rarity >> item.seed >> item.curse))
     return false;
   item.base = findBase(key);
-  if (item.base < 0 || item.tier < 0 || item.tier >= TIERS || rarity < 0 ||
+  if (item.base < 0 || item.tier < 0 || item.tier >= TIER_COUNT || rarity < 0 ||
       rarity >= int(Rarity::Count) || item.curse >= CURSE_COUNT)
     return false;
   item.rarity = Rarity(rarity);

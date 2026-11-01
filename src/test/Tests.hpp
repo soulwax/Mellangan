@@ -27,6 +27,8 @@ void testGreenwoodFoes();
 void testRunRules();
 void testShapeForms();
 void testChampionTraits();
+void testLootDrops();
+void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();
 void testPoolConcurrency();

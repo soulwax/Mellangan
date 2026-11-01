@@ -19,6 +19,8 @@ struct Curse {
   const char *name, *text;
 };
 
+enum GearSlot { GearWeapon, GearOffhand, GearArmour, GearCharm, GearCharm2, GEAR };
+
 constexpr int MAX_AFFIXES = 6;
 constexpr int CURSE_COUNT = 5;
 extern const Curse CURSES[CURSE_COUNT];
@@ -35,6 +37,9 @@ struct Item {
   int prefixes() const;
   int suffixes() const;
   bool hasFamily(int affix) const;
+  int gearSlot() const;
+  float implicit() const;
+  float stat(Stat s) const;
   bool addAffix(bool prefix, Rng &rng);
   void reroll(int i, Rng &rng);
   std::string baseName() const;
@@ -46,3 +51,4 @@ struct Item {
 };
 
 const char *rarityName(Rarity r);
+const char *gearName(int slot);

@@ -6,6 +6,7 @@
 #include "gfx/StatusVisual.hpp"
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
+#include "entity/pickup/ItemDrop.hpp"
 #include "item/skill/Skill.hpp"
 #include "level/Flavour.hpp"
 #include "level/World.hpp"
@@ -45,6 +46,12 @@ bool Hud::edge(double wx, double wy, Pin &pin) const {
   if (fit >= 1)
     pin.nx = 0, pin.ny = 1;
   return fit < 1;
+}
+
+bool Hud::inView(double wx, double wy, float margin) const {
+  const Screen &s = game.screen;
+  double xv = wx - xView, yv = wy - yView;
+  return xv > -margin && yv > -margin && xv < s.vw + margin && yv < s.vh + margin;
 }
 
 void Hud::arrow(const Pin &pin, float length, float wing, Color c) {
@@ -108,12 +115,10 @@ void Hud::landmarks() {
 void Hud::champions() {
   if (game.menu)
     return;
-  Screen &s = game.screen;
   Player &p = *game.level->player;
   for (entt::entity id : game.level->bossIds) {
     Enemy *e = game.level->get<Enemy>(id);
-    if (!e || e->removed || !e->title || !s.visible(e->x, e->y, 600) ||
-        s.visible(e->x, e->y, 8))
+    if (!e || e->removed || !e->title || !inView(e->x, e->y, 600) || inView(e->x, e->y, 8))
       continue;
     Pin pin;
     if (!edge(e->x, e->bodyY(), pin))
@@ -154,6 +159,46 @@ void Hud::minimap() {
   right(FLAVOURS[b].note, y - 4 * u - 32 * small, col::gold * 0.8f);
   right(Chart::title(b), y - 2 * u - 16 * small, col::muted);
   right(game.level->sky.name(), y - 6 * u - 48 * small, Color{0.62f, 0.72f, 0.9f, 0.85f});
+}
+
+void Hud::lootLabels() {
+  Screen &s = game.screen;
+  float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
+  float xo = std::floor((s.w - s.vw * k) / 2), yo = std::floor((s.h - s.vh * k) / 2);
+  bool held = game.input.loot.down;
+  struct Tag {
+    float x, y, w, h;
+    std::string text;
+    Color c;
+  };
+  std::vector<Tag> tags;
+  game.level->each<ItemDrop>([&](ItemDrop &d) {
+    if (d.removed || !d.labelled(held))
+      return;
+    float gx = xo + float(d.x - xView) * k, gy = yo + float(d.y - d.z - yView) * k - 12 * u;
+    if (gx < xo || gy < yo || gx > xo + s.vw * k || gy > yo + s.vh * k)
+      return;
+    std::string text = d.label();
+    float w = Screen::textWidth(text, small) + 6 * u, h = 16 * small + 2 * u;
+    tags.push_back({gx - w / 2, gy - h, w, h, std::move(text), d.color()});
+  });
+  std::sort(tags.begin(), tags.end(), [](const Tag &a, const Tag &b) { return a.y > b.y; });
+  for (size_t i = 0; i < tags.size(); i++) {
+    Tag &t = tags[i];
+    for (int tries = 0; tries < 12; tries++) {
+      const Tag *hit = nullptr;
+      for (size_t j = 0; j < i && !hit; j++) {
+        const Tag &o = tags[j];
+        if (t.x < o.x + o.w && o.x < t.x + t.w && t.y < o.y + o.h && o.y < t.y + t.h)
+          hit = &o;
+      }
+      if (!hit)
+        break;
+      t.y = hit->y - t.h - u;
+    }
+    s.rect(t.x, t.y, t.w, t.h, col::panel.alpha(0.82f));
+    s.text(t.text, t.x + 3 * u, t.y + u, small, t.c);
+  }
 }
 
 void Hud::experience() {
@@ -323,6 +368,8 @@ void Hud::bannerBox() {
 
 void Hud::draw() {
   float u = game.screen.u, top = 6 * u + 5 * u;
+  if (!game.menu)
+    lootLabels();
   experience();
   stats(top);
   night(top);

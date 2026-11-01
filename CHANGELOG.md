@@ -14,10 +14,13 @@ All notable changes to Mellangan are documented here. The format follows
 - Eight new champion traits: cursed, silencing, fire, cold and storm enchanted (with death novas), stone skin, multishot and aura bearer.
 - Three new weapon forms for upcoming weapons: whips that crack harder at the tip, walls that hold foes back, and spirals.
 - Run rules for future modes: day and night cycles, spawn and horde scaling, safe zones, fixed omens and threat by place. The dawn run is unchanged.
+- Diablo-style loot on the ground behind the `--loot` dev flag: items pop out of fallen foes, rares and better cast a light beam, names show in their rarity colour and stack without overlapping, Alt shows every label, and walking over an item bags it.
+- An inventory screen on `I`: a paper doll with weapon, off-hand, armour and two charm slots, a 32-slot bag, Diablo-style tooltips with affixes, curses, class requirements and a green and red comparison against what you wear, and dropping items back on the ground. Equipped items have no effect yet.
 - The groundwork of a Diablo-style item system: item bases from every weapon plus off-hands, armour and charms; 30 affix families in five tiers; seeded magic, rare and night-touched rolls with magic find; treasure classes per source; item save lines; and `--loot-sim` to check drop rates. Not yet visible in play.
 
 ### Changed
 
+- Champion edge pointers on the HUD now work everywhere; they compared world positions against the origin and only showed near the start.
 - Reorganised the source for readability: tests and QA views moved to `src/test`, the HUD and save files left `Game`, weapon forms became one class each, and the largest enemy, level and ability files were split by responsibility. Gameplay is unchanged.
 - World generation moved into `src/level/world`, one file per concern, with a single tile-memo helper; feature props are one-line table entries and the dev start flags live in `DevStart`. Generated worlds are bit-identical.
 - Split the weather into fronts, footprints, thunder and rendering, and structure layouts into settlements, wilds and landmarks; props gained one-call sprite, collider and light helpers. The class and level-up menus now share one glyph renderer and word wrap, with the hero card and upgrade card as their own classes, and `Mob::upgrade` replaces six hand-written name lookups. Generated worlds remain bit-identical.

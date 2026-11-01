@@ -18,6 +18,7 @@
 #include "menu/DawnMenu.hpp"
 #include "menu/DeadMenu.hpp"
 #include "menu/LevelUpMenu.hpp"
+#include "menu/InventoryMenu.hpp"
 #include "menu/MapMenu.hpp"
 #include "menu/PauseMenu.hpp"
 #include "menu/ShrineMenu.hpp"
@@ -137,6 +138,9 @@ void Game::tick() {
   } else if (input.map.clicked) {
     Sound::select.play(0.5f, 0);
     setMenu(std::make_unique<MapMenu>(*this));
+  } else if (input.inventory.clicked) {
+    Sound::select.play(0.5f, 0);
+    setMenu(std::make_unique<InventoryMenu>(*this));
   } else if (freeze > 0) {
     freeze -= DT;
   } else {

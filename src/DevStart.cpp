@@ -8,6 +8,7 @@
 
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
+#include "item/loot/Loot.hpp"
 #include "level/World.hpp"
 
 void DevStart::parse(int argc, char **argv) {
@@ -20,6 +21,8 @@ void DevStart::parse(int argc, char **argv) {
       hero = std::atoi(argv[++i]);
     else if (a == "--biome" && more)
       biome = std::atoi(argv[++i]);
+    else if (a == "--give" && more)
+      give = std::atoi(argv[++i]);
     else if (a == "--landmark" && more)
       landmark = std::atoi(argv[++i]);
     else if (a == "--at" && more)
@@ -58,6 +61,8 @@ void DevStart::seekLandmark() {
 void DevStart::apply(Player &p) {
   if (!arm.empty())
     armPlayer(p);
+  for (int i = 0; i < give && int(p.bag.size()) < Player::BAG; i++)
+    p.bag.push_back(rollItem(30, 300, true, rng));
   if (biome >= 0 && biome < BIOME_COUNT)
     visitBiome(p);
   if (lake)

@@ -29,6 +29,7 @@ private:
   int xView = 0, yView = 0;
 
   void draw();
+  void lootLabels();
   void experience();
   void stats(float top);
   void night(float top);
@@ -43,6 +44,7 @@ private:
   void vitals();
   void bannerBox();
   bool edge(double wx, double wy, Pin &pin) const;
+  bool inView(double wx, double wy, float margin) const;
   void arrow(const Pin &pin, float length, float wing, Color c);
   void diamond(const Pin &pin, Color c);
   void tag(const std::string &text, const Pin &pin, float back, Color c);

@@ -1,11 +1,19 @@
 #undef NDEBUG
 #include <cassert>
 
+#include <cstring>
 #include <iostream>
 
 #include "test/Tests.hpp"
 
+#include "Game.hpp"
+#include "entity/Player.hpp"
+#include "entity/pickup/ItemDrop.hpp"
+#include "item/Upgrade.hpp"
 #include "item/loot/Loot.hpp"
+#include "level/Level.hpp"
+#include "menu/InventoryMenu.hpp"
+#include "hero/Hero.hpp"
 
 namespace {
 
@@ -81,5 +89,123 @@ void testItems() {
   assert(!Item::load("", bad));
   std::cout << "[TEST] Items roll from seeds, respect tiers and caps, save and load, drop at "
                "target rates: PASS"
+            << std::endl;
+}
+
+void testLootDrops() {
+  auto arena = [](bool loot, auto body) {
+    RunRules rules;
+    rules.loot = loot, rules.spawnRate = 0, rules.waves = rules.bosses = false;
+    Game game;
+    game.level = std::make_unique<Level>(game, rules);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    p.god = true;
+    for (auto &up : p.upgrades)
+      up->level = 0;
+    body(level, p);
+    game.level.reset();
+  };
+  auto kill = [](Level &level, double x, double y, bool boss) {
+    auto made = Enemy::create(EnemyKind::Rat, 1, 1);
+    Enemy *e = made.get();
+    e->x = x, e->y = y, e->boss = boss;
+    level.add(std::move(made));
+    level.tick();
+    e->hurt(1e9f, 0, 0, 0);
+    level.tick();
+  };
+  arena(false, [&](Level &level, Player &p) {
+    for (int i = 0; i < 20; i++)
+      kill(level, p.x + 200, p.y, false);
+    assert(level.count<ItemDrop>() == 0);
+  });
+  arena(true, [&](Level &level, Player &p) {
+    kill(level, p.x + 200, p.y, true);
+    int rares = 0;
+    level.each<ItemDrop>([&](ItemDrop &d) {
+      rares += d.drop.kind == DropKind::Item && int(d.drop.item.rarity) >= int(Rarity::Rare);
+    });
+    assert(rares >= 2);
+
+    Rng r;
+    r.state = 5;
+    Item sword = rollItem(10, 0, false, r, Rarity::Magic);
+    level.add<ItemDrop>(p.x, p.y, Drop{DropKind::Item, 1, sword}, p.x, p.y);
+    level.add<ItemDrop>(p.x + 20, p.y, Drop{DropKind::Gold, 17, {}}, p.x + 20, p.y);
+    for (int i = 0; i < 60; i++)
+      level.tick();
+    assert(p.bag.size() == 1 && p.bag[0].save() == sword.save());
+    assert(p.gold >= 17);
+
+    p.bag.resize(Player::BAG);
+    level.add<ItemDrop>(p.x, p.y, Drop{DropKind::Item, 1, sword}, p.x, p.y);
+    for (int i = 0; i < 60; i++)
+      level.tick();
+    assert(int(p.bag.size()) == Player::BAG && level.count<ItemDrop>() >= 1);
+
+    for (int i = 0; i < 130; i++)
+      level.add<ItemDrop>(p.x + 400, p.y, Drop{DropKind::Gold, 1, {}}, p.x + 400, p.y);
+    level.tick();
+    size_t before = level.count<ItemDrop>();
+    for (int i = 0; i < 10; i++)
+      ItemDrop::spill(level, p.x + 300, p.y, Source::Brute, 20);
+    level.tick();
+    level.each<ItemDrop>([&](ItemDrop &d) {
+      if (d.x > p.x + 250 && d.x < p.x + 350)
+        assert(d.drop.kind == DropKind::Item && int(d.drop.item.rarity) >= int(Rarity::Rare));
+    });
+    assert(level.count<ItemDrop>() >= before);
+  });
+  std::cout << "[TEST] Loot drops only when the rules allow, bosses drop rares, walking picks up "
+               "items, gold flies in, full bags refuse, crowded ground keeps only rares: PASS"
+            << std::endl;
+}
+
+void testInventory() {
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Player &p = *game.level->player;
+  auto base = [&](unsigned slot, bool classOnly, const char *notFor) {
+    const auto &bases = itemBases();
+    for (size_t i = 0; i < bases.size(); i++)
+      if ((bases[i].slots & slot) && bool(bases[i].klass) == classOnly &&
+          (!notFor || !bases[i].klass || std::strcmp(bases[i].klass, notFor) != 0)) {
+        Item item;
+        item.base = int(i);
+        return item;
+      }
+    assert(false);
+    return Item{};
+  };
+  Item sword = base(slot::Weapon, false, nullptr), axe = sword;
+  axe.ilvl = 9;
+  Item charm = base(slot::Charm, false, nullptr), alien = base(slot::Weapon, true, p.hero->name);
+  p.bag = {sword, axe, charm, charm, alien};
+  InventoryMenu menu(game);
+  menu.selected = GEAR;
+  menu.activate();
+  assert(p.worn[GearWeapon] && p.gear[GearWeapon].ilvl == sword.ilvl && p.bag.size() == 4);
+  menu.selected = GEAR;
+  menu.activate();
+  assert(p.gear[GearWeapon].ilvl == 9 && p.bag.size() == 4 && p.bag[0].ilvl == sword.ilvl);
+  menu.selected = GEAR + 1;
+  menu.activate();
+  menu.selected = GEAR + 1;
+  menu.activate();
+  assert(p.worn[GearCharm] && p.worn[GearCharm2] && p.bag.size() == 2);
+  menu.selected = GEAR + 1;
+  menu.activate();
+  assert(p.bag.size() == 2 && !p.worn[GearOffhand]);
+  menu.selected = GearWeapon;
+  menu.activate();
+  assert(!p.worn[GearWeapon] && p.bag.size() == 3);
+  menu.selected = GEAR;
+  menu.dropSelected();
+  game.level->tick();
+  assert(p.bag.size() == 2 && game.level->count<ItemDrop>() == 1);
+  game.level.reset();
+  std::cout << "[TEST] Inventory equips, swaps, fills both charms, refuses other classes' gear, "
+               "unequips and drops: PASS"
             << std::endl;
 }

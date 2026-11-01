@@ -8,6 +8,7 @@
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
+#include "entity/enemy/SupplyBarrel.hpp"
 #include "level/Level.hpp"
 
 void testRunRules() {
@@ -39,7 +40,9 @@ void testRunRules() {
     }
     assert(sawDay && level.night.nights >= 3);
     assert(!p.god);
-    assert(level.count<Enemy>() < 8);
+    int foes = 0;
+    level.each<Enemy>([&](Enemy &e) { foes += !dynamic_cast<SupplyBarrel *>(&e); });
+    assert(foes < 8);
     game.level.reset();
   }
   {

@@ -153,6 +153,7 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
       game.dev |= std::string_view(argv[i]) == "--dev";
       game.bench.enabled |= std::string_view(argv[i]) == "--bench";
+      game.rules.loot |= std::string_view(argv[i]) == "--loot";
     }
     game.start.parse(argc, argv);
     if (game.dev)

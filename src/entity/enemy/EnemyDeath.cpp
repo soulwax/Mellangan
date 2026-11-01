@@ -20,6 +20,7 @@
 #include "entity/enemy/ai/Plans.hpp"
 #include "entity/enemy/ai/Melee.hpp"
 #include "entity/pickup/Chest.hpp"
+#include "entity/pickup/ItemDrop.hpp"
 #include "entity/pickup/Gem.hpp"
 #include "entity/pickup/Potion.hpp"
 #include "hero/Hero.hpp"
@@ -115,6 +116,29 @@ void flesh(Level &level, EnemyKind k, double x, double y, double body,
 }
 } // namespace
 
+namespace {
+
+Source lootSource(const Enemy &e) {
+  if (e.boss)
+    return Source::Boss;
+  if (e.title)
+    return Source::Champion;
+  if (e.is(EnemyKind::Mimic))
+    return Source::Mimic;
+  if (e.elite)
+    return Source::Elite;
+  return e.type.hp < 25 ? Source::Swarm : e.type.hp < 80 ? Source::Line : Source::Brute;
+}
+
+int monsterLevel(const Enemy &e) {
+  const RunRules &r = e.level->rules;
+  float t = r.threat ? r.threat(e.x, e.y) : e.level->time;
+  int bonus = e.boss ? 5 : e.title ? 3 : e.elite ? 2 : 0;
+  return std::clamp(1 + int(t / 15) + bonus, 1, 99);
+}
+
+} // namespace
+
 void Enemy::die() {
   status.clear();
   for (auto &up : upgrades)
@@ -138,6 +162,8 @@ void Enemy::die() {
                 (1 + std::min(level->streak, 100) * 0.005f));
   if (elite && rng.chance(0.25f))
     level->add<Potion>(x + 6, y);
+  if (level->rules.loot)
+    ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this));
   if (elite)
     level->game.hitStop(0.035f);
   traits.died(*this, type.damage * damageMul * 2);
