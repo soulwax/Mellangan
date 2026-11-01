@@ -10,3 +10,6 @@
 [submodule "extern/stb"]
 	path = extern/stb
 	url = https://github.com/nothings/stb.git
+[submodule "extern/wiki"]
+	path = extern/wiki
+	url = https://github.com/soulwax/mellangan-wiki.git
