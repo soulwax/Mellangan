@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `BiomeViewer`, a separate tool that shows the whole generated world for any seed, with refresh, zoom, structure sites, copy to clipboard and PNG export.
+
 ### Changed
 
 - Reorganised the source for readability: tests and QA views moved to `src/test`, the HUD and save files left `Game`, weapon forms became one class each, and the largest enemy, level and ability files were split by responsibility. Gameplay is unchanged.

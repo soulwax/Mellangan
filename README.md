@@ -214,6 +214,12 @@ effects scene without loading or saving player progress.
 - `tools/make_flora.py`, `tools/make_desert.py` – add the recoloured and hand-drawn plants, mud, sand and water tiles to `res/atlas.png`
 - `tools/make_winter.py` – adds the frosted winter band to `res/atlas.png` (also run by `make_assets.py`)
 - `tools/make_arsenal.py` – paints recipe weapon and skill icons into the arsenal band (chained by `make_expansion.py` and `make_assets.py`); `--preview out.png` writes them at 8x
+- `tools/biome_viewer` – standalone `BiomeViewer` window showing the whole generated world (biome colours shaded by
+  height, water, structure sites) for a seed. Build it on demand with `cmake --build build --target BiomeViewer`
+  (Release is about six times faster). Refresh or R rolls a new seed, 0 shows the classic world, +/- or the wheel
+  zoom from 1 to 32 tiles per pixel, C copies the map to the clipboard as PNG, S saves `biomes-<seed>-x<zoom>.png`,
+  T toggles structure dots, and hovering shows the biome and height under the cursor.
+  `BiomeViewer [--seed HEX] --png out.png` writes one map without a window
 - `tools/footprint_preview.py` – composes a dumped structure footprint (ground and props) into a preview PNG
 - `tools/building_preview.py` – composes Tiny Town tile rows into a preview PNG, used to design buildings outside the game
 
