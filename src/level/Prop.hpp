@@ -16,6 +16,18 @@ public:
   bool wisp = true;
 
   void add(const Sprite &s, int yo = 0) { parts[count++] = {s, yo}; }
+  bool body(float shade, float collide) {
+    shadow = shade, solid = collide;
+    return true;
+  }
+  bool piece(const Sprite &s, float shade, float collide) {
+    add(s);
+    return body(shade, collide);
+  }
+  void lamp(Color c, float size = 80, int yo = -10) {
+    light = c, lightSize = size, lightYo = yo;
+  }
+  void fire(Color c, float size, int yo) { lamp(c, size, yo), wisp = false; }
   void render(Screen &s) override;
   float occlusion(float &width) const override;
   void renderShadow(Screen &s) override;

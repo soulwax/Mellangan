@@ -55,8 +55,7 @@ int Ashlands::place(int x, int y, uint32_t roll, Prop &p) const {
     return -1;
   p.solid = 7;
   if (roll % 3 == 0)
-    p.light = {0.5f, 0.18f, 0.04f, 1}, p.lightSize = 70, p.lightYo = -6,
-    p.wisp = false;
+    p.fire({0.5f, 0.18f, 0.04f, 1}, 70, -6);
   return 1;
 }
 

@@ -5,6 +5,7 @@
 #include "entity/Trait.hpp"
 
 #include <memory>
+#include <string_view>
 #include <vector>
 
 class Upgrade;
@@ -24,6 +25,7 @@ public:
   ~Mob() override;
   void tickKit();
   Upgrade *grant(const char *name, int levels);
+  Upgrade *upgrade(std::string_view name) const;
 
   virtual bool hostile() const { return false; }
   virtual void split() {}

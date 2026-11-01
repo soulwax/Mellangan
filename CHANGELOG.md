@@ -14,6 +14,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 - Reorganised the source for readability: tests and QA views moved to `src/test`, the HUD and save files left `Game`, weapon forms became one class each, and the largest enemy, level and ability files were split by responsibility. Gameplay is unchanged.
 - World generation moved into `src/level/world`, one file per concern, with a single tile-memo helper; feature props are one-line table entries and the dev start flags live in `DevStart`. Generated worlds are bit-identical.
+- Split the weather into fronts, footprints, thunder and rendering, and structure layouts into settlements, wilds and landmarks; props gained one-call sprite, collider and light helpers. The class and level-up menus now share one glyph renderer and word wrap, with the hero card and upgrade card as their own classes, and `Mob::upgrade` replaces six hand-written name lookups. Generated worlds remain bit-identical.
 
 ## [0.5.14] - 2026-11-01
 

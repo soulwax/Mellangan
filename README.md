@@ -197,11 +197,17 @@ effects scene without loading or saving player progress.
   modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and
   `Encounter` (what a structure does when entered); `level/world` implements `World.hpp` as `Biomes` (tile memo,
   biome votes, ground blend), `Terrain` (height, water, dirt, ramps), `Sites` (structure rolls), `Ground` (floor
-  tiles, shade, tint) and `Props`, sharing `Internal.hpp`
+  tiles, shade, tint) and `Props`, sharing `Internal.hpp`; `level/structure` holds the layouts behind the
+  `STRUCTURES` table (`Settlements`, `Wilds`, `Landmarks`); `Prop::piece`, `body`, `lamp` and `fire` set a prop's
+  sprite, collider and light in one call
+- `src/level/Sky` – weather simulation and its queries; `level/sky` has the front table (`Fronts`), `Footprints`,
+  `Thunder` and the drawing (`SkyRender`)
 - `src/level/BiomeReward`, `EncounterGuards`, and `EncounterObjective` – biome challenge rewards, local guard
   tracking, and objective rules used by the encounter lifecycle
-- `src/menu` – title, pause, level-up, and death menus
-- `src/gui` – reusable GUI widgets and shared choice layout and input handling; `Hud` draws the in-run HUD (bars,
+- `src/menu` – title, pause, level-up, and death menus; `HeroCard` and `HeroSigil` draw the class menu's info card
+  and sigils, `UpgradeCard` draws one level-up choice
+- `src/gui` – reusable GUI widgets and shared choice layout and input handling, `Glyph` (pixel-art glyphs from
+  string rows) and `Text` (word wrap); `Hud` draws the in-run HUD (bars,
   timers, icons, minimap, edge pointers to shrines, landmarks and champions) and owns the announcement banners
 - `src/Game` – the run loop, menus, camera and run lifecycle; `src/meta/Saves` owns the preference folder, world
   choice and world history files; `src/DevStart` parses the dev start flags (`--arm`, `--hero`, `--biome`, `--at`,

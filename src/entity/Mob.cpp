@@ -45,6 +45,13 @@ void Mob::tickKit() {
   }
 }
 
+Upgrade *Mob::upgrade(std::string_view name) const {
+  for (auto &u : upgrades)
+    if (name == u->name)
+      return u.get();
+  return nullptr;
+}
+
 Upgrade *Mob::grant(const char *name, int levels) {
   Upgrade *up = nullptr;
   for (auto &u : upgrades)

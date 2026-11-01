@@ -138,12 +138,9 @@ void captureScreenshotSuite(SDL_Window *window, const std::string &base) {
 
   for (auto &up : p.upgrades)
     up->level = 0;
-  for (auto &up : p.upgrades) {
-    if (std::string_view(up->name) == "Staff")
+  for (const char *name : {"Staff", "Frost Nova"})
+    if (Upgrade *up = p.upgrade(name))
       up->level = 1;
-    if (std::string_view(up->name) == "Frost Nova")
-      up->level = 1;
-  }
   p.lvl = 2;
   p.exp = 0;
   p.expNext = 100;

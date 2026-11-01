@@ -33,9 +33,8 @@ void Player::onAdded() {
       u->levelUp(*this);
       break;
     }
-  for (auto &u : upgrades)
-    if (std::strcmp(u->name, hero->weapon) == 0)
-      return u->levelUp(*this);
+  if (Upgrade *u = upgrade(hero->weapon))
+    return u->levelUp(*this);
   upgrades.front()->levelUp(*this);
 }
 

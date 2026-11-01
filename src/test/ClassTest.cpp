@@ -151,12 +151,7 @@ void testClassKits() {
     game.level = std::make_unique<Level>(game);
     Level &level = *game.level;
     Player &p = *level.player;
-    auto has = [&](const char *name) {
-      for (auto &u : p.upgrades)
-        if (std::strcmp(u->name, name) == 0)
-          return true;
-      return false;
-    };
+    auto has = [&](const char *name) { return p.upgrade(name) != nullptr; };
     for (auto &u : p.upgrades) {
       auto *w = dynamic_cast<RecipeWeapon *>(u.get());
       if (!w)

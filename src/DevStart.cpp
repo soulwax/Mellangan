@@ -127,13 +127,12 @@ void DevStart::armPlayer(Player &p) const {
     bool evolve = !name.empty() && name.back() == '!';
     if (evolve)
       name.remove_suffix(1);
-    auto it = std::find_if(p.upgrades.begin(), p.upgrades.end(),
-                           [&](auto &u) { return name == u->name; });
-    if (it == p.upgrades.end()) {
+    Upgrade *found = p.upgrade(name);
+    if (!found) {
       spdlog::warn("dev: no upgrade named {}", name);
       continue;
     }
-    Upgrade &u = **it;
+    Upgrade &u = *found;
     while (!u.maxed())
       u.levelUp(p);
     if (evolve && u.evolvedName)

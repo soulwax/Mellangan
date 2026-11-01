@@ -13,6 +13,11 @@ inline float clampf(float v, float lo, float hi) {
   return std::max(lo, std::min(hi, v));
 }
 inline float damp(float rate, float dt) { return 1.0f - std::exp(-rate * dt); }
+inline float fract(float x) { return x - std::floor(x); }
+inline float smoothstep01(float x) {
+  x = clampf(x, 0, 1);
+  return x * x * (3 - 2 * x);
+}
 
 struct Rng {
   uint64_t state = 0x9E3779B97F4A7C15ull ^ (uint64_t)(uintptr_t)&state;
