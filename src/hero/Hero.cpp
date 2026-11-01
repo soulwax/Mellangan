@@ -11,7 +11,10 @@
 #include "hero/Ranger.hpp"
 #include "hero/Reaper.hpp"
 #include "hero/Stormcaller.hpp"
-#include "hero/ExpansionHero.hpp"
+#include "hero/Corsair.hpp"
+#include "hero/Oracle.hpp"
+#include "hero/Tinkerer.hpp"
+#include "hero/Warden.hpp"
 
 namespace {
 const Mage mage;
@@ -22,13 +25,16 @@ const Stormcaller stormcaller;
 const Reaper reaper;
 const Priestess priestess;
 const Duelist duelist;
-const ExpansionHero warden{0},tinkerer{1},oracle{2},corsair{3};
+const Warden warden;
+const Tinkerer tinkerer;
+const Oracle oracle;
+const Corsair corsair;
 } // namespace
 
 const Hero *const HEROES[HERO_COUNT] = {
     &mage,        &ranger, &knight,    &alchemist,
     &stormcaller, &reaper, &priestess, &duelist,
-    &warden,&tinkerer,&oracle,&corsair};
+    &warden,      &tinkerer, &oracle,    &corsair};
 
 void Hero::equip(Mob &p) const {
   if (Player *pl = p.asPlayer())

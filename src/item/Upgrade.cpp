@@ -99,6 +99,48 @@ const char *const EVOLUTIONS[][3] = {
     {"Chain Shot", "Sea Legs", "Broadside Shot"},
     {"Riptide", "Lodestone", "Maelstrom"}};
 
+struct PassiveDef {
+  const char *owner, *name;
+  Sprite icon;
+  const char *desc;
+  float Mob::*stat;
+  float amount;
+};
+
+const PassiveDef PASSIVES[] = {
+    {nullptr, "Quicksilver", atlas::tile(t::PotionBlue), "+10% movement speed", &Mob::speed, 7.4f},
+    {nullptr, "Heartroot", atlas::tile(t::PotionRed), "+20 max health", &Mob::maxHp, 20},
+    {nullptr, "Ogre Hammer", atlas::tile(t::Hammer), "+10% damage", &Mob::might, 0.1f},
+    {nullptr, "Hourglass Tonic", atlas::tile(t::PotionGreen), "-7% weapon cooldowns", &Mob::haste, -0.07f},
+    {nullptr, "Lodestone", atlas::tile(t::Coin), "+30% pickup range", &Mob::magnet, 8.4f},
+    {nullptr, "Iron Buckler", atlas::tile(t::Shield), "Take 1 less damage per hit", &Mob::armor, 1},
+    {nullptr, "Troll Blood", atlas::tile(t::VialGreen), "Regenerate 0.3 health/second", &Mob::regen, 0.3f},
+    {nullptr, "Lucky Key", atlas::town(tt::Key), "+4% critical hit chance", &Mob::luck, 0.04f},
+};
+
+const PassiveDef KIN[] = {
+    {"MAGE", "Arcane Mind", atlas::tile(128), "-6% weapon cooldowns", &Mob::haste, -0.06f},
+    {"RANGER", "Fleet Foot", atlas::kit(kt::Fern), "+8% movement speed", &Mob::speed, 6},
+    {"KNIGHT", "Oathbound", atlas::tile(74), "+25 max health", &Mob::maxHp, 25},
+    {"ALCHEMIST", "Distillation", atlas::kit(kt::Glowshrooms), "Regenerate 0.4 health/second", &Mob::regen, 0.4f},
+    {"STORMCALLER", "Conduit", atlas::kit(kt::Lavender), "+5% critical hit chance", &Mob::luck, 0.05f},
+    {"REAPER", "Bloodlust", atlas::kit(kt::Roses), "+8% damage", &Mob::might, 0.08f},
+    {"PRIESTESS", "Grace", atlas::kit(kt::CallaLilies), "Take 0.5 less damage per hit", &Mob::armor, 0.5f},
+    {"DUELIST", "Keen Eye", atlas::kit(kt::Snowdrops), "+5% critical hit chance", &Mob::luck, 0.05f},
+    {"WARDEN", "Deep Roots", atlas::kit(kt::MossyLog), "+20 max health", &Mob::maxHp, 20},
+    {"TINKERER", "Fine Gearing", atlas::kit(kt::Pebbles), "-6% weapon cooldowns", &Mob::haste, -0.06f},
+    {"ORACLE", "Farsight", atlas::kit(kt::Amethyst), "+20% pickup range", &Mob::magnet, 5.6f},
+    {"CORSAIR", "Sea Legs", atlas::kit(kt::Driftwood), "+8% movement speed", &Mob::speed, 6},
+};
+
+template <size_t N>
+void addPassives(std::vector<std::unique_ptr<Upgrade>> &u, const PassiveDef (&defs)[N]) {
+  for (const PassiveDef &d : defs) {
+    u.push_back(std::make_unique<Passive>(d.name, d.icon, d.desc, d.stat, d.amount));
+    u.back()->owner = d.owner;
+  }
+}
+
 void phoenix(Mob &p) {
   if (Player *pl = p.asPlayer())
     pl->revives++;
@@ -121,26 +163,7 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   u.push_back(std::make_unique<FireBomb>());
   u.push_back(std::make_unique<Bow>());
   u.push_back(std::make_unique<Scythe>());
-  auto passive = [&](const char *name, Sprite icon, const char *desc,
-                     float Mob::*stat, float amount) {
-    u.push_back(std::make_unique<Passive>(name, icon, desc, stat, amount));
-  };
-  passive("Quicksilver", atlas::tile(t::PotionBlue), "+10% movement speed",
-          &Mob::speed, 7.4f);
-  passive("Heartroot", atlas::tile(t::PotionRed), "+20 max health",
-          &Mob::maxHp, 20);
-  passive("Ogre Hammer", atlas::tile(t::Hammer), "+10% damage", &Mob::might,
-          0.1f);
-  passive("Hourglass Tonic", atlas::tile(t::PotionGreen),
-          "-7% weapon cooldowns", &Mob::haste, -0.07f);
-  passive("Lodestone", atlas::tile(t::Coin), "+30% pickup range",
-          &Mob::magnet, 8.4f);
-  passive("Iron Buckler", atlas::tile(t::Shield), "Take 1 less damage per hit",
-          &Mob::armor, 1);
-  passive("Troll Blood", atlas::tile(t::VialGreen),
-          "Regenerate 0.3 health/second", &Mob::regen, 0.3f);
-  passive("Lucky Key", atlas::town(tt::Key), "+4% critical hit chance",
-          &Mob::luck, 0.04f);
+  addPassives(u, PASSIVES);
   u.push_back(std::make_unique<FrostNova>());
   u.push_back(std::make_unique<PiercingShot>());
   u.push_back(std::make_unique<Judgement>());
@@ -170,35 +193,7 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   u.push_back(std::make_unique<Chakram>());
   u.push_back(std::make_unique<Glaive>());
   u.push_back(std::make_unique<Censer>());
-  auto kin = [&](const char *owner, const char *name, Sprite icon,
-                 const char *desc, float Mob::*stat, float amount) {
-    passive(name, icon, desc, stat, amount);
-    u.back()->owner = owner;
-  };
-  kin("MAGE", "Arcane Mind", atlas::tile(128), "-6% weapon cooldowns",
-      &Mob::haste, -0.06f);
-  kin("RANGER", "Fleet Foot", atlas::kit(kt::Fern), "+8% movement speed",
-      &Mob::speed, 6);
-  kin("KNIGHT", "Oathbound", atlas::tile(74), "+25 max health",
-      &Mob::maxHp, 25);
-  kin("ALCHEMIST", "Distillation", atlas::kit(kt::Glowshrooms),
-      "Regenerate 0.4 health/second", &Mob::regen, 0.4f);
-  kin("STORMCALLER", "Conduit", atlas::kit(kt::Lavender),
-      "+5% critical hit chance", &Mob::luck, 0.05f);
-  kin("REAPER", "Bloodlust", atlas::kit(kt::Roses), "+8% damage",
-      &Mob::might, 0.08f);
-  kin("PRIESTESS", "Grace", atlas::kit(kt::CallaLilies),
-      "Take 0.5 less damage per hit", &Mob::armor, 0.5f);
-  kin("DUELIST", "Keen Eye", atlas::kit(kt::Snowdrops),
-      "+5% critical hit chance", &Mob::luck, 0.05f);
-  kin("WARDEN", "Deep Roots", atlas::kit(kt::MossyLog), "+20 max health",
-      &Mob::maxHp, 20);
-  kin("TINKERER", "Fine Gearing", atlas::kit(kt::Pebbles), "-6% weapon cooldowns",
-      &Mob::haste, -0.06f);
-  kin("ORACLE", "Farsight", atlas::kit(kt::Amethyst), "+20% pickup range",
-      &Mob::magnet, 5.6f);
-  kin("CORSAIR", "Sea Legs", atlas::kit(kt::Driftwood), "+8% movement speed",
-      &Mob::speed, 6);
+  addPassives(u, KIN);
   u.push_back(std::make_unique<SunfireCrown>());
   u.push_back(std::make_unique<TempestEye>());
   u.push_back(std::make_unique<Relic>("Phoenix Feather", atlas::kit(kt::Poppies),

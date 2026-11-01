@@ -189,6 +189,8 @@ effects scene without loading or saving player progress.
   fires it, and `RecipeShot` holds the shared hit, status, blast and chain mechanics; `item/weapon/form` has one
   `FormBehavior` class per `Form` (bolt, volley, seeker, boomerang, orbit, nova, rain, field, cleave, lob, trap, beam)
   deciding how a shot is fired, moves, draws and lights. A new form is a new class plus a line in `FormBehavior::of`
+- `src/hero` – one class per hero (`Mage`, `Ranger`, … `Corsair`); the four expansion heroes share `ExpansionHero`
+  for their sprite
 - `src/entity/ability` – the shared ability catalogue (`entity/Ability.hpp`) used by heroes, skills and foes, grouped as
   `Strikes`, `Barrages`, `Control` and `Support`; `Common.hpp` holds their private helpers
 - `src/entity/enemy` – `Enemy` (AI, movement, hits, drawing), `Roster` (stats table, names, the `create` factory),

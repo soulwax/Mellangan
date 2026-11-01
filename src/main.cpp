@@ -33,6 +33,56 @@ static void initLogging(const std::string &base) {
   spdlog::set_default_logger(log);
 }
 
+static void consultOuroboros() {
+  constexpr ouroboros::Ouroboros council;
+  int n = int(SDL_GetTicks() % 1000);
+  ouroboros::Augury augury;
+  spdlog::info("Ouroboros: {} is {}, {} of 4 serpents agree, the augury {}", n,
+               (council->*n) ? "even" : "odd", council.agreement(n),
+               augury.even(n) == (council->*n) ? "concurs" : "dissents");
+}
+
+static bool parseNumber(const char *s, auto &value) {
+  const char *end = s + std::strlen(s);
+  auto result = std::from_chars(s, end, value);
+  return result.ec == std::errc{} && result.ptr == end;
+}
+
+static int launchView(SDL_Window *window, const std::string &base, int argc,
+                      char **argv) {
+  using View = void (*)(SDL_Window *, const std::string &);
+  const std::pair<std::string_view, View> views[] = {
+      {"--capture-screenshots", captureScreenshotSuite},
+      {"--test-combat-view", viewCombatReadability},
+      {"--test-encounter-view", viewBiomeEncounter},
+      {"--test-gui-view", viewGui},
+      {"--test-effects-view", viewDeathEffects}};
+  for (int i = 1; i < argc; i++)
+    if (std::string_view(argv[i]) == "--test-arsenal-view") {
+      viewArsenal(window, base,
+                  i + 1 < argc && argv[i + 1][0] != '-' ? argv[i + 1] : nullptr);
+      return 0;
+    }
+  for (auto &[flag, run] : views)
+    for (int i = 1; i < argc; i++)
+      if (std::string_view(argv[i]) == flag) {
+        run(window, base);
+        return 0;
+      }
+  for (int i = 1; i + 3 < argc; i++)
+    if (std::string_view(argv[i]) == "--test-biome-view") {
+      int x = 0, y = 0;
+      unsigned seed = 0;
+      if (!parseNumber(argv[i + 1], x) || !parseNumber(argv[i + 2], y) ||
+          !parseNumber(argv[i + 3], seed) || x < -1000000 || x > 1000000 ||
+          y < -1000000 || y > 1000000)
+        return 1;
+      viewBiomeTransition(window, base, x, y, seed);
+      return 0;
+    }
+  return -1;
+}
+
 int main(int argc, char **argv) {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS))
     return 1;
@@ -78,13 +128,6 @@ int main(int argc, char **argv) {
   spdlog::info("{}", vk2dHostInformation());
   spdlog::info("Window {}x{}, {}x{} pixels", ww, wh, pw, ph);
 
-  using View = void (*)(SDL_Window *, const std::string &);
-  const std::pair<std::string_view, View> views[] = {
-      {"--capture-screenshots", captureScreenshotSuite},
-      {"--test-combat-view", viewCombatReadability},
-      {"--test-encounter-view", viewBiomeEncounter},
-      {"--test-gui-view", viewGui},
-      {"--test-effects-view", viewDeathEffects}};
   auto finish = [&](int code) {
     vk2dRendererQuit();
     SDL_DestroyWindow(window);
@@ -92,35 +135,8 @@ int main(int argc, char **argv) {
     pool_shutdown();
     return code;
   };
-  for (int i = 1; i < argc; i++)
-    if (std::string_view(argv[i]) == "--test-arsenal-view") {
-      viewArsenal(window, base,
-                  i + 1 < argc && argv[i + 1][0] != '-' ? argv[i + 1] : nullptr);
-      return finish(0);
-    }
-  for (auto &[flag, run] : views)
-    for (int i = 1; i < argc; i++)
-      if (std::string_view(argv[i]) == flag) {
-        run(window, base);
-        return finish(0);
-      }
-
-  for (int i = 1; i + 3 < argc; i++)
-    if (std::string_view(argv[i]) == "--test-biome-view") {
-      int x = 0, y = 0;
-      unsigned seed = 0;
-      auto parse = [](const char *s, auto &value) {
-        const char *end = s + std::strlen(s);
-        auto result = std::from_chars(s, end, value);
-        return result.ec == std::errc{} && result.ptr == end;
-      };
-      if (!parse(argv[i + 1], x) || !parse(argv[i + 2], y) ||
-          !parse(argv[i + 3], seed) ||
-          x < -1000000 || x > 1000000 || y < -1000000 || y > 1000000)
-        return 1;
-      viewBiomeTransition(window, base, x, y, seed);
-      return finish(0);
-    }
+  if (int view = launchView(window, base, argc, argv); view >= 0)
+    return view ? view : finish(0);
 
   for (int i = 1; i < argc; i++)
     if (std::string_view(argv[i]) == "--test")
@@ -137,17 +153,7 @@ int main(int argc, char **argv) {
     }
     game.start.parse(argc, argv);
     if (game.dev)
-      spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world "
-                   "debug, F9 warp to nearest structure, F10 next weather; --arm \"A,B!\" "
-                   "starts runs with those upgrades, --biome N starts in biome N, --at X,Y on tile X,Y, --lake at the nearest lakeshore, --cliff below the nearest cliff, --ramp below the nearest stairs, --peak on the nearest hilltop, --landmark N by landmark N");
-    if (game.dev) {
-      constexpr ouroboros::Ouroboros council;
-      int n = int(SDL_GetTicks() % 1000);
-      ouroboros::Augury augury;
-      spdlog::info("Ouroboros: {} is {}, {} of 4 serpents agree, the augury {}",
-                   n, (council->*n) ? "even" : "odd", council.agreement(n),
-                   augury.even(n) == (council->*n) ? "concurs" : "dissents");
-    }
+      spdlog::info("Dev mode: {}", DevStart::HELP), consultOuroboros();
     if (game.init(window, base)) {
       spdlog::info("Mellangan ready");
       game.run();
@@ -156,10 +162,7 @@ int main(int argc, char **argv) {
     }
     game.shutdown();
   }
-  vk2dRendererQuit();
-  SDL_DestroyWindow(window);
-  SDL_Quit();
-  pool_shutdown();
+  finish(0);
   spdlog::info("Bye");
   return code;
 }

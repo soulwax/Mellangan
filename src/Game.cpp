@@ -14,6 +14,7 @@
 #include "item/skill/Skill.hpp"
 #include "level/Flavour.hpp"
 #include "level/Noise.h"
+#include "level/WorldDebug.hpp"
 #include "menu/DawnMenu.hpp"
 #include "menu/DeadMenu.hpp"
 #include "menu/LevelUpMenu.hpp"
@@ -385,7 +386,7 @@ void Game::render() {
   screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0,
                            pause, shrine});
   if (worldDebug && dev)
-    level->renderWorldDebug(screen, xView, yView, input.mouseX, input.mouseY);
+    WorldDebug(screen, *level, xView, yView).render(input.mouseX, input.mouseY);
   if (!menu || menu->showHud())
     hud.render(time, xView, yView);
   if (menu)

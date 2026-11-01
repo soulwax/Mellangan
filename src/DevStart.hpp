@@ -5,6 +5,13 @@
 class Player;
 
 struct DevStart {
+  static constexpr const char *HELP =
+      "F5 level up, F6 +30s, F7 god mode, F8 world debug, F9 warp to nearest "
+      "structure, F10 next weather; --arm \"A,B!\" starts runs with those upgrades, "
+      "--biome N starts in biome N, --at X,Y on tile X,Y, --lake at the nearest "
+      "lakeshore, --cliff below the nearest cliff, --ramp below the nearest stairs, "
+      "--peak on the nearest hilltop, --landmark N by landmark N";
+
   std::string arm;
   int hero = -1, biome = -1, landmark = -1, x = 0, y = 0;
   bool at = false, lake = false, cliff = false, ramp = false, peak = false;

@@ -18,6 +18,8 @@ All notable changes to Mellangan are documented here. The format follows
 - Expansion weapons are one table row per kind with named kinds instead of numbered branches; floor painting moved into `FloorPainter`, prop light into `Prop::shine`, and encounters split into sites and landmarks with a shared radius-damage helper.
 - The HUD draws one panel per method with shared edge-pointer helpers, the spawner runs one method per schedule, `Level::quake` replaces four hand-written radius damage loops, `world::biomeUnder` replaces eleven pixel-to-biome conversions, and the four enemy worker passes share one template.
 - Expansion foes use named variants and one stats row each instead of numbered branches; the camera is its own `Camera`; `RecipeShot`, the Mage skills and the skill arts have their own files with a shared `castRecipe`; biome events split scheduling, forces and pulses.
+- The Warden, Tinkerer, Oracle and Corsair are their own hero classes like the other eight; passives and class passives are data tables; `main` hands QA views to one launcher and the dev flag help lives in `DevStart`.
+- The title menu draws one section per method with a shared heading helper, the run recap computes its rank and formats its figures in small helpers, and the F8 world debug overlay is its own `WorldDebug` class instead of a 160-line `Level` method.
 
 ## [0.5.14] - 2026-11-01
 

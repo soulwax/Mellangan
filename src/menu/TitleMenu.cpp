@@ -88,6 +88,12 @@ void TitleMenu::recall(int i) {
   game.reseed();
 }
 
+void TitleMenu::stepDifficulty(int dir) {
+  int tiers = int(Difficulty::Count);
+  Sound::select.play(0.5f, 0);
+  game.setDifficulty(Difficulty((int(game.difficulty) + tiers + dir) % tiers));
+}
+
 void TitleMenu::tick() {
   Menu::tick();
   game.level->player->animT += DT;
@@ -106,12 +112,8 @@ void TitleMenu::tick() {
     return choose((int(game.worldMode) + 1) % 4);
   if (!typing() && in.codex.clicked)
     return game.setMenu(std::make_unique<CodexMenu>(game, false));
-  int tiers = int(Difficulty::Count), tier = int(game.difficulty);
-  if (!typing() && (in.prior.clicked || in.next.clicked)) {
-    Sound::select.play(0.5f, 0);
-    return game.setDifficulty(
-        Difficulty((tier + (in.next.clicked ? 1 : tiers - 1)) % tiers));
-  }
+  if (!typing() && (in.prior.clicked || in.next.clicked))
+    return stepDifficulty(in.next.clicked ? 1 : -1);
   int n = int(game.saves.history.size());
   if (n && in.older.clicked)
     return recall(pick < 0 ? 0 : std::max(0, pick - 1));
@@ -123,12 +125,8 @@ void TitleMenu::tick() {
     for (int i = 0; i < 4; i++)
       if (inside(l.chips[i], in))
         return choose(i);
-    if (inside(l.diff, in)) {
-      Sound::select.play(0.5f, 0);
-      bool right = in.mouseX > l.diff.x + l.diff.w / 2;
-      return game.setDifficulty(
-          Difficulty((tier + (right ? 1 : tiers - 1)) % tiers));
-    }
+    if (inside(l.diff, in))
+      return stepDifficulty(in.mouseX > l.diff.x + l.diff.w / 2 ? 1 : -1);
     for (int i = 0; i < std::min(n, 6); i++)
       if (inside(l.rows[i], in))
         return recall(i);
@@ -166,13 +164,27 @@ void TitleMenu::render(Screen &s) {
 
   Layout l = layout();
   const SDL_FRect &p = l.panel;
-  int mode = int(game.worldMode);
-  float pad = 8 * u;
   s.rect(p.x, p.y, p.w, p.h, {0.04f, 0.04f, 0.07f, 0.8f});
   s.bracket(p.x, p.y, p.w, p.h, u);
-  s.text("WORLD", p.x + pad, p.y + pad, small, col::muted);
-  s.text("Tab", p.x + p.w - pad - Screen::textWidth("Tab", small), p.y + pad,
-         small, col::muted * 0.7f);
+  heading(s, l, p.y + 8 * u, "WORLD", "Tab");
+  renderModes(s, l);
+  renderSeed(s, l);
+  renderDifficulty(s, l);
+  renderHistory(s, l);
+}
+
+void TitleMenu::heading(Screen &s, const Layout &l, float y, const char *label,
+                        const char *hint) const {
+  const SDL_FRect &p = l.panel;
+  float pad = 8 * s.u, small = std::max(1.0f, s.u - 1);
+  s.text(label, p.x + pad, y, small, col::muted);
+  s.text(hint, p.x + p.w - pad - Screen::textWidth(hint, small), y, small,
+         col::muted * 0.7f);
+}
+
+void TitleMenu::renderModes(Screen &s, const Layout &l) const {
+  float u = s.u, small = std::max(1.0f, u - 1);
+  int mode = int(game.worldMode);
   for (int i = 0; i < 4; i++) {
     const SDL_FRect &c = l.chips[i];
     bool on = i == mode;
@@ -182,9 +194,13 @@ void TitleMenu::render(Screen &s) {
     s.textCenter(MODES[i], c.x + c.w / 2, c.y + (c.h - 16 * small) / 2, small,
                  on ? col::black : col::muted);
   }
-  s.text(BLURBS[mode], p.x + pad, l.chips[0].y + l.chips[0].h + 6 * u, small,
+  s.text(BLURBS[mode], l.panel.x + 8 * u, l.chips[0].y + l.chips[0].h + 6 * u, small,
          col::muted);
+}
 
+void TitleMenu::renderSeed(Screen &s, const Layout &l) const {
+  float u = s.u, small = std::max(1.0f, u - 1);
+  int mode = int(game.worldMode);
   const SDL_FRect &f = l.seed;
   bool custom = mode == int(WorldMode::Custom);
   gui::Panel(f, {0.02f, 0.02f, 0.04f, 0.9f},
@@ -200,19 +216,20 @@ void TitleMenu::render(Screen &s) {
            12 * small, col::gold);
   if (custom && game.seedCode.empty())
     s.text("type a code", tx + 10 * small, ty, small, col::muted * 0.6f);
-  std::string_view hint = mode == int(WorldMode::Random)   ? "R reroll"
-                          : custom                           ? "Esc back"
-                                                             : "";
+  std::string_view hint = mode == int(WorldMode::Random) ? "R reroll"
+                          : custom                         ? "Esc back"
+                                                           : "";
   s.text(hint, f.x + f.w - Screen::textWidth(hint, small) - 6 * u, ty, small,
          col::muted * 0.7f);
+}
 
+void TitleMenu::renderDifficulty(Screen &s, const Layout &l) const {
+  float u = s.u, small = std::max(1.0f, u - 1);
   const SDL_FRect &d = l.diff;
   Difficulty tier = game.difficulty;
   bool nightmare = tier == Difficulty::Nightmare;
   Color heat = nightmare ? col::red : col::gold;
-  s.text("DIFFICULTY", p.x + pad, d.y - 14 * u, small, col::muted);
-  s.text("Left/Right", p.x + p.w - pad - Screen::textWidth("Left/Right", small),
-         d.y - 14 * u, small, col::muted * 0.7f);
+  heading(s, l, d.y - 14 * u, "DIFFICULTY", "Left/Right");
   gui::Panel(d, {0.02f, 0.02f, 0.04f, 0.9f}, heat.alpha(0.5f), u).render(s);
   float dy = d.y + (d.h - 16 * small) / 2;
   s.text("<", d.x + 5 * u, dy, small, heat.alpha(0.8f));
@@ -220,15 +237,15 @@ void TitleMenu::render(Screen &s) {
          heat.alpha(0.8f));
   s.textCenter(difficultyTitle(tier), d.x + d.w / 2, dy, small,
                nightmare ? col::red.alpha(0.75f + 0.25f * std::sin(t * 6)) : heat);
-  s.text(difficultyBlurb(tier), p.x + pad, d.y + d.h + 5 * u, small, col::muted);
+  s.text(difficultyBlurb(tier), l.panel.x + 8 * u, d.y + d.h + 5 * u, small, col::muted);
+}
 
+void TitleMenu::renderHistory(Screen &s, const Layout &l) const {
+  float u = s.u, small = std::max(1.0f, u - 1);
   int n = std::min(int(game.saves.history.size()), 6);
   if (!n)
     return;
-  float hy = l.rows[0].y - 16 * u;
-  s.text("PAST WORLDS", p.x + pad, hy, small, col::muted);
-  s.text("Up/Down", p.x + p.w - pad - Screen::textWidth("Up/Down", small), hy,
-         small, col::muted * 0.7f);
+  heading(s, l, l.rows[0].y - 16 * u, "PAST WORLDS", "Up/Down");
   for (int i = 0; i < n; i++) {
     const PastWorld &w = game.saves.history[i];
     const SDL_FRect &r = l.rows[i];

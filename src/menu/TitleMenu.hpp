@@ -24,4 +24,11 @@ private:
   Layout layout() const;
   void choose(int mode);
   void recall(int i);
+  void stepDifficulty(int dir);
+  void heading(Screen &s, const Layout &l, float y, const char *label,
+               const char *hint) const;
+  void renderModes(Screen &s, const Layout &l) const;
+  void renderSeed(Screen &s, const Layout &l) const;
+  void renderDifficulty(Screen &s, const Layout &l) const;
+  void renderHistory(Screen &s, const Layout &l) const;
 };

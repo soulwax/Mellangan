@@ -42,51 +42,65 @@ const RankInfo RANKS[21] = {
     {"S",  {1.0f,  0.84f, 0.22f, 1.0f}},
     {"S+", {1.0f,  0.92f, 0.35f, 1.0f}}
 };
-}
 
-RunStats computeRunStats(const Level &l) {
-  RunStats stats;
-
-  float t = l.time;
-  float base = 0.0f;
-  if (l.night.dawn) {
+float rankScore(const Level &l) {
+  float t = l.time, base;
+  if (l.night.dawn)
     base = 10.0f;
-  } else if (t < 300.0f) {
+  else if (t < 300.0f)
     base = (t / 300.0f) * 2.0f;
-  } else if (t < 600.0f) {
+  else if (t < 600.0f)
     base = 3.0f + ((t - 300.0f) / 300.0f) * 2.0f;
-  } else {
+  else
     base = 6.0f + (std::min(t - 600.0f, 300.0f) / 300.0f) * 2.0f;
-  }
-
   float dmgBonus = std::min(l.totalDamage / 60'000.0f, 4.0f);
   float killBonus = std::min(float(l.kills) / 250.0f, 3.0f);
   float shrineBonus = std::min(float(l.night.lit) * 0.6f, 2.4f);
-  float distMetres = l.distanceRan / 16.0f;
-  float distBonus = std::min(distMetres / 2500.0f, 1.0f);
+  float distBonus = std::min(l.distanceRan / 16.0f / 2500.0f, 1.0f);
+  return base + dmgBonus + killBonus + shrineBonus + distBonus;
+}
 
-  float rawScore = base + dmgBonus + killBonus + shrineBonus + distBonus;
-
+const RankInfo &rankOf(const Level &l) {
+  float raw = rankScore(l);
   float handicapBonus = std::min(float(l.handicaps) * 0.8f, 2.5f);
+  int rawIndex = std::clamp(int(std::floor(raw)), 0, 20);
+  int boostedIndex = std::clamp(int(std::floor(raw + handicapBonus)), 0, 17);
+  return RANKS[std::max(rawIndex, boostedIndex)];
+}
 
-  int rawIndex = std::clamp(int(std::floor(rawScore)), 0, 20);
-  int boostedIndex = std::clamp(int(std::floor(rawScore + handicapBonus)), 0, 17);
-  int finalIndex = std::max(rawIndex, boostedIndex);
+std::string formatDistance(float metres) {
+  if (metres < 1000.0f)
+    return fmt::format("{} m", int(std::round(metres)));
+  return fmt::format("{:.2f} km", metres / 1000.0f);
+}
 
-  stats.rank = RANKS[finalIndex].grade;
-  stats.rankColor = RANKS[finalIndex].color;
+std::string formatDamage(float damage) {
+  if (damage >= 1'000'000.0f)
+    return fmt::format("{:.2f}M", damage / 1'000'000.0f);
+  if (damage >= 10'000.0f)
+    return fmt::format("{:.1f}k", damage / 1'000.0f);
+  return fmt::format("{}", int(std::round(damage)));
+}
 
-  if (distMetres < 1000.0f)
-    stats.distance = fmt::format("{} m", int(std::round(distMetres)));
-  else
-    stats.distance = fmt::format("{:.2f} km", distMetres / 1000.0f);
+void corners(Screen &s, float x, float y, float w, float h, float tick, float u,
+             Color c) {
+  for (int i = 0; i < 4; i++) {
+    float cx = i & 1 ? x + w : x, cy = i & 2 ? y + h : y;
+    float hx = i & 1 ? cx - tick : cx + tick, vy = i & 2 ? cy - tick : cy + tick;
+    s.line(cx, cy, hx, cy, u, c);
+    s.line(cx, cy, cx, vy, u, c);
+  }
+}
 
-  if (l.totalDamage >= 1'000'000.0f)
-    stats.totalDamage = fmt::format("{:.2f}M", l.totalDamage / 1'000'000.0f);
-  else if (l.totalDamage >= 10'000.0f)
-    stats.totalDamage = fmt::format("{:.1f}k", l.totalDamage / 1'000.0f);
-  else
-    stats.totalDamage = fmt::format("{}", int(std::round(l.totalDamage)));
+} // namespace
+
+RunStats computeRunStats(const Level &l) {
+  RunStats stats;
+  const RankInfo &rank = rankOf(l);
+  stats.rank = rank.grade;
+  stats.rankColor = rank.color;
+  stats.distance = formatDistance(l.distanceRan / 16.0f);
+  stats.totalDamage = formatDamage(l.totalDamage);
 
   const Hero *h = l.player ? l.player->hero : nullptr;
   stats.className = h ? h->name : "Adventurer";
@@ -119,15 +133,7 @@ float renderEndStats(Screen &s, const Level &l, float y, float alpha) {
   s.rect(bx, by, badgeW, badgeH, col::panel.alpha(0.92f * alpha));
   s.frame(bx, by, badgeW, badgeH, 2 * u, stats.rankColor.alpha(0.9f * alpha));
 
-  float tick = 6 * u;
-  s.line(bx, by, bx + tick, by, u, col::white.alpha(alpha));
-  s.line(bx, by, bx, by + tick, u, col::white.alpha(alpha));
-  s.line(bx + badgeW, by, bx + badgeW - tick, by, u, col::white.alpha(alpha));
-  s.line(bx + badgeW, by, bx + badgeW, by + tick, u, col::white.alpha(alpha));
-  s.line(bx, by + badgeH, bx + tick, by + badgeH, u, col::white.alpha(alpha));
-  s.line(bx, by + badgeH, bx, by + badgeH - tick, u, col::white.alpha(alpha));
-  s.line(bx + badgeW, by + badgeH, bx + badgeW - tick, by + badgeH, u, col::white.alpha(alpha));
-  s.line(bx + badgeW, by + badgeH, bx + badgeW, by + badgeH - tick, u, col::white.alpha(alpha));
+  corners(s, bx, by, badgeW, badgeH, 6 * u, u, col::white.alpha(alpha));
 
   s.text("RANK", bx + 16 * u, by + (badgeH - 16 * small) * 0.5f, small, col::muted.alpha(alpha));
   s.textCenter(stats.rank, bx + badgeW - 38 * u, by + (badgeH - 16 * 1.8f * u) * 0.5f, 1.8f * u, stats.rankColor.alpha(alpha));
@@ -140,39 +146,22 @@ float renderEndStats(Screen &s, const Level &l, float y, float alpha) {
   gui::Panel({cx, cy, cardW, cardH}, col::panel.alpha(0.90f * alpha),
              col::muted.alpha(0.35f * alpha), u).render(s);
 
-  float row1Y = cy + 4.5f * u;
-  float col1X = cx + 10 * u;
-  float col2X = cx + cardW * 0.35f;
-  float col3X = cx + cardW * 0.70f;
-
-  s.text("CLASS", col1X, row1Y, small, col::muted.alpha(0.75f * alpha));
-  s.text(stats.className, col1X + 44 * u, row1Y, small, stats.classColor.alpha(alpha));
-
-  s.text("DIFF", col2X, row1Y, small, col::muted.alpha(0.75f * alpha));
-  s.text(stats.difficulty, col2X + 36 * u, row1Y, small, stats.diffColor.alpha(alpha));
-
-  s.text("RAN", col3X, row1Y, small, col::muted.alpha(0.75f * alpha));
-  s.text(stats.distance, col3X + 30 * u, row1Y, small, col::white.alpha(alpha));
-
-  s.line(cx + 8 * u, cy + 23 * u, cx + cardW - 8 * u, cy + 23 * u, 1, col::muted.alpha(0.2f * alpha));
-
-  float row2Y = cy + 26.5f * u;
-  float c1 = cx + 10 * u;
-  float c2 = cx + cardW * 0.28f;
-  float c3 = cx + cardW * 0.54f;
-  float c4 = cx + cardW * 0.73f;
-
-  s.text("DMG", c1, row2Y, small, col::muted.alpha(0.75f * alpha));
-  s.text(stats.totalDamage, c1 + 32 * u, row2Y, small, col::white.alpha(alpha));
-
-  s.text("FOES", c2, row2Y, small, col::muted.alpha(0.75f * alpha));
-  s.text(std::to_string(stats.kills), c2 + 38 * u, row2Y, small, col::white.alpha(alpha));
-
-  s.text("LIT", c3, row2Y, small, col::muted.alpha(0.75f * alpha));
-  s.text(std::to_string(stats.shrines), c3 + 28 * u, row2Y, small, col::gold.alpha(alpha));
-
-  s.text("TIME", c4, row2Y, small, col::muted.alpha(0.75f * alpha));
-  s.text(stats.timeText, c4 + 34 * u, row2Y, small, (stats.isRecord ? col::gold : col::white).alpha(alpha));
+  auto field = [&](const char *label, const std::string &value, float x, float y,
+                   float gap, Color c) {
+    s.text(label, x, y, small, col::muted.alpha(0.75f * alpha));
+    s.text(value, x + gap * u, y, small, c.alpha(alpha));
+  };
+  float top = cy + 4.5f * u, bottom = cy + 26.5f * u;
+  field("CLASS", stats.className, cx + 10 * u, top, 44, stats.classColor);
+  field("DIFF", stats.difficulty, cx + cardW * 0.35f, top, 36, stats.diffColor);
+  field("RAN", stats.distance, cx + cardW * 0.70f, top, 30, col::white);
+  s.line(cx + 8 * u, cy + 23 * u, cx + cardW - 8 * u, cy + 23 * u, 1,
+         col::muted.alpha(0.2f * alpha));
+  field("DMG", stats.totalDamage, cx + 10 * u, bottom, 32, col::white);
+  field("FOES", std::to_string(stats.kills), cx + cardW * 0.28f, bottom, 38, col::white);
+  field("LIT", std::to_string(stats.shrines), cx + cardW * 0.54f, bottom, 28, col::gold);
+  field("TIME", stats.timeText, cx + cardW * 0.73f, bottom, 34,
+        stats.isRecord ? col::gold : col::white);
 
   return cy + cardH;
 }

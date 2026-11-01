@@ -122,8 +122,6 @@ public:
   void tick();
   void render(Screen &s);
   void renderLight(Screen &s);
-  void renderWorldDebug(Screen &s, int xView, int yView, float xMouse,
-                        float yMouse);
   void collide(double &x, double &y, float radius) const;
   bool blocks(double x, double y) const;
   void retire(entt::entity id) {
