@@ -21,6 +21,7 @@ from make_grounds import add_grounds
 from make_rims import add_rims
 from make_landmarks import add_landmarks
 from make_cliffs import add_cliffs
+from make_bestiary import add_bestiary
 from make_arsenal import add_arsenal
 from make_sprites import add_sprites
 from make_winter import add_winter_band
@@ -43,6 +44,7 @@ PIPELINE = (
     ("arsenal", (432, 1380), add_arsenal),
     ("landmarks", (432, 1380), add_landmarks),
     ("cliffs", (432, 1380), add_cliffs),
+    ("bestiary", (432, 1488), add_bestiary),
 )
 
 

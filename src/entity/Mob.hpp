@@ -29,10 +29,11 @@ public:
 
   virtual bool hostile() const { return false; }
   virtual void split() {}
-  virtual float power() const { return might; }
+  virtual float power() const { return might * status.outgoing(); }
   virtual void aim(double &ax, double &ay) const { ax = xAim, ay = yAim; }
   virtual void strike(float, double, double, float, Upgrade * = nullptr) {}
   virtual class Player *asPlayer() { return nullptr; }
+  virtual bool bossLike() const { return false; }
   virtual void mend(float amount) { hp = std::min(maxHp, hp + amount); }
   virtual void shield(float) {}
   virtual Sprite body() const { return {}; }

@@ -9,6 +9,9 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - `BiomeViewer`, a separate tool that shows the whole generated world for any seed, with refresh, zoom, structure sites, copy to clipboard and PNG export.
+- Three new statuses, Bleed (stacks, hurts more while moving), Weaken (less damage dealt) and Fear (foes flee), with HUD and body tints, and five new weapon payloads: bleed, weaken, fear, shatter (bonus against chilled foes) and execute (finishes weak non-boss foes).
+- Seven new Greenwood foes with their own sprites: thornlings that leave slowing brambles, charging wild boars, goblin archers that loose volleys, goblin shamans that heal goblins and weaken you, saplings that grow into treants, moth wisps that circle, dive and dim your light, and cutthroats that strike harder from behind. They roam the Meadows, Greenwood, Heath, Autumn Woods and Blossom Grove.
+- The groundwork of a Diablo-style item system: item bases from every weapon plus off-hands, armour and charms; 30 affix families in five tiers; seeded magic, rare and night-touched rolls with magic find; treasure classes per source; item save lines; and `--loot-sim` to check drop rates. Not yet visible in play.
 
 ### Changed
 

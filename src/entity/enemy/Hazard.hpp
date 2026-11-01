@@ -14,6 +14,14 @@ public:
   void renderLight(Screen &s) override;
 };
 
+class Bramble : public Particle {
+public:
+  explicit Bramble(double x, double y) : Particle(x, y, 3) {}
+  int layer() const override { return 0; }
+  void tick() override;
+  void render(Screen &s) override;
+};
+
 class FrostPatch : public Particle {
 public:
   bool hostile;

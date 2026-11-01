@@ -21,8 +21,12 @@ void Mob::drawBody(Screen &s, int px, int py, Sprite body, bool floats, float mo
     s.color({tint.r * 0.65f, tint.g, tint.b * 0.6f, tint.a});
   else if (status.power(StatusKind::Chill) > 0)
     s.color({tint.r * 0.65f, tint.g * 0.85f, tint.b, tint.a});
+  else if (status.power(StatusKind::Bleed) > 0)
+    s.color({tint.r, tint.g * 0.55f, tint.b * 0.55f, tint.a});
   else if (status.power(StatusKind::Marked) > 0)
     s.color({tint.r, tint.g * 0.65f, tint.b, tint.a});
+  else if (status.power(StatusKind::Weaken) > 0)
+    s.color({tint.r * 0.75f, tint.g * 0.75f, tint.b * 0.75f, tint.a});
   s.flash(body, px, py, 8, 16, sx * scale * facing, sy * scale,
           rot, flashAmount, flashColor);
   s.color(col::white);

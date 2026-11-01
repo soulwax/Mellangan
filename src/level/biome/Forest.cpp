@@ -11,7 +11,8 @@ Forest::Forest()
              30,
              50,
              {5, 0, 10, 45, 40},
-             foe(EnemyKind::Bat) | foe(EnemyKind::Spider),
+             foe(EnemyKind::Bat) | foe(EnemyKind::Spider) | foe(EnemyKind::Thornling) |
+                 foe(EnemyKind::Sapling) | foe(EnemyKind::Cutthroat),
              {{&f::oak, 30, 330},
               {&f::pine, 25, 300},
               {&f::mossPine, 10, 120},

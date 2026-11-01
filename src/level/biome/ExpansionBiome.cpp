@@ -15,7 +15,7 @@ const Color COLORS[] = {{0.8f,0.8f,0.7f,1},{0.3f,0.65f,0.6f,1},
     {0.3f,0.25f,0.4f,1},{0.4f,0.45f,0.85f,1}};
 
 using K=EnemyKind;
-const uint32_t FOES[]={
+const FoeMask FOES[]={
     foe(K::GlassMantis)|foe(K::DustVulture),
     foe(K::MireLeech)|foe(K::BogLantern),
     foe(K::FrostWisp)|foe(K::Ghost),

@@ -11,7 +11,8 @@ Heath::Heath()
              35,
              45,
              {10, 0, 15, 30, 45, 15, 20, 5},
-             foe(EnemyKind::Rat) | foe(EnemyKind::Scorpion),
+             foe(EnemyKind::Rat) | foe(EnemyKind::Scorpion) | foe(EnemyKind::GoblinArcher) |
+                 foe(EnemyKind::GoblinShaman) | foe(EnemyKind::Thornling),
              {{&f::dryBush, 10, 90},
               {&f::bush, 6, 50},
               {&f::deadPine, 2, 25},

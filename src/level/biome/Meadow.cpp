@@ -12,7 +12,8 @@ Meadow::Meadow()
            22,
            55,
            {50, 10, 15, 15, 10, 5, 8},
-           foe(EnemyKind::Rat) | foe(EnemyKind::Slime) | foe(EnemyKind::Knight),
+           foe(EnemyKind::Rat) | foe(EnemyKind::Slime) | foe(EnemyKind::Knight) |
+               foe(EnemyKind::Boar) | foe(EnemyKind::Thornling),
            {{&f::oak, 4, 110},
             {&f::bush, 4, 60},
             {&f::pine, 2, 50},

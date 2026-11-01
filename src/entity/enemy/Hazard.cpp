@@ -71,3 +71,18 @@ void FrostPatch::render(Screen &s) {
   s.rect(x - 4, y - 2, 8, 3, FROST.alpha(a));
   s.rect(x - 2, y - 3, 4, 5, FROST.alpha(a * 0.8f));
 }
+
+void Bramble::tick() {
+  Particle::tick();
+  Player &p = *level->player;
+  double xd = p.x - x, yd = p.y - y;
+  if (xd * xd + yd * yd < 11 * 11)
+    p.afflict(StatusKind::Chill, 0.4f, 0.35f), p.afflict(StatusKind::Bleed, 1, 0.5f);
+}
+
+void Bramble::render(Screen &s) {
+  float a = std::min(1.0f, frac() * 2);
+  s.color(Color{0.55f, 0.7f, 0.45f, a});
+  s.sprite(atlas::kit(atlas::kt::Thornbush), x, y + 2, 8, 16, 0.8f, 0.6f);
+  s.color(col::white);
+}

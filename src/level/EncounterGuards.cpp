@@ -82,7 +82,7 @@ int spawnEncounterGuards(Level &level, BiomeId biome, const Structure &site,
     return 0;
   EnemyKind local[int(EnemyKind::Count)];
   int localCount = 0;
-  uint32_t foes = BIOMES[biome]->foes;
+  FoeMask foes = BIOMES[biome]->foes;
   for (int k = 0; k < int(EnemyKind::Count); k++) {
     EnemyKind enemy = EnemyKind(k);
     if ((foes & foe(enemy)) && enemy != EnemyKind::Cyclops &&

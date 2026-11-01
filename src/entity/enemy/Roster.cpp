@@ -16,6 +16,7 @@
 #include "entity/enemy/Renegade.hpp"
 #include "entity/enemy/Thief.hpp"
 #include "entity/enemy/ExpansionEnemy.hpp"
+#include "entity/enemy/WildFoe.hpp"
 #include "entity/enemy/Wolf.hpp"
 #include "entity/enemy/ai/Plans.hpp"
 #include "entity/enemy/ai/Melee.hpp"
@@ -38,6 +39,7 @@
 namespace {
 namespace t = atlas::t;
 namespace fr = atlas::fr;
+namespace bs = atlas::bs;
 
 const EnemyType TYPES[] = {
     {t::Bat, 5, 50, 5, 5, 1, 1, 1, {0.85f, 0.55f, 0.35f, 1}, true, 0},
@@ -97,7 +99,17 @@ const EnemyType TYPES[] = {
     {87, 110, 40, 16, 7, 1.15f, 12, 0.5f, {0.65f, 0.08f, 0.1f, 1}, false, 180},
     {88, 70, 58, 12, 6, 1.05f, 10, 0.7f, {0.65f, 0.08f, 0.1f, 1}, false, 210},
     {98, 130, 30, 16, 7, 1.1f, 12, 0.4f, {0.65f, 0.08f, 0.1f, 1}, false, 240},
+    {bs::Thornling, 12, 58, 5, 5, 1, 1, 1, {0.35f, 0.6f, 0.25f, 1}, false, 20, atlas::beast},
+    {bs::Boar, 110, 32, 14, 8, 1.2f, 8, 0.4f, {0.7f, 0.15f, 0.12f, 1}, false, 60, atlas::beast},
+    {bs::GoblinArcher, 28, 46, 6, 6, 1, 3, 1, {0.5f, 0.75f, 0.3f, 1}, false, 90, atlas::beast},
+    {bs::GoblinShaman, 34, 40, 6, 6, 1, 5, 1, {0.5f, 0.75f, 0.3f, 1}, false, 120, atlas::beast},
+    {bs::Sapling, 40, 30, 8, 6, 1, 4, 0.8f, {0.55f, 0.4f, 0.25f, 1}, false, 80, atlas::beast},
+    {bs::Treant, 170, 22, 18, 10, 1.4f, 12, 0.25f, {0.55f, 0.4f, 0.25f, 1}, false, 1e9f,
+     atlas::beast},
+    {bs::MothWisp, 14, 55, 5, 5, 1, 2, 1, {0.85f, 0.8f, 1, 1}, true, 100, atlas::beast},
+    {bs::Cutthroat, 36, 60, 10, 6, 1, 5, 0.9f, {0.7f, 0.1f, 0.12f, 1}, false, 140, atlas::beast},
 };
+static_assert(std::size(TYPES) == int(EnemyKind::Count));
 } // namespace
 
 const EnemyType &Enemy::typeOf(EnemyKind kind) { return TYPES[int(kind)]; }
@@ -106,7 +118,9 @@ std::unique_ptr<Enemy> Enemy::create(EnemyKind kind, float hpMul,
                                      float damageMul) {
   const EnemyType &t = typeOf(kind);
   std::unique_ptr<Enemy> e;
-  if (kind >= EnemyKind::Outlaw)
+  if (kind >= WildFoe::FIRST && kind <= WildFoe::LAST)
+    e = std::make_unique<WildFoe>(t, hpMul, damageMul, int(kind) - int(WildFoe::FIRST));
+  else if (kind >= EnemyKind::Outlaw && kind <= EnemyKind::Deserter)
     e = std::make_unique<Renegade>(t, hpMul, damageMul,
                                    int(kind) - int(EnemyKind::Outlaw));
   else if (kind == EnemyKind::Mimic)
@@ -145,8 +159,11 @@ const char *Enemy::name() const {
       "a treasure thief", "a mire leech", "a bog lantern", "a glass mantis",
       "a dust vulture", "a frost wisp", "an iceback", "a sporeling",
       "a mycelial brute", "an ember imp", "a cinder golem", "a mimic",
-      "an outlaw", "a berserker", "a pit fighter", "a deserter"
+      "an outlaw", "a berserker", "a pit fighter", "a deserter",
+      "a thornling", "a wild boar", "a goblin archer", "a goblin shaman",
+      "a sapling", "a treant", "a moth wisp", "a cutthroat"
   };
+  static_assert(std::size(NAMES) == int(EnemyKind::Count));
   return NAMES[&type - TYPES];
 }
 

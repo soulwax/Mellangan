@@ -16,6 +16,7 @@
 Player::Player() {
   upgrades = Upgrade::all();
   hp = maxHp = 100;
+  status.immune |= 1u << int(StatusKind::Fear);
 }
 
 Player::~Player() = default;
@@ -44,6 +45,8 @@ void Player::tick() {
   if (dead())
     return;
 
+  status.moving = xa * xa + ya * ya > 100;
+  dim = std::max(0.0f, dim - DT);
   status.tick(DT, [&](float damage, Upgrade *) {
     felledBy = "a lingering affliction";
     hurt(damage, true);
@@ -118,7 +121,8 @@ void Player::renderLight(Screen &s) {
   if (dead())
     return s.glow(xp, yb, 200, {0.25f, 0.05f, 0.05f, 1});
   float f = flicker(level->time, 0),
-        reach = 1 + 0.08f * std::min(level->night.lit, 8);
+        reach = (1 + 0.08f * std::min(level->night.lit, 8)) *
+                (1 - 0.45f * std::min(1.0f, dim));
   int xt = xp + int(facing * 6), yt = yp - 13;
   Color warm{0.34f * f, 0.27f * f * f, 0.17f * f * f, 1},
       core{0.22f * f, 0.16f * f * f, 0.08f * f, 1};

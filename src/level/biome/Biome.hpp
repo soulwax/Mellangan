@@ -45,7 +45,9 @@ struct FeatureSpawn {
   int base, dense;
 };
 
-constexpr uint32_t foe(EnemyKind k) { return 1u << int(k); }
+typedef uint64_t FoeMask;
+static_assert(int(EnemyKind::Count) <= 64);
+constexpr FoeMask foe(EnemyKind k) { return FoeMask(1) << int(k); }
 
 constexpr int MAX_SPAWNS = 20;
 struct BiomeData {
@@ -55,7 +57,7 @@ struct BiomeData {
   int flowers, tufts;
   int structureChance;
   int structureWeights[int(StructureKind::Count)];
-  uint32_t foes;
+  FoeMask foes;
   FeatureSpawn spawns[MAX_SPAWNS];
   const Feature *fringe;
 };

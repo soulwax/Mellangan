@@ -11,7 +11,8 @@ Autumn::Autumn()
              28,
              50,
              {20, 0, 10, 35, 35, 5},
-             foe(EnemyKind::Slime) | foe(EnemyKind::Demon),
+             foe(EnemyKind::Slime) | foe(EnemyKind::Demon) | foe(EnemyKind::Boar) |
+                 foe(EnemyKind::Cutthroat) | foe(EnemyKind::GoblinArcher),
              {{&f::autumnOak, 25, 300},
               {&f::autumnPine, 20, 260},
               {&f::bush, 6, 40},

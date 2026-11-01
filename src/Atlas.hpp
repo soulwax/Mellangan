@@ -198,6 +198,13 @@ constexpr Sprite stairs(int material, int part) {
   int i = 45 + material * 3 + part;
   return {float((i % 24) * 18 + 1), float(1326 + (i / 24) * 18 + 1), 16, 16};
 }
+constexpr Sprite beast(int index) {
+  return {float((index % 24) * 18 + 1), float(1380 + (index / 24) * 18 + 1), 16, 16};
+}
+namespace bs {
+constexpr int Thornling = 0, Boar = 1, GoblinArcher = 2, GoblinShaman = 3, Sapling = 4,
+              Treant = 5, MothWisp = 6, Cutthroat = 7;
+} // namespace bs
 constexpr Sprite biomeGround(int set, int cell) {
   return {float(((set % 2) * 12 + cell) * 18 + 1),
           float(696 + (set / 2) * 18 + 1), 16, 16};

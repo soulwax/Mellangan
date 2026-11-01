@@ -4,13 +4,16 @@
 #include "gfx/Screen.hpp"
 
 inline Color statusColor(StatusKind kind) {
-  constexpr Color colors[] = {{1, 0.42f, 0.12f, 1}, {0.45f, 0.85f, 1, 1},
-                              {0.4f, 1, 0.3f, 1}, {1, 0.35f, 0.8f, 1}};
+  constexpr Color colors[] = {{1, 0.42f, 0.12f, 1},  {0.45f, 0.85f, 1, 1},
+                              {0.4f, 1, 0.3f, 1},    {1, 0.35f, 0.8f, 1},
+                              {0.85f, 0.1f, 0.15f, 1}, {0.6f, 0.55f, 0.5f, 1},
+                              {0.7f, 0.5f, 1, 1}};
   return colors[int(kind)];
 }
 
 inline const char *statusName(StatusKind kind) {
-  constexpr const char *names[] = {"BURN", "CHILL", "POISON", "MARKED"};
+  constexpr const char *names[] = {"BURN",  "CHILL",  "POISON", "MARKED",
+                                   "BLEED", "WEAKEN", "FEAR"};
   return names[int(kind)];
 }
 
@@ -35,10 +38,20 @@ inline void statusIcons(Screen &s, const Status &status, double x, double y) {
       s.rect(px + 1, y, 2, 1, c);
       s.rect(px, y + 1, 4, 2, c);
       s.rect(px + 1, y + 3, 2, 1, c);
-    } else {
+    } else if (kind == StatusKind::Marked) {
       s.rect(px, y, 1, 4, c);
       s.rect(px + 3, y, 1, 4, c);
       s.rect(px + 1, y + 1, 2, 2, c);
+    } else if (kind == StatusKind::Bleed) {
+      s.rect(px + 1, y, 2, 2, c);
+      s.rect(px, y + 2, 4, 2, c);
+    } else if (kind == StatusKind::Weaken) {
+      s.rect(px, y, 4, 1, c);
+      s.rect(px + 1, y + 1, 2, 3, c);
+    } else {
+      s.rect(px, y, 4, 1, c);
+      s.rect(px, y + 3, 4, 1, c);
+      s.rect(px + 1, y + 1, 1, 2, c);
     }
     px += 6;
   }

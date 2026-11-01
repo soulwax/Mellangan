@@ -12,7 +12,8 @@ Blossom::Blossom()
            22,
            55,
            {40, 0, 30, 10, 15, 5},
-           foe(EnemyKind::Bat) | foe(EnemyKind::Slime) | foe(EnemyKind::Spider),
+           foe(EnemyKind::Bat) | foe(EnemyKind::Slime) | foe(EnemyKind::Spider) |
+               foe(EnemyKind::MothWisp) | foe(EnemyKind::Sapling),
            {{&f::pinkOak, 12, 200},
             {&f::whiteOak, 7, 110},
             {&f::lilac, 6, 60},

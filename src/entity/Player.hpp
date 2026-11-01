@@ -12,6 +12,7 @@ class Hero;
 
 class Player : public Mob {
 public:
+  float dim = 0;
   int lvl = 1, pendingLevels = 0, pendingTreasures = 0, revives = 0;
   const char *felledBy = nullptr;
   float exp = 0, expNext = 5, xpBase = 6, xpGrowth = 1.08f;

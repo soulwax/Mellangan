@@ -61,6 +61,9 @@ int runTests() {
   std::cout << "[TEST] Pool multithreaded concurrency: PASS" << std::endl;
   testStatuses();
   testStatusDamage();
+  testNewStatuses();
+  testNewPayloads();
+  testItems();
   testExpansionEnemies();
   testExpansionContent();
   testArsenal();
@@ -83,6 +86,7 @@ int runTests() {
   testSpawnShore();
   testHills();
   testNewFoes();
+  testGreenwoodFoes();
   std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"
             << std::endl;

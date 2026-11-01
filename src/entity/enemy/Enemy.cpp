@@ -124,14 +124,14 @@ void Enemy::act() {
   dd = std::sqrt(xd * xd + yd * yd);
   if (p.dead() || dd < 1e-5)
     return;
-  level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul)
+  level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul * status.outgoing())
       ->by = name();
   if (boss) {
     double turn = std::atan2(yd, xd) + PI / 10;
     for (int i = 0; i < 10; i++) {
       double a = turn + TAU * i / 10;
       level->add<Orb>(x, bodyY(), std::cos(a) * 45, std::sin(a) * 45,
-                      8 * damageMul)->by = name();
+                      8 * damageMul * status.outgoing())->by = name();
     }
     level->add<Shockwave>(x, bodyY(), 6, 40, 0.4f, Color{0.75f, 0.35f, 1, 0.9f})
         ->spokes = 10;
@@ -151,6 +151,10 @@ void Enemy::move() {
     spdMul = 1.35f;
   }
   spdMul *= status.movement();
+  if (status.afraid() && !boss) {
+    double fx = x - p.x, fy = y - p.y, fd = std::max(1.0, std::sqrt(fx * fx + fy * fy));
+    xWant = fx / fd * type.speed, yWant = fy / fd * type.speed;
+  }
   spdMul *= traits.speed();
   if (!type.floats && level->surfaceAt(x, y) == 1)
     spdMul *= is(EnemyKind::MireLeech) ? 1.2f : 0.5f;
@@ -214,6 +218,7 @@ void Enemy::settle() {
 }
 
 void Enemy::tick() {
+  status.moving = xWant * xWant + yWant * yWant > 25;
   status.tick(DT, [&](float damage, Upgrade *src) {
     hurt(damage, 0, 0, 0, src, true);
     return !removed;
@@ -242,7 +247,7 @@ void Enemy::tick() {
     p.felledBy = name();
     bool lands = p.invuln <= 0 && !p.god;
     float before = p.hp;
-    p.hurt(type.damage * damageMul);
+    p.hurt(type.damage * damageMul * status.outgoing() * contactBonus(p));
     if (lands)
       traits.landed(*this, std::max(before - p.hp, maxHp * 0.1f));
   }

@@ -39,10 +39,19 @@ enum class EnemyKind {
   Berserker,
   PitFighter,
   Deserter,
+  Thornling,
+  Boar,
+  GoblinArcher,
+  GoblinShaman,
+  Sapling,
+  Treant,
+  MothWisp,
+  Cutthroat,
   Count
 };
 
 class Enemy;
+class Player;
 struct BossDef;
 
 struct Cast {
@@ -99,7 +108,9 @@ public:
   void makeElite(float health = 4);
   bool hostile() const override { return true; }
   void split() override;
-  float power() const override { return damageMul * might; }
+  bool bossLike() const override { return boss || def; }
+  virtual float contactBonus(const Player &) const { return 1; }
+  float power() const override { return damageMul * might * status.outgoing(); }
   void aim(double &ax, double &ay) const override;
   void strike(float damage, double xd, double yd, float force,
               Upgrade *src = nullptr) override {

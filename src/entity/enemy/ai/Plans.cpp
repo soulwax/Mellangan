@@ -2,6 +2,7 @@
 
 #include "entity/enemy/ai/Approach.hpp"
 #include "entity/enemy/ai/Burrow.hpp"
+#include "entity/enemy/ai/Circle.hpp"
 #include "entity/enemy/ai/Escape.hpp"
 #include "entity/enemy/ai/Falter.hpp"
 #include "entity/enemy/ai/Flank.hpp"
@@ -11,6 +12,7 @@
 #include "entity/enemy/ai/LookOut.hpp"
 #include "entity/enemy/ai/Lurk.hpp"
 #include "entity/enemy/ai/Melee.hpp"
+#include "entity/enemy/ai/Mend.hpp"
 #include "entity/enemy/ai/Raise.hpp"
 #include "entity/enemy/ai/Ranged.hpp"
 #include "entity/enemy/ai/Stalk.hpp"
@@ -46,6 +48,14 @@ const Raise RAISE{0.85f, 5.5f};
 const Escape ESCAPE{10.0f};
 const Lurk LURK{46};
 const Approach SHOOTING_RANGE{170, {1, 0, 0, 30, 3, false}};
+const Approach BOW_RANGE{130, {1, 0, 0, 26, 3, false}};
+const Approach CHARGE_RANGE{120, {}};
+const Approach HOVER{80, {1, 0, 0, 34, 5, false}};
+const Melee GORE{0.6f, 0.7f, 4.5, 2.5f};
+const Melee DIVE{0.2f, 0.35f, 3.2, 1.5f};
+const Melee STAB{0.2f, 0.15f, 3.4, 1.2f};
+const Circle ORBIT{60, 2.5f};
+const Mend MEND{150, 4};
 
 const Plan PLANS[] = {
     {{&FLUTTER}, {}},
@@ -79,7 +89,16 @@ const Plan PLANS[] = {
     {{&MARCH, &CLEAVE}, {&FALTER}},
     {{&FLANK, &BITE}, {&FALTER}},
     {{&GUARD, &MARCH, &CLEAVE}, {&FALTER}},
+    {{&CLOSE, &NIP}, {&FALTER}},
+    {{&CHARGE_RANGE, &GORE}, {&FALTER}},
+    {{&BOW_RANGE}, {&FALTER}},
+    {{&MEND, &CASTING_RANGE}, {&FALTER}},
+    {{&CLOSE, &BITE}, {}},
+    {{&LUMBER, &SLAM}, {}},
+    {{&HOVER, &ORBIT, &DIVE}, {}},
+    {{&FLANK, &STAB}, {&FALTER}},
 };
+static_assert(sizeof(PLANS) / sizeof(PLANS[0]) == int(EnemyKind::Count));
 
 } // namespace
 

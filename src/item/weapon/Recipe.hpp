@@ -30,7 +30,8 @@ enum class Form {
 namespace pay {
 constexpr unsigned Burn = 1, Chill = 2, Poison = 4, Mark = 8, Pull = 16,
                    Pierce = 32, Explode = 64, Split = 128, Leech = 256,
-                   Chain = 512, Stagger = 1024;
+                   Chain = 512, Stagger = 1024, Bleed = 2048, Weaken = 4096,
+                   Fear = 8192, Shatter = 16384, Execute = 32768;
 }
 
 struct Recipe {

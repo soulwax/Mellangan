@@ -7,7 +7,7 @@
 
 class Upgrade;
 
-enum class StatusKind { Burn, Chill, Poison, Marked, Count };
+enum class StatusKind { Burn, Chill, Poison, Marked, Bleed, Weaken, Fear, Count };
 
 struct StatusEffect {
   float time = 0, power = 0, elapsed = 0;
@@ -18,6 +18,7 @@ class Status {
 public:
   std::array<StatusEffect, int(StatusKind::Count)> effects{};
   uint32_t immune = 0;
+  bool moving = false;
 
   bool apply(StatusKind kind, float duration, float power,
              Upgrade *source = nullptr) {
@@ -27,9 +28,11 @@ public:
         power <= 0)
       return false;
     auto &e = effects[i];
-    power = std::min(power, kind == StatusKind::Chill ? 0.65f :
-                            kind == StatusKind::Marked ? 1.0f : 1000.0f);
-    if (e.time <= 0 || power > e.power) {
+    power = std::min(power, cap(kind));
+    if (kind == StatusKind::Bleed && e.time > 0) {
+      e.power = std::min(cap(kind), e.power + power);
+      e.source = source;
+    } else if (e.time <= 0 || power > e.power) {
       e.power = power;
       e.source = source;
     }
@@ -42,8 +45,29 @@ public:
     return e.time > 0 ? e.power : 0;
   }
 
+  static float cap(StatusKind kind) {
+    switch (kind) {
+    case StatusKind::Chill:
+      return 0.65f;
+    case StatusKind::Marked:
+    case StatusKind::Fear:
+      return 1.0f;
+    case StatusKind::Weaken:
+      return 0.5f;
+    default:
+      return 1000.0f;
+    }
+  }
+
+  static bool ticks(int i) {
+    return i == int(StatusKind::Burn) || i == int(StatusKind::Poison) ||
+           i == int(StatusKind::Bleed);
+  }
+
   float movement() const { return 1 - power(StatusKind::Chill); }
   float incoming() const { return 1 + power(StatusKind::Marked); }
+  float outgoing() const { return 1 - power(StatusKind::Weaken); }
+  bool afraid() const { return power(StatusKind::Fear) > 0; }
   void clear() { effects = {}; }
 
   template <class F> void tick(float dt, F &&damage) {
@@ -53,17 +77,18 @@ public:
         continue;
       float step = std::min(dt, e.time);
       e.time = std::max(0.0f, e.time - dt);
-      if (i == int(StatusKind::Burn) || i == int(StatusKind::Poison)) {
+      if (ticks(i)) {
+        float k = i == int(StatusKind::Bleed) && moving ? 1.6f : 1.0f;
         e.elapsed += step;
         while (e.elapsed + 1e-6f >= 0.5f) {
           e.elapsed = std::max(0.0f, e.elapsed - 0.5f);
-          if (!damage(e.power * 0.5f, e.source)) {
+          if (!damage(e.power * 0.5f * k, e.source)) {
             clear();
             return;
           }
         }
         if (e.time <= 0 && e.elapsed > 1e-6f)
-          if (!damage(e.power * e.elapsed, e.source)) {
+          if (!damage(e.power * e.elapsed * k, e.source)) {
             clear();
             return;
           }

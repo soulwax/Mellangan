@@ -31,6 +31,8 @@ bool RecipeShot::hitBefore(entt::entity id) const {
 
 void RecipeShot::hit(Mob &e, double xd, double yd, float dmg, float knock) {
   unsigned p = r.payload;
+  if ((p & pay::Shatter) && e.status.power(StatusKind::Chill) > 0)
+    dmg *= 1.5f, e.status.effects[int(StatusKind::Chill)] = {};
   if (p & pay::Burn)
     e.afflict(StatusKind::Burn, 2.0f, dmg * 0.25f, source);
   if (p & pay::Chill)
@@ -41,7 +43,16 @@ void RecipeShot::hit(Mob &e, double xd, double yd, float dmg, float knock) {
     e.afflict(StatusKind::Marked, 2.5f, 0.15f, source);
   if (p & pay::Stagger)
     e.afflict(StatusKind::Chill, 0.5f, 0.65f, source), knock += 120;
+  if (p & pay::Bleed)
+    e.afflict(StatusKind::Bleed, 3.0f, dmg * 0.15f, source);
+  if (p & pay::Weaken)
+    e.afflict(StatusKind::Weaken, 3.0f, 0.25f, source);
+  if (p & pay::Fear)
+    e.afflict(StatusKind::Fear, 1.5f, 1, source);
   e.strike(dmg, xd, yd, knock, source);
+  if ((p & pay::Execute) && !e.dead() && !e.asPlayer() && !e.bossLike() &&
+      e.hp < e.maxHp * 0.08f)
+    e.strike(e.hp + 1, xd, yd, 0, source);
   if (p & pay::Leech)
     if (Mob *w = wielder(); w && !w->dead())
       w->hp = std::min(w->maxHp, w->hp + std::min(2.0f, dmg * 0.04f));

@@ -13,6 +13,7 @@
 #include "test/Views.hpp"
 #include "entity/Pool.h"
 #include "Version.hpp"
+#include "item/loot/Loot.hpp"
 #include "other/Ouroboros.hpp"
 
 static void initLogging(const std::string &base) {
@@ -143,6 +144,8 @@ int main(int argc, char **argv) {
       return runTests();
     else if (std::string_view(argv[i]) == "--biome-map" && i + 1 < argc)
       return mapBiomes(argv[i + 1]);
+    else if (std::string_view(argv[i]) == "--loot-sim" && i + 1 < argc)
+      return lootSim(std::atoi(argv[i + 1]), i + 2 < argc ? std::atoi(argv[i + 2]) : 20);
 
   int code = 0;
   {

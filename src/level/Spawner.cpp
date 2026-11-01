@@ -36,8 +36,8 @@ bool crownable(EnemyKind k) {
   return k < EnemyKind::Mimic && k != EnemyKind::Cyclops && k != EnemyKind::Thief &&
          k != EnemyKind::Skeleton && k != EnemyKind::Alpha;
 }
-uint32_t localFoes(BiomeId region) {
-  uint32_t foes = BIOMES[region]->foes;
+FoeMask localFoes(BiomeId region) {
+  FoeMask foes = BIOMES[region]->foes;
   if (region == BIOME_MIRE)
     foes |= foe(EnemyKind::MireLeech) | foe(EnemyKind::BogLantern);
   if (region == BIOME_DESERT || region == BIOME_BADLANDS)
@@ -66,7 +66,7 @@ EnemyKind Spawner::pick(const Roster &r, double x, double y) const {
   const Balance &b = level.game.balance;
   if (level.time >= 70 && rng.chance(0.015f))
     return EnemyKind::Thief;
-  uint32_t foes = localFoes(world::biomeUnder(x, y));
+  FoeMask foes = localFoes(world::biomeUnder(x, y));
   EnemyKind local[int(EnemyKind::Count)];
   int m = 0, n = int(r.common.size());
   for (EnemyKind k : r.pool)
@@ -120,7 +120,7 @@ void Spawner::renegades(float t) {
   const Omen &o = level.portent();
   nextBand += rng.range(70, 110);
   int renegades = 0;
-  level.each<Enemy>([&](Enemy &e) { renegades += e.kind() >= int(EnemyKind::Outlaw); });
+  level.each<Enemy>([&](Enemy &e) { renegades += e.kind() >= int(EnemyKind::Outlaw) && e.kind() <= int(EnemyKind::Deserter); });
   if (renegades >= 4)
     return;
   double x, y;
@@ -245,7 +245,7 @@ void Spawner::wave(int index, int count) {
     break;
   }
   case 5: {
-    uint32_t foes = BIOMES[world::biomeUnder(p.x, p.y)]->foes;
+    FoeMask foes = BIOMES[world::biomeUnder(p.x, p.y)]->foes;
     std::vector<EnemyKind> local;
     for (int k = 0; k < int(EnemyKind::Count); k++)
       if ((foes & foe(EnemyKind(k))) && k != int(EnemyKind::Cyclops) &&
@@ -267,7 +267,7 @@ void Spawner::wave(int index, int count) {
 }
 
 Enemy *Spawner::champion(double x, double y) {
-  uint32_t foes = BIOMES[world::biomeUnder(x, y)]->foes;
+  FoeMask foes = BIOMES[world::biomeUnder(x, y)]->foes;
   std::vector<EnemyKind> pick;
   for (int k = 0; k < int(EnemyKind::Count); k++)
     if ((foes & foe(EnemyKind(k))) && crownable(EnemyKind(k)))
