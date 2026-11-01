@@ -1,5 +1,7 @@
 #include "level/Structure.hpp"
 
+#include "level/Noise.h"
+
 namespace {
 
 namespace tt = atlas::tt;
@@ -97,7 +99,12 @@ bool campDirt(const Structure *s, int lx, int ly) {
   float dx = lx - (s->w - 1) * 0.5f, dy = ly - (s->h - 1) * 0.5f;
   return dx * dx + dy * dy < 2.7f * 2.7f;
 }
-bool ruinDirt(const Structure *, int, int) { return true; }
+bool ruinDirt(const Structure *s, int lx, int ly) {
+  float dx = (lx - (s->w - 1) * 0.5f) / (s->w * 0.5f),
+        dy = (ly - (s->h - 1) * 0.5f) / (s->h * 0.5f + 0.3f), d = dx * dx + dy * dy;
+  return d < 0.35f ||
+         d < 0.75f + 0.5f * noise_fbm((s->x + lx) * 0.35f, (s->y + ly) * 0.35f, 2, 1217);
+}
 
 bool shrineGround(const Structure *s, int lx, int ly, Sprite *out) {
   int row = ly == 0          ? 0

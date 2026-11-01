@@ -33,5 +33,14 @@ void quake(Mob &caster, float radius, float damage);
 void firering(Mob &caster, int count, float damage);
 void lodestar(Mob &caster, float radius);
 void snare(Mob &caster, float reach, float damage);
+void banner(Mob &caster, float radius, float seconds);
+void hunt(Mob &caster, int count, float damage);
+void barrage(Mob &caster, int count, float damage);
+void tempest(Mob &caster, float seconds, float damage);
+void drain(Mob &caster, float radius, float damage);
+void sanctuary(Mob &caster, float radius, float seconds);
+void flash(Mob &caster, int count, float damage);
+void overgrowth(Mob &caster, float radius, float seconds);
+void eclipse(Mob &caster, float radius, float seconds);
 
 } // namespace ability

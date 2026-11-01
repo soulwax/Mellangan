@@ -34,6 +34,9 @@ RAGE = ((120, 30, 24), (214, 70, 50), (255, 160, 120))
 LINEN = ((150, 140, 120), (220, 212, 190), (252, 248, 236))
 BONE = ((150, 120, 70), (214, 186, 130), (246, 232, 190))
 MAG = ((60, 100, 150), (110, 180, 230), (210, 240, 255))
+SEA = ((30, 90, 100), (70, 170, 180), (170, 236, 240))
+HOLY = ((170, 140, 70), (250, 226, 150), (255, 252, 230))
+BLOOD = ((100, 20, 36), (190, 50, 70), (250, 130, 140))
 
 
 def inverted(c, cx, top, bottom, half, pal):
@@ -337,12 +340,332 @@ def snare_net():
     return c.image()
 
 
+def hollow(c, cx, cy, rx, ry):
+    for x, y in list(c.px):
+        if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 < 1:
+            del c.px[(x, y)]
+
+
+def lionheart_cleave():
+    c = Canvas()
+    c.line(4, 12, 13, 3, STEEL[1], 2)
+    c.line(5, 12, 13, 4, STEEL[2])
+    c.line(3, 9, 7, 13, GOLD[1], 2)
+    c.line(2, 14, 5, 11, WOOD[1])
+    c.ellipse(2, 14, 1, 1, GOLD)
+    return c.image()
+
+
+def bastion_shields():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 5, IRON)
+    hollow(c, 8, 8, 4, 3)
+    for x, y in ((3, 4), (13, 12)):
+        c.ellipse(x, y, 2, 3, STEEL)
+        c.put(x, y, GOLD[1])
+    return c.image()
+
+
+def hawk_talon():
+    c = Canvas()
+    c.line(2, 4, 8, 11, WOOD[1], 2)
+    c.line(8, 11, 14, 4, WOOD[1], 2)
+    c.line(3, 4, 8, 10, LEAF[2])
+    c.line(8, 10, 13, 4, LEAF[1])
+    return c.image()
+
+
+def bear_trap():
+    c = Canvas()
+    c.ellipse(8, 12, 6, 2, IRON)
+    c.curve(2, 11, 12, 0, 7, STEEL[1], 2)
+    for x in (4, 6, 8, 10, 12):
+        c.line(x, 5, x, 8, STEEL[2])
+    c.line(3, 8, 13, 8, STEEL[1])
+    return c.image()
+
+
+def flask(c, pal):
+    c.rect(7, 2, 9, 5, LINEN)
+    c.ellipse(8, 10, 5, 5, pal)
+    c.put(6, 8, pal[2])
+
+
+def caustic_flask():
+    c = Canvas()
+    flask(c, TOXIC)
+    c.put(10, 12, TOXIC[2])
+    c.put(9, 13, TOXIC[0])
+    return c.image()
+
+
+def witchfire_phial():
+    c = Canvas()
+    flask(c, DUSK)
+    c.tri(8, 6, 12, 2, EMBER)
+    c.put(8, 9, EMBER[2])
+    return c.image()
+
+
+def ball_lightning():
+    c = Canvas()
+    c.ellipse(8, 8, 5, 5, MAG)
+    for x0, y0, x1, y1 in ((8, 1, 6, 5), (15, 8, 11, 7), (3, 13, 6, 11)):
+        c.line(x0, y0, x1, y1, RUNE[2])
+    c.put(7, 7, (240, 252, 255))
+    return c.image()
+
+
+def arc_lance():
+    c = Canvas()
+    c.line(1, 14, 14, 1, MAG[0], 3)
+    c.line(1, 14, 14, 1, RUNE[2])
+    for x, y in ((5, 6), (11, 10), (9, 3)):
+        c.line(x, y, 8, 7, RUNE[1])
+    return c.image()
+
+
+def soul_harvest():
+    c = Canvas()
+    c.curve(2, 4, 12, 9, 5, DUSK[1], 2)
+    c.curve(3, 4, 10, 8, 4, DUSK[2])
+    c.line(13, 2, 13, 14, WOOD[1])
+    c.ellipse(5, 12, 2, 2, BLOOD)
+    return c.image()
+
+
+def bone_wheel():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, BONE)
+    c.ellipse(8, 8, 2, 2, CORE)
+    for x, y in ((8, 2), (14, 8), (8, 14), (2, 8)):
+        c.line(8, 8, x, y, BONE[0])
+    return c.image()
+
+
+def lance_of_dawn():
+    c = Canvas()
+    c.ellipse(3, 13, 3, 2, HOLY)
+    c.line(4, 12, 14, 2, HOLY[1], 3)
+    c.line(4, 12, 14, 2, (255, 255, 240))
+    c.put(14, 2, HOLY[2])
+    return c.image()
+
+
+def seraph_wings():
+    c = Canvas()
+    c.curve(8, 9, -7, -6, 3, HOLY[1], 2)
+    c.curve(8, 9, 7, -6, 3, HOLY[1], 2)
+    c.curve(8, 11, -5, -2, 2, LINEN[2])
+    c.curve(8, 11, 5, -2, 2, LINEN[2])
+    c.ellipse(8, 9, 1, 2, HOLY)
+    return c.image()
+
+
+def crescent_cut():
+    c = Canvas()
+    c.curve(2, 3, 11, 9, 4, (250, 200, 225), 2)
+    c.curve(5, 2, 10, 11, 4, STEEL[2])
+    c.put(13, 13, RAGE[1])
+    return c.image()
+
+
+def flicker_darts():
+    c = Canvas()
+    for x, y in ((12, 2), (14, 7), (8, 1)):
+        c.line(2, 14, x, y, STEEL[1])
+        c.put(x, y, STEEL[2])
+    c.ellipse(3, 13, 2, 2, ((150, 80, 110), (230, 150, 190), (250, 210, 230)))
+    return c.image()
+
+
+def thornwhip():
+    c = Canvas()
+    c.curve(2, 14, 12, -11, -6, LEAF[1], 2)
+    for x, y in ((5, 9), (9, 5), (12, 3), (4, 12)):
+        c.put(x, y, LEAF[2])
+        c.put(x + 1, y - 1, BONE[1])
+    return c.image()
+
+
+def root_snare():
+    c = Canvas()
+    c.ellipse(8, 12, 5, 2, WOOD)
+    for x, d in ((4, -2), (8, 0), (12, 2)):
+        c.curve(x, 12, d, -9, 2, LEAF[1])
+    c.put(8, 3, LEAF[2])
+    return c.image()
+
+
+def clockwork_mine():
+    c = Canvas()
+    c.ellipse(8, 9, 6, 5, GOLD)
+    c.ellipse(8, 9, 2, 2, IRON)
+    for x, y in ((8, 3), (14, 9), (8, 15), (2, 9)):
+        c.put(x, y, GOLD[0])
+    c.put(8, 9, EMBER[2])
+    return c.image()
+
+
+def flash_grenade():
+    c = Canvas()
+    c.ellipse(7, 10, 4, 4, IRON)
+    c.line(9, 6, 11, 3, IRON[2])
+    for x, y in ((13, 1), (15, 4), (12, 5)):
+        c.line(11, 3, x, y, STAR[2])
+    return c.image()
+
+
+def prophecy_ray():
+    c = Canvas()
+    c.ellipse(4, 8, 3, 2, ARC)
+    c.put(4, 8, CORE[0])
+    c.line(7, 7, 15, 3, ARC[2])
+    c.line(7, 9, 15, 13, ARC[2])
+    c.line(7, 8, 15, 8, (250, 236, 255))
+    return c.image()
+
+
+def fate_wheel():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, VOID)
+    c.ellipse(8, 8, 4, 4, ARC)
+    for x, y in ((8, 2), (13, 11), (3, 11)):
+        c.put(x, y, RUNE[2])
+    c.line(8, 5, 8, 11, VOID[2])
+    return c.image()
+
+
+def chain_shot():
+    c = Canvas()
+    c.ellipse(4, 11, 3, 3, IRON)
+    c.ellipse(12, 5, 3, 3, IRON)
+    c.line(6, 9, 10, 7, STEEL[1])
+    c.put(3, 10, STEEL[2])
+    c.put(11, 4, STEEL[2])
+    return c.image()
+
+
+def riptide():
+    c = Canvas()
+    c.ellipse(8, 9, 6, 5, SEA)
+    c.curve(3, 9, 9, -4, 3, SEA[2])
+    c.curve(6, 10, 4, -2, 1, SEA[0])
+    c.put(8, 9, SEA[0])
+    return c.image()
+
+
+def war_banner():
+    c = Canvas()
+    c.line(4, 1, 4, 15, WOOD[1], 2)
+    c.rect(5, 2, 13, 8, RAGE)
+    c.tri(9, 8, 11, 4, RAGE)
+    c.ellipse(9, 5, 1, 1, GOLD)
+    return c.image()
+
+
+def hunters_mark():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, LEAF)
+    hollow(c, 8, 8, 4, 4)
+    c.line(8, 1, 8, 15, RAGE[1])
+    c.line(1, 8, 15, 8, RAGE[1])
+    c.put(8, 8, RAGE[2])
+    return c.image()
+
+
+def flask_barrage():
+    c = Canvas()
+    for x, y in ((5, 10), (10, 11), (8, 6)):
+        c.ellipse(x, y, 3, 3, EMBER)
+    c.rect(7, 1, 9, 3, LINEN)
+    c.put(4, 9, EMBER[2])
+    return c.image()
+
+
+def tempest():
+    c = Canvas()
+    c.ellipse(6, 4, 4, 3, IRON)
+    c.ellipse(11, 4, 4, 3, IRON)
+    c.line(9, 7, 6, 11, RUNE[2], 2)
+    c.line(6, 11, 10, 11, RUNE[2])
+    c.line(10, 11, 7, 15, RUNE[2])
+    return c.image()
+
+
+def blood_pact():
+    c = Canvas()
+    c.ellipse(8, 9, 5, 5, BLOOD)
+    c.tri(8, 1, 6, 3, BLOOD)
+    c.put(6, 8, BLOOD[2])
+    c.line(3, 15, 13, 15, DUSK[1])
+    return c.image()
+
+
+def hallowed_ground():
+    c = Canvas()
+    c.ellipse(8, 12, 7, 3, HOLY)
+    c.line(8, 1, 8, 10, HOLY[2], 2)
+    c.line(5, 4, 11, 4, HOLY[2], 2)
+    return c.image()
+
+
+def flash_step():
+    c = Canvas()
+    for x in (3, 7, 11):
+        c.line(x, 13, x + 3, 3, (240, 190, 220) if x < 11 else STEEL[2])
+    c.ellipse(13, 3, 1, 1, STEEL)
+    return c.image()
+
+
+def overgrowth():
+    c = Canvas()
+    c.ellipse(5, 10, 4, 4, LEAF)
+    c.ellipse(11, 9, 4, 5, LEAF)
+    c.ellipse(8, 5, 3, 3, TOXIC)
+    c.put(11, 7, TOXIC[2])
+    return c.image()
+
+
+def scrap_barrage():
+    c = Canvas()
+    c.ellipse(6, 10, 4, 4, IRON)
+    c.rect(10, 3, 13, 6, STEEL)
+    c.line(9, 7, 12, 10, GOLD[1])
+    c.put(6, 6, EMBER[2])
+    return c.image()
+
+
+def eclipse():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, GOLD)
+    c.ellipse(10, 7, 5, 5, VOID)
+    c.put(4, 4, ARC[2])
+    return c.image()
+
+
+def whirlpool():
+    c = Canvas()
+    c.ellipse(8, 8, 7, 6, SEA)
+    c.ellipse(8, 8, 4, 3, ((20, 60, 70), (40, 120, 130), (120, 210, 220)))
+    c.ellipse(8, 8, 1, 1, CORE)
+    c.curve(2, 6, 7, -3, 2, SEA[2])
+    return c.image()
+
+
 WEAPONS = (ember_lance, hoarfrost_fan, arcane_orbit, starfall, void_rift,
-           seeker_runes, flame_ring)
+           seeker_runes, flame_ring, lionheart_cleave, bastion_shields,
+           hawk_talon, bear_trap, caustic_flask, witchfire_phial,
+           ball_lightning, arc_lance, soul_harvest, bone_wheel, lance_of_dawn,
+           seraph_wings, crescent_cut, flicker_darts, thornwhip, root_snare,
+           clockwork_mine, flash_grenade, prophecy_ray, fate_wheel, chain_shot,
+           riptide)
 SKILLS = (time_warp, mana_surge, arcane_missiles, singularity, arrow_storm,
           shield_charge, miasma, chain_storm, death_grip, sacred_light, lunge,
           brambles, minefield, comet, powder_keg, war_cry, bandage, tumble,
-          whirlwind, ground_slam, fire_ring, lodestar, snare_net)
+          whirlwind, ground_slam, fire_ring, lodestar, snare_net, war_banner,
+          hunters_mark, flask_barrage, tempest, blood_pact, hallowed_ground,
+          flash_step, overgrowth, scrap_barrage, eclipse, whirlpool)
 
 
 def icons():

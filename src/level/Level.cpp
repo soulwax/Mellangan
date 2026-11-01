@@ -424,7 +424,10 @@ void Level::renderFloor(Screen &s) {
   auto wall = [&](int x, int y, float shade) {
     int level = world::heightAt(x, y);
     if (world::heightAt(x, y - 1) > level && !world::isRamp(x, y - 1))
-      s.rect(x * 16, y * 16, 16, 4, {0.02f, 0.02f, 0.06f, 0.3f});
+      s.rect(x * 16, y * 16, 16, 4, {0.02f, 0.02f, 0.06f, 0.3f}),
+          s.rect(x * 16, y * 16 + 4, 16, 6, {0.02f, 0.02f, 0.06f, 0.12f});
+    if (world::heightAt(x - 1, y) > level)
+      s.rect(x * 16, y * 16, 3, 16, {0.02f, 0.02f, 0.06f, 0.16f});
     if (level == 0)
       return;
     auto top = [&](int nx, int ny) { return world::heightAt(nx, ny) >= level; };
@@ -466,7 +469,7 @@ void Level::renderFloor(Screen &s) {
   };
   eachVisibleTile(s, [&](int x, int y) {
     float n = world::groundShade(x, y),
-          shade = (0.8f + 0.2f * n) * (0.94f + 0.1f * world::heightAt(x, y));
+          shade = (0.8f + 0.2f * n) * (0.94f + 0.08f * world::heightAt(x, y));
     int own = int(world::biomeAt(x, y));
     Structure st;
     bool wet = world::isWater(x, y);

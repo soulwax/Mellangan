@@ -23,6 +23,7 @@
 #include "item/talent/Harvest.hpp"
 #include "item/talent/Beacon.hpp"
 #include "item/talent/Riposte.hpp"
+#include "item/talent/ExpansionTalents.hpp"
 #include "item/weapon/FrostNova.hpp"
 #include "item/weapon/Radiance.hpp"
 #include "item/weapon/WhirlingEdge.hpp"
@@ -67,7 +68,36 @@ const char *const EVOLUTIONS[][3] = {
     {"Reaper's Scythe", "Ogre Hammer", "Harvest Moon"},
     {"Chakram", "Quicksilver", "Moon Chakram"},
     {"Glaive", "Iron Buckler", "Dragonslayer Glaive"},
-    {"Censer", "Heartroot", "Sanctified Thurible"}};
+    {"Censer", "Heartroot", "Sanctified Thurible"},
+    {"Ember Lance", "Arcane Mind", "Sunspear"},
+    {"Hoarfrost Fan", "Quicksilver", "Glacier Fan"},
+    {"Arcane Orbit", "Lucky Key", "Astral Orbit"},
+    {"Starfall", "Lodestone", "Starstorm"},
+    {"Void Rift", "Hourglass Tonic", "Abyssal Rift"},
+    {"Seeker Runes", "Iron Buckler", "Hunting Glyphs"},
+    {"Flame Ring", "Troll Blood", "Phoenix Ring"},
+    {"Lionheart Cleave", "Oathbound", "Kingsbane Cleave"},
+    {"Bastion Shields", "Iron Buckler", "Aegis Bastion"},
+    {"Hawk Talon", "Fleet Foot", "Falcon's Return"},
+    {"Bear Trap", "Lucky Key", "Dread Snare"},
+    {"Caustic Flask", "Distillation", "Plague Vial"},
+    {"Witchfire Phial", "Troll Blood", "Hexfire Phial"},
+    {"Ball Lightning", "Conduit", "Storm Sphere"},
+    {"Arc Lance", "Lucky Key", "Skyfork Lance"},
+    {"Soul Harvest", "Bloodlust", "Crimson Reaping"},
+    {"Bone Wheel", "Ogre Hammer", "Ossuary Wheel"},
+    {"Lance of Dawn", "Grace", "Noonfire Lance"},
+    {"Seraph Wings", "Heartroot", "Archangel Wings"},
+    {"Crescent Cut", "Keen Eye", "New Moon Cut"},
+    {"Flicker Darts", "Quicksilver", "Phantom Darts"},
+    {"Thornwhip", "Deep Roots", "Briar Scourge"},
+    {"Root Snare", "Troll Blood", "Strangler Roots"},
+    {"Clockwork Mine", "Fine Gearing", "Infernal Engine"},
+    {"Flash Grenade", "Lodestone", "Sunburst Grenade"},
+    {"Prophecy Ray", "Farsight", "Doom Ray"},
+    {"Fate Wheel", "Hourglass Tonic", "Wheel of Ages"},
+    {"Chain Shot", "Sea Legs", "Broadside Shot"},
+    {"Riptide", "Lodestone", "Maelstrom"}};
 
 void phoenix(Mob &p) {
   if (Player *pl = p.asPlayer())
@@ -135,6 +165,8 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   u.push_back(std::make_unique<Harvest>());
   u.push_back(std::make_unique<Beacon>());
   u.push_back(std::make_unique<Riposte>());
+  for (int i = 0; i < 4; i++)
+    u.push_back(std::make_unique<ExpansionTalent>(i));
   u.push_back(std::make_unique<Chakram>());
   u.push_back(std::make_unique<Glaive>());
   u.push_back(std::make_unique<Censer>());
@@ -159,10 +191,14 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
       "Take 0.5 less damage per hit", &Mob::armor, 0.5f);
   kin("DUELIST", "Keen Eye", atlas::kit(kt::Snowdrops),
       "+5% critical hit chance", &Mob::luck, 0.05f);
-  for (auto &w : u)
-    for (auto &e : EVOLUTIONS)
-      if (std::strcmp(w->name, e[0]) == 0)
-        w->partner = e[1], w->evolvedName = e[2];
+  kin("WARDEN", "Deep Roots", atlas::kit(kt::MossyLog), "+20 max health",
+      &Mob::maxHp, 20);
+  kin("TINKERER", "Fine Gearing", atlas::kit(kt::Pebbles), "-6% weapon cooldowns",
+      &Mob::haste, -0.06f);
+  kin("ORACLE", "Farsight", atlas::kit(kt::Amethyst), "+20% pickup range",
+      &Mob::magnet, 5.6f);
+  kin("CORSAIR", "Sea Legs", atlas::kit(kt::Driftwood), "+8% movement speed",
+      &Mob::speed, 6);
   u.push_back(std::make_unique<SunfireCrown>());
   u.push_back(std::make_unique<TempestEye>());
   u.push_back(std::make_unique<Relic>("Phoenix Feather", atlas::kit(kt::Poppies),
@@ -186,6 +222,10 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
     u.push_back(std::make_unique<ExpansionRelic>(i));
   for (const Recipe &r : RECIPES)
     u.push_back(std::make_unique<RecipeWeapon>(r));
+  for (auto &w : u)
+    for (auto &e : EVOLUTIONS)
+      if (std::strcmp(w->name, e[0]) == 0)
+        w->partner = e[1], w->evolvedName = e[2];
   addSkills(u);
   return u;
 }

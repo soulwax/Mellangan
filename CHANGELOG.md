@@ -4,7 +4,76 @@ All notable changes to Mellangan are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 `dist.ps1` turns the `Unreleased` section into the next version when it packages a release.
 
-## [Unreleased]
+## [0.5.14] - 2026-11-01
+
+### Changed
+
+- Hills are shaped tile by tile instead of in 3 × 3 blocks, so their cliffs wind and bend like natural contours rather than running dead straight along a grid. Lakes that meet a hill follow its curve too.
+- Big hills now rise to a third terrace, a rocky hilltop above the two lower ones, and each terrace stays at least a tile wide.
+- Cliffs cast a soft shadow onto the ground below and to their east, so the high ground reads more clearly.
+- Stairs only appear on a straight three-tile stretch of a cliff, so they always line up.
+- Buildings check that their whole footprint is level, so a cliff never cuts through a cottage or a shrine.
+- Climbing changes the land: forest thins on the upper terraces and hilltops open into rocky crowns of boulders, pebbles and heather. The rocks match the region: sandstone in the deserts, obsidian in the ashlands, snow-capped in the north.
+- Scree and fallen boulders gather at the foot of cliffs.
+- Small mountain tarns sit in the hollows of wide plateaus, frozen over in winter lands.
+
+### Added
+
+- Every class now has a fuller kit, so the Mage is no longer the only one with real choices:
+  - **22 new class weapons**, two per class, offered only to that class:
+    - Knight: Lionheart Cleave and Bastion Shields.
+    - Ranger: Hawk Talon and Bear Trap.
+    - Alchemist: Caustic Flask and Witchfire Phial.
+    - Stormcaller: Ball Lightning and Arc Lance.
+    - Reaper: Soul Harvest and Bone Wheel.
+    - Priestess: Lance of Dawn and Seraph Wings.
+    - Duelist: Crescent Cut and Flicker Darts.
+    - Warden: Thornwhip and Root Snare.
+    - Tinkerer: Clockwork Mine and Flash Grenade.
+    - Oracle: Prophecy Ray and Fate Wheel.
+    - Corsair: Chain Shot and Riptide.
+  - **New ways to attack:**
+    - melee cleaves that sweep the space in front of you;
+    - boomerangs that fly out and come back;
+    - lobbed flasks and grenades;
+    - traps that spring when a foe steps on them;
+    - beams that strike a whole line of foes at once.
+  - **New weapon effects:**
+    - lifesteal heals you a little with every hit;
+    - chain hits arc on to a nearby foe;
+    - stagger hits knock foes back hard and pin them for a moment.
+  - **11 new class skills**, one per class:
+    - War Banner (Knight).
+    - Hunter's Mark (Ranger).
+    - Flask Barrage (Alchemist).
+    - Tempest (Stormcaller).
+    - Blood Pact (Reaper).
+    - Hallowed Ground (Priestess).
+    - Flash Step (Duelist).
+    - Overgrowth (Warden).
+    - Scrap Barrage (Tinkerer).
+    - Eclipse (Oracle).
+    - Whirlpool (Corsair).
+  - **A class passive** for each of the Warden, Tinkerer, Oracle and Corsair: Deep Roots, Fine Gearing, Farsight and Sea Legs.
+- **Class talents** for the Warden, Tinkerer, Oracle and Corsair:
+  - **Heartwood:** skills heal you and root nearby foes.
+  - **Shrapnel:** slain foes may burst into shrapnel.
+  - **Starsight:** every few seconds, foresees and marks the nearest foes.
+  - **Plunder:** kills may spill an extra gem.
+- **22 new evolutions**, one for every new class weapon. Max out the weapon while holding its partner passive, and it evolves with double damage, faster attacks and an extra strike (or a wider area):
+  - Lionheart Cleave becomes Kingsbane Cleave with Oathbound, and Hawk Talon becomes Falcon's Return with Fleet Foot.
+  - Each class's first weapon pairs with that class's own passive, and its second with a shared passive.
+- The Mage's seven spell weapons can now evolve too, for example Ember Lance with Arcane Mind becomes Sunspear and Flame Ring with Troll Blood becomes Phoenix Ring.
+- `--test-arsenal-view CLASS` plays as that class with its whole kit maxed and shows live damage per second for each weapon, for balance checks.
+- Skill-specific talents (Beacon, Echoing Blink, Overcharge) now trigger only when you cast your class's own skill, not any drafted skill.
+- Skilled elite foes can now also plant banners, loose marking arrows, drain life, grow thorny ground and cast a following eclipse.
+
+### Fixed
+
+- Lakes beside cottages, camps and other buildings no longer stop along a ruler-straight line two tiles out. They now curve around buildings like any other shore, so a narrow strait between two buildings is no longer a perfect rectangle of water.
+- The clearing around the starting point is no longer a square hole in the woods. Trees and bushes thin out gradually toward an irregular open circle.
+- Ruins no longer sit on a solid rectangle of dirt; each one has an irregular patch of trodden earth.
+- The starting area could sit on an almost perfectly square island, because lakes were simply cut away from a fixed square around the spawn. The spawn now has a soft, irregular dry zone instead, so nearby lakes curve naturally around it and the start usually joins the mainland.
 
 ## [0.5.13] - 2026-10-31
 

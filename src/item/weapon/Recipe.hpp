@@ -10,11 +10,25 @@
 
 class Enemy;
 
-enum class Form { Bolt, Volley, Orbit, Nova, Rain, Field, Seeker };
+enum class Form {
+  Bolt,
+  Volley,
+  Orbit,
+  Nova,
+  Rain,
+  Field,
+  Seeker,
+  Cleave,
+  Boomerang,
+  Lob,
+  Trap,
+  Beam
+};
 
 namespace pay {
 constexpr unsigned Burn = 1, Chill = 2, Poison = 4, Mark = 8, Pull = 16,
-                   Pierce = 32, Explode = 64, Split = 128;
+                   Pierce = 32, Explode = 64, Split = 128, Leech = 256,
+                   Chain = 512, Stagger = 1024;
 }
 
 struct Recipe {
@@ -56,14 +70,18 @@ public:
 
   const Recipe &r;
   float age = 0, life, damage, reach, pulse = 0;
-  double ox, oy, dx, dy;
+  double ox, oy, dx, dy, tx = 0, ty = 0;
   int index, of, hitsLeft;
-  bool child = false, burstOnEnd = false;
+  bool child = false, burstOnEnd = false, back = false;
   std::vector<entt::entity> hits;
 
 private:
   bool hitBefore(entt::entity id) const;
+  Mob *wielder() const;
+  void hit(Mob &e, double xd, double yd, float dmg, float knock);
   void strike(Mob &e, double xd, double yd);
+  void chain(Mob &from);
+  void touch(float r);
   void blast(float radius, float dmg);
   void trail();
   void steer(float range);

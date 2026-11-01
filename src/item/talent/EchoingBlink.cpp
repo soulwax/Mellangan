@@ -8,6 +8,7 @@ EchoingBlink::EchoingBlink()
               {"Blink detonates where you land, recharges faster", "Blink detonates where you land, recharges faster", "Blink detonates where you land, recharges faster", "Blink detonates where you land, recharges faster", "Blink detonates where you land, recharges faster"},
               false) {
   owner = "MAGE";
+  signature = true;
 }
 
 void EchoingBlink::cast(Mob &p) {

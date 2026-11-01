@@ -3,6 +3,7 @@
 
 #include "ArsenalTest.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -120,10 +121,13 @@ void testArsenal() {
             << std::endl;
 }
 
-void viewArsenal(SDL_Window *window, const std::string &base) {
+void viewArsenal(SDL_Window *window, const std::string &base, const char *cls) {
   Game game;
   game.window = window;
   game.codex.start = 0;
+  for (int i = 0; cls && i < HERO_COUNT; i++)
+    if (std::strcmp(HEROES[i]->name, cls) == 0)
+      game.dev = true, game.heroPick = i;
   if (!game.screen.load(base))
     return;
   SDL_RaiseWindow(window);
@@ -133,10 +137,17 @@ void viewArsenal(SDL_Window *window, const std::string &base) {
   p.god = true;
   level.night.dawn = true;
   std::vector<Skill *> skills;
+  bool solo = game.dev;
+  auto mine = [&](const Upgrade &u) {
+    return u.owner && std::strcmp(u.owner, p.hero->name) == 0;
+  };
   for (auto &u : p.upgrades) {
-    if (auto *w = dynamic_cast<RecipeWeapon *>(u.get()))
+    if (auto *w = dynamic_cast<RecipeWeapon *>(u.get()); w && (!solo || mine(*w)))
       while (!w->maxed())
         w->levelUp(p);
+    if (solo && mine(*u) && !u->skill)
+      while (!u->maxed())
+        u->levelUp(p);
     if (auto *s = dynamic_cast<Skill *>(u.get());
         s && s->owner && std::strcmp(s->owner, p.hero->name) == 0)
       skills.push_back(s);
@@ -173,6 +184,22 @@ void viewArsenal(SDL_Window *window, const std::string &base) {
     s.beginGui(window, {0, 0, 0, 0, 0});
     s.textCenter("ARSENAL QA: 1-5 CAST A SKILL, ESC QUITS", s.w / 2, 8 * s.u,
                  s.u, col::white);
+    if (solo) {
+      float t = std::max(1.0f, frame * DT);
+      std::vector<Upgrade *> held;
+      for (auto &u : p.upgrades)
+        if (u->level > 0 && (u->weapon || u->dealt > 0))
+          held.push_back(u.get());
+      std::sort(held.begin(), held.end(),
+                [](Upgrade *a, Upgrade *b) { return a->dealt > b->dealt; });
+      s.text(p.hero->name, 6 * s.u, 8 * s.u, s.u, col::gold);
+      float y = 20 * s.u;
+      for (Upgrade *u : held) {
+        s.text(fmt::format("{:<18} {:>6.0f} DPS", u->name, u->dealt / t), 6 * s.u, y,
+               s.u * 0.75f, mine(*u) ? col::white : col::muted);
+        y += 9 * s.u;
+      }
+    }
     if (p.skill)
       s.textCenter(p.skill->name, s.w / 2, 24 * s.u, s.u, col::gold);
     vk2dRendererPresent();

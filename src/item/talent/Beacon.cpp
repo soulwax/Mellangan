@@ -8,6 +8,7 @@ Beacon::Beacon()
               {"Sanctuary heals 10 more and burns brighter", "Sanctuary heals 10 more and burns brighter", "Sanctuary heals 10 more and burns brighter", "Sanctuary heals 10 more and burns brighter", "Sanctuary heals 10 more and burns brighter"},
               false) {
   owner = "PRIESTESS";
+  signature = true;
 }
 
 void Beacon::cast(Mob &p) {

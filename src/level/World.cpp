@@ -4,6 +4,8 @@
 
 namespace world {
 
+bool structureIn(int rx, int ry, Structure &s);
+
 namespace {
 
 namespace tt = atlas::tt;
@@ -45,11 +47,20 @@ enum : uint32_t {
 };
 
 int levelNoise(int x, int y) {
-  float n = noise_fbm(x * 0.0075f - 91.3f, y * 0.0075f + 57.1f, 3, 1301);
+  float wx = x + 9 * noise_fbm(x * 0.04f + 17.3f, y * 0.04f - 2.9f, 2, 1303),
+        wy = y + 9 * noise_fbm(x * 0.04f - 31.1f, y * 0.04f + 8.7f, 2, 1305);
+  float n = noise_fbm(wx * 0.0075f - 91.3f, wy * 0.0075f + 57.1f, 3, 1301);
   float d = std::sqrt(float(x) * x + float(y) * y);
   float lift = clampf((d - 18) / 42, 0, 1);
   n *= lift * lift * (3 - 2 * lift);
-  return n > 0.34f ? 2 : n > 0.14f ? 1 : 0;
+  static const float STEPS[3] = {0.14f, 0.34f, 0.48f};
+  int level = 0;
+  while (level < 3 &&
+         n > STEPS[level] + 0.06f * noise_fbm(x * 0.09f + level * 13.7f,
+                                               y * 0.09f - level * 5.3f, 2,
+                                               1307 + level))
+    level++;
+  return level;
 }
 
 const float LAKES[BIOME_COUNT] = {
@@ -62,6 +73,13 @@ const int LANDMARKS[BIOME_COUNT] = {0, 0, 5, 7, 2, 9, 0, 5, 6, 0, 2, 8, 4,
 constexpr int LANDMARK_KINDS = 10;
 
 int floorDiv(int v, int d) { return (v - (v < 0 ? d - 1 : 0)) / d; }
+
+float spawnDry(int x, int y) {
+  float d = std::sqrt(float(x) * x + float(y) * y) +
+            6 * noise_fbm(x * 0.09f + 3.1f, y * 0.09f - 7.7f, 2, 1207);
+  float k = clampf(1 - (d - 7) / 18, 0, 1);
+  return 1.6f * k * k * (3 - 2 * k);
+}
 
 bool lake(int x, int y, float margin) {
   GroundBlend g = groundBlend(x, y);
@@ -193,14 +211,57 @@ int rawLevel(int x, int y) {
   return int(m->bits >> RAW_LEVEL_SHIFT & 3);
 }
 
+bool rawAbove(int x, int y, const void *k) {
+  return rawLevel(x, y) >= *static_cast<const int *>(k);
+}
+
+bool rawBelow(int x, int y, const void *k) { return !rawAbove(x, y, k); }
+
+bool filledAbove(int x, int y, const void *k) {
+  return rawAbove(x, y, k) || !smoothPatch(rawBelow, k, x, y);
+}
+
+float structureDry(int x, int y) {
+  constexpr int REACH = 6;
+  int rx = regionOf(x), ry = regionOf(y), lx = x - rx * REGION, ly = y - ry * REGION;
+  float best = 0;
+  Structure s;
+  for (int yr = ry - (ly < REACH); yr <= ry + (ly >= REGION - REACH); yr++)
+    for (int xr = rx - (lx < REACH); xr <= rx + (lx >= REGION - REACH); xr++) {
+      if (!structureIn(xr, yr, s))
+        continue;
+      float dx = float(std::max({s.x - x, 0, x - (s.x + s.w - 1)})),
+            dy = float(std::max({s.y - y, 0, y - (s.y + s.h - 1)}));
+      if (dx > REACH || dy > REACH)
+        continue;
+      float d = std::sqrt(dx * dx + dy * dy) +
+                2.5f * noise_fbm(x * 0.25f + 11.3f, y * 0.25f - 4.9f, 2, 1211);
+      float k = clampf(1 - (d - 1) / 3.5f, 0, 1);
+      best = std::max(best, 1.6f * k * k * (3 - 2 * k));
+    }
+  return best;
+}
+
+bool tarn(int x, int y, int level) {
+  if (LAKES[biomeAt(x, y)] < -0.5f ||
+      noise_fbm(x * 0.07f + 23.1f, y * 0.07f - 9.4f, 2, 1223) > -0.36f)
+    return false;
+  for (int dy = -2; dy <= 2; dy++)
+    for (int dx = -2; dx <= 2; dx++)
+      if (heightAt(x + dx, y + dy) != level)
+        return false;
+  return true;
+}
+
 bool rawWater(int x, int y) {
   TileMemo *m = memoAt(x, y);
   if (!(m->bits & HAS_RAW_WATER)) {
     Structure s;
     BiomeId b = biomeAt(x, y);
-    bool wet = (std::abs(x) > 10 || std::abs(y) > 10) && heightAt(x, y) == 0 &&
-               !structureAt(x, y, s, 2) && !BIOMES[b]->fixedGround(x, y) &&
-               lake(x, y, 0);
+    int level = heightAt(x, y);
+    bool wet = !structureAt(x, y, s, 1) && !BIOMES[b]->fixedGround(x, y) &&
+               (level ? tarn(x, y, level)
+                      : lake(x, y, -std::max(spawnDry(x, y), structureDry(x, y))));
     m = memoAt(x, y);
     m->bits |= HAS_RAW_WATER | (wet ? uint32_t(RAW_WATER) : 0u);
   }
@@ -247,10 +308,10 @@ bool rollStructure(int rx, int ry, Structure *out) {
   int spanX = REGION - 4 - w, spanY = REGION - 4 - ht;
   auto level = [&](int x, int y) {
     int ground = heightAt(x + w / 2, y + ht / 2);
-    for (int corner = 0; corner < 4; corner++)
-      if (heightAt(corner & 1 ? x + w + 1 : x - 2,
-                   corner & 2 ? y + ht + 1 : y - 2) != ground)
-        return false;
+    for (int yy = y - 2; yy <= y + ht + 1; yy++)
+      for (int xx = x - 2; xx <= x + w + 1; xx++)
+        if (heightAt(xx, yy) != ground)
+          return false;
     return true;
   };
   int x = 0, y = 0, tries = 0;
@@ -384,8 +445,9 @@ int block(int v) { return (v - (v < 0 ? 2 : 0)) / 3; }
 int heightAt(int x, int y) {
   TileMemo *m = memoAt(x, y);
   if (!(m->bits & HAS_LEVEL)) {
-    int bx = block(x), by = block(y);
-    int level = rawLevel(bx * 3 + 1, by * 3 + 1);
+    int level = 0;
+    for (int k = 1; k <= 3 && smoothPatch(filledAbove, &k, x, y); k++)
+      level = k;
     m = memoAt(x, y);
     m->bits |= HAS_LEVEL | uint32_t(level) << LEVEL_SHIFT;
   }
@@ -393,8 +455,13 @@ int heightAt(int x, int y) {
 }
 
 bool isRamp(int x, int y) {
-  return heightAt(x, y) > heightAt(x, y + 1) &&
-         hash2(block(x) * 13 + 7, y * 29 - 3) % 3 == 0;
+  int h = heightAt(x, y), b = block(x) * 3;
+  if (hash2(block(x) * 13 + 7, y * 29 - 3) % 3 == 2)
+    return false;
+  for (int c = b; c < b + 3; c++)
+    if (heightAt(c, y) != h || heightAt(c, y + 1) >= h || heightAt(c, y - 1) < h)
+      return false;
+  return true;
 }
 
 bool isIce(int x, int y) {
@@ -461,19 +528,16 @@ Color groundTint(int x, int y) {
   return out;
 }
 
-bool propAt(int x, int y, Prop &p) {
-  p = Prop{};
-  p.x = x * 16 + 8.0;
-  p.y = y * 16 + 16.0;
+namespace fe = feature;
 
-  Structure st;
-  if (structureAt(x, y, st, 1))
-    return structureProp(&st, x - st.x, y - st.y, &p);
-  if ((std::abs(x) < 4 && std::abs(y) < 4) || isDirt(x, y) || isWater(x, y) ||
-      isRamp(x, y) || isRamp(x, y - 1))
-    return false;
+const Feature *const ROCKS[5] = {&fe::boulder, &fe::mossyBoulder, &fe::snowyBoulder,
+                                 &fe::sandstone, &fe::obsidian};
+const uint8_t ROCK[BIOME_COUNT] = {1, 1, 0, 0, 0, 2, 1, 1, 3, 1, 3, 4, 0,
+                                   1, 3, 2, 3, 1, 0, 0, 4, 3, 0, 3, 1, 0};
+const int HIGH_ROCKS[4] = {0, 0, 14, 45}, HIGH_COVER[4] = {0, 0, 20, 60},
+          THIN[4] = {0, 0, 56, 100};
 
-  uint32_t h = hash2(x * 7 + 3, y * 13 + 1);
+bool wildProp(int x, int y, uint32_t h, Prop &p) {
   const Biome *self = BIOMES[biomeAt(x, y)];
   if (int own = self->place(x, y, h, p); own >= 0)
     return own;
@@ -498,6 +562,48 @@ bool propAt(int x, int y, Prop &p) {
     r -= chance;
   }
   return false;
+}
+
+
+bool propAt(int x, int y, Prop &p) {
+  p = Prop{};
+  p.x = x * 16 + 8.0;
+  p.y = y * 16 + 16.0;
+
+  Structure st;
+  if (structureAt(x, y, st, 1))
+    return structureProp(&st, x - st.x, y - st.y, &p);
+  if (isDirt(x, y) || isWater(x, y) || isRamp(x, y) || isRamp(x, y - 1))
+    return false;
+
+  uint32_t h = hash2(x * 7 + 3, y * 13 + 1);
+  if (std::abs(x) < 9 && std::abs(y) < 9) {
+    float d = std::sqrt(float(x) * x + float(y) * y),
+          w = d + 1.5f * noise_fbm(x * 0.2f - 5.3f, y * 0.2f + 8.1f, 2, 1213);
+    if (d < 2.5f || w < 3.5f || (w < 6.5f && float(h >> 22 & 1023) < (6.5f - w) / 3 * 1024))
+      return false;
+  }
+  int level = heightAt(x, y), id = biomeAt(x, y);
+  uint32_t q = hash2(x * 59 + 1, y * 43 - 7);
+  const Feature *rock = ROCKS[ROCK[id]];
+  if (heightAt(x, y - 1) > level || heightAt(x - 1, y) > level) {
+    if (q % 100 < 6)
+      return rock->place(rock, h >> 16, &p);
+    if (q % 100 < 24)
+      return fe::pebbles.place(&fe::pebbles, h >> 16, &p);
+  }
+  if (level >= 2) {
+    int roll = int(q % 1000);
+    if (roll < HIGH_ROCKS[level])
+      return rock->place(rock, h >> 16, &p);
+    if (roll < HIGH_ROCKS[level] + HIGH_COVER[level]) {
+      const Feature *cover = ROCK[id] < 2 && q >> 20 & 1 ? &fe::heather : &fe::pebbles;
+      return cover->place(cover, h >> 16, &p);
+    }
+  }
+  if (!wildProp(x, y, h, p))
+    return false;
+  return !(p.solid > 0 && int(q >> 12 & 127) < THIN[level]);
 }
 
 } // namespace world

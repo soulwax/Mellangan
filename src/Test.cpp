@@ -24,6 +24,10 @@
 #include "gfx/StatusVisual.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "item/skill/Skill.hpp"
+#include "item/weapon/Recipe.hpp"
+#include "item/talent/ExpansionTalents.hpp"
+#include "entity/pickup/Gem.hpp"
+#include "entity/Ability.hpp"
 #include "level/Flavour.hpp"
 #include "entity/enemy/Boss.hpp"
 #include "entity/Trait.hpp"
@@ -38,6 +42,10 @@
 #include "entity/pickup/Gem.hpp"
 #include "entity/projectile/ChakramDisc.hpp"
 #include "level/Level.hpp"
+#include "level/Noise.h"
+#include "level/World.hpp"
+#include "level/Prop.hpp"
+#include "level/Structure.hpp"
 #include "item/Upgrade.hpp"
 #include "hero/Hero.hpp"
 #include "menu/LevelUpMenu.hpp"
@@ -550,7 +558,10 @@ static void testArtsBothSides() {
                               "CHAIN STORM", "DEATH GRIP", "SACRED LIGHT",
                               "LUNGE", "BRAMBLES", "MINEFIELD", "COMET",
                               "POWDER KEG", "WAR CRY", "WHIRLWIND",
-                              "GROUND SLAM", "FIRE RING", "SNARE NET"};
+                              "GROUND SLAM", "FIRE RING", "SNARE NET",
+                              "HUNTER'S MARK", "FLASK BARRAGE", "TEMPEST",
+                              "BLOOD PACT", "HALLOWED GROUND", "FLASH STEP",
+                              "OVERGROWTH"};
   for (const char *art : ARTS) {
     for (int side = 0; side < 2; side++) {
       Game game;
@@ -598,6 +609,318 @@ static void testArtsBothSides() {
     }
   }
   std::cout << "[TEST] New class skills strike foes for the player and the player for foes: PASS"
+            << std::endl;
+}
+
+static void testSpawnShore() {
+  uint32_t salt = noise_salt;
+  int longest = 0;
+  for (uint32_t seed = 0; seed < 100; seed++) {
+    noise_reseed(seed);
+    for (int y = -5; y <= 5; y++)
+      for (int x = -5; x <= 5; x++)
+        assert(!world::isWater(x, y));
+    for (int dir = 0; dir < 4; dir++) {
+      int ox = dir == 0 ? 1 : dir == 1 ? -1 : 0, oy = dir == 2 ? 1 : dir == 3 ? -1 : 0;
+      for (int a = -30; a <= 30; a++)
+        for (int b = -30, run = 0; b <= 30; b++) {
+          int x = ox ? a : b, y = ox ? b : a;
+          run = !world::isWater(x, y) && world::isWater(x + ox, y + oy) ? run + 1 : 0;
+          longest = std::max(longest, run);
+        }
+    }
+  }
+  int rims = 0;
+  Prop prop;
+  for (uint32_t seed = 0; seed < 100; seed++) {
+    noise_reseed(seed);
+    for (int y = -2; y <= 2; y++)
+      for (int x = -2; x <= 2; x++)
+        assert(x * x + y * y >= 7 || !world::propAt(x, y, prop));
+    int ring = 0;
+    for (int i = -4; i <= 4; i++)
+      ring += world::propAt(i, -4, prop) + world::propAt(i, 4, prop) +
+              (i > -4 && i < 4 ? world::propAt(-4, i, prop) + world::propAt(4, i, prop) : 0);
+    rims += ring >= 10;
+  }
+  int sites = 0, straight = 0;
+  for (uint32_t seed = 0; seed < 10; seed++) {
+    noise_reseed(seed);
+    Structure st;
+    for (int ry = -6; ry < 6; ry++)
+      for (int rx = -6; rx < 6; rx++) {
+        bool found = false;
+        for (int dy = 0; dy < world::REGION && !found; dy += 2)
+          for (int dx = 0; dx < world::REGION && !found; dx += 2)
+            found = world::structureAt(rx * world::REGION + dx, ry * world::REGION + dy, st, 0);
+        if (!found)
+          continue;
+        if (st.kind == StructureKind::Ruin) {
+          int dirt = 0;
+          for (int y = st.y; y < st.y + st.h; y++)
+            for (int x = st.x; x < st.x + st.w; x++)
+              dirt += world::isDirt(x, y);
+          assert(dirt > 4 && dirt * 10 < st.w * st.h * 9);
+        }
+        int wet = 0;
+        for (int y = st.y - 4; y < st.y + st.h + 4; y++)
+          for (int x = st.x - 4; x < st.x + st.w + 4; x++) {
+            bool w = world::isWater(x, y);
+            assert(!w || !st.contains(x, y, 1));
+            wet += w;
+          }
+        if (!wet)
+          continue;
+        sites++;
+        int run = 0, best = 0;
+        for (int dir = 0; dir < 4; dir++) {
+          int ox = dir == 0 ? 1 : dir == 1 ? -1 : 0, oy = dir == 2 ? 1 : dir == 3 ? -1 : 0;
+          for (int a = -12; a <= 12; a++) {
+            run = 0;
+            for (int b = -12; b <= 12; b++) {
+              int x = st.x + st.w / 2 + (ox ? a : b), y = st.y + st.h / 2 + (ox ? b : a);
+              run = !world::isWater(x, y) && world::isWater(x + ox, y + oy) ? run + 1 : 0;
+              best = std::max(best, run);
+            }
+          }
+        }
+        straight += best >= 8;
+      }
+  }
+  noise_reseed(salt);
+  assert(longest < 18 && rims <= 5 && sites > 20 && straight * 10 < sites * 3);
+  std::cout << "[TEST] Shores and clearings stay organic: longest straight spawn coast "
+            << longest << ", dense square clearing rims " << rims << "/100, straight structure shores "
+            << straight << "/" << sites << ": PASS" << std::endl;
+}
+
+static void testHills() {
+  uint32_t salt = noise_salt;
+  int cliffs = 0, straight = 0, peaks = 0, ramps = 0, tarns = 0, land[2]{}, woods[2]{};
+  Prop prop;
+  for (uint32_t seed = 0; seed < 2; seed++) {
+    noise_reseed(seed);
+    for (int sx = -180; sx < 180; sx += 120)
+      for (int y = -180; y < 180; y++)
+        for (int x = sx, run = 0; x < sx + 120; x++) {
+          int h = world::heightAt(x, y);
+          auto at = [&](int dx, int dy) { return world::heightAt(x + dx, y + dy); };
+          for (int k = 1; k <= h; k++)
+            assert((at(0, -1) >= k || at(0, 1) >= k) && (at(-1, 0) >= k || at(1, 0) >= k));
+          assert(std::abs(h - at(1, 0)) < 2 && std::abs(h - at(0, 1)) < 2);
+          if (world::isRamp(x, y)) {
+            int b = x - ((x % 3) + 3) % 3;
+            assert(world::isRamp(b, y) && world::isRamp(b + 1, y) && world::isRamp(b + 2, y));
+            ramps++;
+          }
+          peaks += h == 3;
+          if (world::isWater(x, y)) {
+            for (int d = 0; h && d < 9; d++)
+              assert(at(d % 3 - 1, d / 3 - 1) == h);
+            tarns += h > 0;
+          } else {
+            land[h >= 2]++;
+            woods[h >= 2] += world::propAt(x, y, prop) && prop.solid > 0 && prop.solid < 4;
+          }
+          bool cliff = h > at(0, 1);
+          run = cliff ? run + 1 : 0;
+          cliffs += cliff;
+          straight += run == 8 ? 8 : run > 8;
+        }
+  }
+  noise_reseed(salt);
+  float low = float(woods[0]) / land[0], high = float(woods[1]) / land[1];
+  assert(peaks > 0 && ramps > 0 && tarns > 0 && straight * 5 < cliffs && high < low * 0.8f);
+  std::cout << "[TEST] Hills rise in clean organic terraces: " << peaks << " hilltop tiles, "
+            << ramps << " stair tiles, " << straight << "/" << cliffs
+            << " cliff tiles in straight runs, " << tarns << " tarn tiles, woods "
+            << int(low * 100) << "% low and " << int(high * 100) << "% high: PASS" << std::endl;
+}
+
+static void testClassKits() {
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Player &p = *game.level->player;
+    for (const Hero *h : HEROES) {
+      int weapons = 0, skills = 0, kin = 0;
+      for (const Recipe &r : RECIPES)
+        weapons += std::strcmp(r.owner, h->name) == 0;
+      for (auto &u : p.upgrades) {
+        if (!u->owner || std::strcmp(u->owner, h->name) != 0)
+          continue;
+        skills += u->skill;
+        kin += !u->skill && !u->weapon;
+      }
+      if (weapons < 2 || skills < 3 || kin < 1)
+        std::cout << "[TEST] Thin class kit: " << h->name << std::endl;
+      assert(weapons >= 2 && skills >= 3 && kin >= 1);
+    }
+    game.level.reset();
+  }
+  auto recipe = [](const char *name) -> const Recipe & {
+    for (const Recipe &r : RECIPES)
+      if (std::strcmp(r.name, name) == 0)
+        return r;
+    assert(false);
+    return RECIPES.front();
+  };
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    p.hp = p.maxHp * 0.5f, p.regen = 0;
+    float hp = p.hp;
+    ability::banner(p, 90, 8);
+    for (int i = 0; i < 120; i++)
+      level.tick();
+    assert(p.hp > hp);
+    game.level.reset();
+  }
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    RecipeShot shot(recipe("Hawk Talon"), p.x, p.bodyY(), 1, 0, 1, 170);
+    shot.level = &level;
+    double far = 0;
+    for (int i = 0; i < 600 && !shot.removed; i++) {
+      shot.tick();
+      far = std::max(far, shot.x - p.x);
+    }
+    assert(shot.removed && shot.back && far > 120);
+    game.level.reset();
+  }
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    const Recipe &trap = recipe("Bear Trap");
+    RecipeShot *shot = level.add<RecipeShot>(trap, p.x + 120, p.y, 0, 0, 30, trap.reach);
+    for (int i = 0; i < 120; i++)
+      level.tick();
+    assert(!shot->removed);
+    auto made = Enemy::create(EnemyKind::Knight, 200, 1);
+    Enemy *e = made.get();
+    e->x = p.x + 120, e->y = p.y, e->aware = false, e->plan = nullptr;
+    level.add(std::move(made));
+    float hp = e->hp;
+    for (int i = 0; i < 10 && !shot->removed; i++)
+      level.tick();
+    assert(shot->removed && e->hp < hp);
+    game.level.reset();
+  }
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    p.luck = -1;
+    p.hp = p.maxHp * 0.3f, p.regen = 0;
+    float hp = p.hp;
+    Upgrade *wings = p.grant("Seraph Wings", 1);
+    assert(wings);
+    for (double dx : {30.0, -30.0, 0.0}) {
+      auto made = Enemy::create(EnemyKind::Knight, 400, 0.01f);
+      made->x = p.x + dx, made->y = p.y + (dx == 0 ? 36 : 0);
+      made->aware = false, made->plan = nullptr;
+      level.add(std::move(made));
+    }
+    for (int i = 0; i < 600 && wings->dealt <= 0; i++)
+      level.tick();
+    assert(wings->dealt > 0 && p.hp > hp);
+    game.level.reset();
+  }
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    auto has = [&](const char *name) {
+      for (auto &u : p.upgrades)
+        if (std::strcmp(u->name, name) == 0)
+          return true;
+      return false;
+    };
+    for (auto &u : p.upgrades) {
+      auto *w = dynamic_cast<RecipeWeapon *>(u.get());
+      if (!w)
+        continue;
+      assert(w->partner && w->evolvedName && has(w->partner));
+    }
+    const Recipe &cleave = recipe("Lionheart Cleave");
+    RecipeWeapon w(cleave);
+    for (int i = 0; i < Upgrade::MAX_LEVEL; i++)
+      w.levelUp(p);
+    int count = w.count();
+    float dmg = w.damage(p);
+    w.evolvedName = "Kingsbane Cleave";
+    w.evolve();
+    assert(w.count() == count + 1 && w.damage(p) > dmg * 1.9f &&
+           std::strcmp(w.name, "Kingsbane Cleave") == 0);
+    for (const char *cls : {"WARDEN", "TINKERER", "ORACLE", "CORSAIR"}) {
+      int talents = 0;
+      for (auto &u : p.upgrades)
+        talents += dynamic_cast<ExpansionTalent *>(u.get()) && std::strcmp(u->owner, cls) == 0;
+      assert(talents == 1);
+    }
+    game.level.reset();
+  }
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    auto made = Enemy::create(EnemyKind::Knight, 400, 1);
+    Enemy *e = made.get();
+    e->x = p.x + 60, e->y = p.y, e->aware = false, e->plan = nullptr;
+    level.add(std::move(made));
+    level.tick();
+    level.tick();
+    ExpansionTalent heart(0), sight(2), plunder(3);
+    for (ExpansionTalent *t : {&heart, &sight, &plunder})
+      for (int i = 0; i < Upgrade::MAX_LEVEL; i++)
+        t->levelUp(p);
+    p.hp = p.maxHp * 0.5f;
+    float hp = p.hp;
+    heart.cast(p);
+    assert(p.hp > hp && e->status.power(StatusKind::Chill) > 0.5f);
+    sight.timer = 0;
+    sight.tick(p);
+    assert(e->status.power(StatusKind::Marked) > 0);
+    int gems = int(level.count<Gem>());
+    for (int i = 0; i < 40; i++)
+      plunder.slay(p, *e);
+    level.tick();
+    assert(int(level.count<Gem>()) > gems);
+    game.level.reset();
+  }
+  {
+    Game game;
+    game.codex.start = 0;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    Upgrade *echo = p.grant("Echoing Blink", 1);
+    assert(echo && echo->signature && p.skill);
+    p.cast();
+    float hero = p.skillTime;
+    assert(hero < p.skill->cooldown * p.haste - 0.01f);
+    Skill *warp = nullptr;
+    for (auto &u : p.upgrades)
+      if (u->skill && std::strcmp(u->name, "TIME WARP") == 0)
+        warp = static_cast<Skill *>(u.get());
+    warp->levelUp(p);
+    p.skillTime = 0;
+    p.cast();
+    assert(std::abs(p.skillTime - warp->cooldown * p.haste) < 0.001f);
+    game.level.reset();
+  }
+  std::cout << "[TEST] Every class owns weapons, skills, a kin passive and evolutions; "
+               "banners heal, talons return, traps spring, wings leech, talents work: PASS"
             << std::endl;
 }
 
@@ -952,6 +1275,9 @@ int runTests() {
   testGeneralSkills();
   testRunVariety();
   testNewTraits();
+  testClassKits();
+  testSpawnShore();
+  testHills();
   testNewFoes();
   std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"

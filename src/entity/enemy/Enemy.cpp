@@ -111,6 +111,11 @@ const Cast SKILLS[] = {
     {[](Enemy &e) { ability::bandage(e, e.maxHp * 0.2f); }, 12, 240,
      {0.5f, 1, 0.6f, 1}},
     {[](Enemy &e) { ability::miasma(e, 90, 3, 4); }, 10, 90, {0.55f, 0.95f, 0.35f, 1}},
+    {[](Enemy &e) { ability::banner(e, 80, 6); }, 14, 160, {1, 0.85f, 0.45f, 1}},
+    {[](Enemy &e) { ability::hunt(e, 1, 6); }, 7, 220, {0.85f, 1, 0.55f, 1}},
+    {[](Enemy &e) { ability::drain(e, 80, 8); }, 9, 80, {0.85f, 0.2f, 0.3f, 1}},
+    {[](Enemy &e) { ability::overgrowth(e, 70, 5); }, 12, 90, {0.45f, 0.85f, 0.35f, 1}},
+    {[](Enemy &e) { ability::eclipse(e, 70, 5); }, 12, 120, {0.6f, 0.5f, 0.95f, 1}},
 };
 constexpr float WIND = 0.6f;
 

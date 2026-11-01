@@ -4,6 +4,7 @@
 #include "entity/Mob.hpp"
 #include "level/Level.hpp"
 #include "Game.hpp"
+#include "entity/effect/Aura.hpp"
 #include "entity/effect/FirePool.hpp"
 #include "entity/effect/GlaiveThrust.hpp"
 #include "entity/effect/Smite.hpp"
@@ -475,6 +476,121 @@ void snare(Mob &caster, float reach, float damage) {
                      Color{0.85f, 0.78f, 0.6f, 0.8f}, 4);
   }
   Sound::bow.play(0.6f, 0, 0.8f);
+}
+
+void banner(Mob &caster, float radius, float seconds) {
+  constexpr Color GOLD{1, 0.85f, 0.45f, 1};
+  caster.level->add<Aura>(caster, AuraDef{radius, seconds, 4, 0, 0.35f, 0, 0, 0, 0,
+                                          0, false, GOLD, atlas::pt::HolyGlint});
+  flourish::sigil(*caster.level, caster.x, caster.bodyY(), 40, GOLD, 8);
+  caster.level->add<Shockwave>(caster.x, caster.y, 4, radius, 0.4f, GOLD.alpha(0.8f),
+                               false);
+  Sound::raise.play(0.5f, 0, 1.2f);
+}
+
+void hunt(Mob &caster, int count, float damage) {
+  Level &level = *caster.level;
+  constexpr Color HUNT{0.85f, 1, 0.55f, 1};
+  for (Mob *e : level.nearestFoes(caster, caster.x, caster.y, 260, count)) {
+    e->afflict(StatusKind::Marked, 6, 0.4f);
+    double xd = e->x - caster.x, yd = e->bodyY() - caster.bodyY(),
+           d = std::max(1.0, std::sqrt(xd * xd + yd * yd));
+    level.add<Arrow>(caster.x, caster.bodyY(), xd / d * 280, yd / d * 280,
+                     damage * caster.power(), 1)->hostile = caster.hostile();
+    flourish::sigil(level, e->x, e->bodyY(), 10, HUNT, 4);
+  }
+  Sound::bow.play(0.7f, 0, 1.1f);
+}
+
+void barrage(Mob &caster, int count, float damage) {
+  auto targets = caster.level->nearestFoes(caster, caster.x, caster.y, 220, count);
+  for (int i = 0; i < count; i++) {
+    double x = caster.x + rng.range(-90, 90), y = caster.y + rng.range(-70, 70);
+    if (!targets.empty()) {
+      Mob &t = *targets[size_t(i) % targets.size()];
+      x = t.x + rng.range(-8, 8), y = t.y + rng.range(-6, 6);
+    }
+    lob(caster, x, y, damage, 18, damage * 0.2f, 2);
+  }
+  flourish::scatter(*caster.level, caster.x, caster.bodyY(), atlas::pt::Bubble,
+                    Color{1, 0.6f, 0.3f, 1}, 6, 50, -30);
+  Sound::potion.play(0.6f, 0, 0.8f);
+}
+
+void tempest(Mob &caster, float seconds, float damage) {
+  constexpr Color STORM{0.55f, 0.75f, 1, 1};
+  caster.level->add<Aura>(caster, AuraDef{120, seconds, 0, 0, 0, 0, 0, 0, 0.35f,
+                                          damage * caster.power(), true, STORM,
+                                          atlas::pt::Gust});
+  flourish::sigil(*caster.level, caster.x, caster.bodyY(), 50, STORM, 10);
+  Sound::thunder.play(0.5f);
+}
+
+void drain(Mob &caster, float radius, float damage) {
+  Level &level = *caster.level;
+  constexpr Color BLOOD{0.85f, 0.2f, 0.3f, 1};
+  int n = 0;
+  within(caster, radius, [&](Mob &foe, double xd, double yd) {
+    foe.strike(damage * caster.power(), xd, yd, 40);
+    if (n++ < 8)
+      flourish::streak(level, foe.x, foe.bodyY(), caster.x, caster.bodyY(),
+                       atlas::pt::Wisp, BLOOD, 4);
+  });
+  if (n)
+    caster.mend(std::min(40.0f, 3.0f * n));
+  level.add<Shockwave>(caster.x, caster.bodyY(), radius, 8, 0.45f, BLOOD.alpha(0.8f),
+                       false);
+  Sound::scythe.play(0.6f, 0, 0.6f);
+}
+
+void sanctuary(Mob &caster, float radius, float seconds) {
+  constexpr Color HOLY{1, 0.95f, 0.75f, 1};
+  caster.level->add<Aura>(caster, AuraDef{radius, seconds, 6, 0, 0, 0,
+                                          4 * caster.power(), 0, 0, 0, false, HOLY,
+                                          atlas::pt::HolyGlint});
+  flourish::sigil(*caster.level, caster.x, caster.bodyY(), radius * 0.6f, HOLY, 12);
+  Sound::nova.play(0.5f, 0, 1.3f);
+}
+
+void flash(Mob &caster, int count, float damage) {
+  Level &level = *caster.level;
+  auto targets = level.nearestFoes(caster, caster.x, caster.y, 200, count);
+  if (targets.empty())
+    return;
+  double px = caster.x, py = caster.y;
+  flourish::echo(level, caster.x, caster.y, caster.body(), col::white);
+  for (Mob *e : targets) {
+    flourish::streak(level, px, py - 6, e->x, e->bodyY(), atlas::pt::Petal,
+                     Color{1, 0.85f, 0.95f, 1}, 4);
+    e->strike(damage * caster.power(), e->x - px, e->y - py, 120);
+    e->afflict(StatusKind::Marked, 3, 0.3f);
+    px = e->x, py = e->y;
+  }
+  Mob &last = *targets.back();
+  double xd = caster.x - last.x, yd = caster.y - last.y,
+         d = std::max(1.0, std::sqrt(xd * xd + yd * yd));
+  caster.x = last.x + xd / d * 16, caster.y = last.y + yd / d * 16;
+  level.collide(caster.x, caster.y, caster.radius);
+  caster.shield(0.5f);
+  Sound::slash.play(0.7f, 0, 1.25f);
+}
+
+void overgrowth(Mob &caster, float radius, float seconds) {
+  constexpr Color WILD{0.45f, 0.85f, 0.35f, 1};
+  caster.level->add<Aura>(caster, AuraDef{radius, seconds, 0, 0, 0.45f,
+                                          4 * caster.power(), 0, 0, 0, 0, false,
+                                          WILD, atlas::pt::Leaf});
+  flourish::scatter(*caster.level, caster.x, caster.bodyY(), atlas::pt::Leaf, WILD,
+                    12, 80, -20);
+  Sound::erupt.play(0.45f, 0, 1.1f);
+}
+
+void eclipse(Mob &caster, float radius, float seconds) {
+  constexpr Color DUSK{0.6f, 0.5f, 0.95f, 1};
+  caster.level->add<Aura>(caster, AuraDef{radius, seconds, 0, 0, 0.3f, 0, 0, 0.35f,
+                                          0, 0, true, DUSK, atlas::pt::ArcaneStar});
+  flourish::sigil(*caster.level, caster.x, caster.bodyY(), 46, DUSK, 10);
+  Sound::cast.play(0.5f, 0, 0.7f);
 }
 
 } // namespace ability

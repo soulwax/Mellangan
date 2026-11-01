@@ -162,13 +162,14 @@ void Player::cast() {
   if (!hero || dead() || skillTime > 0)
     return;
   float wait = (skill ? skill->cooldown : hero->cooldown) * haste;
+  bool own = !skill || dynamic_cast<HeroSkill *>(skill);
   if (skill)
     skill->use(*this);
   else
     hero->cast(*this);
   skillTime = wait;
   for (auto &up : upgrades)
-    if (up->level > 0)
+    if (up->level > 0 && (own || !up->signature))
       up->cast(*this);
 }
 

@@ -295,6 +295,10 @@ void Game::newGame(bool reroll) {
       return world::heightAt(x, y + 2) == world::heightAt(x, y) &&
              !world::isWater(x, y + 2);
     });
+  if (dev && peakPick)
+    seek([](int x, int y) {
+      return world::heightAt(x, y) == 3 && world::heightAt(x, y + 6) < 3;
+    });
   if (dev && landmarkPick >= 0)
     for (int r = 0; r < 40 && !atPick; r++)
       for (int ry = -r; ry <= r && !atPick; ry++)

@@ -9,6 +9,7 @@ Overcharge::Overcharge()
               {"Thunderclap calls two more bolts", "Thunderclap calls two more bolts", "Thunderclap calls two more bolts", "Thunderclap calls two more bolts", "Thunderclap calls two more bolts"},
               false) {
   owner = "STORMCALLER";
+  signature = true;
 }
 
 void Overcharge::cast(Mob &p) {
