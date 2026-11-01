@@ -11,6 +11,7 @@
 #include <vector>
 #include <unordered_set>
 
+#include "entity/Ally.hpp"
 #include "entity/Entity.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "level/Bounty.hpp"
@@ -56,6 +57,7 @@ public:
   float distanceRan = 0, totalDamage = 0;
   int handicaps = 0;
   std::vector<entt::entity> bossIds;
+  std::vector<Ally *> allies;
   Bounty bounties[3];
   Spawner spawner{*this};
   Night night{*this};
@@ -104,17 +106,23 @@ public:
   int gather(double x, double y, float r, Enemy **out, int max) const;
   std::vector<Enemy *> nearest(double x, double y, float range, int n);
   Mob *playerIn(double x, double y, float r);
+  template <class F> void friends(double x, double y, float r, F &&f) {
+    if (Mob *m = playerIn(x, y, r))
+      f(*m);
+    for (Ally *a : allies) {
+      double xd = a->x - x, yd = a->y - y;
+      if (!a->removed && !a->dead() && xd * xd + yd * yd < double(r) * r)
+        f(static_cast<Mob &>(*a));
+    }
+  }
   std::vector<Mob *> nearestFoes(bool hostile, double x, double y, float range, int n);
   std::vector<Mob *> nearestFoes(const Mob &self, double x, double y, float range,
                                  int n) {
     return nearestFoes(self.hostile(), x, y, range, n);
   }
   template <class F> void foes(bool hostile, double x, double y, float r, F &&f) {
-    if (hostile) {
-      if (Mob *m = playerIn(x, y, r))
-        f(*m);
-      return;
-    }
+    if (hostile)
+      return friends(x, y, r, f);
     enemiesNear(x, y, r, [&](Enemy &e) { f(static_cast<Mob &>(e)); });
   }
   template <class F> void foes(const Mob &self, double x, double y, float r, F &&f) {

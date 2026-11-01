@@ -56,8 +56,24 @@ void Enemy::voice(Sound &s, float volume, float jitter) const {
     s.play(volume, jitter);
 }
 
+const Mob &Enemy::quarry() const {
+  const Mob *best = level->player;
+  double px = best->x - x, py = best->y - y, bd = px * px + py * py;
+  for (const Ally *a : level->allies) {
+    double xd = a->x - x, yd = a->y - y, d = xd * xd + yd * yd;
+    float reach = a->def.lure ? 220.0f : 110.0f;
+    if (a->removed || a->dead() || d > reach * reach)
+      continue;
+    if (a->def.lure)
+      d *= 0.2;
+    if (d < bd)
+      best = a, bd = d;
+  }
+  return *best;
+}
+
 Sense Enemy::sense() const {
-  const Player &p = *level->player;
+  const Mob &p = quarry();
   double rx = p.x - x, ry = p.y - y, raw = std::sqrt(rx * rx + ry * ry);
   double lead = std::min(0.7, raw / std::max(20.0, double(type.speed))) * 0.6;
   Sense s{rx + p.xa * lead, ry + p.ya * lead, 0, 0, 0, false};

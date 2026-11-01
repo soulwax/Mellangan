@@ -9,16 +9,16 @@
 
 void Projectile::collide() {
   if (hostile || (source && source->hostile())) {
-    Player &p = *level->player;
-    if (removed || p.dead() || !touches(p) ||
-        std::find(hits.begin(), hits.end(), p.id) != hits.end())
-      return;
-    hits.push_back(p.id);
-    double xd, yd;
-    push(p, xd, yd);
-    p.strike(damage, xd, yd, knock);
-    if (--pierce <= 0)
-      spent(), remove();
+    level->friends(x, y, radius + 32, [&](Mob &p) {
+      if (removed || !touches(p) || std::find(hits.begin(), hits.end(), p.id) != hits.end())
+        return;
+      hits.push_back(p.id);
+      double xd, yd;
+      push(p, xd, yd);
+      p.strike(damage, xd, yd, knock);
+      if (--pierce <= 0)
+        spent(), remove();
+    });
     return;
   }
   level->enemiesNear(x, y, radius + 32, [&](Enemy &e) {

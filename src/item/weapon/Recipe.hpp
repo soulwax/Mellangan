@@ -27,7 +27,8 @@ enum class Form {
   Beam,
   Whip,
   Wall,
-  Spiral
+  Spiral,
+  Summon
 };
 
 namespace pay {
@@ -36,6 +37,9 @@ constexpr unsigned Burn = 1, Chill = 2, Poison = 4, Mark = 8, Pull = 16,
                    Chain = 512, Stagger = 1024, Bleed = 2048, Weaken = 4096,
                    Fear = 8192, Shatter = 16384, Execute = 32768;
 }
+
+void landHit(unsigned payload, Mob &e, double xd, double yd, float dmg, float knock,
+             Upgrade *source, Mob *wielder);
 
 struct Recipe {
   const char *name, *owner, *pitch, *unit;

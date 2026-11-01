@@ -30,7 +30,11 @@ bool RecipeShot::hitBefore(entt::entity id) const {
 }
 
 void RecipeShot::hit(Mob &e, double xd, double yd, float dmg, float knock) {
-  unsigned p = r.payload;
+  landHit(r.payload, e, xd, yd, dmg, knock, source, wielder());
+}
+
+void landHit(unsigned p, Mob &e, double xd, double yd, float dmg, float knock,
+             Upgrade *source, Mob *w) {
   if ((p & pay::Shatter) && e.status.power(StatusKind::Chill) > 0)
     dmg *= 1.5f, e.status.effects[int(StatusKind::Chill)] = {};
   if (p & pay::Burn)
@@ -54,7 +58,7 @@ void RecipeShot::hit(Mob &e, double xd, double yd, float dmg, float knock) {
       e.hp < e.maxHp * 0.08f)
     e.strike(e.hp + 1, xd, yd, 0, source);
   if (p & pay::Leech)
-    if (Mob *w = wielder(); w && !w->dead())
+    if (w && !w->dead())
       w->hp = std::min(w->maxHp, w->hp + std::min(2.0f, dmg * 0.04f));
 }
 

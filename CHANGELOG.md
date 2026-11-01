@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Allies: wolves, hawks, ghouls, skeletons, clockwork drones, powder crews and decoys can fight beside you. They chase foes near you, apply their weapon's effects, take hits, and fade when their time runs out. Foes turn on allies that come close, and decoys draw them away from you. Your attacks never hurt allies. No weapon summons them yet; `--allies N` brings a pack in dev runs.
+
 ## [0.5.15] - 2026-11-01
 
 ### Added

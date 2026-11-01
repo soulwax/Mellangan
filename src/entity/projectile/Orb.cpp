@@ -9,14 +9,16 @@ void Orb::tick() {
     return remove();
   x += xa * DT;
   y += ya * DT;
-  Player &p = *level->player;
-  double xd = p.x - x, yd = p.bodyY() - y;
-  if (!p.dead() && xd * xd + yd * yd < 7 * 7) {
-    p.felledBy = by;
-    p.hurt(damage);
+  level->friends(x, y + 7, 20, [&](Mob &m) {
+    double xd = m.x - x, yd = m.bodyY() - y;
+    if (removed || xd * xd + yd * yd >= 7 * 7)
+      return;
+    if (Player *p = m.asPlayer())
+      p->felledBy = by;
+    m.strike(damage, xa, ya, 0);
     Spark::burst(*level, x, y, {0.75f, 0.35f, 1, 1}, 6, 50, false);
     remove();
-  }
+  });
 }
 
 void Orb::render(Screen &s) {

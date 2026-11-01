@@ -112,6 +112,7 @@ public:
   virtual float contactBonus(const Player &) const { return 1; }
   float power() const override { return damageMul * might * status.outgoing(); }
   void aim(double &ax, double &ay) const override;
+  const Mob &quarry() const;
   void strike(float damage, double xd, double yd, float force,
               Upgrade *src = nullptr) override {
     hurt(damage, xd, yd, force, src);

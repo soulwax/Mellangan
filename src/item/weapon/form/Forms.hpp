@@ -129,6 +129,16 @@ public:
   float knock() const override { return 20; }
 };
 
+class SummonForm : public FormBehavior {
+public:
+  void fire(const FormCast &c) const override;
+  float life(const RecipeShot &) const override { return 0; }
+  void tick(RecipeShot &, Mob &, float) const override {}
+  void render(RecipeShot &, Screen &) const override {}
+  void light(RecipeShot &, Screen &) const override {}
+  float knock() const override { return 40; }
+};
+
 class SpiralForm : public BoltForm {
 public:
   void fire(const FormCast &c) const override;

@@ -84,6 +84,8 @@ void Level::flush() {
     raw->onAdded();
   }
   pending.clear();
+  allies.clear();
+  each<Ally>([&](Ally &a) { allies.push_back(&a); });
 }
 
 void Level::tick() {
@@ -275,8 +277,11 @@ std::vector<Mob *> Level::nearestFoes(bool hostile, double x, double y,
                                       float range, int n) {
   std::vector<Mob *> out;
   if (hostile) {
-    if (Mob *m = playerIn(x, y, range); m && n > 0)
-      out.push_back(m);
+    friends(x, y, range, [&](Mob &m) { out.push_back(&m); });
+    auto d2 = [&](Mob *m) { return (m->x - x) * (m->x - x) + (m->y - y) * (m->y - y); };
+    std::sort(out.begin(), out.end(), [&](Mob *a, Mob *b) { return d2(a) < d2(b); });
+    if (int(out.size()) > n)
+      out.resize(size_t(std::max(0, n)));
     return out;
   }
   for (Enemy *e : nearest(x, y, range, n))
@@ -290,8 +295,6 @@ void Level::foesOf(const Mob &self, double x, double y, double r,
     enemiesNear(x, y, r, [&](Enemy &e) { fn(e); });
     return;
   }
-  double xd = player->x - x, yd = player->y - y;
-  if (!player->dead() && xd * xd + yd * yd < r * r)
-    fn(*player);
+  friends(x, y, float(r), fn);
 }
 

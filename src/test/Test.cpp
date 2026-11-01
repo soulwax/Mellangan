@@ -68,6 +68,7 @@ int runTests() {
   testLootDrops();
   testInventory();
   testEquipStats();
+  testAllies();
   testExpansionEnemies();
   testExpansionContent();
   testArsenal();

@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <string_view>
 
+#include "entity/Ally.hpp"
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
 #include "item/loot/Loot.hpp"
@@ -23,6 +24,8 @@ void DevStart::parse(int argc, char **argv) {
       biome = std::atoi(argv[++i]);
     else if (a == "--give" && more)
       give = std::atoi(argv[++i]);
+    else if (a == "--allies" && more)
+      allies = std::atoi(argv[++i]);
     else if (a == "--landmark" && more)
       landmark = std::atoi(argv[++i]);
     else if (a == "--at" && more)
@@ -95,6 +98,11 @@ void DevStart::apply(Player &p) {
   if (at) {
     p.x = x * 16 + 8, p.y = y * 16 + 8;
     spdlog::info("dev: starting at tile ({}, {})", x, y);
+  }
+  for (int i = 0; i < allies && p.level; i++) {
+    double a = TAU * i / allies;
+    summon(*p.level, AllyKind(i % int(AllyKind::Decoy)), p.x + std::cos(a) * 24,
+           p.y + std::sin(a) * 16, 12, 120);
   }
 }
 

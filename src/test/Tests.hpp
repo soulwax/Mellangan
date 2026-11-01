@@ -24,6 +24,7 @@ void testNewPayloads();
 void testNewStatuses();
 void testItems();
 void testEquipStats();
+void testAllies();
 void testGreenwoodFoes();
 void testRunRules();
 void testShapeForms();
