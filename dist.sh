@@ -66,7 +66,7 @@ echo "Mellangan $version"
 if [[ $platform == macos ]]; then
   cmake -S . -B build-macos-dist -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 \
     -DMELLANGAN_VULKAN_LOADER=OFF
-  cmake --build build-macos-dist --parallel
+  cmake --build build-macos-dist --parallel --clean-first
 else
   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
   cmake --build build --config Release --parallel
