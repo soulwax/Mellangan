@@ -121,7 +121,7 @@ void ExpansionRelic::cast(Mob &p) {
   double a = std::atan2(p.yAim, p.xAim);
   for (int i = 0; i < 2; i++) {
     double angle = a + (i == 0 ? -0.35 : 0.35);
-    p.level->add<ExpansionAttack>(3, p.x, p.bodyY(), std::cos(angle),
+    p.level->add<ExpansionAttack>(xw::Boomerang, p.x, p.bodyY(), std::cos(angle),
                                   std::sin(angle), 30 * p.might, 150.0f, 1)
         ->source = this;
   }

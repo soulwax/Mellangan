@@ -3,6 +3,10 @@
 #include "entity/Entity.hpp"
 #include "item/Upgrade.hpp"
 
+namespace xw {
+enum Kind { Sling, Harpoon, Sigil, Boomerang, Mortar, Lash, Prism, Swarm, Count };
+} // namespace xw
+
 class ExpansionWeapon : public Upgrade {
 public:
   explicit ExpansionWeapon(int kind);
@@ -27,9 +31,13 @@ public:
 
 private:
   bool hitBefore(entt::entity id) const;
+  Mob *freshFoe(double range) const;
+  void steer(double tx, double ty);
   void strike(Mob &e);
+  void sweep(bool area, bool line, Mob *&bounced);
   void born();
   void trail();
   void blast();
   void impact(Mob &e);
+  void renderBolt(Screen &s, Color c) const;
 };

@@ -2,6 +2,8 @@
 
 #include "SpriteObject.hpp"
 
+class LightField;
+
 class Prop : public SpriteObject {
 public:
   struct Part {
@@ -31,4 +33,5 @@ public:
   void render(Screen &s) override;
   float occlusion(float &width) const override;
   void renderShadow(Screen &s) override;
+  void shine(Screen &s, LightField &lights, float time) const;
 };

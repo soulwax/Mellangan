@@ -191,11 +191,12 @@ effects scene without loading or saving player progress.
   `Strikes`, `Barrages`, `Control` and `Support`; `Common.hpp` holds their private helpers
 - `src/entity/enemy` – `Enemy` (AI, movement, hits, drawing), `Roster` (stats table, names, the `create` factory),
   `Rank` (elites, champions, bosses and their casting) and `EnemyDeath` (death, loot and death effects)
-- `src/level` – `Level` (backed by an `entt::registry`; `Level.cpp` lifecycle and world tick, `LevelRender.cpp` floor,
-  props, draw order, reflections and light, `LevelSpace.cpp` collision, heights and spatial queries) and the
+- `src/level` – `Level` (backed by an `entt::registry`; `Level.cpp` lifecycle and world tick, `LevelRender.cpp` props,
+  draw order, reflections and light, `FloorPainter` the ground, blends, puddles, snow and cliffs, `Prop::shine` prop light, `LevelSpace.cpp` collision, heights and spatial queries) and the
   `Spawner`; world generation as small table-driven
   modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and
-  `Encounter` (what a structure does when entered); `level/world` implements `World.hpp` as `Biomes` (tile memo,
+  `Encounter` (what a structure does when entered; the table, with `level/encounter` holding `Sites`, `Landmarks` and
+  their shared helpers); `level/world` implements `World.hpp` as `Biomes` (tile memo,
   biome votes, ground blend), `Terrain` (height, water, dirt, ramps), `Sites` (structure rolls), `Ground` (floor
   tiles, shade, tint) and `Props`, sharing `Internal.hpp`; `level/structure` holds the layouts behind the
   `STRUCTURES` table (`Settlements`, `Wilds`, `Landmarks`); `Prop::piece`, `body`, `lamp` and `fire` set a prop's

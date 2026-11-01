@@ -216,7 +216,7 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
                                       atlas::kit(kt::Obsidian),
                                       "+50% damage, take 2 less per hit",
                                       signet));
-  for (int i=0;i<8;i++)
+  for (int i = 0; i < xw::Count; i++)
     u.push_back(std::make_unique<ExpansionWeapon>(i));
   for (int i=0;i<8;i++)
     u.push_back(std::make_unique<ExpansionRelic>(i));
