@@ -127,11 +127,16 @@ public:
     SDL_RenderTexture(renderer, map, nullptr, &dst);
     int step = STEPS[zoomAt];
     if (done() && !sites.empty() && showSites) {
-      SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
       for (const Structure &st : sites) {
         float x = (st.x + st.w / 2.0f) / step + SIDE / 2.0f,
               y = (st.y + st.h / 2.0f) / step + SIDE / 2.0f + BAR;
-        float r = st.landmark() ? 2.5f : 1.0f;
+        float r = 0.5f;
+        if (st.landmark())
+          SDL_SetRenderDrawColor(renderer, 190, 110, 255, 255), r = 1.5f;
+        else if (st.kind == StructureKind::Shrine)
+          SDL_SetRenderDrawColor(renderer, 255, 220, 90, 255), r = 1.0f;
+        else
+          SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
         SDL_FRect d{x - r, y - r, 2 * r, 2 * r};
         SDL_RenderFillRect(renderer, &d);
       }
@@ -167,7 +172,7 @@ public:
     float ly = BAR + 22 + int(BIOME_COUNT) * 15.0f + 10;
     const char *help[] = {"R/click Refresh: new seed", "0: classic seed",
                           "+/- or wheel: zoom", "C: copy PNG  S: save PNG",
-                          "T: toggle structures", "dots: sites, big = landmark"};
+                          "T: toggle structures", "dots: grey site, yellow shrine", "     purple landmark"};
     for (const char *h : help)
       SDL_RenderDebugText(renderer, x0, ly, h), ly += 14;
     if (mx >= 0 && mx < SIDE && my >= BAR && my < BAR + SIDE) {
