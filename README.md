@@ -182,14 +182,30 @@ effects scene without loading or saving player progress.
   `Hide`) and a plan per enemy kind; `src/Workers` runs it on a thread pool
 - `src/particle` – particles kept outside the registry in `Level::particles`: `Spark` and `TextParticle`, and `Debris` after dittany: blood, meat, smoke, flames, heal crosses and
   the `Explosion` emitter
-- `src/item` – `Upgrade` and its weapons and passives
-- `src/level` – `Level` (backed by an `entt::registry`) and the `Spawner`; world generation as small table-driven
+- `src/item` – `Upgrade` and its weapons, passives, relics, talents and drafted skills (`item/skill`)
+- `src/item/weapon/Recipe` – data-driven weapons: `RECIPES` lists each weapon as one entry, `RecipeWeapon` levels and
+  fires it, and `RecipeShot` holds the shared hit, status, blast and chain mechanics; `item/weapon/form` has one
+  `FormBehavior` class per `Form` (bolt, volley, seeker, boomerang, orbit, nova, rain, field, cleave, lob, trap, beam)
+  deciding how a shot is fired, moves, draws and lights. A new form is a new class plus a line in `FormBehavior::of`
+- `src/entity/ability` – the shared ability catalogue (`entity/Ability.hpp`) used by heroes, skills and foes, grouped as
+  `Strikes`, `Barrages`, `Control` and `Support`; `Common.hpp` holds their private helpers
+- `src/entity/enemy` – `Enemy` (AI, movement, hits, drawing), `Roster` (stats table, names, the `create` factory),
+  `Rank` (elites, champions, bosses and their casting) and `EnemyDeath` (death, loot and death effects)
+- `src/level` – `Level` (backed by an `entt::registry`; `Level.cpp` lifecycle and world tick, `LevelRender.cpp` floor,
+  props, draw order, reflections and light, `LevelSpace.cpp` collision, heights and spatial queries) and the
+  `Spawner`; world generation as small table-driven
   modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and
   `Encounter` (what a structure does when entered)
 - `src/level/BiomeReward`, `EncounterGuards`, and `EncounterObjective` – biome challenge rewards, local guard
   tracking, and objective rules used by the encounter lifecycle
 - `src/menu` – title, pause, level-up, and death menus
-- `src/gui` – reusable GUI widgets and shared choice layout and input handling
+- `src/gui` – reusable GUI widgets and shared choice layout and input handling; `Hud` draws the in-run HUD (bars,
+  timers, icons, minimap, edge pointers to shrines, landmarks and champions) and owns the announcement banners
+- `src/Game` – the run loop, menus, camera and run lifecycle; `src/meta/Saves` owns the preference folder, world
+  choice and world history files
+- `src/test` – the `--test` suite split by area (`CoreTest`, `CombatTest`, `ClassTest`, `RunTest`, `WorldTest`,
+  biome, expansion and arsenal tests; `Tests.hpp` lists them) and `src/test/view` – the `--test-*-view` QA scenes,
+  `--biome-map` and `--capture-screenshots` (`Views.hpp`); `main.cpp` maps each flag to its view in one table
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
 - `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites

@@ -1,14 +1,18 @@
-#pragma once
-
+#undef NDEBUG
 #include <cassert>
-#include <cmath>
+#ifdef _WIN32
+#include <stdlib.h>
+#endif
 
+#include "test/Tests.hpp"
+
+#include <cmath>
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/ExpansionEnemy.hpp"
 #include "level/Level.hpp"
 
-inline void testExpansionEnemies() {
+void testExpansionEnemies() {
   Game game;
   game.level = std::make_unique<Level>(game);
   Level &level = *game.level;

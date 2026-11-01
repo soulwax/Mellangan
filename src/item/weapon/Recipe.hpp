@@ -9,6 +9,8 @@
 #include "item/Upgrade.hpp"
 
 class Enemy;
+class FormBehavior;
+class Mob;
 
 enum class Form {
   Bolt,
@@ -75,7 +77,8 @@ public:
   bool child = false, burstOnEnd = false, back = false;
   std::vector<entt::entity> hits;
 
-private:
+  const FormBehavior &form() const;
+  bool hostile() const { return source && source->hostile(); }
   bool hitBefore(entt::entity id) const;
   Mob *wielder() const;
   void hit(Mob &e, double xd, double yd, float dmg, float knock);
@@ -83,7 +86,6 @@ private:
   void chain(Mob &from);
   void touch(float r);
   void blast(float radius, float dmg);
-  void trail();
   void steer(float range);
 };
 

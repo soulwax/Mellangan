@@ -1,16 +1,20 @@
-#pragma once
-
+#undef NDEBUG
 #include <cassert>
+#ifdef _WIN32
+#include <stdlib.h>
+#endif
+
+#include "test/Tests.hpp"
+
 #include <cmath>
 #include <iostream>
-
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/ExpansionEnemy.hpp"
 #include "level/ExpansionEncounter.hpp"
 #include "level/Level.hpp"
 
-inline void testBiomeEncounters() {
+void testBiomeEncounters() {
   {
     Game game;
     game.level = std::make_unique<Level>(game);

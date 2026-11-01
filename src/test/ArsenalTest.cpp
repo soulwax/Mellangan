@@ -1,13 +1,15 @@
 #undef NDEBUG
 #include <cassert>
+#ifdef _WIN32
+#include <stdlib.h>
+#endif
 
-#include "ArsenalTest.hpp"
+#include "test/Tests.hpp"
+#include "test/Views.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <cstring>
 #include <iostream>
-
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"

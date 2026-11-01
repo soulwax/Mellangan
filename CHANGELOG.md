@@ -4,6 +4,12 @@ All notable changes to Mellangan are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 `dist.ps1` turns the `Unreleased` section into the next version when it packages a release.
 
+## [Unreleased]
+
+### Changed
+
+- Reorganised the source for readability: tests and QA views moved to `src/test`, the HUD and save files left `Game`, weapon forms became one class each, and the largest enemy, level and ability files were split by responsibility. Gameplay is unchanged.
+
 ## [0.5.14] - 2026-11-01
 
 ### Changed

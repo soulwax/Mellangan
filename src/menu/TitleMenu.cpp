@@ -49,7 +49,7 @@ TitleMenu::Layout TitleMenu::layout() const {
   l.seed = {in, y + pad + 56 * u, iw, 18 * u};
   l.diff = {in, l.seed.y + l.seed.h + 22 * u, iw, 16 * u};
   float ry = l.diff.y + l.diff.h + 42 * u;
-  int n = std::min(int(game.history.size()), 6);
+  int n = std::min(int(game.saves.history.size()), 6);
   for (int i = 0; i < 6; i++)
     l.rows[i] = {in, ry + i * 13 * u, iw, 12 * u};
   float bottom = n ? ry + n * 13 * u : l.diff.y + l.diff.h + 18 * u;
@@ -74,12 +74,12 @@ void TitleMenu::choose(int mode) {
 }
 
 void TitleMenu::recall(int i) {
-  if (i < 0 || i >= int(game.history.size()))
+  if (i < 0 || i >= int(game.saves.history.size()))
     return;
   pick = i;
   if (!typing())
     SDL_StartTextInput(game.window);
-  const std::string &code = game.history[i].code;
+  const std::string &code = game.saves.history[i].code;
   game.worldMode = code == "CLASSIC" ? WorldMode::Classic : WorldMode::Custom;
   game.seedCode = code == "CLASSIC" ? "" : code;
   if (!typing())
@@ -112,7 +112,7 @@ void TitleMenu::tick() {
     return game.setDifficulty(
         Difficulty((tier + (in.next.clicked ? 1 : tiers - 1)) % tiers));
   }
-  int n = int(game.history.size());
+  int n = int(game.saves.history.size());
   if (n && in.older.clicked)
     return recall(pick < 0 ? 0 : std::max(0, pick - 1));
   if (n && in.newer.clicked)
@@ -222,7 +222,7 @@ void TitleMenu::render(Screen &s) {
                nightmare ? col::red.alpha(0.75f + 0.25f * std::sin(t * 6)) : heat);
   s.text(difficultyBlurb(tier), p.x + pad, d.y + d.h + 5 * u, small, col::muted);
 
-  int n = std::min(int(game.history.size()), 6);
+  int n = std::min(int(game.saves.history.size()), 6);
   if (!n)
     return;
   float hy = l.rows[0].y - 16 * u;
@@ -230,7 +230,7 @@ void TitleMenu::render(Screen &s) {
   s.text("Up/Down", p.x + p.w - pad - Screen::textWidth("Up/Down", small), hy,
          small, col::muted * 0.7f);
   for (int i = 0; i < n; i++) {
-    const PastWorld &w = game.history[i];
+    const PastWorld &w = game.saves.history[i];
     const SDL_FRect &r = l.rows[i];
     bool on = w.code == game.worldName();
     if (on)

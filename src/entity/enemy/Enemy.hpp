@@ -75,6 +75,8 @@ public:
   bool aware = true, wantsFire = false, wantsLeader = false, faltered = false,
        alarmed = false, buried = false, gilded = false, boss = false;
 
+  static constexpr float WIND = 0.6f;
+
   Enemy(const EnemyType &type, float hpMul, float damageMul);
   static const EnemyType &typeOf(EnemyKind kind);
   static std::unique_ptr<Enemy> create(EnemyKind kind, float hpMul,

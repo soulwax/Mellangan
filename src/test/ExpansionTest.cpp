@@ -1,13 +1,14 @@
 #undef NDEBUG
 #include <cassert>
+#ifdef _WIN32
+#include <stdlib.h>
+#endif
 
-#include "ExpansionTest.hpp"
+#include "test/Tests.hpp"
 
-#include <cassert>
 #include <iostream>
 #include <set>
 #include <filesystem>
-
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"

@@ -1,0 +1,31 @@
+#pragma once
+
+int runTests();
+
+void testArsenal();
+void testArtsBothSides();
+void testAutomaticLevelUp();
+void testBalance();
+void testBiomeEncounters();
+void testBiomeTransitions();
+void testClassKits();
+void testCombatReadability();
+void testEnemyDeathEffects();
+void testExpansionContent();
+void testExpansionEnemies();
+void testExperienceCurve();
+void testFoeKits();
+void testGeneralSkills();
+void testGuiChoices();
+void testHills();
+void testLevelLifecycleAndSimulation();
+void testNewFoes();
+void testNewTraits();
+void testPoolAllocAndFree();
+void testPoolConcurrency();
+void testRunVariety();
+void testSidedAbilities();
+void testSidedEffects();
+void testSpawnShore();
+void testStatusDamage();
+void testStatuses();

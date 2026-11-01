@@ -9,9 +9,8 @@
 
 #include "Crash.hpp"
 #include "Game.hpp"
-#include "Test.hpp"
-#include "BiomeTransitionTest.hpp"
-#include "ArsenalTest.hpp"
+#include "test/Tests.hpp"
+#include "test/Views.hpp"
 #include "entity/Pool.h"
 #include "Version.hpp"
 #include "other/Ouroboros.hpp"
@@ -79,66 +78,32 @@ int main(int argc, char **argv) {
   spdlog::info("{}", vk2dHostInformation());
   spdlog::info("Window {}x{}, {}x{} pixels", ww, wh, pw, ph);
 
-  for (int i = 1; i < argc; i++)
-    if (std::string_view(argv[i]) == "--capture-screenshots") {
-      captureScreenshotSuite(window, base);
-      vk2dRendererQuit();
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      pool_shutdown();
-      return 0;
-    }
-
+  using View = void (*)(SDL_Window *, const std::string &);
+  const std::pair<std::string_view, View> views[] = {
+      {"--capture-screenshots", captureScreenshotSuite},
+      {"--test-combat-view", viewCombatReadability},
+      {"--test-encounter-view", viewBiomeEncounter},
+      {"--test-gui-view", viewGui},
+      {"--test-effects-view", viewDeathEffects}};
+  auto finish = [&](int code) {
+    vk2dRendererQuit();
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    pool_shutdown();
+    return code;
+  };
   for (int i = 1; i < argc; i++)
     if (std::string_view(argv[i]) == "--test-arsenal-view") {
       viewArsenal(window, base,
                   i + 1 < argc && argv[i + 1][0] != '-' ? argv[i + 1] : nullptr);
-      vk2dRendererQuit();
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      pool_shutdown();
-      return 0;
+      return finish(0);
     }
-
-  for (int i = 1; i < argc; i++)
-    if (std::string_view(argv[i]) == "--test-combat-view") {
-      viewCombatReadability(window, base);
-      vk2dRendererQuit();
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      pool_shutdown();
-      return 0;
-    }
-
-  for (int i = 1; i < argc; i++)
-    if (std::string_view(argv[i]) == "--test-encounter-view") {
-      viewBiomeEncounter(window, base);
-      vk2dRendererQuit();
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      pool_shutdown();
-      return 0;
-    }
-
-  for (int i = 1; i < argc; i++)
-    if (std::string_view(argv[i]) == "--test-gui-view") {
-      viewGui(window, base);
-      vk2dRendererQuit();
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      pool_shutdown();
-      return 0;
-    }
-
-  for (int i = 1; i < argc; i++)
-    if (std::string_view(argv[i]) == "--test-effects-view") {
-      viewDeathEffects(window, base);
-      vk2dRendererQuit();
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      pool_shutdown();
-      return 0;
-    }
+  for (auto &[flag, run] : views)
+    for (int i = 1; i < argc; i++)
+      if (std::string_view(argv[i]) == flag) {
+        run(window, base);
+        return finish(0);
+      }
 
   for (int i = 1; i + 3 < argc; i++)
     if (std::string_view(argv[i]) == "--test-biome-view") {
@@ -154,11 +119,7 @@ int main(int argc, char **argv) {
           x < -1000000 || x > 1000000 || y < -1000000 || y > 1000000)
         return 1;
       viewBiomeTransition(window, base, x, y, seed);
-      vk2dRendererQuit();
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      pool_shutdown();
-      return 0;
+      return finish(0);
     }
 
   for (int i = 1; i < argc; i++)

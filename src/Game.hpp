@@ -14,16 +14,9 @@
 #include "menu/Menu.hpp"
 #include "meta/Balance.hpp"
 #include "meta/Codex.hpp"
+#include "meta/Saves.hpp"
+#include "gui/Hud.hpp"
 
-
-enum class WorldMode { Classic, Random, Daily, Custom };
-
-struct PastWorld {
-  std::string code;
-  float best;
-  int runs;
-  bool dawn;
-};
 
 inline std::string clockText(float t) {
   return fmt::format("{:02}:{:02}", int(t) / 60, int(t) % 60);
@@ -38,7 +31,6 @@ public:
   std::unique_ptr<Menu> menu;
   bool running = true, dev = false, reducedParticles = false;
   Bench bench;
-  static constexpr int HISTORY = 6;
 
   WorldMode worldMode = WorldMode::Classic;
   std::string seedCode, arm;
@@ -49,7 +41,8 @@ public:
   Balance balance;
   Difficulty difficulty = Difficulty::HurtMePlenty;
   std::string base;
-  std::vector<PastWorld> history;
+  Saves saves;
+  Hud hud{*this};
   Codex codex;
   float best = 0;
   bool beatBest = false;
@@ -83,10 +76,9 @@ public:
 private:
   std::unique_ptr<Menu> nextMenu;
   bool menuChanged = false, showFps = false, worldDebug = false;
-  float time = 0, hurt = 0, shake = 0, fps = 0, bannerTime = 0, freeze = 0,
+  float time = 0, hurt = 0, shake = 0, fps = 0, freeze = 0,
         lastStop = -1, levelBeat = -1;
-  std::string banner, chartPath, prefPath;
-  std::deque<std::string> banners;
+  std::string chartPath;
   double xCam = 0, yCam = 0;
   int xView = 0, yView = 0;
 
@@ -97,12 +89,5 @@ private:
   void saveWorld() const;
   void remember(bool dawn);
   void render();
-  void renderHud();
-  void renderCompass();
-  void renderLandmarks();
-  void renderChampions();
-  bool edge(double wx, double wy, float &xe, float &ye, float &xn,
-            float &yn) const;
-  void renderMinimap();
   friend void captureScreenshotSuite(SDL_Window *window, const std::string &base);
 };
