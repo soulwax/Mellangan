@@ -39,14 +39,14 @@ void pass(Workers &workers, std::vector<Enemy *> &list) {
 
 Level::~Level() = default;
 
-Level::Level(Game &game) : game(game) {
+Level::Level(Game &game, RunRules rules) : game(game), rules(std::move(rules)) {
   cellStart.assign(GRID * GRID + 1, 0);
   cellFill.assign(GRID * GRID, 0);
   player = add<Player>();
   flush();
   Bounty::roll(bounties, 3);
-  if (rng.chance(0.85f)) {
-    omen = rng.irange(0, OMEN_COUNT - 1);
+  if (this->rules.omen == RunRules::ROLL_OMEN ? rng.chance(0.85f) : this->rules.omen >= 0) {
+    omen = this->rules.omen >= 0 ? this->rules.omen : rng.irange(0, OMEN_COUNT - 1);
     handicaps += OMENS[omen].handicap;
   }
 }
@@ -89,7 +89,7 @@ void Level::flush() {
 void Level::tick() {
   time += DT, ticks++;
   prof_begin(PROF_HOUSEKEEP);
-  if (!player->dead() && !night.dawn)
+  if (!player->dead() && (!night.dawn || !rules.endsAtDawn))
     night.tick();
   if (!player->dead() && !night.dawn)
     spawner.tick(), explore(), hunt();

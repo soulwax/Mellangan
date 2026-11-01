@@ -94,23 +94,14 @@ void DevStart::apply(Player &p) {
 }
 
 bool DevStart::visitBiome(Player &p) const {
-  for (int r = 0; r < 4000; r += 12)
-    for (int i = 0, n = std::max(1, r / 2); i < n; i++) {
-      double a = TAU * i / n;
-      int tx = int(std::cos(a) * r), ty = int(std::sin(a) * r);
-      bool deep = true;
-      for (int k = 0; k < 4; k++)
-        deep &= world::biomeAt(tx + (k & 1 ? 6 : -6), ty + (k & 2 ? 6 : -6)) ==
-                biome;
-      if (!deep || world::biomeAt(tx, ty) != biome)
-        continue;
-      p.x = tx * 16 + 8, p.y = ty * 16 + 8;
-      spdlog::info("dev: visiting {} at tile ({}, {})", BIOMES[biome]->name, tx,
-                   ty);
-      return true;
-    }
-  spdlog::warn("dev: biome {} not found", biome);
-  return false;
+  int tx, ty;
+  if (!world::findBiome(biome, tx, ty)) {
+    spdlog::warn("dev: biome {} not found", biome);
+    return false;
+  }
+  p.x = tx * 16 + 8, p.y = ty * 16 + 8;
+  spdlog::info("dev: visiting {} at tile ({}, {})", BIOMES[biome]->name, tx, ty);
+  return true;
 }
 
 void DevStart::armPlayer(Player &p) const {

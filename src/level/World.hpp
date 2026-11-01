@@ -45,5 +45,6 @@ Sprite groundTile(int x, int y);
 float groundShade(int x, int y);
 Color groundTint(int x, int y);
 bool propAt(int x, int y, Prop &p);
+bool findBiome(int biome, int &x, int &y, int reach = 4000);
 
 } // namespace world

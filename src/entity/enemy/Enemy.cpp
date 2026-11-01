@@ -126,6 +126,12 @@ void Enemy::act() {
     return;
   level->add<Orb>(x, bodyY(), xd / dd * 70, yd / dd * 70, 10 * damageMul * status.outgoing())
       ->by = name();
+  if (traits.has(Trait::Multishot))
+    for (int side = -1; side <= 1; side += 2) {
+      double a = std::atan2(yd, xd) + side * 0.3;
+      level->add<Orb>(x, bodyY(), std::cos(a) * 70, std::sin(a) * 70,
+                      10 * damageMul * status.outgoing())->by = name();
+    }
   if (boss) {
     double turn = std::atan2(yd, xd) + PI / 10;
     for (int i = 0; i < 10; i++) {

@@ -24,7 +24,10 @@ enum class Form {
   Boomerang,
   Lob,
   Trap,
-  Beam
+  Beam,
+  Whip,
+  Wall,
+  Spiral
 };
 
 namespace pay {

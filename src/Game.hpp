@@ -37,6 +37,7 @@ public:
   WorldMode worldMode = WorldMode::Classic;
   std::string seedCode;
   DevStart start;
+  RunRules rules;
   Balance balance;
   Difficulty difficulty = Difficulty::HurtMePlenty;
   std::string base;

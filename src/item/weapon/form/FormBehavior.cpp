@@ -5,7 +5,7 @@
 #include "level/Level.hpp"
 #include "particle/Drift.hpp"
 
-static_assert(int(Form::Beam) == 11, "every Form needs a FormBehavior");
+static_assert(int(Form::Spiral) == 14, "every Form needs a FormBehavior");
 
 const FormBehavior &FormBehavior::of(Form form) {
   static const BoltForm bolt;
@@ -20,9 +20,13 @@ const FormBehavior &FormBehavior::of(Form form) {
   static const LobForm lob;
   static const TrapForm trap;
   static const BeamForm beam;
-  static const FormBehavior *const all[] = {&bolt, &volley, &orbit, &nova,
-                                            &rain, &field, &seeker, &cleave,
-                                            &boomerang, &lob, &trap, &beam};
+  static const WhipForm whip;
+  static const WallForm wall;
+  static const SpiralForm spiral;
+  static const FormBehavior *const all[] = {&bolt,  &volley, &orbit,     &nova, &rain,
+                                            &field, &seeker, &cleave,    &boomerang,
+                                            &lob,   &trap,   &beam,      &whip, &wall,
+                                            &spiral};
   return *all[int(form)];
 }
 

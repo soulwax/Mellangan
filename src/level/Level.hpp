@@ -19,6 +19,7 @@
 #include "level/Chart.hpp"
 #include "level/LightField.hpp"
 #include "level/Night.hpp"
+#include "level/RunRules.hpp"
 #include "level/Spawner.hpp"
 #include "level/World.hpp"
 
@@ -49,6 +50,7 @@ public:
   uint32_t entered = 0, litBiomes = 0;
   float pace = 1, step = 1, xpMul = 1, eliteMul = 1, kindleRate = 1;
   int omen = -1;
+  RunRules rules;
   const Omen &portent() const;
   Color air;
   float distanceRan = 0, totalDamage = 0;
@@ -61,7 +63,7 @@ public:
   Chart chart;
   BiomeEvents events;
   Sky sky;
-  explicit Level(Game &game);
+  explicit Level(Game &game, RunRules rules = {});
   ~Level();
 
   std::vector<std::unique_ptr<SpriteObject>> particles;

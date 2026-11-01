@@ -63,6 +63,7 @@ int runTests() {
   testStatusDamage();
   testNewStatuses();
   testNewPayloads();
+  testShapeForms();
   testItems();
   testExpansionEnemies();
   testExpansionContent();
@@ -82,11 +83,13 @@ int runTests() {
   testGeneralSkills();
   testRunVariety();
   testNewTraits();
+  testChampionTraits();
   testClassKits();
   testSpawnShore();
   testHills();
   testNewFoes();
   testGreenwoodFoes();
+  testRunRules();
   std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"
             << std::endl;

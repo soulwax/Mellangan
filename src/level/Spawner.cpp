@@ -82,7 +82,10 @@ void Spawner::trickle(float t) {
   if ((timer -= DT) > 0)
     return;
   const Balance &b = level.game.balance;
-  timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp) * level.portent().rate;
+  if (level.rules.spawnRate <= 0)
+    return void(timer = 1);
+  timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp) * level.portent().rate /
+           level.rules.spawnRate;
   Roster r = roster(t);
   for (int i = 0, batch = 1 + int(t / b.batchEvery);
        i < batch && level.count<Enemy>() < int(b.enemyCap); i++) {
@@ -96,7 +99,8 @@ void Spawner::horde(float t) {
   const Balance &b = level.game.balance;
   const Omen &o = level.portent();
   nextWave += b.hordeEvery * o.waves;
-  int count = int(std::min(b.hordeMax, b.hordeBase + t / b.hordeRamp) * o.horde);
+  int count = int(std::min(b.hordeMax, b.hordeBase + t / b.hordeRamp) * o.horde *
+                  level.rules.hordeScale);
   int open[WAVES], n = 0;
   for (int i = 0; i < WAVES; i++)
     if (WAVE_DEFS[i].from <= t && i != lastWave)
@@ -170,17 +174,17 @@ void Spawner::tick() {
   const Omen &o = level.portent();
   float t = level.time;
   trickle(t);
-  if (t >= nextWave)
+  if (t >= nextWave && level.rules.waves)
     horde(t);
   if (t >= nextMimic * o.mimics)
     mimics();
   if (t >= nextBand * o.bands)
     renegades(t);
-  if (t >= nextChampion * o.champions)
+  if (t >= nextChampion * o.champions && level.rules.bosses)
     champions();
   if (t >= nextBarrel)
     barrel();
-  if (t >= nextBoss)
+  if (t >= nextBoss && level.rules.bosses)
     boss();
 }
 
@@ -293,10 +297,13 @@ Enemy *Spawner::champion(double x, double y) {
 Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
                       bool boss) {
   std::lock_guard<std::mutex> lock(spawnMutex);
+  if (level.rules.safeAt(x, y))
+    return nullptr;
   const Balance &b = level.game.balance;
   const Omen &o = level.portent();
-  float hpMul = b.enemyHp * (1 + level.time / b.enemyHpRamp) * o.hp;
-  float dmgMul = b.enemyDamage * (1 + level.time / b.enemyDamageRamp);
+  float t = level.rules.threat ? level.rules.threat(x, y) : level.time;
+  float hpMul = b.enemyHp * (1 + t / b.enemyHpRamp) * o.hp;
+  float dmgMul = b.enemyDamage * (1 + t / b.enemyDamageRamp);
   float bossHp = 1 + (bosses - 1) * b.bossHpStep;
   if (kind == EnemyKind::Cyclops)
     hpMul *= bossHp;
@@ -304,8 +311,8 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   e->x = x, e->y = y, e->aware = aware;
   if (boss)
     e->makeBoss(Enemy::typeOf(EnemyKind::Cyclops).hp * hpMul * bossHp, 1.6f);
-  else if (kind != EnemyKind::Cyclops && level.time > b.eliteStart &&
-      rng.chance((b.eliteBase + level.time / b.eliteRamp) * level.eliteMul)) {
+  else if (kind != EnemyKind::Cyclops && t > b.eliteStart &&
+      rng.chance((b.eliteBase + t / b.eliteRamp) * level.eliteMul)) {
     e->makeElite(b.eliteHp);
     if (rng.chance(o.skilled))
       e->learn();

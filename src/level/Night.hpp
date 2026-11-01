@@ -7,19 +7,21 @@ class Screen;
 
 class Night {
 public:
-  static constexpr float LENGTH = 900, PULL = 60, KINDLE = 6;
+  static constexpr float KINDLE = 6;
   static constexpr int MAX_LIT = 64;
 
   int lit = 0;
   float kindling = 0;
   bool dawn = false, hasBeacon = false;
   bool offering = false;
+  int nights = 1;
+  float nightStart = 0, dayEnds = 0;
   Structure beacon{};
 
   explicit Night(Level &level) : level(level) {}
   void tick();
   void renderLight(Screen &s) const;
-  float dawnAt() const { return LENGTH - lit * PULL; }
+  float dawnAt() const;
   float left() const;
   float daylight() const;
   bool isLit(const Structure &s) const;
@@ -30,5 +32,6 @@ private:
   float scan = 0;
 
   void kindle();
+  void cycle();
   static bool cold(const Structure *s, const void *night);
 };

@@ -10,6 +10,7 @@
 #include "entity/enemy/Hazard.hpp"
 #include "entity/enemy/WildFoe.hpp"
 #include "entity/projectile/Arrow.hpp"
+#include "entity/projectile/Orb.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
 
@@ -26,6 +27,22 @@ struct Arena {
       up->level = 0;
   }
   ~Arena() { game.level.reset(); }
+
+  Enemy *any(EnemyKind kind, double dx, double dy, Trait trait) {
+    auto made = Enemy::create(kind, 4, 1);
+    Enemy *e = made.get();
+    e->x = p.x + dx, e->y = p.y + dy;
+    e->traits.add(trait);
+    level.add(std::move(made));
+    return e;
+  }
+
+  int orbs() {
+    int n = 0;
+    for (auto [id, o] : level.reg.view<Owned>().each())
+      n += dynamic_cast<Orb *>(o.self.get()) && !o.self->removed;
+    return n;
+  }
 
   WildFoe *add(EnemyKind kind, double dx, double dy) {
     auto made = Enemy::create(kind, 4, 1);
@@ -119,5 +136,55 @@ void testGreenwoodFoes() {
   }
   std::cout << "[TEST] Greenwood foes: shamans mend, saplings grow, moths dim, cutthroats "
                "backstab, thornlings leave brambles, archers loose volleys: PASS"
+            << std::endl;
+}
+
+void testChampionTraits() {
+  auto contact = [](Trait trait, auto check) {
+    Arena a;
+    a.p.god = false, a.p.hp = a.p.maxHp = 1e6f, a.p.invuln = 0;
+    a.any(EnemyKind::Knight, 3, 0, trait);
+    float skill = a.p.skillTime;
+    for (int i = 0; i < 30 && a.p.hp >= a.p.maxHp; i++)
+      a.run(1);
+    assert(a.p.hp < a.p.maxHp);
+    check(a.p, skill);
+  };
+  contact(Trait::Cursed, [](Player &p, float) { assert(p.status.power(StatusKind::Weaken) > 0); });
+  contact(Trait::Silencing, [](Player &p, float skill) { assert(p.skillTime >= skill + 1.9f); });
+  contact(Trait::FireEnchanted, [](Player &p, float) { assert(p.status.power(StatusKind::Burn) > 0); });
+  {
+    Arena a;
+    a.p.god = false, a.p.hp = a.p.maxHp = 1e6f;
+    Enemy *e = a.any(EnemyKind::Rat, 30, 0, Trait::FireEnchanted);
+    a.run(2);
+    a.p.status.clear();
+    e->hurt(1e6f, 0, 0, 0);
+    assert(a.p.status.power(StatusKind::Burn) > 0);
+  }
+  {
+    Arena a;
+    Enemy *e = a.any(EnemyKind::Knight, 200, 0, Trait::StoneSkin);
+    a.run(2);
+    assert(std::abs(e->traits.incoming(*e, 100) - 65) < 1e-3f);
+    assert(e->traits.speed() < 1);
+  }
+  {
+    Arena a;
+    a.any(EnemyKind::Cultist, 120, 0, Trait::Multishot);
+    int most = 0;
+    for (int i = 0; i < 600 && most < 3; i++)
+      a.run(1), most = std::max(most, a.orbs());
+    assert(most >= 3);
+  }
+  {
+    Arena a;
+    a.any(EnemyKind::Knight, 150, 0, Trait::AuraBearer);
+    Enemy *ally = a.any(EnemyKind::Rat, 170, 10, Trait::Hasted);
+    a.run(3);
+    assert(ally->frenzy > 0);
+  }
+  std::cout << "[TEST] Cursed, silencing, enchanted, stone skin, multishot and aura bearer "
+               "traits: PASS"
             << std::endl;
 }

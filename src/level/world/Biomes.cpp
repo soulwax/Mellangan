@@ -128,4 +128,18 @@ const Biome *blendedBiome(int x, int y) {
   return there->winter() == here->winter() ? there : here;
 }
 
+bool findBiome(int biome, int &x, int &y, int reach) {
+  for (int r = 0; r < reach; r += 12)
+    for (int i = 0, n = std::max(1, r / 2); i < n; i++) {
+      double a = TAU * i / n;
+      int tx = int(std::cos(a) * r), ty = int(std::sin(a) * r);
+      bool deep = true;
+      for (int k = 0; k < 4; k++)
+        deep &= biomeAt(tx + (k & 1 ? 6 : -6), ty + (k & 2 ? 6 : -6)) == biome;
+      if (deep && biomeAt(tx, ty) == biome)
+        return x = tx, y = ty, true;
+    }
+  return false;
+}
+
 } // namespace world

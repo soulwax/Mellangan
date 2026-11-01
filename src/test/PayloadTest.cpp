@@ -8,6 +8,7 @@
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "item/Upgrade.hpp"
 #include "item/weapon/Recipe.hpp"
 #include "level/Level.hpp"
 
@@ -102,4 +103,34 @@ void testNewPayloads() {
   assert(!boss->dead());
   game.level.reset();
   std::cout << "[TEST] Bleed, weaken, fear, shatter and execute payloads: PASS" << std::endl;
+}
+
+void testShapeForms() {
+  auto arena = [](Form form, double dx, int count, int ticks, auto check) {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    p.god = true;
+    for (auto &up : p.upgrades)
+      up->level = 0;
+    Enemy *e = place(level, p.x + dx, p.y, EnemyKind::Knight);
+    level.tick();
+    level.tick();
+    float hp = e->hp;
+    Recipe r{"Probe", nullptr, "", "probe", 0, form, 0, 10, 1, 70, 160, count,
+             col::white, atlas::pt::Rune};
+    fireRecipe(r, p, nullptr, 10, 70, count);
+    for (int i = 0; i < ticks; i++)
+      level.tick();
+    check(*e, p, hp);
+    game.level.reset();
+  };
+  arena(Form::Whip, 45, 1, 20, [](Enemy &e, Player &, float hp) { assert(e.hp < hp); });
+  arena(Form::Wall, 110, 1, 150, [](Enemy &e, Player &p, float hp) {
+    assert(e.hp < hp);
+    assert(e.x - p.x > 40);
+  });
+  arena(Form::Spiral, 50, 4, 90, [](Enemy &e, Player &, float hp) { assert(e.hp < hp); });
+  std::cout << "[TEST] Whip cracks, walls hold foes back, spirals reach out: PASS" << std::endl;
 }

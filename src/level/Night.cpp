@@ -23,11 +23,31 @@ EnemyKind strongestUnlocked(float time) {
 }
 } // namespace
 
+float Night::dawnAt() const {
+  const RunRules &r = level.rules;
+  return nightStart + r.nightLength - (r.endsAtDawn ? lit * r.dawnPull : 0);
+}
+
 float Night::left() const { return std::max(0.0f, dawnAt() - level.time); }
 
 float Night::daylight() const {
+  if (dawn && !level.rules.endsAtDawn)
+    return clampf((dayEnds - level.time) / 20, 0, 1);
   float d = clampf(1 - left() / 150, 0, 1);
   return d * d;
+}
+
+void Night::cycle() {
+  if (dawn) {
+    if (level.time < dayEnds)
+      return;
+    dawn = false, nightStart = level.time, nights++;
+    level.game.announce("NIGHT FALLS");
+    return;
+  }
+  if (level.time >= dawnAt())
+    dawn = true, dayEnds = level.time + level.rules.dayLength,
+    level.game.announce("DAWN BREAKS");
 }
 
 bool Night::isLit(const Structure &s) const {
@@ -43,6 +63,11 @@ bool Night::cold(const Structure *s, const void *night) {
 }
 
 void Night::tick() {
+  if (!level.rules.endsAtDawn) {
+    cycle();
+    if (dawn)
+      return;
+  }
   Player &p = *level.player;
   int tx = int(std::floor(p.x / 16)), ty = int(std::floor(p.y / 16));
   Structure here;
@@ -65,7 +90,7 @@ void Night::tick() {
   if ((scan -= DT) <= 0)
     scan = 0.5f,
     hasBeacon = world::nearestStructure(p.x, p.y, 7, beacon, cold, this);
-  if (!dawn && level.time >= dawnAt())
+  if (level.rules.endsAtDawn && !dawn && level.time >= dawnAt())
     dawn = true, level.game.onDawn();
 }
 

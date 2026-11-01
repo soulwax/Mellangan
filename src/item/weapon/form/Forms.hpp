@@ -109,3 +109,29 @@ public:
   void render(RecipeShot &s, Screen &screen) const override;
   void light(RecipeShot &s, Screen &screen) const override;
 };
+
+class WhipForm : public FormBehavior {
+public:
+  void fire(const FormCast &c) const override;
+  float life(const RecipeShot &) const override { return 0.3f; }
+  void tick(RecipeShot &s, Mob &p, float speed) const override;
+  void render(RecipeShot &s, Screen &screen) const override;
+  float knock() const override { return 70; }
+};
+
+class WallForm : public FormBehavior {
+public:
+  void fire(const FormCast &c) const override;
+  float life(const RecipeShot &) const override { return 4.0f; }
+  void tick(RecipeShot &s, Mob &p, float speed) const override;
+  void render(RecipeShot &s, Screen &screen) const override;
+  void light(RecipeShot &s, Screen &screen) const override;
+  float knock() const override { return 20; }
+};
+
+class SpiralForm : public BoltForm {
+public:
+  void fire(const FormCast &c) const override;
+  float life(const RecipeShot &s) const override;
+  void tick(RecipeShot &s, Mob &p, float speed) const override;
+};

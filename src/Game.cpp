@@ -217,7 +217,7 @@ void Game::build() {
       saves.dir().empty()
           ? ""
           : saves.dir() + (code.empty() ? "chart.bin" : "chart-" + code + ".bin");
-  level = std::make_unique<Level>(*this);
+  level = std::make_unique<Level>(*this, rules);
   if (!bench.enabled)
     level->chart.load(chartPath);
   snapCamera();
