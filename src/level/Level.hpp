@@ -132,6 +132,7 @@ public:
   }
   bool visited(const Structure &s) const;
   float strike();
+  void quake(double x, double y, double r, float damage, float force);
   void reflect(Screen &s);
   int surfaceAt(double x, double y) const;
   Mob *mob(entt::entity id);

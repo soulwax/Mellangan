@@ -1,6 +1,5 @@
 #include "level/Encounter.hpp"
 
-#include "entity/enemy/Enemy.hpp"
 #include "level/Level.hpp"
 #include "level/encounter/Common.hpp"
 #include "particle/Drift.hpp"
@@ -26,14 +25,6 @@ void drift(Level *level, double x, double y, int icon, Color c, float rise) {
   Drift *d = level->add<Drift>(x, y, rng.range(-6, 6), rise, icon, c,
                                rng.range(2.5f, 4));
   d->sway = 8, d->scale = 0.8f, d->drag = 0.4f;
-}
-
-void quake(Level *level, double x, double y, double r, float damage, float force) {
-  level->enemiesNear(x, y, r + 10, [&](Enemy &e) {
-    double xd = e.x - x, yd = e.y - y;
-    if (xd * xd + yd * yd < r * r)
-      e.hurt(damage, xd, yd, force);
-  });
 }
 
 } // namespace encounter

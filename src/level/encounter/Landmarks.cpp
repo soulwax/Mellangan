@@ -56,7 +56,7 @@ void leaves(Level *level, Site s) {
 void fallenStar(Level *level, Site s) {
   double x = s->centerX(), y = footY(s) - 10;
   level->add<Shockwave>(x, y, 6, 110, 0.5f, Color{1, 0.9f, 0.55f, 1})->spokes = 10;
-  quake(level, x, y, 110, 60 + level->time * 0.1f, 160);
+  level->quake(x, y, 110, 60 + level->time * 0.1f, 160);
   for (int i = 0; i < 12; i++)
     Gem::drop(*level, x + rng.range(-20, 20), y + rng.range(-6, 14), 4);
   level->add<Chest>(x, footY(s) + 14);
@@ -107,7 +107,7 @@ void spire(Level *level, Site s) {
   p.skillTime = 0, p.might += 0.05f;
   double x = s->centerX(), y = footY(s) - 20;
   level->add<Shockwave>(x, y, 6, 120, 0.5f, Color{0.75f, 0.55f, 1, 1})->spokes = 8;
-  quake(level, x, y, 120, 40 + level->time * 0.08f, 120);
+  level->quake(x, y, 120, 40 + level->time * 0.08f, 120);
   level->game.announce("YOUR POWER RINGS: SKILL READY, +5% MIGHT");
   Sound::nova.play(0.5f, 0);
 }

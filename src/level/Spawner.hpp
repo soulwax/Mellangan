@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <vector>
 
 #include "entity/enemy/Enemy.hpp"
 
@@ -22,6 +23,19 @@ private:
         nextMimic = 70, nextBand = 160, nextChampion = 110;
   int bosses = 0, lastWave = -1;
 
+  struct Roster {
+    std::vector<EnemyKind> pool, common;
+  };
+
+  Roster roster(float t) const;
+  EnemyKind pick(const Roster &r, double x, double y) const;
+  void trickle(float t);
+  void horde(float t);
+  void mimics();
+  void renegades(float t);
+  void champions();
+  void barrel();
+  void boss();
   void ring(float dist, double &x, double &y) const;
   std::mutex spawnMutex;
 };

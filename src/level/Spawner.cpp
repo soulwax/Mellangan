@@ -36,123 +36,152 @@ bool crownable(EnemyKind k) {
   return k < EnemyKind::Mimic && k != EnemyKind::Cyclops && k != EnemyKind::Thief &&
          k != EnemyKind::Skeleton && k != EnemyKind::Alpha;
 }
+uint32_t localFoes(BiomeId region) {
+  uint32_t foes = BIOMES[region]->foes;
+  if (region == BIOME_MIRE)
+    foes |= foe(EnemyKind::MireLeech) | foe(EnemyKind::BogLantern);
+  if (region == BIOME_DESERT || region == BIOME_BADLANDS)
+    foes |= foe(EnemyKind::GlassMantis) | foe(EnemyKind::DustVulture);
+  if (region == BIOME_SNOW || region == BIOME_TAIGA)
+    foes |= foe(EnemyKind::FrostWisp) | foe(EnemyKind::Iceback);
+  if (region == BIOME_FUNGAL)
+    foes |= foe(EnemyKind::Sporeling) | foe(EnemyKind::MycelialBrute);
+  if (region == BIOME_ASHLANDS)
+    foes |= foe(EnemyKind::EmberImp) | foe(EnemyKind::CinderGolem);
+  return foes;
+}
+
 } // namespace
 
-void Spawner::tick() {
-  const Balance &b = level.game.balance;
-  const Omen &o = level.portent();
-  float t = level.time;
-  std::vector<EnemyKind> pool, common;
+Spawner::Roster Spawner::roster(float t) const {
+  Roster r;
   for (int k = 0; k < int(EnemyKind::Count); k++)
     if (Enemy::typeOf(EnemyKind(k)).unlockAt <= t)
-      (k < int(EnemyKind::Cyclops) ? common : pool).push_back(EnemyKind(k));
-  pool.insert(pool.end(), common.begin(), common.end());
-  int n = int(common.size());
-  auto pick = [&](double x, double y) {
-    if (t >= 70 && rng.chance(0.015f))
-      return EnemyKind::Thief;
-    uint32_t foes =
-        BIOMES[world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)))]
-            ->foes;
-    BiomeId region =
-        world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)));
-    if (region == BIOME_MIRE)
-      foes |= foe(EnemyKind::MireLeech) | foe(EnemyKind::BogLantern);
-    if (region == BIOME_DESERT || region == BIOME_BADLANDS)
-      foes |= foe(EnemyKind::GlassMantis) | foe(EnemyKind::DustVulture);
-    if (region == BIOME_SNOW || region == BIOME_TAIGA)
-      foes |= foe(EnemyKind::FrostWisp) | foe(EnemyKind::Iceback);
-    if (region == BIOME_FUNGAL)
-      foes |= foe(EnemyKind::Sporeling) | foe(EnemyKind::MycelialBrute);
-    if (region == BIOME_ASHLANDS)
-      foes |= foe(EnemyKind::EmberImp) | foe(EnemyKind::CinderGolem);
-    EnemyKind local[int(EnemyKind::Count)];
-    int m = 0;
-    for (EnemyKind k : pool)
-      if (foes & foe(k))
-        local[m++] = k;
-    if (m && rng.chance(b.localChance))
-      return local[rng.irange(0, m - 1)];
-    return n > 2 && rng.chance(b.strongChance) ? common[n - 1 - rng.irange(0, 1)]
-                                      : common[rng.irange(0, n - 1)];
-  };
+      (k < int(EnemyKind::Cyclops) ? r.common : r.pool).push_back(EnemyKind(k));
+  r.pool.insert(r.pool.end(), r.common.begin(), r.common.end());
+  return r;
+}
 
-  if ((timer -= DT) <= 0) {
-    timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp) * o.rate;
-    for (int i = 0, batch = 1 + int(t / b.batchEvery);
-         i < batch && level.count<Enemy>() < int(b.enemyCap); i++) {
-      double x, y;
-      ring(rng.range(280, 320), x, y);
-      spawn(pick(x, y), x, y, false);
-    }
-  }
-  if (t >= nextWave) {
-    nextWave += b.hordeEvery * o.waves;
-    int count = int(std::min(b.hordeMax, b.hordeBase + t / b.hordeRamp) * o.horde);
-    int open[WAVES], n = 0;
-    for (int i = 0; i < WAVES; i++)
-      if (WAVE_DEFS[i].from <= t && i != lastWave)
-        open[n++] = i;
-    wave(n ? open[rng.irange(0, n - 1)] : 0, count);
-  }
-  if (t >= nextMimic * o.mimics) {
-    nextMimic += rng.range(45, 75);
-    int mimics = 0;
-    level.each<Enemy>([&](Enemy &e) { mimics += e.is(EnemyKind::Mimic); });
-    if (mimics < (o.mimics < 1 ? 4 : 2)) {
-      double x, y;
-      ring(rng.range(150, 230), x, y);
-      spawn(EnemyKind::Mimic, x, y, false);
-    }
-  }
-  if (t >= nextBand * o.bands) {
-    nextBand += rng.range(70, 110);
-    int renegades = 0;
-    level.each<Enemy>([&](Enemy &e) {
-      renegades += e.kind() >= int(EnemyKind::Outlaw);
-    });
-    if (renegades < 4) {
-      double x, y;
-      ring(rng.range(280, 310), x, y);
-      for (int i = 0, n = 2 + (t > 420) + (t > 720); i < n; i++) {
-        auto k = EnemyKind(int(EnemyKind::Outlaw) + rng.irange(0, 3));
-        if (Enemy::typeOf(k).unlockAt * o.bands > t)
-          k = EnemyKind::Outlaw;
-        spawn(k, x + rng.range(-24, 24), y + rng.range(-24, 24));
-      }
-      level.game.announce("RENEGADES ON YOUR TRAIL");
-    }
-  }
-  if (t >= nextChampion * o.champions) {
-    nextChampion += rng.range(150, 230);
-    bool alive = false;
-    level.each<Enemy>([&](Enemy &e) { alive |= e.title && !e.def; });
-    if (!alive) {
-      double x, y;
-      ring(rng.range(300, 340), x, y);
-      if (Enemy *c = champion(x, y))
-        level.game.announce(fmt::format("A CHAMPION STALKS: {}", c->title));
-    }
-  }
-  if (t >= nextBarrel) {
-    nextBarrel += 20;
-    auto b = std::make_unique<SupplyBarrel>();
-    ring(rng.range(270, 300), b->x, b->y);
-    level.add(std::move(b));
-  }
-  if (t >= nextBoss) {
-    nextBoss += b.bossEvery;
-    bosses++;
+EnemyKind Spawner::pick(const Roster &r, double x, double y) const {
+  const Balance &b = level.game.balance;
+  if (level.time >= 70 && rng.chance(0.015f))
+    return EnemyKind::Thief;
+  uint32_t foes = localFoes(world::biomeUnder(x, y));
+  EnemyKind local[int(EnemyKind::Count)];
+  int m = 0, n = int(r.common.size());
+  for (EnemyKind k : r.pool)
+    if (foes & foe(k))
+      local[m++] = k;
+  if (m && rng.chance(b.localChance))
+    return local[rng.irange(0, m - 1)];
+  return n > 2 && rng.chance(b.strongChance) ? r.common[n - 1 - rng.irange(0, 1)]
+                                             : r.common[rng.irange(0, n - 1)];
+}
+
+void Spawner::trickle(float t) {
+  if ((timer -= DT) > 0)
+    return;
+  const Balance &b = level.game.balance;
+  timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp) * level.portent().rate;
+  Roster r = roster(t);
+  for (int i = 0, batch = 1 + int(t / b.batchEvery);
+       i < batch && level.count<Enemy>() < int(b.enemyCap); i++) {
     double x, y;
-    ring(300, x, y);
-    const BossDef *def = bossFor(world::biomeAt(int(std::floor(level.player->x / 16)),
-                                                int(std::floor(level.player->y / 16))));
-    if (!def || rng.chance(0.3f))
-      def = &BOSS_DEFS[(bosses - 1) % 3];
-    spawn(def->kind, x, y, true, def->kind != EnemyKind::Cyclops);
-    level.game.announce(def->arrival);
-    Sound::boss.play(0.8f, 0);
+    ring(rng.range(280, 320), x, y);
+    spawn(pick(r, x, y), x, y, false);
   }
+}
+
+void Spawner::horde(float t) {
+  const Balance &b = level.game.balance;
+  const Omen &o = level.portent();
+  nextWave += b.hordeEvery * o.waves;
+  int count = int(std::min(b.hordeMax, b.hordeBase + t / b.hordeRamp) * o.horde);
+  int open[WAVES], n = 0;
+  for (int i = 0; i < WAVES; i++)
+    if (WAVE_DEFS[i].from <= t && i != lastWave)
+      open[n++] = i;
+  wave(n ? open[rng.irange(0, n - 1)] : 0, count);
+}
+
+void Spawner::mimics() {
+  const Omen &o = level.portent();
+  nextMimic += rng.range(45, 75);
+  int mimics = 0;
+  level.each<Enemy>([&](Enemy &e) { mimics += e.is(EnemyKind::Mimic); });
+  if (mimics >= (o.mimics < 1 ? 4 : 2))
+    return;
+  double x, y;
+  ring(rng.range(150, 230), x, y);
+  spawn(EnemyKind::Mimic, x, y, false);
+}
+
+void Spawner::renegades(float t) {
+  const Omen &o = level.portent();
+  nextBand += rng.range(70, 110);
+  int renegades = 0;
+  level.each<Enemy>([&](Enemy &e) { renegades += e.kind() >= int(EnemyKind::Outlaw); });
+  if (renegades >= 4)
+    return;
+  double x, y;
+  ring(rng.range(280, 310), x, y);
+  for (int i = 0, n = 2 + (t > 420) + (t > 720); i < n; i++) {
+    auto k = EnemyKind(int(EnemyKind::Outlaw) + rng.irange(0, 3));
+    if (Enemy::typeOf(k).unlockAt * o.bands > t)
+      k = EnemyKind::Outlaw;
+    spawn(k, x + rng.range(-24, 24), y + rng.range(-24, 24));
+  }
+  level.game.announce("RENEGADES ON YOUR TRAIL");
+}
+
+void Spawner::champions() {
+  nextChampion += rng.range(150, 230);
+  bool alive = false;
+  level.each<Enemy>([&](Enemy &e) { alive |= e.title && !e.def; });
+  if (alive)
+    return;
+  double x, y;
+  ring(rng.range(300, 340), x, y);
+  if (Enemy *c = champion(x, y))
+    level.game.announce(fmt::format("A CHAMPION STALKS: {}", c->title));
+}
+
+void Spawner::barrel() {
+  nextBarrel += 20;
+  auto b = std::make_unique<SupplyBarrel>();
+  ring(rng.range(270, 300), b->x, b->y);
+  level.add(std::move(b));
+}
+
+void Spawner::boss() {
+  nextBoss += level.game.balance.bossEvery;
+  bosses++;
+  double x, y;
+  ring(300, x, y);
+  const BossDef *def = bossFor(world::biomeUnder(level.player->x, level.player->y));
+  if (!def || rng.chance(0.3f))
+    def = &BOSS_DEFS[(bosses - 1) % 3];
+  spawn(def->kind, x, y, true, def->kind != EnemyKind::Cyclops);
+  level.game.announce(def->arrival);
+  Sound::boss.play(0.8f, 0);
+}
+
+void Spawner::tick() {
+  const Omen &o = level.portent();
+  float t = level.time;
+  trickle(t);
+  if (t >= nextWave)
+    horde(t);
+  if (t >= nextMimic * o.mimics)
+    mimics();
+  if (t >= nextBand * o.bands)
+    renegades(t);
+  if (t >= nextChampion * o.champions)
+    champions();
+  if (t >= nextBarrel)
+    barrel();
+  if (t >= nextBoss)
+    boss();
 }
 
 void Spawner::wave(int index, int count) {
@@ -216,8 +245,7 @@ void Spawner::wave(int index, int count) {
     break;
   }
   case 5: {
-    uint32_t foes = BIOMES[world::biomeAt(int(std::floor(p.x / 16)),
-                                          int(std::floor(p.y / 16)))]->foes;
+    uint32_t foes = BIOMES[world::biomeUnder(p.x, p.y)]->foes;
     std::vector<EnemyKind> local;
     for (int k = 0; k < int(EnemyKind::Count); k++)
       if ((foes & foe(EnemyKind(k))) && k != int(EnemyKind::Cyclops) &&
@@ -239,8 +267,7 @@ void Spawner::wave(int index, int count) {
 }
 
 Enemy *Spawner::champion(double x, double y) {
-  uint32_t foes = BIOMES[world::biomeAt(int(std::floor(x / 16)),
-                                        int(std::floor(y / 16)))]->foes;
+  uint32_t foes = BIOMES[world::biomeUnder(x, y)]->foes;
   std::vector<EnemyKind> pick;
   for (int k = 0; k < int(EnemyKind::Count); k++)
     if ((foes & foe(EnemyKind(k))) && crownable(EnemyKind(k)))

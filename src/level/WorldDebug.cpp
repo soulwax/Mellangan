@@ -200,8 +200,7 @@ void Level::renderWorldDebug(Screen &s, int xView, int yView, float xMouse,
     panel(s, info, px, py, small, false);
   }
 
-  const Biome *pb = BIOMES[world::biomeAt(int(std::floor(player->x / 16)),
-                                          int(std::floor(player->y / 16)))];
+  const Biome *pb = BIOMES[world::biomeUnder(player->x, player->y)];
   std::vector<std::pair<std::string, Color>> hud{
       {"WORLD DEBUG  F8 hide  F9 warp", col::gold},
       {fmt::format("player tile {},{}  region {},{}",

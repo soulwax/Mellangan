@@ -53,7 +53,7 @@ int Chart::tick(double x, double y) {
   int cx = cellOf(x), cy = cellOf(y);
   if (cx != xLast || cy != yLast)
     reveal(cx, cy), survey(cx, cy), xLast = cx, yLast = cy;
-  BiomeId b = world::biomeAt(int(std::floor(x / 16)), int(std::floor(y / 16)));
+  BiomeId b = world::biomeUnder(x, y);
   if (knows(b))
     return -1;
   seen |= 1u << b, discovered++;

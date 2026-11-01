@@ -14,7 +14,6 @@ double atY(Site s, int ly);
 double footY(Site s);
 void smoke(Level *level, double x, double y, double z);
 void drift(Level *level, double x, double y, int icon, Color c, float rise);
-void quake(Level *level, double x, double y, double r, float damage, float force);
 
 void cottage(Level *level, Site s);
 void hearth(Level *level, Site s);

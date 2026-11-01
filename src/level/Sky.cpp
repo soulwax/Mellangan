@@ -198,7 +198,7 @@ void Sky::settle(int biome) {
 void Sky::tick(Level &level) {
   Player &p = *level.player;
   cx = float(p.x), cy = float(p.y);
-  int biome = world::biomeAt(int(std::floor(p.x / 16)), int(std::floor(p.y / 16)));
+  int biome = world::biomeUnder(p.x, p.y);
   if (!seeded)
     seed();
   int before = active();

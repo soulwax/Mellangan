@@ -21,6 +21,22 @@
 #include "particle/Spark.hpp"
 #include "particle/VisualDetail.hpp"
 
+namespace {
+
+template <void (Enemy::*Step)()>
+void pass(Workers &workers, std::vector<Enemy *> &list) {
+  workers.run(
+      int(list.size()), 256,
+      [](void *ctx, int begin, int end) {
+        Enemy **each = static_cast<Enemy **>(ctx);
+        for (int i = begin; i < end; i++)
+          (each[i]->*Step)();
+      },
+      list.data());
+}
+
+} // namespace
+
 Level::~Level() = default;
 
 Level::Level(Game &game) : game(game) {
@@ -88,39 +104,10 @@ void Level::tick() {
   thinkers.clear();
   each<Enemy>([&](Enemy &e) { thinkers.push_back(&e); });
   Workers &workers = Workers::shared();
-  int n = int(thinkers.size());
-  workers.run(
-      n, 256,
-      [](void *ctx, int begin, int end) {
-        Enemy **list = static_cast<Enemy **>(ctx);
-        for (int i = begin; i < end; i++)
-          list[i]->think();
-      },
-      thinkers.data());
-  workers.run(
-      n, 256,
-      [](void *ctx, int begin, int end) {
-        Enemy **list = static_cast<Enemy **>(ctx);
-        for (int i = begin; i < end; i++)
-          list[i]->move();
-      },
-      thinkers.data());
-  workers.run(
-      n, 256,
-      [](void *ctx, int begin, int end) {
-        Enemy **list = static_cast<Enemy **>(ctx);
-        for (int i = begin; i < end; i++)
-          list[i]->push();
-      },
-      thinkers.data());
-  workers.run(
-      n, 256,
-      [](void *ctx, int begin, int end) {
-        Enemy **list = static_cast<Enemy **>(ctx);
-        for (int i = begin; i < end; i++)
-          list[i]->settle();
-      },
-      thinkers.data());
+  pass<&Enemy::think>(workers, thinkers);
+  pass<&Enemy::move>(workers, thinkers);
+  pass<&Enemy::push>(workers, thinkers);
+  pass<&Enemy::settle>(workers, thinkers);
   prof_end(PROF_THINK);
   prof_begin(PROF_ENTITIES);
   for (auto [id, o] : reg.view<Owned>().each())
@@ -171,8 +158,7 @@ void Level::ambience() {
 }
 
 void Level::climate() {
-  BiomeId here = world::biomeAt(int(std::floor(player->x / 16)),
-                                int(std::floor(player->y / 16)));
+  BiomeId here = world::biomeUnder(player->x, player->y);
   const Flavour &f = FLAVOURS[here];
   const Color &g = AIRS[here].grade;
   float k = 1 - std::exp(-0.9f * DT);
@@ -191,11 +177,7 @@ void Level::climate() {
   player->hp = std::min(player->maxHp, player->hp + f.mend * DT);
   if (f.burn && (burnTime -= DT) <= 0) {
     burnTime = 0.6f;
-    enemiesNear(player->x, player->y, 110, [&](Enemy &e) {
-      double xd = e.x - player->x, yd = e.y - player->y;
-      if (xd * xd + yd * yd < 110 * 110)
-        e.hurt(4, xd, yd, 10);
-    });
+    quake(player->x, player->y, 110, 4, 10);
   }
 }
 
@@ -214,8 +196,7 @@ void Level::hunt() {
 }
 
 void Level::weather() {
-  BiomeId here = world::biomeAt(int(std::floor(player->x / 16)),
-                                int(std::floor(player->y / 16)));
+  BiomeId here = world::biomeUnder(player->x, player->y);
   BIOMES[here]->weather(*this, player->x, player->y);
   const Air &a = AIRS[here];
   float shelter = 1 - 0.75f * sky.rough();
@@ -256,12 +237,16 @@ float Level::strike() {
   add<Arc>(std::move(bolt), 0.3f, storm);
   add<Shockwave>(x, y, 4, 34, 0.35f, storm);
   Spark::burst(*this, x, y, storm, 6, 70, true);
-  enemiesNear(x, y, 40, [&](Enemy &e) {
-    double ex = e.x - x, ey = e.y - y;
-    if (ex * ex + ey * ey < 34 * 34)
-      e.hurt(28 + time * 0.08f, ex, ey, 60);
-  });
+  quake(x, y, 34, 28 + time * 0.08f, 60);
   return float(std::sqrt(xd * xd + yd * yd));
+}
+
+void Level::quake(double x, double y, double r, float damage, float force) {
+  enemiesNear(x, y, float(r), [&](Enemy &e) {
+    double xd = e.x - x, yd = e.y - y;
+    if (xd * xd + yd * yd < r * r)
+      e.hurt(damage, xd, yd, force);
+  });
 }
 
 void Level::explore() {

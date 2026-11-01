@@ -193,7 +193,8 @@ effects scene without loading or saving player progress.
   `Rank` (elites, champions, bosses and their casting) and `EnemyDeath` (death, loot and death effects)
 - `src/level` – `Level` (backed by an `entt::registry`; `Level.cpp` lifecycle and world tick, `LevelRender.cpp` props,
   draw order, reflections and light, `FloorPainter` the ground, blends, puddles, snow and cliffs, `Prop::shine` prop light, `LevelSpace.cpp` collision, heights and spatial queries) and the
-  `Spawner`; world generation as small table-driven
+  `Spawner` (one method per schedule: trickle, horde, mimics, renegades, champions, barrels, bosses); `Level::quake`
+  hurts every foe in a radius and `world::biomeUnder` maps a pixel position to its biome; world generation as small table-driven
   modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and
   `Encounter` (what a structure does when entered; the table, with `level/encounter` holding `Sites`, `Landmarks` and
   their shared helpers); `level/world` implements `World.hpp` as `Biomes` (tile memo,
@@ -209,7 +210,8 @@ effects scene without loading or saving player progress.
   and sigils, `UpgradeCard` draws one level-up choice
 - `src/gui` – reusable GUI widgets and shared choice layout and input handling, `Glyph` (pixel-art glyphs from
   string rows) and `Text` (word wrap); `Hud` draws the in-run HUD (bars,
-  timers, icons, minimap, edge pointers to shrines, landmarks and champions) and owns the announcement banners
+  timers, icons, minimap, edge pointers to shrines, landmarks and champions, one method per panel with shared
+  `arrow`, `diamond` and `tag` pointer helpers) and owns the announcement banners
 - `src/Game` – the run loop, menus, camera and run lifecycle; `src/meta/Saves` owns the preference folder, world
   choice and world history files; `src/DevStart` parses the dev start flags (`--arm`, `--hero`, `--biome`, `--at`,
   `--lake`, `--cliff`, `--ramp`, `--peak`, `--landmark`) and places and arms the player

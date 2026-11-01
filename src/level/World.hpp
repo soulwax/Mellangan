@@ -16,6 +16,9 @@ constexpr int REGION = 20;
 inline int regionOf(int tile) {
   return (tile - (tile >> 31 & (REGION - 1))) / REGION;
 }
+inline int tileOf(double v) { return int(std::floor(v / 16)); }
+inline BiomeId biomeUnder(double x, double y) { return biomeAt(tileOf(x), tileOf(y)); }
+
 bool structureIn(int rx, int ry, Structure &out);
 bool structureAt(int x, int y, Structure &out, int margin = 0);
 typedef bool (*StructureFilter)(const Structure *s, const void *ctx);
