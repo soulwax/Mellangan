@@ -26,4 +26,7 @@ public:
 
 private:
   float nextPulse = 0;
+
+  void arm(Level &level, int tx, int ty);
+  void pulse(Level &level, bool inside);
 };

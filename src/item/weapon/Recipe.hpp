@@ -91,3 +91,6 @@ public:
 
 void fireRecipe(const Recipe &r, Mob &p, Upgrade *source, float damage,
                 float reach, int count);
+inline void castRecipe(const Recipe &r, Mob &p, Upgrade *source, float power) {
+  fireRecipe(r, p, source, r.damage * power, r.reach, r.count);
+}

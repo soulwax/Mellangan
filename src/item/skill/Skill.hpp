@@ -25,3 +25,5 @@ public:
 };
 
 void addSkills(std::vector<std::unique_ptr<Upgrade>> &u);
+void addMageSkills(std::vector<std::unique_ptr<Upgrade>> &u);
+void addArtSkills(std::vector<std::unique_ptr<Upgrade>> &u);

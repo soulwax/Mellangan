@@ -156,11 +156,8 @@ void Game::tick() {
   if (menuChanged)
     menu = std::move(nextMenu), menuChanged = false;
 
-  double k = damp(9, DT);
-  xCam += (level->player->x - xCam) * k;
-  yCam += (level->player->y - yCam) * k;
+  camera.follow(level->player->x, level->player->y);
   hurt *= std::exp(-3.5f * DT);
-  shake *= std::exp(-10 * DT);
   if (!menu && best > 0 && !beatBest && level->time > best)
     beatBest = true, announce("NEW BEST");
   hud.tick(!menu);
@@ -187,7 +184,7 @@ void Game::devTick() {
                               level.get())) {
     p.x = target.centerX();
     p.y = target.centerY();
-    xCam = p.x, yCam = p.y;
+    snapCamera();
     spdlog::info("dev: warped to {} at tile ({}, {}), region ({}, {})",
                  target.name(), target.x, target.y, target.rx, target.ry);
   }
@@ -222,8 +219,8 @@ void Game::build() {
   level = std::make_unique<Level>(*this);
   if (!bench.enabled)
     level->chart.load(chartPath);
-  xCam = level->player->x, yCam = level->player->y;
-  hurt = shake = freeze = 0;
+  snapCamera();
+  hurt = camera.shake = freeze = 0;
   levelBeat = -1;
   hud.clear();
 }
@@ -299,7 +296,7 @@ void Game::setDifficulty(Difficulty d) {
   reseed();
 }
 
-void Game::snapCamera() { xCam = level->player->x, yCam = level->player->y; }
+void Game::snapCamera() { camera.snap(level->player->x, level->player->y); }
 
 void Game::loadWorld() {
   if (saves.dir().empty() || bench.enabled)
@@ -368,12 +365,8 @@ void Game::onDawn() {
 
 void Game::render() {
   Player &p = *level->player;
-  double xj = 0, yj = 0;
-  if (shake > 0.05f)
-    xj = rng.range(-1, 1) * shake, yj = rng.range(-1, 1) * shake;
   screen.fit(window);
-  screen.xOffset = int(std::floor(xCam + xj - screen.vw / 2.0f));
-  screen.yOffset = int(std::floor(yCam + yj - screen.vh / 2.0f));
+  camera.aim(screen);
 
   float d = level->night.daylight();
   const Color &air = level->air;

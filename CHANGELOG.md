@@ -17,6 +17,7 @@ All notable changes to Mellangan are documented here. The format follows
 - Split the weather into fronts, footprints, thunder and rendering, and structure layouts into settlements, wilds and landmarks; props gained one-call sprite, collider and light helpers. The class and level-up menus now share one glyph renderer and word wrap, with the hero card and upgrade card as their own classes, and `Mob::upgrade` replaces six hand-written name lookups. Generated worlds remain bit-identical.
 - Expansion weapons are one table row per kind with named kinds instead of numbered branches; floor painting moved into `FloorPainter`, prop light into `Prop::shine`, and encounters split into sites and landmarks with a shared radius-damage helper.
 - The HUD draws one panel per method with shared edge-pointer helpers, the spawner runs one method per schedule, `Level::quake` replaces four hand-written radius damage loops, `world::biomeUnder` replaces eleven pixel-to-biome conversions, and the four enemy worker passes share one template.
+- Expansion foes use named variants and one stats row each instead of numbered branches; the camera is its own `Camera`; `RecipeShot`, the Mage skills and the skill arts have their own files with a shared `castRecipe`; biome events split scheduling, forces and pulses.
 
 ## [0.5.14] - 2026-11-01
 

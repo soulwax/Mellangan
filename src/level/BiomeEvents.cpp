@@ -108,10 +108,74 @@ uint32_t mix(uint32_t n) {
   return n ^ n >> 16;
 }
 
+void sway(Level &level, const BiomeEventSchedule &cur, const EventDef &def,
+          bool inside) {
+  Player &p = *level.player;
+  if (inside && def.push > 0) {
+    p.xa += cur.dx * def.push * DT;
+    p.ya += cur.dy * def.push * DT;
+  }
+  if (inside && def.charge)
+    p.skillTime = std::max(0.0f, p.skillTime - DT * 2);
+  if (def.push <= 0 && def.repel <= 0)
+    return;
+  double r2 = cur.radius * cur.radius;
+  level.enemiesNear(cur.x, cur.y, cur.radius, [&](Enemy &e) {
+    double dx = e.x - cur.x, dy = e.y - cur.y, d2 = dx * dx + dy * dy;
+    if (d2 >= r2)
+      return;
+    double d = std::max(1.0, std::sqrt(d2));
+    e.xa += (cur.dx * def.push * 0.58 + dx / d * def.repel) * DT;
+    e.ya += (cur.dy * def.push * 0.58 + dy / d * def.repel) * DT;
+  });
+}
+
+void raise(Level &level, const BiomeEventSchedule &cur, const EventDef &def) {
+  for (int i = 0; i < def.count; i++) {
+    double a = TAU * i / def.count + rng.range(-0.3f, 0.3f),
+           d = cur.radius * rng.range(0.4f, 0.8f);
+    double sx = cur.x + std::cos(a) * d, sy = cur.y + std::sin(a) * d;
+    level.spawner.spawn(def.raise, sx, sy, true);
+    Spark::burst(level, sx, sy - 4, def.tone, 6, 40, false);
+  }
+}
+
+void touch(Level &level, const EventDef &def, bool first) {
+  Player &p = *level.player;
+  if (!def.boon) {
+    if (first)
+      level.handicaps++;
+    p.felledBy = def.name;
+  }
+  if (def.cleanse) {
+    p.status.effects[int(S::Burn)] = {};
+    p.status.effects[int(S::Poison)] = {};
+  }
+  if (def.heal > 0)
+    p.heal(def.heal);
+  if (first && def.strike > 0)
+    p.hurt(def.strike);
+  if (def.sting > 0)
+    p.hurt(def.sting);
+  if (def.status != NONE)
+    p.afflict(def.status, 0.7f, def.power);
+}
+
+void flourish(Level &level, const BiomeEventSchedule &cur, const EventDef &def) {
+  if (Spark::alive < 450)
+    Spark::burst(level, cur.x, cur.y - 3, def.tone, 8, 55, true);
+  for (int i = 0; i < 3 && Drift::room(); i++) {
+    double a = rng.range(0, TAU), d = cur.radius * std::sqrt(rng.unit());
+    Drift *f = level.add<Drift>(cur.x + std::cos(a) * d, cur.y + std::sin(a) * d,
+                                cur.dx * def.push * 0.5, -6, def.icon,
+                                def.tone.alpha(0.85f), 1.2f);
+    f->sway = 8, f->scale = 0.7f;
+  }
+}
+
 bool sanctuary(double x, double y) {
   Structure site;
-  return world::structureAt(int(std::floor(x / 16)),
-                            int(std::floor(y / 16)), site, 2) &&
+  return world::structureAt(world::tileOf(x), world::tileOf(y), site, 2) &&
          site.kind == StructureKind::Shrine;
 }
 }
@@ -140,87 +204,40 @@ BiomeEventSchedule BiomeEvents::schedule(uint32_t seed, int biome, int epoch,
   return e;
 }
 
-void BiomeEvents::tick(Level &level) {
+void BiomeEvents::arm(Level &level, int tx, int ty) {
   Player &p = *level.player;
-  if (p.dead() || level.night.dawn) {
-    active = false;
-    return;
-  }
-  if (active && level.time >= current.ends)
-    active = false;
-  int tx = int(std::floor(p.x / 16)), ty = int(std::floor(p.y / 16));
   int biome = world::biomeAt(tx, ty);
   int epoch = int(level.time / EVENTS[biome].every);
-  if (!active && level.time >= 40 && handled[biome] != epoch) {
-    auto candidate = schedule(noise_salt, biome, epoch, world::regionOf(tx),
-                              world::regionOf(ty));
-    if (level.time >= candidate.begins) {
-      handled[biome] = epoch;
-    } else if (level.time >= candidate.begins - 3) {
-      handled[biome] = epoch;
-      if (level.time <= candidate.begins - 3 + DT * 1.5f &&
-          !sanctuary(p.x, p.y) && !sanctuary(candidate.x, candidate.y)) {
-        current = candidate;
-        active = true;
-        nextPulse = current.begins;
-        level.game.announce(std::string(EVENTS[biome].name) +
-                            (EVENTS[biome].boon ? " - STEP INSIDE"
-                                                : " - MOVE TO SAFETY"));
-      }
-    }
-  }
-  if (!active || level.time < current.begins)
+  if (active || level.time < 40 || handled[biome] == epoch)
     return;
+  auto candidate = schedule(noise_salt, biome, epoch, world::regionOf(tx),
+                            world::regionOf(ty));
+  if (level.time >= candidate.begins) {
+    handled[biome] = epoch;
+    return;
+  }
+  if (level.time < candidate.begins - 3)
+    return;
+  handled[biome] = epoch;
+  if (level.time > candidate.begins - 3 + DT * 1.5f || sanctuary(p.x, p.y) ||
+      sanctuary(candidate.x, candidate.y))
+    return;
+  current = candidate;
+  active = true;
+  nextPulse = current.begins;
+  level.game.announce(std::string(EVENTS[biome].name) +
+                      (EVENTS[biome].boon ? " - STEP INSIDE" : " - MOVE TO SAFETY"));
+}
+
+void BiomeEvents::pulse(Level &level, bool inside) {
   const EventDef &def = EVENTS[current.biome];
-  double r2 = current.radius * current.radius;
-  double xd = p.x - current.x, yd = p.y - current.y;
-  bool inside = xd * xd + yd * yd < r2 && !sanctuary(p.x, p.y);
-  if (inside && def.push > 0) {
-    p.xa += current.dx * def.push * DT;
-    p.ya += current.dy * def.push * DT;
-  }
-  if (inside && def.charge)
-    p.skillTime = std::max(0.0f, p.skillTime - DT * 2);
-  if (def.push > 0 || def.repel > 0)
-    level.enemiesNear(current.x, current.y, current.radius, [&](Enemy &e) {
-      double dx = e.x - current.x, dy = e.y - current.y, d2 = dx * dx + dy * dy;
-      if (d2 >= r2)
-        return;
-      double d = std::max(1.0, std::sqrt(d2));
-      e.xa += (current.dx * def.push * 0.58 + dx / d * def.repel) * DT;
-      e.ya += (current.dy * def.push * 0.58 + dy / d * def.repel) * DT;
-    });
-  if (level.time < nextPulse)
-    return;
   bool first = nextPulse == current.begins;
   nextPulse = level.time + 0.5f;
   if (first)
-    for (int i = 0; i < def.count; i++) {
-      double a = TAU * i / def.count + rng.range(-0.3f, 0.3f),
-             d = current.radius * rng.range(0.4f, 0.8f);
-      double sx = current.x + std::cos(a) * d, sy = current.y + std::sin(a) * d;
-      level.spawner.spawn(def.raise, sx, sy, true);
-      Spark::burst(level, sx, sy - 4, def.tone, 6, 40, false);
-    }
-  if (inside) {
-    if (!def.boon) {
-      if (first)
-        level.handicaps++;
-      p.felledBy = def.name;
-    }
-    if (def.cleanse) {
-      p.status.effects[int(S::Burn)] = {};
-      p.status.effects[int(S::Poison)] = {};
-    }
-    if (def.heal > 0)
-      p.heal(def.heal);
-    if (first && def.strike > 0)
-      p.hurt(def.strike);
-    if (def.sting > 0)
-      p.hurt(def.sting);
-    if (def.status != NONE)
-      p.afflict(def.status, 0.7f, def.power);
-  }
+    raise(level, current, def);
+  if (inside)
+    touch(level, def, first);
+  double r2 = current.radius * current.radius;
   level.enemiesNear(current.x, current.y, current.radius + 24, [&](Enemy &e) {
     double dx = e.x - current.x, dy = e.y - current.y;
     if (dx * dx + dy * dy > r2 || sanctuary(e.x, e.y))
@@ -230,16 +247,25 @@ void BiomeEvents::tick(Level &level) {
     if (first && def.foeStrike > 0)
       e.hurt(def.foeStrike, dx, dy, 100);
   });
-  if (Spark::alive < 450)
-    Spark::burst(level, current.x, current.y - 3, def.tone, 8, 55, true);
-  for (int i = 0; i < 3 && Drift::room(); i++) {
-    double a = rng.range(0, TAU), d = current.radius * std::sqrt(rng.unit());
-    Drift *f = level.add<Drift>(current.x + std::cos(a) * d,
-                                current.y + std::sin(a) * d,
-                                current.dx * def.push * 0.5, -6, def.icon,
-                                def.tone.alpha(0.85f), 1.2f);
-    f->sway = 8, f->scale = 0.7f;
+  flourish(level, current, def);
+}
+
+void BiomeEvents::tick(Level &level) {
+  Player &p = *level.player;
+  if (p.dead() || level.night.dawn) {
+    active = false;
+    return;
   }
+  if (active && level.time >= current.ends)
+    active = false;
+  arm(level, world::tileOf(p.x), world::tileOf(p.y));
+  if (!active || level.time < current.begins)
+    return;
+  double xd = p.x - current.x, yd = p.y - current.y;
+  bool inside = xd * xd + yd * yd < current.radius * current.radius && !sanctuary(p.x, p.y);
+  sway(level, current, EVENTS[current.biome], inside);
+  if (level.time >= nextPulse)
+    pulse(level, inside);
 }
 
 void BiomeEvents::render(Screen &s, const Level &level) const {

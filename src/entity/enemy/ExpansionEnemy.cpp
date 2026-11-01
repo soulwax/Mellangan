@@ -6,14 +6,37 @@
 #include "particle/Spark.hpp"
 
 namespace {
-Color tone(int kind) {
-  if (kind == 4 || kind == 5)
-    return {0.55f, 0.85f, 1, 1};
-  if (kind == 6 || kind == 7)
-    return {0.6f, 1, 0.4f, 1};
-  if (kind >= 8)
-    return {1, 0.4f, 0.15f, 1};
-  return {0.9f, 0.6f, 0.9f, 1};
+
+typedef ExpansionEnemy X;
+
+enum State { Idle, Winding, Dashing, Resting };
+
+struct Def {
+  Color tone;
+  int immune;
+  float range, windup, dash, speed, rest, warn;
+};
+
+constexpr Color VIOLET{0.9f, 0.6f, 0.9f, 1}, ICE{0.55f, 0.85f, 1, 1},
+    MOSS{0.6f, 1, 0.4f, 1}, EMBER{1, 0.4f, 0.15f, 1};
+constexpr int CHILL = int(StatusKind::Chill), POISON = int(StatusKind::Poison),
+              BURN = int(StatusKind::Burn);
+
+const Def DEFS[] = {
+    {VIOLET, -1, 22, 0.35f, 1.8f, 260, 4.0f, 18},
+    {VIOLET, -1, 70, 0.9f, 0.45f, 260, 3.0f, 52},
+    {VIOLET, -1, 150, 0.65f, 0.45f, 260, 3.0f, 40},
+    {VIOLET, -1, 150, 0.9f, 0.65f, 190, 3.0f, 40},
+    {ICE, CHILL, 150, 0.9f, 0.45f, 260, 3.0f, 40},
+    {ICE, CHILL, 150, 0.9f, 0.45f, 220, 4.5f, 40},
+    {MOSS, POISON, 100, 0.9f, 0.45f, 260, 3.0f, 40},
+    {MOSS, POISON, 150, 0.9f, 0.45f, 260, 3.0f, 40},
+    {EMBER, BURN, 150, 0.9f, 0.45f, 260, 3.0f, 40},
+    {EMBER, BURN, 150, 0.9f, 0.45f, 260, 3.0f, 40},
+};
+
+bool trails(int variant) {
+  return variant == X::Wisp || variant == X::Sporeling || variant == X::Imp;
 }
 
 class EnemyHazard : public Entity {
@@ -44,23 +67,23 @@ public:
     if (xd * xd + yd * yd > reach * reach)
       return;
     p.felledBy = by;
-    if (variant == 4)
+    if (variant == X::Wisp)
       p.afflict(StatusKind::Chill, 0.7f, 0.3f);
-    else if (variant == 6)
+    else if (variant == X::Sporeling)
       p.afflict(StatusKind::Poison, 1.5f, damage);
-    else if (variant == 8)
+    else if (variant == X::Imp)
       p.afflict(StatusKind::Burn, 1.2f, damage);
     else {
       p.hurt(damage);
       life = std::min(life, 0.15f);
-      Spark::burst(*level, x, y - 3, tone(variant), 18, 90, true);
+      Spark::burst(*level, x, y - 3, DEFS[variant].tone, 18, 90, true);
     }
   }
 
   void render(Screen &s) override {
-    Color c = tone(variant);
+    Color c = DEFS[variant].tone;
     float fade = std::min(1.0f, life);
-    bool trail = variant == 4 || variant == 6 || variant == 8;
+    bool trail = trails(variant);
     if (delay > 0)
       enemyWarning(s, xp, yp, radius, trail ? 0.6f : 0.9f, life * 0.4f);
     else if (trail) {
@@ -75,23 +98,20 @@ public:
     s.color(col::white);
   }
 };
-}
+
+} // namespace
 
 ExpansionEnemy::ExpansionEnemy(const EnemyType &type, float hpMul,
                                float damageMul, int variant)
     : Enemy(type, hpMul, damageMul), variant(variant) {
   timer = 0.8f + variant * 0.13f;
-  if (variant == 4 || variant == 5)
-    status.immune |= 1u << int(StatusKind::Chill);
-  if (variant == 6 || variant == 7)
-    status.immune |= 1u << int(StatusKind::Poison);
-  if (variant >= 8)
-    status.immune |= 1u << int(StatusKind::Burn);
+  if (DEFS[variant].immune >= 0)
+    status.immune |= 1u << DEFS[variant].immune;
 }
 
 void ExpansionEnemy::windup(float seconds, double xd, double yd,
                            double distance) {
-  state = 1;
+  state = Winding;
   timer = seconds;
   aimX = distance > 1e-5 ? xd / distance : facing;
   aimY = distance > 1e-5 ? yd / distance : 0;
@@ -108,7 +128,88 @@ void ExpansionEnemy::burst(float reach, float damage, StatusKind kind,
     p.hurt(damage * damageMul);
     p.afflict(kind, 1.5f, power);
   }
-  Spark::burst(*level, x, bodyY(), tone(variant), 16, reach * 1.5f, true);
+  Spark::burst(*level, x, bodyY(), DEFS[variant].tone, 16, reach * 1.5f, true);
+}
+
+void ExpansionEnemy::hazard(float radius, float life, float delay, float damage) {
+  level->add<EnemyHazard>(x, y, variant, radius, life, delay, damage * damageMul, name());
+}
+
+void ExpansionEnemy::mend() {
+  timer = 2.0f;
+  Enemy *nearby[24];
+  for (int i = 0, n = level->gather(x, y, 70, nearby, 24); i < n; i++) {
+    Enemy &e = *nearby[i];
+    double dx = e.x - x, dy = e.y - y;
+    if (e.removed || &e == this || dx * dx + dy * dy > 70 * 70)
+      continue;
+    e.status.effects[int(StatusKind::Burn)] = {};
+    e.status.effects[int(StatusKind::Poison)] = {};
+    e.hp = std::min(e.maxHp, e.hp + 3.0f);
+  }
+  flash = 0.15f;
+  Spark::burst(*level, x, bodyY(), DEFS[variant].tone, 9, 50, true);
+}
+
+void ExpansionEnemy::stalk(Player &p, double xd, double yd, double dist) {
+  const Def &d = DEFS[variant];
+  if (variant == Vulture && dist > 45) {
+    xa = -yd / dist * type.speed * 0.8;
+    ya = xd / dist * type.speed * 0.8;
+  }
+  if (variant == Lantern && dist < 100 && dist > 48) {
+    p.xa -= xd / dist * 35 * DT;
+    p.ya -= yd / dist * 35 * DT;
+  }
+  if (timer <= 0 && dist < d.range)
+    windup(d.windup, xd, yd, dist);
+}
+
+void ExpansionEnemy::release() {
+  if (variant == Lantern || variant == Sporeling) {
+    if (variant == Lantern)
+      burst(52, 12, StatusKind::Marked, 0.2f);
+    else
+      hazard(40.0f, 3.0f, 0.25f, 3.5f);
+    state = Resting;
+    timer = variant == Lantern ? 4.5f : 5.0f;
+    return;
+  }
+  state = Dashing;
+  timer = DEFS[variant].dash;
+  pulse = 0;
+}
+
+void ExpansionEnemy::charge(Player &p, double dist) {
+  const Def &d = DEFS[variant];
+  if (variant == Leech) {
+    if (dist > 48) {
+      state = Resting;
+      timer = 3;
+      return;
+    }
+    x = p.x - facing * 7;
+    y = p.y + 2;
+    xa = ya = 0;
+    if (pulse <= 0) {
+      pulse = 0.6f;
+      float before = p.hp;
+      p.felledBy = name();
+      p.hurt(2.5f * damageMul, true);
+      hp = std::min(maxHp, hp + std::max(0.0f, before - p.hp));
+    }
+  } else {
+    xa = aimX * d.speed;
+    ya = aimY * d.speed;
+    if (variant == Iceback && dist < radius + p.radius + 6)
+      p.afflict(StatusKind::Chill, 1.4f, 0.4f);
+  }
+  if (timer <= 0) {
+    xa *= 0.2;
+    ya *= 0.2;
+    state = Resting;
+    timer = d.rest;
+  }
 }
 
 void ExpansionEnemy::tick() {
@@ -117,7 +218,7 @@ void ExpansionEnemy::tick() {
     return;
   Player &p = *level->player;
   if (p.dead()) {
-    state = 0;
+    state = Idle;
     return;
   }
   timer -= DT;
@@ -125,132 +226,58 @@ void ExpansionEnemy::tick() {
   double xd = p.x - x, yd = p.y - y;
   double dist = std::sqrt(xd * xd + yd * yd);
 
-  if (variant == 4 || variant == 8) {
+  switch (variant) {
+  case Wisp:
+  case Imp:
     if (pulse <= 0) {
-      pulse = variant == 4 ? 1.1f : 0.8f;
-      level->add<EnemyHazard>(x, y, variant, 18.0f, 2.4f, 0.35f,
-                              3.0f * damageMul, name());
+      pulse = variant == Wisp ? 1.1f : 0.8f;
+      hazard(18.0f, 2.4f, 0.35f, 3.0f);
     }
     return;
-  }
-
-  if (variant == 7) {
-    if (timer <= 0) {
-      timer = 2.0f;
-      Enemy *nearby[24];
-      for (int i = 0, n = level->gather(x, y, 70, nearby, 24); i < n; i++) {
-        Enemy &e = *nearby[i];
-        double dx = e.x - x, dy = e.y - y;
-        if (e.removed || &e == this || dx * dx + dy * dy > 70 * 70)
-          continue;
-        e.status.effects[int(StatusKind::Burn)] = {};
-        e.status.effects[int(StatusKind::Poison)] = {};
-        e.hp = std::min(e.maxHp, e.hp + 3.0f);
-      }
-      flash = 0.15f;
-      Spark::burst(*level, x, bodyY(), tone(variant), 9, 50, true);
-    }
+  case Brute:
+    if (timer <= 0)
+      mend();
     return;
-  }
-
-  if (variant == 9) {
+  case Golem:
     if (timer <= 0 && dist < 70) {
       timer = 5;
-      level->add<EnemyHazard>(x, y, variant, 38.0f, 1.2f, 0.8f,
-                              12.0f * damageMul, name());
+      hazard(38.0f, 1.2f, 0.8f, 12.0f);
     }
     return;
   }
 
-  if (state == 3) {
+  if (state == Resting) {
     if (timer <= 0)
-      state = 0;
+      state = Idle;
     return;
   }
-
-  if (state == 0) {
-    if (variant == 3 && dist > 45) {
-      xa = -yd / dist * type.speed * 0.8;
-      ya = xd / dist * type.speed * 0.8;
-    }
-    if (variant == 1 && dist < 100 && dist > 48) {
-      p.xa -= xd / dist * 35 * DT;
-      p.ya -= yd / dist * 35 * DT;
-    }
-    float range = variant == 0 ? 22.0f : variant == 1 ? 70.0f :
-                  variant == 6 ? 100.0f : 150.0f;
-    if (timer <= 0 && dist < range)
-      windup(variant == 0 ? 0.35f : variant == 2 ? 0.65f : 0.9f,
-             xd, yd, dist);
-    return;
-  }
-
-  if (state == 1) {
+  if (state == Idle)
+    return stalk(p, xd, yd, dist);
+  if (state == Winding) {
     x = xMark;
     y = yMark;
     xa = ya = 0;
     if (timer > 0)
       return;
-    if (variant == 1 || variant == 6) {
-      if (variant == 1)
-        burst(52, 12, StatusKind::Marked, 0.2f);
-      else
-        level->add<EnemyHazard>(x, y, variant, 40.0f, 3.0f, 0.25f,
-                                3.5f * damageMul, name());
-      state = 3;
-      timer = variant == 1 ? 4.5f : 5.0f;
+    release();
+    if (state != Dashing)
       return;
-    }
-    state = 2;
-    timer = variant == 0 ? 1.8f : variant == 3 ? 0.65f : 0.45f;
-    pulse = 0;
   }
-
-  if (state == 2) {
-    if (variant == 0) {
-      if (dist > 48) {
-        state = 3;
-        timer = 3;
-        return;
-      }
-      x = p.x - facing * 7;
-      y = p.y + 2;
-      xa = ya = 0;
-      if (pulse <= 0) {
-        pulse = 0.6f;
-        float before = p.hp;
-        p.felledBy = name();
-        p.hurt(2.5f * damageMul, true);
-        hp = std::min(maxHp, hp + std::max(0.0f, before - p.hp));
-      }
-    } else {
-      float speed = variant == 5 ? 220.0f : variant == 3 ? 190.0f : 260.0f;
-      xa = aimX * speed;
-      ya = aimY * speed;
-      if (variant == 5 && dist < radius + p.radius + 6)
-        p.afflict(StatusKind::Chill, 1.4f, 0.4f);
-    }
-    if (timer <= 0) {
-      xa *= 0.2;
-      ya *= 0.2;
-      state = 3;
-      timer = variant == 0 ? 4.0f : variant == 5 ? 4.5f : 3.0f;
-    }
-  }
+  if (state == Dashing)
+    charge(p, dist);
 }
 
 void ExpansionEnemy::render(Screen &s) {
-  if (state == 1) {
+  if (state == Winding) {
     Color c{1, 0.18f, 0.12f, 0.9f};
-    float reach = variant == 0 ? 18.0f : variant == 1 ? 52.0f : 40.0f;
-    enemyWarning(s, xp, yp, reach, 0.9f, timer);
-    if (variant == 2 || variant == 3 || variant == 5)
+    enemyWarning(s, xp, yp, DEFS[variant].warn, 0.9f, timer);
+    if (variant == Mantis || variant == Vulture || variant == Iceback)
       s.line(xp, yp, xp + aimX * 90, yp + aimY * 90, 2, c);
     s.color(col::white);
   }
   Enemy::render(s);
-  if (variant == 7) {
-    s.color(tone(variant).alpha(0.2f));
+  if (variant == Brute) {
+    s.color(DEFS[variant].tone.alpha(0.2f));
     s.ring(xp, yp, 70);
     s.color(col::white);
   }
@@ -258,13 +285,12 @@ void ExpansionEnemy::render(Screen &s) {
 
 void ExpansionEnemy::renderLight(Screen &s) {
   Enemy::renderLight(s);
-  if (variant == 1 || variant == 4 || variant >= 8)
-    s.glow(xp, yp - 5, 42, tone(variant) * 0.12f);
+  if (variant == Lantern || variant == Wisp || variant >= Imp)
+    s.glow(xp, yp - 5, 42, DEFS[variant].tone * 0.12f);
 }
 
 void ExpansionEnemy::die() {
-  if (variant == 9)
-    level->add<EnemyHazard>(x, y, variant, 56.0f, 1.3f, 0.85f,
-                            18.0f * damageMul, name());
+  if (variant == Golem)
+    hazard(56.0f, 1.3f, 0.85f, 18.0f);
   Enemy::die();
 }

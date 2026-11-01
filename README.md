@@ -182,8 +182,10 @@ effects scene without loading or saving player progress.
   `Hide`) and a plan per enemy kind; `src/Workers` runs it on a thread pool
 - `src/particle` – particles kept outside the registry in `Level::particles`: `Spark` and `TextParticle`, and `Debris` after dittany: blood, meat, smoke, flames, heal crosses and
   the `Explosion` emitter
-- `src/item` – `Upgrade` and its weapons, passives, relics, talents and drafted skills (`item/skill`)
-- `src/item/weapon/Recipe` – data-driven weapons: `RECIPES` lists each weapon as one entry, `RecipeWeapon` levels and
+- `src/item` – `Upgrade` and its weapons, passives, relics, talents and drafted skills (`item/skill`: the `Skill`
+  base, `MageSkills` and the `Arts` table of class and general skills)
+- `src/item/weapon/Recipe` – data-driven weapons (`RecipeShot` lives in `form/RecipeShot.cpp`; `castRecipe` fires a
+  recipe at its own damage, reach and count): `RECIPES` lists each weapon as one entry, `RecipeWeapon` levels and
   fires it, and `RecipeShot` holds the shared hit, status, blast and chain mechanics; `item/weapon/form` has one
   `FormBehavior` class per `Form` (bolt, volley, seeker, boomerang, orbit, nova, rain, field, cleave, lob, trap, beam)
   deciding how a shot is fired, moves, draws and lights. A new form is a new class plus a line in `FormBehavior::of`
@@ -212,7 +214,7 @@ effects scene without loading or saving player progress.
   string rows) and `Text` (word wrap); `Hud` draws the in-run HUD (bars,
   timers, icons, minimap, edge pointers to shrines, landmarks and champions, one method per panel with shared
   `arrow`, `diamond` and `tag` pointer helpers) and owns the announcement banners
-- `src/Game` – the run loop, menus, camera and run lifecycle; `src/meta/Saves` owns the preference folder, world
+- `src/Game` – the run loop, menus and run lifecycle; `gfx/Camera` follows, shakes and aims the view; `src/meta/Saves` owns the preference folder, world
   choice and world history files; `src/DevStart` parses the dev start flags (`--arm`, `--hero`, `--biome`, `--at`,
   `--lake`, `--cliff`, `--ramp`, `--peak`, `--landmark`) and places and arms the player
 - `src/test` – the `--test` suite split by area (`CoreTest`, `CombatTest`, `ClassTest`, `RunTest`, `WorldTest`,

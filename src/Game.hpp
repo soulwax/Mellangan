@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Bench.hpp"
+#include "gfx/Camera.hpp"
 #include "DevStart.hpp"
 #include "gfx/Screen.hpp"
 #include "input/Input.hpp"
@@ -62,8 +63,8 @@ public:
   std::string worldName() const;
   void announce(std::string text);
   void setReducedParticles(bool reduced);
-  void onPlayerHurt() { hurt = 1, shake = 4; }
-  void onExplosion() { shake = std::max(shake, 2.5f); }
+  void onPlayerHurt() { hurt = 1, camera.shake = 4; }
+  void onExplosion() { camera.jolt(2.5f); }
   void hitStop(float seconds);
   void celebrate();
   void onPlayerDied();
@@ -72,10 +73,10 @@ public:
 private:
   std::unique_ptr<Menu> nextMenu;
   bool menuChanged = false, showFps = false, worldDebug = false;
-  float time = 0, hurt = 0, shake = 0, fps = 0, freeze = 0,
+  float time = 0, hurt = 0, fps = 0, freeze = 0,
         lastStop = -1, levelBeat = -1;
   std::string chartPath;
-  double xCam = 0, yCam = 0;
+  Camera camera;
   int xView = 0, yView = 0;
 
   void tick();
