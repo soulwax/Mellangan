@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Bench.hpp"
+#include "DevStart.hpp"
 #include "gfx/Screen.hpp"
 #include "input/Input.hpp"
 #include "level/Level.hpp"
@@ -33,11 +34,8 @@ public:
   Bench bench;
 
   WorldMode worldMode = WorldMode::Classic;
-  std::string seedCode, arm;
-  int heroPick = -1, biomePick = -1, atX = 0, atY = 0;
-  bool atPick = false, lakePick = false, cliffPick = false, rampPick = false,
-       peakPick = false;
-  int landmarkPick = -1;
+  std::string seedCode;
+  DevStart start;
   Balance balance;
   Difficulty difficulty = Difficulty::HurtMePlenty;
   std::string base;
@@ -58,9 +56,7 @@ public:
   void newGame(bool reroll = true);
   void toTitle();
   void reseed();
-  void armPlayer();
   void snapCamera();
-  void visitBiome();
   void loadBalance();
   void setDifficulty(Difficulty d);
   std::string worldName() const;

@@ -13,6 +13,7 @@ All notable changes to Mellangan are documented here. The format follows
 ### Changed
 
 - Reorganised the source for readability: tests and QA views moved to `src/test`, the HUD and save files left `Game`, weapon forms became one class each, and the largest enemy, level and ability files were split by responsibility. Gameplay is unchanged.
+- World generation moved into `src/level/world`, one file per concern, with a single tile-memo helper; feature props are one-line table entries and the dev start flags live in `DevStart`. Generated worlds are bit-identical.
 
 ## [0.5.14] - 2026-11-01
 

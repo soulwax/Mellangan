@@ -142,7 +142,7 @@ void Game::tick() {
     if (input.confirm.clicked)
       level->player->cast();
     level->tick();
-    if (dev && !arm.empty() && arm.front() == '=')
+    if (dev && start.stripsLevels())
       level->player->pendingLevels = level->player->pendingTreasures = 0;
     if (!menuChanged && level->night.offering)
       setMenu(std::make_unique<ShrineMenu>(*this));
@@ -252,61 +252,8 @@ void Game::newGame(bool reroll) {
   if (worldMode == WorldMode::Random && reroll)
     seedCode.clear();
   reseed();
-  if (dev && !arm.empty())
-    armPlayer();
-  if (dev && biomePick >= 0 && biomePick < BIOME_COUNT)
-    visitBiome();
-  auto seek = [&](auto fits) {
-    for (int r = 0; r < 2000; r += 4)
-      for (int i = 0, n = std::max(1, r); i < n; i++) {
-        double a = TAU * i / n;
-        int x = int(std::cos(a) * r), y = int(std::sin(a) * r);
-        if (fits(x, y)) {
-          atX = x, atY = y, atPick = true;
-          return;
-        }
-      }
-  };
-  if (dev && lakePick)
-    seek([](int x, int y) {
-      return world::isWater(x, y) && world::isWater(x, y - 2) &&
-             !world::isWater(x, y + 3);
-    });
-  if (dev && rampPick)
-    seek([&](int x, int y) {
-      return world::isRamp(x, y - 1) && world::isRamp(x - 1, y - 1) &&
-             world::isRamp(x + 1, y - 1) && !world::isWater(x, y + 1) &&
-             (biomePick < 0 || world::biomeAt(x, y) == biomePick);
-    });
-  if (dev && cliffPick)
-    seek([&](int x, int y) {
-      if (biomePick >= 0 && world::biomeAt(x, y) != biomePick)
-        return false;
-      for (int dx = -2; dx <= 2; dx++)
-        if (world::heightAt(x + dx, y - 1) <= world::heightAt(x + dx, y))
-          return false;
-      return world::heightAt(x, y + 2) == world::heightAt(x, y) &&
-             !world::isWater(x, y + 2);
-    });
-  if (dev && peakPick)
-    seek([](int x, int y) {
-      return world::heightAt(x, y) == 3 && world::heightAt(x, y + 6) < 3;
-    });
-  if (dev && landmarkPick >= 0)
-    for (int r = 0; r < 40 && !atPick; r++)
-      for (int ry = -r; ry <= r && !atPick; ry++)
-        for (int rx = -r; rx <= r && !atPick; rx++) {
-          Structure site;
-          if ((std::abs(rx) == r || std::abs(ry) == r) &&
-              world::structureIn(rx, ry, site) &&
-              int(site.kind) == int(StructureKind::AncientTree) + landmarkPick)
-            atX = site.x + 3, atY = site.y + site.h + 2, atPick = true;
-        }
-  if (dev && atPick) {
-    Player &p = *level->player;
-    p.x = atX * 16 + 8, p.y = atY * 16 + 8, xCam = p.x, yCam = p.y;
-    spdlog::info("dev: starting at tile ({}, {})", atX, atY);
-  }
+  if (dev)
+    start.apply(*level->player), snapCamera();
   setMenu(nullptr);
   best = 0, beatBest = false;
   if (level->omen >= 0)
@@ -353,58 +300,6 @@ void Game::setDifficulty(Difficulty d) {
 }
 
 void Game::snapCamera() { xCam = level->player->x, yCam = level->player->y; }
-
-void Game::visitBiome() {
-  Player &p = *level->player;
-  for (int r = 0; r < 4000; r += 12)
-    for (int i = 0, n = std::max(1, r / 2); i < n; i++) {
-      double a = TAU * i / n;
-      int x = int(std::cos(a) * r), y = int(std::sin(a) * r);
-      bool deep = true;
-      for (int k = 0; k < 4; k++)
-        deep &= world::biomeAt(x + (k & 1 ? 6 : -6), y + (k & 2 ? 6 : -6)) ==
-                biomePick;
-      if (!deep || world::biomeAt(x, y) != biomePick)
-        continue;
-      p.x = x * 16 + 8, p.y = y * 16 + 8;
-      xCam = p.x, yCam = p.y;
-      spdlog::info("dev: visiting {} at tile ({}, {})", BIOMES[biomePick]->name,
-                   x, y);
-      return;
-    }
-  spdlog::warn("dev: biome {} not found", biomePick);
-}
-
-void Game::armPlayer() {
-  Player &p = *level->player;
-  std::string_view list = arm;
-  if (list.front() == '=') {
-    list.remove_prefix(1);
-    for (auto &u : p.upgrades)
-      u->level = 0;
-  }
-  while (!list.empty()) {
-    size_t comma = list.find(',');
-    std::string_view name = list.substr(0, comma);
-    list.remove_prefix(comma == list.npos ? list.size() : comma + 1);
-    bool evolve = !name.empty() && name.back() == '!';
-    if (evolve)
-      name.remove_suffix(1);
-    auto it = std::find_if(p.upgrades.begin(), p.upgrades.end(),
-                           [&](auto &u) { return name == u->name; });
-    if (it == p.upgrades.end()) {
-      spdlog::warn("dev: no upgrade named {}", name);
-      continue;
-    }
-    Upgrade &u = **it;
-    while (!u.maxed())
-      u.levelUp(p);
-    if (evolve && u.evolvedName)
-      u.evolve();
-    spdlog::info("dev: armed {} at level {}", u.name, u.level);
-  }
-}
-
 
 void Game::loadWorld() {
   if (saves.dir().empty() || bench.enabled)

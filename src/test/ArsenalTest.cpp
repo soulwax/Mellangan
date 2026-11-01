@@ -129,7 +129,7 @@ void viewArsenal(SDL_Window *window, const std::string &base, const char *cls) {
   game.codex.start = 0;
   for (int i = 0; cls && i < HERO_COUNT; i++)
     if (std::strcmp(HEROES[i]->name, cls) == 0)
-      game.dev = true, game.heroPick = i;
+      game.dev = true, game.start.hero = i;
   if (!game.screen.load(base))
     return;
   SDL_RaiseWindow(window);

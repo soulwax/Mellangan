@@ -22,8 +22,8 @@ Player::~Player() = default;
 
 void Player::onAdded() {
   Game &g = level->game;
-  hero = g.dev && g.heroPick >= 0 && g.heroPick < HERO_COUNT
-             ? HEROES[g.heroPick]
+  hero = g.dev && g.start.hero >= 0 && g.start.hero < HERO_COUNT
+             ? HEROES[g.start.hero]
              : &heroOf(g.codex);
   hp = maxHp = g.balance.playerHp;
   xpBase = g.balance.xpBase, xpGrowth = g.balance.xpGrowth;

@@ -195,14 +195,17 @@ effects scene without loading or saving player progress.
   props, draw order, reflections and light, `LevelSpace.cpp` collision, heights and spatial queries) and the
   `Spawner`; world generation as small table-driven
   modules: `Noise.c` (pure C Perlin/fBm), `Biome`, `Feature` (scattered props), `Structure` (layouts) and
-  `Encounter` (what a structure does when entered)
+  `Encounter` (what a structure does when entered); `level/world` implements `World.hpp` as `Biomes` (tile memo,
+  biome votes, ground blend), `Terrain` (height, water, dirt, ramps), `Sites` (structure rolls), `Ground` (floor
+  tiles, shade, tint) and `Props`, sharing `Internal.hpp`
 - `src/level/BiomeReward`, `EncounterGuards`, and `EncounterObjective` – biome challenge rewards, local guard
   tracking, and objective rules used by the encounter lifecycle
 - `src/menu` – title, pause, level-up, and death menus
 - `src/gui` – reusable GUI widgets and shared choice layout and input handling; `Hud` draws the in-run HUD (bars,
   timers, icons, minimap, edge pointers to shrines, landmarks and champions) and owns the announcement banners
 - `src/Game` – the run loop, menus, camera and run lifecycle; `src/meta/Saves` owns the preference folder, world
-  choice and world history files
+  choice and world history files; `src/DevStart` parses the dev start flags (`--arm`, `--hero`, `--biome`, `--at`,
+  `--lake`, `--cliff`, `--ramp`, `--peak`, `--landmark`) and places and arms the player
 - `src/test` – the `--test` suite split by area (`CoreTest`, `CombatTest`, `ClassTest`, `RunTest`, `WorldTest`,
   biome, expansion and arsenal tests; `Tests.hpp` lists them) and `src/test/view` – the `--test-*-view` QA scenes,
   `--biome-map` and `--capture-screenshots` (`Views.hpp`); `main.cpp` maps each flag to its view in one table

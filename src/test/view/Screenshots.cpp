@@ -72,8 +72,9 @@ void captureScreenshotSuite(SDL_Window *window, const std::string &base) {
 
   game.menu.reset();
   game.dev = true;
-  game.biomePick = BIOME_SAVANNA;
-  game.visitBiome();
+  game.start.biome = BIOME_SAVANNA;
+  game.start.visitBiome(*game.level->player);
+  game.snapCamera();
   Player &p = *game.level->player;
   p.hero = HEROES[0];
   HEROES[0]->equip(p);

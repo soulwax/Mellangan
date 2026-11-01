@@ -134,21 +134,8 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
       game.dev |= std::string_view(argv[i]) == "--dev";
       game.bench.enabled |= std::string_view(argv[i]) == "--bench";
-      if (std::string_view(argv[i]) == "--arm" && i + 1 < argc)
-        game.arm = argv[++i];
-      if (std::string_view(argv[i]) == "--hero" && i + 1 < argc)
-        game.heroPick = std::atoi(argv[++i]);
-      if (std::string_view(argv[i]) == "--biome" && i + 1 < argc)
-        game.biomePick = std::atoi(argv[++i]);
-      game.lakePick |= std::string_view(argv[i]) == "--lake";
-      game.cliffPick |= std::string_view(argv[i]) == "--cliff";
-      game.rampPick |= std::string_view(argv[i]) == "--ramp";
-      game.peakPick |= std::string_view(argv[i]) == "--peak";
-      if (std::string_view(argv[i]) == "--landmark" && i + 1 < argc)
-        game.landmarkPick = std::atoi(argv[++i]);
-      if (std::string_view(argv[i]) == "--at" && i + 1 < argc)
-        game.atPick = std::sscanf(argv[++i], "%d,%d", &game.atX, &game.atY) == 2;
     }
+    game.start.parse(argc, argv);
     if (game.dev)
       spdlog::info("Dev mode: F5 level up, F6 +30s, F7 god mode, F8 world "
                    "debug, F9 warp to nearest structure, F10 next weather; --arm \"A,B!\" "
