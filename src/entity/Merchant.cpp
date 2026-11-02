@@ -11,6 +11,10 @@ namespace {
 constexpr int TRADER = 86, BARREL = 82;
 constexpr Color LAMP{0.95f, 0.7f, 0.35f, 1};
 
+int stockLevel(Level &level, double x, double y) {
+  return level.rules.town ? std::clamp(level.player->lvl, 1, 99) : level.monsterLevel(x, y);
+}
+
 } // namespace
 
 void Merchant::onAdded() { level->tag(this); }
@@ -55,7 +59,7 @@ Merchant *Merchant::camp(Level &level, double x, double y) {
   double bx = x + 30, by = y + 2;
   level.collide(bx, by, 6);
   v.bench = level.add<Workbench>(bx, by)->id;
-  v.restock(level.monsterLevel(x, y), rng);
+  v.restock(stockLevel(level, x, y), rng);
   Spark::burst(level, x, y - 6, LAMP, 10, 40, true);
   Player &p = *level.player;
   spdlog::info("merchant: camp {} at {:.0f} s, ilvl {}, hero level {} with {} gold, {} kills",
@@ -66,14 +70,14 @@ Merchant *Merchant::camp(Level &level, double x, double y) {
 void Merchant::visit(Level &level) {
   Vendor &v = level.vendor;
   Night &n = level.night;
-  if (const Structure *s = n.lastLit(); s && n.lit != v.camp) {
+  if (const Structure *s = n.lastLit(); s && n.lit != v.camp && !level.rules.town) {
     v.camp = n.lit;
     camp(level, s->centerX() + 28, s->centerY() + 12);
     level.game.announce("A MERCHANT CAMPS BY THE FIRE");
   }
   Merchant *m = level.get<Merchant>(v.merchant);
   if (m && n.dawn && !v.day) {
-    v.restock(level.monsterLevel(m->x, m->y), rng);
+    v.restock(stockLevel(level, m->x, m->y), rng);
     level.game.announce("THE MERCHANT RESTOCKS AT DAWN");
   }
   v.day = n.dawn;

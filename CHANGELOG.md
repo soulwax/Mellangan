@@ -8,14 +8,21 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
-- A first taste of the campaign: start the game with `--campaign` to found Hearthwick and keep one hero in one world across sessions.
-  - Hearthwick is a fenced clearing with torches, a campfire, a waypoint stone and a stash chest. Foes never spawn inside it.
+- A first taste of the campaign: press K on the title screen (or start with `--campaign`) to found Hearthwick and keep one hero in one world across sessions. A new campaign asks for your class first; an existing one continues where you left off.
+  - Hearthwick is a fenced clearing with torches, a campfire, a waypoint stone, a stash chest, and the merchant with his workbench, who stay in town and stock wares for your level. Foes never spawn inside it.
+  - Days are quieter but not empty: a thin trickle of foes roams by day, and the hordes come at night.
   - Days and nights repeat. The clock shows the day and counts down to dusk, then to dawn.
   - Foes grow stronger the further you roam from town.
   - Stepping onto the waypoint saves and heals you. The game also saves every minute, when you close the stash and when you quit.
   - Falling wakes you by the waypoint for a tenth of your gold.
   - The stash holds 32 items. Press I beside the chest to move items between it and your bag.
   - Your class, level, gold, materials, gear, bag, stash and learned upgrades carry over, and so does every change to the world.
+  - In the campaign, levelling up gives skill points instead of cards. Press K to open your class's skill tree.
+    - The tree has three tabs: Arms (your class weapons first, then the ones your class favours), Arts (skills) and Instincts (talents and passives).
+    - Each tab has up to four tiers, opening at hero level 1, 4, 9 and 15, and each tier needs a point in the one above.
+    - Skills rank up to five, and every rank after the first shortens the cooldown by a tenth. Switching between learned skills is free.
+    - A weapon that is ready to evolve evolves for a point.
+    - Treasure chests still offer their evolution and relic cards.
 - Allies: wolves, hawks, ghouls, skeletons, clockwork drones, powder crews and decoys can fight beside you. They chase foes near you, apply their weapon's effects, take hits, and fade when their time runs out. Foes turn on allies that come close, and decoys draw them away from you. Your attacks never hurt allies. Wolf Totem, Hawk Companion, Ghoul Pack, Clockwork Drone and Powder Crew summon them; `--allies N` brings a mixed pack in dev runs.
 - Twelve new weapons any class can draft, each with its own icon and evolution:
   - Bloodletter Fan, Hex Whip, Bone Spear and Thunder Drum.

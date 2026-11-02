@@ -19,7 +19,7 @@ private:
   struct Layout {
     SDL_FRect panel, chips[4], seed, diff, rows[6];
   };
-  int pick = -1;
+  int pick = -1, saved = -1;
 
   Layout layout() const;
   void choose(int mode);

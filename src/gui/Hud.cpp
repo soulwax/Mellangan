@@ -275,6 +275,10 @@ void Hud::night(float top) {
     s.textCenter(OMENS[l.omen].name, s.w / 2, top + 58 * u, small, OMENS[l.omen].tint);
   s.textCenter(fmt::format("{} shrine{} lit", n.lit, n.lit == 1 ? "" : "s"),
                s.w / 2, top + 26 * u, small, n.lit ? col::gold : col::muted);
+  if (game.campaign && game.campaign->points > 0)
+    s.textCenter(fmt::format("K  {} skill point{}", game.campaign->points,
+                             game.campaign->points == 1 ? "" : "s"),
+                 s.w / 2, top + 38 * u, small, col::gold.alpha(0.75f + 0.25f * std::sin(time * 4)));
   if (n.kindling > 0) {
     float kw = 120 * u, kx = (s.w - kw) / 2, ky = top + 46 * u;
     s.rect(kx, ky, kw, 4 * u, col::panel);

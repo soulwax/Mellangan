@@ -102,6 +102,14 @@ void TitleMenu::tick() {
     Sound::confirm.play(0.6f, 0);
     return game.setMenu(std::make_unique<ClassMenu>(game));
   }
+  if (in.campaign.clicked && !typing()) {
+    Sound::confirm.play(0.6f, 0);
+    if (game.campaignSaved())
+      return game.beginCampaign();
+    auto pickHero = std::make_unique<ClassMenu>(game);
+    pickHero->campaign = true;
+    return game.setMenu(std::move(pickHero));
+  }
   if (in.escape.clicked) {
     if (typing())
       return choose(int(WorldMode::Classic));
@@ -156,6 +164,10 @@ void TitleMenu::render(Screen &s) {
                col::muted);
   if (std::fmod(t, 1.0f) < 0.65f)
     s.textCenter("PRESS ENTER", s.w / 2, s.h * 0.62f, u, col::white);
+  if (saved < 0)
+    saved = game.campaignSaved();
+  s.textCenter(saved ? "K  CONTINUE THE CAMPAIGN" : "K  BEGIN A CAMPAIGN", s.w / 2,
+               s.h * 0.62f + 24 * u, small, col::gold.alpha(0.8f));
   s.textCenter("WASD/Arrows move   Tab map   C codex   Esc pause   M mute   F11 fullscreen",
                s.w / 2, s.h - 30 * small, small, col::muted);
   std::string_view version = "v" MELLANGAN_VERSION;

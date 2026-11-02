@@ -12,8 +12,8 @@ struct RunRules {
 
   float nightLength = 900, dawnPull = 60, dayLength = 0;
   bool endsAtDawn = true;
-  float spawnRate = 1, hordeScale = 1;
-  bool waves = true, bosses = true, loot = false;
+  float spawnRate = 1, hordeScale = 1, dayRate = 0;
+  bool waves = true, bosses = true, loot = false, town = false;
   int omen = ROLL_OMEN;
   std::vector<SafeZone> safe;
   float (*threat)(double x, double y) = nullptr;

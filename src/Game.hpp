@@ -73,6 +73,7 @@ public:
   void onPlayerDied();
   void onDawn();
   void beginCampaign();
+  bool campaignSaved() const;
   void saveCampaign();
   void endCampaign();
 

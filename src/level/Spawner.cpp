@@ -95,7 +95,7 @@ void Spawner::trickle(float t) {
   if (level.rules.spawnRate <= 0)
     return void(timer = 1);
   timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp) * level.portent().rate /
-           level.rules.spawnRate;
+           (level.rules.spawnRate * (level.night.dawn ? level.rules.dayRate : 1));
   Player &hero = *level.player;
   Roster r = roster(level.rules.threat ? level.rules.threat(hero.x, hero.y) : t);
   for (int i = 0, batch = 1 + int(t / b.batchEvery);
@@ -185,6 +185,8 @@ void Spawner::tick() {
   const Omen &o = level.portent();
   float t = level.time;
   trickle(t);
+  if (level.night.dawn)
+    return named::tick(level);
   if (t >= nextWave && level.rules.waves)
     horde(t);
   if (t >= nextMimic * o.mimics && level.rules.waves)

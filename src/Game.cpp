@@ -24,6 +24,7 @@
 #include "menu/VendorMenu.hpp"
 #include "menu/CraftMenu.hpp"
 #include "menu/StashMenu.hpp"
+#include "menu/TreeMenu.hpp"
 #include "campaign/Stash.hpp"
 #include "menu/MapMenu.hpp"
 #include "menu/PauseMenu.hpp"
@@ -147,6 +148,9 @@ void Game::tick() {
   } else if (input.escape.clicked || input.pause.clicked) {
     Sound::select.play(0.5f, 0);
     setMenu(std::make_unique<PauseMenu>(*this));
+  } else if (campaign && input.campaign.clicked) {
+    Sound::select.play(0.5f, 0);
+    setMenu(std::make_unique<TreeMenu>(*this));
   } else if (input.map.clicked) {
     Sound::select.play(0.5f, 0);
     setMenu(std::make_unique<MapMenu>(*this));
@@ -170,6 +174,13 @@ void Game::tick() {
       autosave = Campaign::AUTOSAVE, saveCampaign();
     if (dev && start.stripsLevels())
       level->player->pendingLevels = level->player->pendingTreasures = 0;
+    if (Player &p = *level->player; campaign && p.pendingLevels > p.pendingTreasures) {
+      int gained = p.pendingLevels - p.pendingTreasures;
+      campaign->points += gained, p.pendingLevels = p.pendingTreasures;
+      celebrate();
+      announce(fmt::format("LEVEL {}  +{} SKILL POINT{}  K TO SPEND", p.lvl, gained,
+                           gained == 1 ? "" : "S"));
+    }
     if (!menuChanged && level->night.offering)
       setMenu(std::make_unique<ShrineMenu>(*this));
     else if (!menuChanged && level->player->pendingLevels > 0) {
@@ -454,6 +465,13 @@ void Game::beginCampaign() {
   spdlog::info("campaign: {} world {} as hero {}, day {}", fresh ? "new" : "loaded",
                campaign->world, campaign->hero, campaign->day);
   announce(fresh ? "ACT I  HEARTHWICK" : "BACK IN HEARTHWICK");
+}
+
+bool Game::campaignSaved() const {
+  if (saves.dir().empty())
+    return false;
+  Campaign probe;
+  return Campaign::load(saves.read("campaign.txt"), probe);
 }
 
 void Game::saveCampaign() {

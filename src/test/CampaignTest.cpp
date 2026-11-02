@@ -9,7 +9,10 @@
 #include "Game.hpp"
 #include "campaign/Campaign.hpp"
 #include "campaign/Stash.hpp"
+#include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
+#include "entity/Workbench.hpp"
+#include "entity/enemy/Enemy.hpp"
 #include "item/Upgrade.hpp"
 #include "item/loot/Loot.hpp"
 #include "level/Edits.hpp"
@@ -90,6 +93,19 @@ void testCampaign() {
   assert(!world::propAt(cx + 1, cy, prop));
   assert(level.rules.threat(first.xTown, first.yTown) < 1 &&
          level.rules.threat(first.xTown + 1600, first.yTown) > 150);
+  Merchant *trader = level.get<Merchant>(level.vendor.merchant);
+  assert(trader && level.get<Workbench>(level.vendor.bench) && level.vendor.restocks == 1);
+  assert(level.rules.safeAt(trader->x, trader->y) && level.rules.dayRate > 0);
+  double tx = trader->x;
+  level.night.lit = 1;
+  Merchant::visit(level);
+  assert(level.get<Merchant>(level.vendor.merchant)->x == tx);
+  level.night.lit = 0;
+  p.god = true;
+  for (int i = 0; i < 900 && level.count<Enemy>() == 0; i++)
+    level.tick();
+  assert(level.night.dawn && level.count<Enemy>() > 0);
+  p.god = false;
 
   p.gold = 500, p.materials[int(Mat::Rune)] = 4;
   Rng r;

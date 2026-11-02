@@ -14,6 +14,8 @@ public:
   void render(Screen &s) override;
   bool showHud() const override { return false; }
 
+  bool campaign = false;
+
 private:
   int pick = 0;
   float since = 0;

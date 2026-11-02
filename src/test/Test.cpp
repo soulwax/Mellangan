@@ -70,6 +70,7 @@ int runTests() {
   testCrafting();
   testLootTies();
   testCampaign();
+  testSkillTrees();
   testInventory();
   testEquipStats();
   testAllies();

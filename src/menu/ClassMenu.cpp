@@ -38,6 +38,8 @@ void ClassMenu::begin() {
     return Sound::hurt.play(0.4f, 0);
   game.codex.start = pick;
   Sound::confirm.play(0.6f, 0);
+  if (campaign)
+    return game.beginCampaign();
   game.newGame(false);
 }
 

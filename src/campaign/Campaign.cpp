@@ -8,9 +8,12 @@
 #include "Game.hpp"
 #include "campaign/Stash.hpp"
 #include "campaign/Waypoint.hpp"
+#include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
+#include "item/skill/Skill.hpp"
+#include "item/tree/Tree.hpp"
 #include "level/Level.hpp"
 #include "level/World.hpp"
 #include "particle/Shockwave.hpp"
@@ -38,8 +41,10 @@ std::string_view rest(std::string_view line, int words) {
 
 std::string Campaign::save() const {
   std::string out = fmt::format("mellangan-campaign {}\n", VERSION);
-  out += fmt::format("world {}\nhero {}\nlevel {} {:.2f} {:.2f}\ngold {}\nday {}\n", world, hero,
-                     lvl, exp, expNext, gold, day);
+  out += fmt::format("world {}\nhero {}\nlevel {} {:.2f} {:.2f}\ngold {}\nday {}\npoints {}\n",
+                     world, hero, lvl, exp, expNext, gold, day, points);
+  if (!active.empty())
+    out += "skill " + active + "\n";
   out += fmt::format("pos {:.1f} {:.1f}\ntown {:.1f} {:.1f} {}\n", x, y, xTown, yTown,
                      int(founded));
   out += "mats";
@@ -81,6 +86,10 @@ bool Campaign::load(std::string_view text, Campaign &out) {
       words >> out.gold;
     else if (key == "day")
       words >> out.day;
+    else if (key == "points")
+      words >> out.points;
+    else if (key == "skill")
+      out.active = std::string(rest(line, 1));
     else if (key == "pos")
       words >> out.x >> out.y;
     else if (key == "town")
@@ -110,7 +119,7 @@ bool Campaign::load(std::string_view text, Campaign &out) {
 RunRules Campaign::rules() const {
   RunRules r;
   r.nightLength = NIGHT, r.dayLength = DAY, r.endsAtDawn = false;
-  r.loot = true, r.bosses = false, r.omen = -1;
+  r.loot = true, r.bosses = false, r.town = true, r.omen = -1, r.dayRate = DAY_RATE;
   r.safe.push_back({xTown, yTown, SAFE});
   r.threat = areaThreat;
   return r;
@@ -123,6 +132,7 @@ void Campaign::capture(const Level &level) {
     materials[m] = p.materials[m];
   bag = p.bag, gear = p.gear, worn = p.worn;
   x = p.x, y = p.y, day = level.night.nights;
+  active = p.skill ? p.skill->name : "";
   upgrades.clear();
   for (const auto &up : p.upgrades) {
     int own = up->level;
@@ -172,9 +182,15 @@ void Campaign::restore(Level &level) {
   for (int m = 0; m < MATS; m++)
     p.materials[m] = materials[m];
   for (const auto &[name, want] : upgrades)
-    if (Upgrade *up = p.upgrade(name))
+    if (Upgrade *up = p.upgrade(name); up && up->skill)
+      Tree::rank(*up, want);
+    else if (up)
       while (up->level < want && !up->maxed())
         up->levelUp(p);
+  if (Upgrade *up = active.empty() ? nullptr : p.upgrade(active); up && up->level > 0)
+    up->levelUp(p);
+  if (p.skill && p.skill->level == 0)
+    Tree::rank(*p.skill, 1);
   p.bag.clear();
   for (int s = 0; s < GEAR; s++)
     if (worn[s])
@@ -186,6 +202,7 @@ void Campaign::restore(Level &level) {
 void Campaign::raise(Level &level) {
   waypoint = level.add<Waypoint>(xTown, yTown - 6)->id;
   chest = level.add<Stash>(xTown + 40, yTown)->id;
+  Merchant::camp(level, xTown - 62, yTown + 34);
 }
 
 void Campaign::fall(Level &level) {

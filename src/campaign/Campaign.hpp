@@ -17,10 +17,11 @@ class Level;
 
 struct Campaign {
   static constexpr int VERSION = 1, STASH = 32;
-  static constexpr float SAFE = 150, AUTOSAVE = 60, NIGHT = 180, DAY = 240;
+  static constexpr float SAFE = 150, AUTOSAVE = 60, NIGHT = 180, DAY = 240, DAY_RATE = 0.35f;
 
   std::string world;
-  int hero = 0, lvl = 1, gold = 0, day = 1;
+  int hero = 0, lvl = 1, gold = 0, day = 1, points = 0;
+  std::string active;
   float exp = 0, expNext = 5;
   int materials[MATS]{};
   std::vector<Item> bag, stash;

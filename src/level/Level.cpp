@@ -96,7 +96,7 @@ void Level::tick() {
     night.tick();
   if (rules.loot && !player->dead())
     Merchant::visit(*this);
-  if (!player->dead() && !night.dawn)
+  if (!player->dead() && (!night.dawn || rules.dayRate > 0))
     spawner.tick(), explore(), hunt();
   climate();
   weather();

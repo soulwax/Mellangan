@@ -43,6 +43,7 @@ void testVendor();
 void testCrafting();
 void testLootTies();
 void testCampaign();
+void testSkillTrees();
 void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();
