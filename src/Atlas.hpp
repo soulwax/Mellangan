@@ -206,7 +206,9 @@ constexpr int Thornling = 0, Boar = 1, GoblinArcher = 2, GoblinShaman = 3, Sapli
               Treant = 5, MothWisp = 6, Cutthroat = 7, BogToad = 8, Drowned = 9,
               Snapjaw = 10, StranglerVine = 11, AmberBeetle = 12, SporePuffer = 13,
               SunkenPriest = 14, Yeti = 15, IceWraith = 16, BarrowWight = 17,
-              CrystalGolem = 18, MoonHound = 19, Lynx = 20, BarrowArcher = 21;
+              CrystalGolem = 18, MoonHound = 19, Lynx = 20, BarrowArcher = 21, SandWyrm = 22,
+              Hyena = 23, SaltGolem = 24, GlassSpitter = 25, StormKite = 26, DuneRaider = 27,
+              TotemShaman = 28, WarTotem = 29;
 } // namespace bs
 constexpr Sprite biomeGround(int set, int cell) {
   return {float(((set % 2) * 12 + cell) * 18 + 1),

@@ -12,7 +12,8 @@ Savanna::Savanna()
               45,
               {10, 0, 15, 35, 40, 0},
               foe(EnemyKind::Rat) | foe(EnemyKind::Scorpion) |
-                  foe(EnemyKind::Demon),
+                  foe(EnemyKind::Demon) | foe(EnemyKind::Hyena) |
+                  foe(EnemyKind::TotemShaman),
               {{&f::acacia, 6, 60},
                {&f::baobab, 2, 15},
                {&f::dryGrass, 10, 40},

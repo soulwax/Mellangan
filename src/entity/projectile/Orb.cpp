@@ -9,6 +9,8 @@ void Orb::tick() {
     return remove();
   x += xa * DT;
   y += ya * DT;
+  if (bounces > 0)
+    ricochet();
   level->friends(x, y + 7, 20, [&](Mob &m) {
     double xd = m.x - x, yd = m.bodyY() - y;
     if (removed || xd * xd + yd * yd >= 7 * 7)
@@ -36,4 +38,18 @@ void Orb::render(Screen &s) {
 
 void Orb::renderLight(Screen &s) {
   s.glow(xp, yp, 44, tone * 0.33f);
+}
+
+void Orb::ricochet() {
+  double cx = x, cy = y + 7;
+  level->collide(cx, cy, 2);
+  double nx = cx - x, ny = cy - y - 7, n = std::sqrt(nx * nx + ny * ny);
+  if (n < 1e-6)
+    return;
+  nx /= n, ny /= n;
+  double dot = xa * nx + ya * ny;
+  if (dot < 0)
+    xa -= 2 * dot * nx, ya -= 2 * dot * ny;
+  x = cx, y = cy - 7, bounces--;
+  Spark::burst(*level, x, y, tone, 4, 40, false);
 }

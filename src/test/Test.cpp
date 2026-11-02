@@ -100,6 +100,7 @@ int runTests() {
   testGreenwoodFoes();
   testMarchesFoes();
   testFrostFoes();
+  testScorchedFoes();
   testRunRules();
   std::cout << "[TEST] Automatic level-up and treasure choices: PASS" << std::endl;
   std::cout << "[TEST] Status stacking, expiry, immunity, damage credit and cleanup: PASS"

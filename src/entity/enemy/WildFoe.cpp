@@ -1,11 +1,13 @@
 #include "entity/enemy/WildFoe.hpp"
 
+#include "audio/Sound.hpp"
 #include "entity/Ability.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "entity/enemy/ai/Mend.hpp"
 #include "entity/projectile/Arrow.hpp"
 #include "entity/projectile/Orb.hpp"
+#include "particle/debris/SmokeDebris.hpp"
 #include "level/Level.hpp"
 #include "level/World.hpp"
 #include "particle/Arc.hpp"
@@ -18,7 +20,10 @@ constexpr Color HEX{0.55f, 0.85f, 0.35f, 1}, TONGUE{0.9f, 0.45f, 0.5f, 1},
                 WATER{0.45f, 0.7f, 0.9f, 1}, VINE{0.4f, 0.7f, 0.3f, 1},
                 SPORE{0.75f, 0.6f, 0.85f, 1}, SNOW{0.92f, 0.96f, 1, 1},
                 FROST{0.55f, 0.85f, 1, 1}, LEECH{0.5f, 0.95f, 0.6f, 1},
-                CRYSTAL{0.8f, 0.65f, 1, 1}, MOON{0.75f, 0.8f, 1, 1};
+                CRYSTAL{0.8f, 0.65f, 1, 1}, MOON{0.75f, 0.8f, 1, 1},
+                SAND{0.9f, 0.72f, 0.42f, 1}, SALT{0.95f, 0.95f, 0.9f, 1},
+                GLASS{0.6f, 0.95f, 0.9f, 1}, STORM{0.65f, 0.75f, 1, 1},
+                HASTE{1, 0.6f, 0.25f, 1}, WARD{0.45f, 0.7f, 1, 1};
 
 void volley(Enemy &e) { ability::volley(e, 3, 0.22, 150, 6, 0); }
 
@@ -80,6 +85,49 @@ void frostshot(Enemy &e) {
   Spark::burst(*e.level, e.x + xd * 6, e.bodyY() + yd * 6, FROST, 3, 30, false);
 }
 
+void glass(Enemy &e) {
+  double xd, yd;
+  if (!sight(e, 0, 210, xd, yd))
+    return;
+  double aim = std::atan2(yd, xd);
+  for (int i = -1; i <= 1; i++) {
+    double a = aim + i * 0.25;
+    Orb *o = e.level->add<Orb>(e.x, e.bodyY(), std::cos(a) * 105, std::sin(a) * 105,
+                               5 * e.power());
+    o->by = e.name(), o->tone = GLASS, o->size = 0.8f, o->bounces = 1;
+  }
+}
+
+void lightning(Enemy &e) {
+  Player &p = *e.level->player;
+  double xd, yd;
+  if (!sight(e, 0, 220, xd, yd))
+    return;
+  Blast *b = e.level->add<Blast>(p.x, p.y, 10 * e.power(), true);
+  b->tone = STORM, b->radius = 22, b->by = e.name();
+}
+
+void javelin(Enemy &e) {
+  double xd, yd;
+  if (!sight(e, 40, 200, xd, yd))
+    return;
+  Arrow *a = e.level->add<Arrow>(e.x, e.bodyY(), xd * 190, yd * 190, 14 * e.power(), 1);
+  a->hostile = true;
+  e.castCount = 0;
+}
+
+void plant(Enemy &e) {
+  Enemy *near[24];
+  int totems = 0;
+  for (int i = 0, n = e.level->gather(e.x, e.y, 140, near, 24); i < n; i++)
+    totems += near[i]->is(EnemyKind::WarTotem);
+  if (totems >= 2)
+    return;
+  float a = e.roll() * TAU;
+  e.level->spawner.spawn(EnemyKind::WarTotem, e.x + std::cos(a) * 20, e.y + std::sin(a) * 14);
+  e.level->add<Shockwave>(e.x, e.bodyY(), 3, 24, 0.35f, HASTE, false);
+}
+
 bool wet(double x, double y) {
   return world::isWater(int(std::floor(x / 16)), int(std::floor(y / 16)));
 }
@@ -110,6 +158,14 @@ const WildDef WildFoe::DEFS[] = {
     {.nocturnal = true, .blinks = true},
     {.lurks = true},
     {.cast = {frostshot, 2.6f, 240, FROST}, .casts = 1},
+    {.wyrm = true},
+    {.skittish = true},
+    {.salty = true},
+    {.cast = {glass, 2.4f, 210, GLASS}, .casts = 1},
+    {.cast = {lightning, 3.5f, 220, STORM}, .casts = 1},
+    {.cast = {javelin, 1.5f, 200, SAND}, .casts = 1},
+    {.cast = {plant, 7, 200, HASTE}, .casts = 1},
+    {.totem = true},
 };
 static_assert(std::size(WildFoe::DEFS) == int(WildFoe::LAST) - int(WildFoe::FIRST) + 1);
 
@@ -129,7 +185,7 @@ void WildFoe::surface() {
   if (wild.nocturnal && level->night.dawn)
     return remove();
   if (!wild.waterborn) {
-    buried = wild.lurks;
+    buried = wild.lurks || wild.wyrm;
     return;
   }
   for (int i = 0; i < 16 && !wet(x, y); i++) {
@@ -179,6 +235,16 @@ void WildFoe::tick() {
     leech(p, std::sqrt(d2));
   if (wild.blinks && aware)
     blink(p, std::sqrt(d2));
+  if (wild.wyrm)
+    burrow(p);
+  if (wild.skittish && !fled && hp < maxHp * 0.3f)
+    fled = true, afflict(StatusKind::Fear, 3.5f, 1);
+  if (wild.salty && xWant * xWant + yWant * yWant > 4 && (saltTime -= DT) <= 0) {
+    saltTime = 0.6f;
+    level->add<FrostPatch>(x, y, true)->tone = SALT;
+  }
+  if (wild.totem)
+    pulse();
   if (wild.dims && d2 < reach * reach)
     p.dim = 4;
   if (wild.roots)
@@ -254,6 +320,45 @@ void WildFoe::reflect() {
   Spark::burst(*level, x + xd * radius, bodyY() + yd * radius, CRYSTAL, 4, 50, false);
 }
 
+void WildFoe::burrow(Player &p) {
+  if (buried && level->ticks % 6 == 0 && Debris::room())
+    level->add<SmokeDebris>(x, y, 1);
+  if ((wyrmTime -= DT) > 0)
+    return;
+  if (!buried) {
+    buried = true, eruptions = 0, wyrmTime = 1.2f;
+    Spark::burst(*level, x, bodyY(), SAND, 14, 70, true);
+    return;
+  }
+  if (eruptions == 3) {
+    buried = false, wyrmTime = 4.5f;
+    level->add<Shockwave>(x, y, 6, 50, 0.5f, SAND, false);
+    voice(Sound::erupt, 0.5f);
+    return;
+  }
+  eruptions++, wyrmTime = 1.6f;
+  x = p.x, y = p.y;
+  Blast *b = level->add<Blast>(p.x, p.y, type.damage * power(), true);
+  b->tone = SAND, b->radius = 30, b->by = name();
+}
+
+void WildFoe::pulse() {
+  x = xHome, y = yHome;
+  if ((pulseTime -= DT) > 0)
+    return;
+  pulseTime = 1.5f;
+  bool ward = pulses++ % 2;
+  level->enemiesNear(x, y, 72, [&](Enemy &e) {
+    if (&e == this || e.is(EnemyKind::WarTotem))
+      return;
+    if (ward)
+      e.shield(1);
+    else
+      e.frenzy = std::max(e.frenzy, 1.6f);
+  });
+  level->add<Shockwave>(x, bodyY(), 4, 72, 0.45f, (ward ? WARD : HASTE).alpha(0.4f), false);
+}
+
 Color WildFoe::tint() const {
   return wild.aura ? col::white.alpha(0.6f + 0.15f * std::sin(animT * 2)) : col::white;
 }
@@ -261,6 +366,12 @@ Color WildFoe::tint() const {
 void WildFoe::render(Screen &s) {
   if (!buried)
     return Enemy::render(s);
+  if (wild.wyrm) {
+    float k = 0.5f + 0.5f * std::sin(animT * 4);
+    s.ring(xp, yp - 2, 8 + 3 * k, SAND.alpha(0.45f));
+    s.ring(xp, yp - 2, 14 + 2 * k, SAND.alpha(0.2f));
+    return;
+  }
   if (!wild.waterborn) {
     if (std::fmod(animT, 3.2f) < 0.18f)
       return;
@@ -283,6 +394,8 @@ float WildFoe::contactBonus(const Player &p) const {
 }
 
 float WildFoe::shell(double xd, double yd) {
+  if (wild.wyrm)
+    return buried ? 0 : 1.5f;
   if (!wild.guarded || (xd == 0 && yd == 0))
     return 1;
   double facing = xd * xMark + yd * yMark;

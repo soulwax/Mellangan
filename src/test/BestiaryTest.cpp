@@ -401,3 +401,118 @@ void testFrostFoes() {
                "dawn, lynxes wait hidden and pounce, barrow arrows chill: PASS"
             << std::endl;
 }
+
+void testScorchedFoes() {
+  {
+    Arena a;
+    a.p.luck = -1;
+    WildFoe *wyrm = a.add(EnemyKind::SandWyrm, 60, 0);
+    a.run(2);
+    assert(wyrm->buried);
+    float hp = wyrm->hp;
+    wyrm->hurt(10, 1, 0, 0);
+    assert(wyrm->hp == hp);
+    int blasts = 0;
+    for (int i = 0; i < 600 && wyrm->buried; i++) {
+      a.run(1);
+      blasts = std::max(blasts, wyrm->eruptions);
+    }
+    assert(!wyrm->buried && blasts == 3);
+    assert(std::abs(wyrm->x - a.p.x) < 4 && std::abs(wyrm->y - a.p.y) < 4);
+    hp = wyrm->hp;
+    wyrm->hurt(10, 1, 0, 0);
+    assert(std::abs(hp - wyrm->hp - 15) < 0.01f);
+    a.level.spawner.spawn(EnemyKind::SandWyrm, a.p.x + 200, a.p.y);
+    a.level.spawner.spawn(EnemyKind::SandWyrm, a.p.x - 200, a.p.y);
+    a.run(1);
+    assert(a.count(EnemyKind::SandWyrm) == 2 && a.count(EnemyKind::DuneRaider) == 1);
+  }
+  {
+    Arena a;
+    a.level.spawner.spawn(EnemyKind::Hyena, a.p.x + 150, a.p.y);
+    a.run(1);
+    assert(a.count(EnemyKind::Hyena) == 6);
+    WildFoe *hyena = a.add(EnemyKind::Hyena, -100, 0);
+    a.run(1);
+    hyena->hp = hyena->maxHp * 0.25f;
+    a.run(1);
+    assert(hyena->fled && hyena->status.afraid());
+  }
+  {
+    Arena a;
+    a.add(EnemyKind::SaltGolem, 120, 0);
+    a.run(120);
+    assert(a.particles<FrostPatch>() > 0);
+  }
+  {
+    Arena a;
+    WildFoe *spitter = a.add(EnemyKind::GlassSpitter, 100, 0);
+    a.run(1);
+    int orbs = a.orbs();
+    spitter->casts->fn(*spitter);
+    a.run(1);
+    assert(a.orbs() == orbs + 3);
+    Screen &view = a.game.screen;
+    view.xOffset = int(a.p.x) - view.vw / 2, view.yOffset = int(a.p.y) - view.vh / 2;
+    a.level.scatter(view);
+    auto solid = [&](double x, double y) {
+      double cx = x, cy = y;
+      a.level.collide(cx, cy, 2);
+      return cx != x || cy != y;
+    };
+    bool wall = false;
+    int px = int(a.p.x / 16), py = int(a.p.y / 16);
+    for (int ty = py - 16; ty <= py + 16 && !wall; ty++)
+      for (int tx = px - 28; tx <= px + 28 && !wall; tx++)
+        if (double xc = tx * 16 + 8.0, yc = ty * 16 + 13.0;
+            solid(xc, yc) && !solid(xc - 30, yc) && !solid(xc - 16, yc)) {
+          Orb *o = a.level.add<Orb>(xc - 30, yc - 7, 60, 0, 1);
+          o->bounces = 1;
+          a.run(40);
+          assert(o->xa < 0 && o->bounces == 0);
+          wall = true;
+        }
+    assert(wall);
+  }
+  {
+    Arena a;
+    WildFoe *kite = a.add(EnemyKind::StormKite, 100, 0);
+    a.run(1);
+    int blasts = a.particles<Blast>();
+    kite->casts->fn(*kite);
+    a.run(1);
+    assert(a.particles<Blast>() == blasts + 1);
+  }
+  {
+    Arena a;
+    WildFoe *raider = a.add(EnemyKind::DuneRaider, 120, 0);
+    a.run(1);
+    int arrows = a.hostileArrows();
+    raider->casts->fn(*raider);
+    a.run(1);
+    assert(a.hostileArrows() == arrows + 1 && raider->castCount == 0);
+  }
+  {
+    Arena a;
+    WildFoe *shaman = a.add(EnemyKind::TotemShaman, 160, 0);
+    a.run(1);
+    for (int i = 0; i < 3; i++) {
+      shaman->casts->fn(*shaman);
+      a.run(2);
+    }
+    assert(a.count(EnemyKind::WarTotem) == 2);
+    WildFoe *ally = a.add(EnemyKind::StranglerVine, 160, 20);
+    bool hasted = false, warded = false;
+    for (int i = 0; i < 300; i++) {
+      a.run(1);
+      hasted |= ally->frenzy > 0;
+      warded |= ally->traits.ward > 0;
+    }
+    assert(hasted && warded);
+  }
+  std::cout << "[TEST] Scorched foes: the wyrm erupts three times under you, then surfaces "
+               "soft and only one hunts at a time; hyenas run in sixes and flee when hurt; salt "
+               "golems leave crust; glass ricochets off walls; kites call lightning; raiders "
+               "throw one spear; shamans plant two totems that haste and ward: PASS"
+            << std::endl;
+}

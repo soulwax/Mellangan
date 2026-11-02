@@ -31,6 +31,7 @@ void testRelicsAndUniques();
 void testGreenwoodFoes();
 void testMarchesFoes();
 void testFrostFoes();
+void testScorchedFoes();
 void testRunRules();
 void testShapeForms();
 void testChampionTraits();

@@ -52,6 +52,14 @@ All notable changes to Mellangan are documented here. The format follows
   - Moon hounds hunt in packs of four by night, blink to your flanks and fade at dawn (Moonlit Grove).
   - Lynxes wait hidden among the trees, their eyes glinting, and pounce when you pass (Taiga).
   - Barrow archers loose chilling arrows (Barrows).
+- Seven new foes of the Scorched lands, each with its own sprite:
+  - The sand wyrm, a desert mini-boss, erupts three times under where you stood, then surfaces and takes extra damage before it dives again. Only one hunts at a time.
+  - Hyenas run in packs of six and bolt when badly hurt, then come back (Savanna).
+  - Salt golems leave a crust behind them that slows you (Salt Flats).
+  - Glass spitters spit three shards that ricochet once off walls (Glass Desert).
+  - Storm kites circle overhead and call lightning down where you stand (Storm Steppe).
+  - Dune raiders throw one spear, then close in with a blade (Desert, Badlands).
+  - Totem shamans plant up to two war totems that hasten and ward the foes around them; break the totems first (Savanna).
 - A wandering merchant (in runs with loot): once you light a shrine, he camps by its fire with a lantern and a barrel. Walk up and press I to trade.
   - He sells healing draughts, plain bases and two or three magic items. His wares are fresh at every newly lit shrine and again at dawn.
   - He buys anything from your bag for a quarter of its worth.

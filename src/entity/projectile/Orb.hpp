@@ -7,6 +7,7 @@ public:
   const char *by = nullptr;
   Color tone{0.75f, 0.35f, 1, 1};
   float chill = 0, size = 1.2f;
+  int bounces = 0;
 
   Orb(double x, double y, double xa, double ya, float damage) : damage(damage) {
     this->x = x, this->y = y;
@@ -19,4 +20,5 @@ public:
 
 private:
   float damage, life = 5;
+  void ricochet();
 };

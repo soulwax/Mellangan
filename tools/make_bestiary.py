@@ -26,6 +26,14 @@ Band at y=1380, 24 columns by 6 rows (144 cells). Cell i is atlas::beast(i); the
     19  Moon Hound     a lean silver-blue hound with glowing eyes
     20  Lynx           a tawny spotted cat with black ear tufts
     21  Barrow Archer  a hooded skeleton with a bow and a frost arrow
+    22  Sand Wyrm      a sandworm rising from its mound, a ring of teeth (drawn at 2.2x)
+    23  Hyena          a dun hyena with a sloping back and dark spots
+    24  Salt Golem     a pale salt-crystal giant
+    25  Glass Spitter  a green lizard with glassy spines
+    26  Storm Kite     a blue diamond ray with a forked tail
+    27  Dune Raider    a sand-wrapped raider with a red scarf and a spear
+    28  Totem Shaman   a masked shaman with a feather crown and a staff
+    29  War Totem      a carved pole with painted faces and wings
 
 Usage: python tools/make_bestiary.py [--preview out.png]   (make_assets.py calls add_bestiary too)
 """
@@ -60,6 +68,16 @@ CRYSTAL = {"v": (78, 56, 138), "I": (146, 116, 214), "i": (206, 186, 250), "n": 
 HOUND = {"s": (48, 52, 82), "S": (98, 106, 146), "U": (170, 180, 216)}
 LYNX = {"h": (130, 86, 44), "H": (196, 146, 78), "J": (236, 206, 150)}
 BONE = {"k": (40, 40, 52), "K": (70, 70, 90), "e": (150, 230, 255), "n": (200, 236, 250)}
+WYRM = {"d": (120, 80, 50), "S": (196, 150, 96), "s": (150, 108, 66), "m": (220, 190, 130)}
+HYENA = {"h": (110, 80, 48), "H": (176, 140, 90), "J": (214, 190, 140)}
+SALT = {"v": (150, 150, 140), "I": (220, 220, 210), "n": (255, 255, 250)}
+GLASSY = {"g": (40, 90, 80), "G": (70, 140, 120), "L": (150, 200, 170), "I": (160, 240, 240),
+          "n": (230, 255, 255)}
+KITE = {"s": (40, 50, 100), "S": (80, 100, 170), "U": (140, 170, 230), "n": (220, 235, 255)}
+RAIDER = {"C": (214, 190, 140), "D": (190, 50, 40), "h": (110, 80, 50), "H": (160, 120, 78),
+          "J": (196, 140, 100)}
+SHAMAN = {"w": (226, 206, 160), "Y": (230, 200, 60), "J": (150, 100, 70)}
+GILT = {"Y": (230, 200, 60)}
 EXTRA = {
     "t": (210, 190, 120),
     "R": (220, 60, 50),
@@ -547,10 +565,179 @@ def barrow_archer():
     ), BONE, BARK)
 
 
+def sand_wyrm():
+    return draw((
+        "................",
+        ".....dddddd.....",
+        "....dSSSSSSd....",
+        "...dSTTTTTTSd...",
+        "...dTEEEEEETd...",
+        "...dTEEEEEETd...",
+        "...dSTTTTTTSd...",
+        "....dSSSSSSd....",
+        "....dSsSSsSd....",
+        "....dSSSSSSd....",
+        "...dSSsSSsSSd...",
+        "...dSSSSSSSSd...",
+        ".ddSSsSSSSsSSdd.",
+        "..mmmSSSSSSmmm..",
+        ".mmmmmmmmmmmmmm.",
+        "................",
+    ), WYRM)
+
+
+def hyena():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "..h.h...........",
+        ".hHhHh..........",
+        "hHOHHHh.........",
+        "EHHHHHbhhh......",
+        ".hJJHHbHbHhhh...",
+        "..hHHHHHbHHHHhh.",
+        "..hHbHHHHHbHHh.h",
+        "..hJHHHHHHHJh...",
+        "..hH.......hH...",
+        "..hH........hH..",
+        ".hh........hh...",
+        "................",
+        "................",
+    ), HYENA, BARK)
+
+
+def salt_golem():
+    return draw((
+        "................",
+        "......nn........",
+        "...n.nIIn...n...",
+        "..nI.IIIIn.nI...",
+        "..vIIvvvvvvIIv..",
+        ".vIIvIOIIOIvIIv.",
+        ".vIvIIIIIIIIvIv.",
+        "vIIvvIIIIIIvvIIv",
+        "vIv.vIIIIIIv.vIv",
+        "vv..vIIvvIIv..vv",
+        "....vIIv.vIIv...",
+        "....vIIv.vIIv...",
+        "...vvIIv.vIIvv..",
+        "...vvvv...vvvv..",
+        "................",
+        "................",
+    ), SALT)
+
+
+def glass_spitter():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        "......n.n.n.....",
+        ".....nIgIgIn....",
+        "..ggggIgIgIgg...",
+        ".gOGGGGGGGGGGg..",
+        "EGGGGGLLLLGGGGg.",
+        ".gGGLLLLLLLGGGGg",
+        "..gGGGGGGGGGGgg.",
+        "..gG...gG..gG...",
+        ".gg...gg..gg....",
+        "................",
+        "................",
+        "................",
+    ), GLASSY)
+
+
+def storm_kite():
+    return draw((
+        "................",
+        ".......nn.......",
+        "......nUUn......",
+        ".....nUSSUn.....",
+        "....nUSSSSUn....",
+        "...nUSOSSOSUn...",
+        "..nUSSSSSSSSUn..",
+        ".nUSSSSSSSSSSUn.",
+        "..nUSSSSSSSSUn..",
+        "....nUSSSSUn....",
+        "......nSSn......",
+        ".......ss.......",
+        "........s.......",
+        ".......n.n......",
+        "........n.......",
+        "................",
+    ), KITE)
+
+
+def dune_raider():
+    return draw((
+        "................",
+        "...........X....",
+        "......CCC..X....",
+        ".....CCCCC.b....",
+        ".....CEJEC.b....",
+        ".....CCCCC.b....",
+        "....hHDDDHhb....",
+        "...hHHDHHHHb....",
+        "...J.hHHHHh.b...",
+        ".....hHHHHh.b...",
+        ".....hhJJhh.b...",
+        ".....hH..Hh.b...",
+        ".....h....h.b...",
+        "....hh....hh....",
+        "................",
+        "................",
+    ), RAIDER, BARK)
+
+
+def totem_shaman():
+    return draw((
+        "..R.Y.R.Y.......",
+        "..RYRYRYR.......",
+        "..wwwwwww...b...",
+        "..wEwwwEw..bBb..",
+        "..wwRRRww...b...",
+        "..wRwRwRw...b...",
+        "...wwwww....b...",
+        "...cCCCCc..Jb...",
+        "..cCCDCCCcJ.b...",
+        "..cCDCCDCc..b...",
+        "..cCCCCCCc..b...",
+        "...cCCCCc...b...",
+        "...J....J...b...",
+        "..JJ....JJ..b...",
+        "................",
+        "................",
+    ), SHAMAN, CLOTH, BARK)
+
+
+def war_totem():
+    return draw((
+        "......bbbb......",
+        "..Y..bWWWWb..Y..",
+        "..YY.bWEEWb.YY..",
+        "...YYbWWWWbYY...",
+        ".....bRRRRb.....",
+        ".....bWWWWb.....",
+        ".....bWEEWb.....",
+        ".....bWRRWb.....",
+        ".....bWWWWb.....",
+        ".....bBBBBb.....",
+        ".....bWWWWb.....",
+        ".....bWBBWb.....",
+        ".....bWWWWb.....",
+        "....bbBBBBbb....",
+        "...bbbbbbbbbb...",
+        "................",
+    ), BARK, GILT)
+
+
 PAINTERS = (thornling, boar, goblin_archer, goblin_shaman, sapling, treant, moth, cutthroat,
             bog_toad, drowned, snapjaw, strangler_vine, amber_beetle, spore_puffer,
             sunken_priest, yeti, ice_wraith, barrow_wight, crystal_golem, moon_hound, lynx,
-            barrow_archer)
+            barrow_archer, sand_wyrm, hyena, salt_golem, glass_spitter, storm_kite, dune_raider,
+            totem_shaman, war_totem)
 
 
 def slot(i):

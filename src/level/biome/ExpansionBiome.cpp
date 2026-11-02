@@ -16,14 +16,14 @@ const Color COLORS[] = {{0.8f,0.8f,0.7f,1},{0.3f,0.65f,0.6f,1},
 
 using K=EnemyKind;
 const FoeMask FOES[]={
-    foe(K::GlassMantis)|foe(K::DustVulture),
+    foe(K::GlassMantis)|foe(K::DustVulture)|foe(K::SaltGolem),
     foe(K::MireLeech)|foe(K::BogLantern)|foe(K::Drowned)|foe(K::Snapjaw),
     foe(K::FrostWisp)|foe(K::Ghost)|foe(K::MoonHound),
     foe(K::MireLeech)|foe(K::Necromancer)|foe(K::Drowned)|foe(K::SunkenPriest),
     foe(K::EmberImp)|foe(K::MireLeech),
     foe(K::Sporeling)|foe(K::Wolf)|foe(K::Alpha)|foe(K::AmberBeetle),
-    foe(K::DustVulture)|foe(K::Iceback),
-    foe(K::GlassMantis)|foe(K::Burrower),
+    foe(K::DustVulture)|foe(K::Iceback)|foe(K::StormKite),
+    foe(K::GlassMantis)|foe(K::Burrower)|foe(K::GlassSpitter),
     foe(K::Spider)|foe(K::MycelialBrute),
     foe(K::CinderGolem)|foe(K::Cultist)};
 

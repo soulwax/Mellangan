@@ -132,6 +132,19 @@ const EnemyType TYPES[] = {
     {bs::Lynx, 38, 60, 11, 6, 1, 5, 0.85f, {0.75f, 0.2f, 0.15f, 1}, false, 60, atlas::beast},
     {bs::BarrowArcher, 30, 40, 7, 6, 1, 4, 1, {0.8f, 0.8f, 0.75f, 1}, false, 100,
      atlas::beast},
+    {bs::SandWyrm, 480, 34, 22, 14, 2.2f, 30, 0, {0.85f, 0.7f, 0.4f, 1}, false, 300,
+     atlas::beast},
+    {bs::Hyena, 16, 72, 6, 5, 1, 1, 1, {0.7f, 0.5f, 0.3f, 1}, false, 50, atlas::beast},
+    {bs::SaltGolem, 140, 24, 16, 10, 1.35f, 10, 0.25f, {0.92f, 0.92f, 0.86f, 1}, false, 130,
+     atlas::beast},
+    {bs::GlassSpitter, 30, 40, 7, 6, 1, 4, 1, {0.6f, 0.9f, 0.85f, 1}, false, 90,
+     atlas::beast},
+    {bs::StormKite, 26, 50, 8, 6, 1, 4, 1, {0.6f, 0.7f, 1, 1}, true, 110, atlas::beast},
+    {bs::DuneRaider, 40, 66, 11, 6, 1, 5, 0.85f, {0.75f, 0.2f, 0.15f, 1}, false, 70,
+     atlas::beast},
+    {bs::TotemShaman, 36, 36, 7, 6, 1, 6, 0.8f, {0.6f, 0.3f, 0.2f, 1}, false, 120,
+     atlas::beast},
+    {bs::WarTotem, 30, 0, 0, 6, 1, 2, 0, {0.6f, 0.4f, 0.25f, 1}, false, 1e9f, atlas::beast},
 };
 static_assert(std::size(TYPES) == int(EnemyKind::Count));
 } // namespace
@@ -189,7 +202,9 @@ const char *Enemy::name() const {
       "a bog toad", "a drowned", "a snapjaw", "a strangler vine",
       "an amber beetle", "a spore puffer", "a sunken priest",
       "a yeti", "an ice wraith", "a barrow wight", "a crystal golem",
-      "a crystal shard", "a moon hound", "a lynx", "a barrow archer"
+      "a crystal shard", "a moon hound", "a lynx", "a barrow archer",
+      "the sand wyrm", "a hyena", "a salt golem", "a glass spitter",
+      "a storm kite", "a dune raider", "a totem shaman", "a war totem"
   };
   static_assert(std::size(NAMES) == int(EnemyKind::Count));
   return NAMES[&type - TYPES];

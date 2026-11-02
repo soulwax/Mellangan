@@ -141,6 +141,7 @@ public:
   void render(Screen &s);
   void renderLight(Screen &s);
   void collide(double &x, double &y, float radius) const;
+  void scatter(Screen &s);
   int monsterLevel(double x, double y) const {
     float t = rules.threat ? rules.threat(x, y) : time;
     return std::clamp(1 + int(t / 15), 1, 99);
@@ -194,7 +195,6 @@ private:
   void ambience();
   void buildGrid();
   void renderFloor(Screen &s);
-  void scatter(Screen &s);
   void queue(SpriteObject *e);
   int cell(double v, double origin) const {
     return std::clamp(int(std::floor((v - origin) / CELL)), 0, GRID - 1);

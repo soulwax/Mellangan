@@ -62,6 +62,14 @@ enum class EnemyKind {
   MoonHound,
   Lynx,
   BarrowArcher,
+  SandWyrm,
+  Hyena,
+  SaltGolem,
+  GlassSpitter,
+  StormKite,
+  DuneRaider,
+  TotemShaman,
+  WarTotem,
   Count
 };
 

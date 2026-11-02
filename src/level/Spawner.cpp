@@ -299,6 +299,12 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   std::lock_guard<std::mutex> lock(spawnMutex);
   if (level.rules.safeAt(x, y))
     return nullptr;
+  if (kind == EnemyKind::SandWyrm && !boss) {
+    if (level.time < nextWyrm)
+      kind = EnemyKind::DuneRaider;
+    else
+      nextWyrm = level.time + WYRM_GAP;
+  }
   const Balance &b = level.game.balance;
   const Omen &o = level.portent();
   float t = level.rules.threat ? level.rules.threat(x, y) : level.time;
@@ -325,9 +331,12 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   }
   entt::entity alphaId = added->id;
 
-  if (kind == EnemyKind::Alpha || kind == EnemyKind::MoonHound) {
-    bool hounds = kind == EnemyKind::MoonHound;
-    int packSize = hounds ? 3 : boss ? rng.irange(6, 8) : rng.irange(2, 4);
+  if (kind == EnemyKind::Alpha || kind == EnemyKind::MoonHound || kind == EnemyKind::Hyena) {
+    bool hounds = kind != EnemyKind::Alpha;
+    int packSize = kind == EnemyKind::Hyena ? 5
+                   : hounds                 ? 3
+                   : boss                   ? rng.irange(6, 8)
+                                            : rng.irange(2, 4);
     for (int i = 0; i < packSize; i++) {
       double a = TAU * i / packSize + rng.range(-0.3f, 0.3f);
       double d = rng.range(22, 38);

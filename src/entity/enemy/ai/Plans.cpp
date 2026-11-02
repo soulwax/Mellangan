@@ -73,6 +73,7 @@ const Guard WARD{4.0f, 0.7, 30};
 const Lurk AMBUSH{90};
 const Leap POUNCE{0.25f, 0.45f, 2.2f, 22};
 const Approach SNIPE{165, {1, 0, 0, 30, 3, false}};
+const Approach TEND{150, {0.9, 0, 0, 24, 2, false}};
 
 const Plan PLANS[] = {
     {{&FLUTTER}, {}},
@@ -129,6 +130,14 @@ const Plan PLANS[] = {
     {{&FLANK, &BITE}, {&FALTER}},
     {{&AMBUSH, &HOP_RANGE, &POUNCE, &STAB}, {&FALTER}},
     {{&SNIPE}, {&FALTER}},
+    {{&ROOT}, {}},
+    {{&FLANK, &NIP}, {}},
+    {{&LUMBER, &SLAM}, {}},
+    {{&SHOOTING_RANGE}, {&FALTER}},
+    {{&HOVER, &ORBIT}, {}},
+    {{&CLOSE, &STAB}, {&FALTER}},
+    {{&TEND}, {&FALTER}},
+    {{&ROOT}, {}},
 };
 static_assert(sizeof(PLANS) / sizeof(PLANS[0]) == int(EnemyKind::Count));
 

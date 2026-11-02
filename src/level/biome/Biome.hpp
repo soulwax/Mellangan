@@ -47,6 +47,7 @@ struct FeatureSpawn {
 
 typedef uint64_t FoeMask;
 static_assert(int(EnemyKind::Count) <= 64);
+static_assert(int(EnemyKind::Count) <= 64, "FoeMask holds 64 kinds");
 constexpr FoeMask foe(EnemyKind k) { return FoeMask(1) << int(k); }
 
 constexpr int MAX_SPAWNS = 20;
