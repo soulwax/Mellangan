@@ -47,6 +47,8 @@ Band at y=1380, 24 columns by 6 rows (144 cells). Cell i is atlas::beast(i); the
     40  Rock Crawler   a grey stone crab that passes for a rock
     41  Ore Golem      the salt golem's shape in rust brown with gold ore
     42  Kobold Miner   a small kobold in a lamp helmet with a pickaxe
+    43  Hide           a stretched pelt (crafting material, not a foe)
+    44  Bone           a long bone (crafting material, not a foe)
 
 Usage: python tools/make_bestiary.py [--preview out.png]   (make_assets.py calls add_bestiary too)
 """
@@ -1018,13 +1020,55 @@ def kobold_miner():
     ), KOBOLD, BARK)
 
 
+def hide():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "...h........h...",
+        "..hHh......hHh..",
+        "...hHHHHHHHHh...",
+        "....hHJJJJHh....",
+        "....hHJHHJHh....",
+        "....hHHHJHHh....",
+        "....hHJHHJHh....",
+        "...hHHHHHHHHh...",
+        "..hHh......hHh..",
+        "...h........h...",
+        "................",
+        "................",
+        "................",
+    ), HIDE)
+
+
+def bone():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        ".TT.........TT..",
+        "TFFT.......TFFT.",
+        ".TFFFFFFFFFFFT..",
+        "TFFT.......TFFT.",
+        ".TT.........TT..",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ))
+
+
 PAINTERS = (thornling, boar, goblin_archer, goblin_shaman, sapling, treant, moth, cutthroat,
             bog_toad, drowned, snapjaw, strangler_vine, amber_beetle, spore_puffer,
             sunken_priest, yeti, ice_wraith, barrow_wight, crystal_golem, moon_hound, lynx,
             barrow_archer, sand_wyrm, hyena, salt_golem, glass_spitter, storm_kite, dune_raider,
             totem_shaman, war_totem, magma_slug, ash_wraith, cave_horror, star_spawn,
             flame_cultist, hollow_sentinel, ember_drake, night_stalker, grave_robber, cave_bat,
-            rock_crawler, ore_golem, kobold_miner)
+            rock_crawler, ore_golem, kobold_miner, hide, bone)
 
 
 def slot(i):

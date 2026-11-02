@@ -41,6 +41,7 @@ void testChampionTraits();
 void testLootDrops();
 void testVendor();
 void testCrafting();
+void testLootTies();
 void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();

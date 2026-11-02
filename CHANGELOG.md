@@ -87,7 +87,7 @@ All notable changes to Mellangan are documented here. The format follows
   - Gamble: pay six times a base's worth for a mystery item of that base. It always rolls magic or better, with rares twice and uniques three times as likely.
   - His prices climb steeply as the night deepens, so early buys are cheap and gambling becomes the better deal later on.
 - A workbench at the merchant's camp. Walk up to it and press I to craft:
-  - Foes now drop four crafting materials: crystal shards, ore, rune stones and herbs. Small foes leave shards and herbs, brutes leave ore, and elites and bosses leave rune stones.
+  - Foes now drop six crafting materials: crystal shards, ore, rune stones, herbs, hides and bones. Small foes leave shards and herbs, brutes leave ore, and elites and bosses leave rune stones.
   - Reroll the weakest affix of an item, reforge every affix of a rare while it keeps its name, or raise a Worn or Fine item one tier.
   - Combine three magic items of one slot into a rare, or cleanse a night-touched item of its curse; the curse goes, and so does the night's gift.
   - Eight crafted recipes turn a plain item into an orange crafted one with two fixed affixes and up to three random ones: Bloodfang, Stormbrand, Ember Lamp, Sage's Ward, Frostmantle, Thornhide, Blood Charm and Fortune Charm.
@@ -105,6 +105,8 @@ All notable changes to Mellangan are documented here. The format follows
 - Spirit Swarm spirits drag the foes they marked together when they fade.
 - Mortar shells stagger instead of burning and leave a crater that slows foes.
 - Conduit now gives +15% chain and arc damage instead of a second copy of Keen Eye.
+- Foe families now lean their loot: goblins drop more gold; golems, kobolds and sentinels drop ore and armour; cultists, priests and shamans drop off-hands; wraiths and wights drop charms; boars, wolves, hyenas, lynxes, hounds and yetis drop hides and bones; mimics, grave robbers and treasure thieves drop more gold and only magic or better items.
+- Bloodfang, Frostmantle, Thornhide and Blood Charm now call for hides and bones.
 - The boss bar now also appears for leaders that join a run at its very start.
 - The inventory shows how many of each crafting material you carry.
 - The Codex bestiary now pages through every foe; foes past the 26th never showed before.

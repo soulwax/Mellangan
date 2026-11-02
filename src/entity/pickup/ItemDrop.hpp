@@ -25,7 +25,8 @@ public:
   std::string label() const;
   Color color() const;
 
-  static void spill(Level &level, double x, double y, Source source, int mlvl);
+  static void spill(Level &level, double x, double y, Source source, int mlvl,
+                    Lean lean = Lean::None);
 
 protected:
   float reach() const override;

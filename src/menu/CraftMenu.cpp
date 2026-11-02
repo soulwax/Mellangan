@@ -185,7 +185,7 @@ void CraftMenu::render(Screen &s) {
   SDL_FRect bag = cell(w);
   s.text("YOUR BAG", bag.x, bag.y - 14 * u, small, col::muted.alpha(in));
   float fy = grid.y + grid.h + 10 * u;
-  gui::materials(s, p.materials, nullptr, bag.x, fy, u, in);
+  gui::materials(s, p.materials, nullptr, bag.x, fy, small, in);
   std::string head = fmt::format("{}  costs  ", r.name);
   s.text(head, bag.x, fy + 20 * u, small, CRAFTED.alpha(in));
   float cx = bag.x + Screen::textWidth(head, small);

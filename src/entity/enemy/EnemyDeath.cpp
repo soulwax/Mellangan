@@ -131,6 +131,30 @@ Source lootSource(const Enemy &e) {
   return e.type.hp < 25 ? Source::Swarm : e.type.hp < 80 ? Source::Line : Source::Brute;
 }
 
+Lean leanOf(const Enemy &e) {
+  using K = EnemyKind;
+  static constexpr std::pair<K, Lean> TIES[] = {
+      {K::GoblinArcher, Lean::Gold},   {K::GoblinShaman, Lean::Gold},
+      {K::CinderGolem, Lean::Ore},     {K::CrystalGolem, Lean::Ore},
+      {K::SaltGolem, Lean::Ore},       {K::OreGolem, Lean::Ore},
+      {K::KoboldMiner, Lean::Ore},     {K::HollowSentinel, Lean::Ore},
+      {K::Cultist, Lean::Arcane},      {K::Necromancer, Lean::Arcane},
+      {K::SunkenPriest, Lean::Arcane}, {K::TotemShaman, Lean::Arcane},
+      {K::FlameCultist, Lean::Arcane}, {K::Ghost, Lean::Charm},
+      {K::IceWraith, Lean::Charm},     {K::AshWraith, Lean::Charm},
+      {K::BarrowWight, Lean::Charm},   {K::Boar, Lean::Hide},
+      {K::Hyena, Lean::Hide},          {K::Lynx, Lean::Hide},
+      {K::MoonHound, Lean::Hide},      {K::Wolf, Lean::Hide},
+      {K::Alpha, Lean::Hide},          {K::Yeti, Lean::Hide},
+      {K::Mimic, Lean::Riches},        {K::GraveRobber, Lean::Riches},
+      {K::Thief, Lean::Riches},
+  };
+  for (auto [k, lean] : TIES)
+    if (e.is(k))
+      return lean;
+  return Lean::None;
+}
+
 int monsterLevel(const Enemy &e) {
   int bonus = e.boss ? 5 : e.title ? 3 : e.elite ? 2 : 0;
   return std::clamp(e.level->monsterLevel(e.x, e.y) + bonus, 1, 99);
@@ -179,7 +203,7 @@ void Enemy::die() {
     level->add<Potion>(x + 6, y);
   if (level->rules.loot)
     for (int i = 0; i <= (title && killer.bonus.extraLoot > 0); i++)
-      ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this));
+      ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this), leanOf(*this));
   if (pack)
     named::fall(*this);
   if (elite)

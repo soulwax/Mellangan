@@ -105,8 +105,9 @@ void ItemDrop::renderLight(Screen &s) {
     s.glow(xp, yp, beams() ? 46 : 28, color() * (beams() ? 0.22f : 0.12f));
 }
 
-void ItemDrop::spill(Level &level, double x, double y, Source source, int mlvl) {
+void ItemDrop::spill(Level &level, double x, double y, Source source, int mlvl, Lean lean) {
   LootRoll roll{source, mlvl};
+  roll.lean = lean;
   roll.night = !level.night.dawn;
   roll.magicFind = level.player->bonus.magicFind, roll.goldFind = level.player->bonus.goldFind;
   auto drops = rollLoot(roll, rng);

@@ -26,13 +26,34 @@ const TreasureClass TREASURE[int(Source::Count)] = {
 };
 
 const int STUFF[int(Source::Count)][MATS] = {
-    {4, 1, 0, 5}, {4, 3, 0, 3}, {2, 6, 1, 1}, {3, 3, 2, 2},
-    {3, 3, 3, 1}, {2, 2, 5, 1}, {3, 3, 2, 2}, {1, 1, 1, 1},
+    {4, 1, 0, 5, 1, 1}, {4, 3, 0, 3, 2, 2}, {2, 6, 1, 1, 2, 2}, {3, 3, 2, 2, 2, 2},
+    {3, 3, 3, 1, 2, 2}, {2, 2, 5, 1, 1, 1}, {3, 3, 2, 2, 1, 1}, {1, 1, 1, 1, 0, 0},
 };
+
+struct Tilt {
+  int gold, material;
+  unsigned slots;
+  Rarity floor;
+};
+
+const Tilt TILTS[] = {
+    {1, 1, 0, Rarity::Normal},
+    {3, 1, 0, Rarity::Normal},
+    {1, 3, slot::Armour, Rarity::Normal},
+    {1, 1, slot::Offhand, Rarity::Normal},
+    {1, 1, slot::Charm, Rarity::Normal},
+    {1, 3, 0, Rarity::Normal},
+    {2, 1, 0, Rarity::Magic},
+};
+static_assert(std::size(TILTS) == int(Lean::Riches) + 1);
 
 constexpr int NIGHT_TOUCHED = 25;
 
-int pickMaterial(Source source, Rng &rng) {
+int pickMaterial(Source source, Lean lean, Rng &rng) {
+  if (lean == Lean::Ore && rng.chance(0.7f))
+    return int(Mat::Ore);
+  if (lean == Lean::Hide && rng.chance(0.7f))
+    return int(rng.chance(0.5f) ? Mat::Hide : Mat::Bone);
   const int *w = STUFF[int(source)];
   int total = 0;
   for (int m = 0; m < MATS; m++)
@@ -128,10 +149,12 @@ RarityOdds rarityOdds(int ilvl, float magicFind) {
           std::min(1.0f, scale / 7 * (1 + magicFind / 100))};
 }
 
-Item rollItem(int ilvl, float magicFind, bool night, Rng &rng, Rarity floor) {
+Item rollItem(int ilvl, float magicFind, bool night, Rng &rng, Rarity floor, unsigned prefer) {
   Item item;
   item.ilvl = std::max(1, ilvl);
   item.base = pickBase(item.ilvl, item.tier, rng);
+  for (int i = 0; prefer && !(item.def().slots & prefer) && i < 16; i++)
+    item.base = pickBase(item.ilvl, item.tier, rng);
   item.seed = rng.next() | 1;
   Rng own;
   own.state = item.seed * 0x9E3779B97F4A7C15ull;
@@ -146,26 +169,32 @@ Item rollItem(int ilvl, float magicFind, bool night, Rng &rng, Rarity floor) {
 
 std::vector<Drop> rollLoot(const LootRoll &roll, Rng &rng) {
   const TreasureClass &tc = TREASURE[int(roll.source)];
+  const Tilt &tilt = TILTS[int(roll.lean)];
   std::vector<Drop> out;
   int itemWeight = tc.item * (roll.night ? 2 : 1);
-  int total = tc.none + tc.gold + tc.potion + tc.material + itemWeight;
+  int goldWeight = tc.gold * tilt.gold, stuffWeight = tc.material * tilt.material;
+  int total = tc.none + goldWeight + tc.potion + stuffWeight + itemWeight;
+  auto leaned = [&](Rarity floor) {
+    unsigned prefer = tilt.slots && rng.chance(0.6f) ? tilt.slots : 0;
+    Rarity r = int(tilt.floor) > int(floor) ? tilt.floor : floor;
+    return rollItem(roll.mlvl, roll.magicFind, roll.night, rng, r, prefer);
+  };
   for (int i = 0; i < tc.floored; i++)
-    out.push_back({DropKind::Item, 1,
-                   rollItem(roll.mlvl, roll.magicFind, roll.night, rng, tc.floor)});
+    out.push_back({DropKind::Item, 1, leaned(tc.floor)});
   for (int i = 0; i < tc.picks; i++) {
     int r = rng.irange(0, total - 1);
     if ((r -= tc.none) < 0)
       continue;
-    if ((r -= tc.gold) < 0) {
-      int gold = int(roll.mlvl * rng.range(1, 3) * (1 + roll.goldFind / 100));
+    if ((r -= goldWeight) < 0) {
+      int gold = int(roll.mlvl * rng.range(1, 3) * (1 + roll.goldFind / 100) *
+                     (tilt.gold > 1 ? 1.5f : 1));
       out.push_back({DropKind::Gold, std::max(1, gold), {}});
     } else if ((r -= tc.potion) < 0) {
       out.push_back({DropKind::Potion, 1, {}});
-    } else if ((r -= tc.material) < 0) {
-      out.push_back({DropKind::Material, 1, {}, pickMaterial(roll.source, rng)});
+    } else if ((r -= stuffWeight) < 0) {
+      out.push_back({DropKind::Material, 1, {}, pickMaterial(roll.source, roll.lean, rng)});
     } else {
-      out.push_back({DropKind::Item, 1,
-                     rollItem(roll.mlvl, roll.magicFind, roll.night, rng)});
+      out.push_back({DropKind::Item, 1, leaned(Rarity::Normal)});
     }
   }
   return out;

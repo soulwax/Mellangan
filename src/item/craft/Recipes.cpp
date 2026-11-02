@@ -113,6 +113,8 @@ const MatDef MATERIALS[MATS] = {
     {"ore", "ore", {0.85f, 0.55f, 0.35f, 1}, atlas::frontier(fr::OrePile)},
     {"rune stone", "rune stones", {0.5f, 0.85f, 0.8f, 1}, atlas::frontier(fr::RuneStoneLow)},
     {"herb", "herbs", {0.55f, 0.85f, 0.4f, 1}, atlas::kit(kt::Sage)},
+    {"hide", "hides", {0.8f, 0.6f, 0.4f, 1}, atlas::beast(atlas::bs::Hide)},
+    {"bone", "bones", {0.92f, 0.88f, 0.76f, 1}, atlas::beast(atlas::bs::Bone)},
 };
 
 const Formula FORMULAS[] = {
@@ -124,7 +126,7 @@ const Formula FORMULAS[] = {
      combine},
     {"Cleanse", "lifts a night curse; the night's gift fades", {1, 0, 0, 1}, 1, touched,
      cleanse},
-    {"Bloodfang", "a weapon of damage and leech", {2, 2, 0, 2}, 1, plain, forge, GearWeapon,
+    {"Bloodfang", "a weapon of damage and leech", {2, 2, 0, 0, 0, 2}, 1, plain, forge, GearWeapon,
      {"damage", "leech"}},
     {"Stormbrand", "a weapon of shock and haste", {3, 2, 1, 0}, 1, plain, forge, GearWeapon,
      {"shock", "haste"}},
@@ -132,11 +134,11 @@ const Formula FORMULAS[] = {
      {"burn", "area"}},
     {"Sage's Ward", "an off-hand of armour and wisdom", {0, 4, 1, 1}, 1, plain, forge,
      GearOffhand, {"armour", "wisdom"}},
-    {"Frostmantle", "armour against the cold", {2, 4, 0, 1}, 1, plain, forge, GearArmour,
+    {"Frostmantle", "armour against the cold", {2, 2, 0, 0, 2, 0}, 1, plain, forge, GearArmour,
      {"armour", "resist chill"}},
-    {"Thornhide", "armour of thorns and life", {0, 3, 0, 3}, 1, plain, forge, GearArmour,
+    {"Thornhide", "armour of thorns and life", {0, 2, 0, 1, 3, 0}, 1, plain, forge, GearArmour,
      {"thorns", "life"}},
-    {"Blood Charm", "a charm of life and leech", {2, 0, 1, 3}, 1, plain, forge, GearCharm,
+    {"Blood Charm", "a charm of life and leech", {1, 0, 1, 1, 0, 2}, 1, plain, forge, GearCharm,
      {"life", "leech"}},
     {"Fortune Charm", "a charm of magic and gold find", {4, 0, 2, 0}, 1, plain, forge,
      GearCharm, {"fortune", "gleaming"}},

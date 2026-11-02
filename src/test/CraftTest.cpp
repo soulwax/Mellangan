@@ -174,8 +174,46 @@ void testCrafting() {
   level.tick();
   assert(!level.get<Workbench>(first) && level.get<Workbench>(level.vendor.bench));
   game.level.reset();
-  std::cout << "[TEST] Crafting: drops carry all four materials; reroll, reforge, upgrade, "
+  std::cout << "[TEST] Crafting: drops carry all six materials; reroll, reforge, upgrade, "
                "combine, cleanse and eight crafted recipes each work and refuse wrong "
                "inputs; the workbench camps beside the merchant: PASS"
+            << std::endl;
+}
+
+void testLootTies() {
+  auto tally = [](Lean lean, Source source, auto count) {
+    Rng r;
+    r.state = 11;
+    int n = 0;
+    for (int i = 0; i < 6000; i++)
+      for (const Drop &d : rollLoot({source, 30, 0, 0, false, lean}, r))
+        n += count(d);
+    return n;
+  };
+  auto gold = [](const Drop &d) { return d.kind == DropKind::Gold; };
+  auto ore = [](const Drop &d) { return d.kind == DropKind::Material && d.material == int(Mat::Ore); };
+  auto pelts = [](const Drop &d) {
+    return d.kind == DropKind::Material &&
+           (d.material == int(Mat::Hide) || d.material == int(Mat::Bone));
+  };
+  auto share = [&](Lean lean, unsigned slots) {
+    int items = tally(lean, Source::Elite, [](const Drop &d) { return d.kind == DropKind::Item; });
+    int hits = tally(lean, Source::Elite, [&](const Drop &d) {
+      return d.kind == DropKind::Item && (d.item.def().slots & slots) != 0;
+    });
+    return float(hits) / std::max(1, items);
+  };
+  assert(tally(Lean::Gold, Source::Line, gold) > tally(Lean::None, Source::Line, gold) * 1.8f);
+  assert(tally(Lean::Ore, Source::Line, ore) > tally(Lean::None, Source::Line, ore) * 3);
+  assert(tally(Lean::Hide, Source::Line, pelts) > tally(Lean::None, Source::Line, pelts) * 4);
+  assert(share(Lean::Ore, slot::Armour) > share(Lean::None, slot::Armour) * 1.5f);
+  assert(share(Lean::Arcane, slot::Offhand) > share(Lean::None, slot::Offhand) * 1.5f);
+  assert(share(Lean::Charm, slot::Charm) > share(Lean::None, slot::Charm) * 1.5f);
+  int plain = tally(Lean::Riches, Source::Elite, [](const Drop &d) {
+    return d.kind == DropKind::Item && int(d.item.rarity) < int(Rarity::Magic);
+  });
+  assert(plain == 0);
+  std::cout << "[TEST] Loot ties: goblins lean gold, golems ore and armour, casters off-hands, "
+               "wraiths charms, beasts hide and bone, mimics and robbers magic or better: PASS"
             << std::endl;
 }

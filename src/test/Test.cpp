@@ -68,6 +68,7 @@ int runTests() {
   testLootDrops();
   testVendor();
   testCrafting();
+  testLootTies();
   testInventory();
   testEquipStats();
   testAllies();
