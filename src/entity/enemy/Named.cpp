@@ -45,7 +45,7 @@ const NamedPack NAMED[NAMED_COUNT] = {
 namespace named {
 
 void tick(Level &level) {
-  if ((level.namedScan -= DT) > 0 || !level.rules.bosses)
+  if ((level.namedScan -= DT) > 0 || (!level.rules.bosses && !level.rules.threat))
     return;
   level.namedScan = 2;
   Player &p = *level.player;

@@ -264,8 +264,13 @@ void Hud::night(float top) {
   Level &l = *game.level;
   Night &n = l.night;
   float u = s.u, small = std::max(1.0f, u - 1);
-  s.textCenter(fmt::format("DAWN {}", clockText(n.left())), s.w / 2, top,
-               std::round(u * 1.5f), col::white);
+  bool cycle = !l.rules.endsAtDawn;
+  std::string clock = cycle && n.dawn
+                          ? fmt::format("DAY {}  DUSK {}", n.nights,
+                                        clockText(std::max(0.0f, n.dayEnds - l.time)))
+                      : cycle ? fmt::format("NIGHT {}  DAWN {}", n.nights, clockText(n.left()))
+                              : fmt::format("DAWN {}", clockText(n.left()));
+  s.textCenter(clock, s.w / 2, top, std::round(u * 1.5f), col::white);
   if (l.omen >= 0)
     s.textCenter(OMENS[l.omen].name, s.w / 2, top + 58 * u, small, OMENS[l.omen].tint);
   s.textCenter(fmt::format("{} shrine{} lit", n.lit, n.lit == 1 ? "" : "s"),

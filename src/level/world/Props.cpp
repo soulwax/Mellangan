@@ -1,5 +1,7 @@
 #include "level/world/Internal.hpp"
 
+#include "level/Edits.hpp"
+
 namespace world {
 
 namespace {
@@ -57,6 +59,9 @@ bool propAt(int x, int y, Prop &p) {
   p = Prop{};
   p.x = x * 16 + 8.0;
   p.y = y * 16 + 16.0;
+  if (edits)
+    if (const Edits::Change *c = edits->at(x, y))
+      return c->placed && pieceProp(c->piece, x, y, p);
 
   Structure st;
   if (structureAt(x, y, st, 1))

@@ -96,7 +96,8 @@ void Spawner::trickle(float t) {
     return void(timer = 1);
   timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp) * level.portent().rate /
            level.rules.spawnRate;
-  Roster r = roster(t);
+  Player &hero = *level.player;
+  Roster r = roster(level.rules.threat ? level.rules.threat(hero.x, hero.y) : t);
   for (int i = 0, batch = 1 + int(t / b.batchEvery);
        i < batch && level.count<Enemy>() < int(b.enemyCap); i++) {
     double x, y;

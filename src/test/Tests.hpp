@@ -42,6 +42,7 @@ void testLootDrops();
 void testVendor();
 void testCrafting();
 void testLootTies();
+void testCampaign();
 void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();

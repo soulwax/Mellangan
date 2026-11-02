@@ -23,6 +23,8 @@
 #include "menu/InventoryMenu.hpp"
 #include "menu/VendorMenu.hpp"
 #include "menu/CraftMenu.hpp"
+#include "menu/StashMenu.hpp"
+#include "campaign/Stash.hpp"
 #include "menu/MapMenu.hpp"
 #include "menu/PauseMenu.hpp"
 #include "menu/ShrineMenu.hpp"
@@ -53,7 +55,10 @@ bool Game::init(SDL_Window *w, const std::string &base) {
   if (!saves.dir().empty() && !bench.enabled)
     codex.load(saves.dir() + "codex.txt");
   Sound::init(base);
-  toTitle();
+  if (wantsCampaign)
+    beginCampaign();
+  else
+    toTitle();
   if (bench.enabled)
     bench.start(*this);
   return true;
@@ -63,6 +68,9 @@ void Game::shutdown() {
   vk2dRendererWait();
   menu.reset();
   nextMenu.reset();
+  saveCampaign();
+  if (campaign)
+    campaign->leave();
   if (level && !bench.enabled)
     level->chart.save(chartPath);
   if (!saves.dir().empty() && !bench.enabled)
@@ -146,6 +154,8 @@ void Game::tick() {
     Sound::select.play(0.5f, 0);
     if (Merchant::near(*level))
       setMenu(std::make_unique<VendorMenu>(*this));
+    else if (Stash::near(*level))
+      setMenu(std::make_unique<StashMenu>(*this));
     else if (Workbench::near(*level))
       setMenu(std::make_unique<CraftMenu>(*this));
     else
@@ -156,6 +166,8 @@ void Game::tick() {
     if (input.confirm.clicked)
       level->player->cast();
     level->tick();
+    if (campaign && (autosave -= DT) <= 0)
+      autosave = Campaign::AUTOSAVE, saveCampaign();
     if (dev && start.stripsLevels())
       level->player->pendingLevels = level->player->pendingTreasures = 0;
     if (!menuChanged && level->night.offering)
@@ -336,6 +348,7 @@ void Game::saveWorld() const {
 }
 
 void Game::toTitle() {
+  endCampaign();
   newGame();
   setMenu(std::make_unique<TitleMenu>(*this));
 }
@@ -354,6 +367,10 @@ void Game::setReducedParticles(bool reduced) {
 }
 
 void Game::onPlayerDied() {
+  if (campaign) {
+    campaign->fall(*level);
+    return saveCampaign();
+  }
   Player &p = *level->player;
   Sound::death.play(0.8f, 0);
   remember(false);
@@ -411,4 +428,47 @@ void Game::render() {
                 4 * screen.u, screen.h - 46 * screen.u - 16 * size, size,
                 col::muted);
   }
+}
+
+void Game::beginCampaign() {
+  dawnRules = rules;
+  campaign = std::make_unique<Campaign>();
+  std::string text = saves.dir().empty() ? std::string() : saves.read("campaign.txt");
+  bool fresh = text.empty() || !Campaign::load(text, *campaign);
+  if (fresh) {
+    *campaign = Campaign{};
+    campaign->hero = start.hero >= 0 && start.hero < HERO_COUNT ? start.hero : codex.start;
+    for (int i = 0; i < 8; i++)
+      campaign->world += CODE_CHARS[rng.next() % (sizeof CODE_CHARS - 1)];
+  }
+  codex.start = campaign->hero;
+  worldMode = WorldMode::Custom, seedCode = campaign->world;
+  rules = campaign->rules();
+  loadBalance();
+  build();
+  campaign->enter(*level);
+  snapCamera();
+  setMenu(nullptr);
+  autosave = Campaign::AUTOSAVE;
+  saveCampaign();
+  spdlog::info("campaign: {} world {} as hero {}, day {}", fresh ? "new" : "loaded",
+               campaign->world, campaign->hero, campaign->day);
+  announce(fresh ? "ACT I  HEARTHWICK" : "BACK IN HEARTHWICK");
+}
+
+void Game::saveCampaign() {
+  if (!campaign || !level || level->player->dead())
+    return;
+  campaign->capture(*level);
+  if (!saves.dir().empty() && !bench.enabled)
+    saves.write("campaign.txt", campaign->save());
+}
+
+void Game::endCampaign() {
+  if (!campaign)
+    return;
+  saveCampaign();
+  campaign->leave();
+  campaign.reset();
+  rules = dawnRules;
 }

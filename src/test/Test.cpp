@@ -69,6 +69,7 @@ int runTests() {
   testVendor();
   testCrafting();
   testLootTies();
+  testCampaign();
   testInventory();
   testEquipStats();
   testAllies();

@@ -159,6 +159,7 @@ int main(int argc, char **argv) {
       game.dev |= std::string_view(argv[i]) == "--dev";
       game.bench.enabled |= std::string_view(argv[i]) == "--bench";
       game.rules.loot |= std::string_view(argv[i]) == "--loot";
+      game.wantsCampaign |= std::string_view(argv[i]) == "--campaign";
     }
     game.start.parse(argc, argv);
     if (game.dev)

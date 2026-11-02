@@ -8,6 +8,14 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
+- A first taste of the campaign: start the game with `--campaign` to found Hearthwick and keep one hero in one world across sessions.
+  - Hearthwick is a fenced clearing with torches, a campfire, a waypoint stone and a stash chest. Foes never spawn inside it.
+  - Days and nights repeat. The clock shows the day and counts down to dusk, then to dawn.
+  - Foes grow stronger the further you roam from town.
+  - Stepping onto the waypoint saves and heals you. The game also saves every minute, when you close the stash and when you quit.
+  - Falling wakes you by the waypoint for a tenth of your gold.
+  - The stash holds 32 items. Press I beside the chest to move items between it and your bag.
+  - Your class, level, gold, materials, gear, bag, stash and learned upgrades carry over, and so does every change to the world.
 - Allies: wolves, hawks, ghouls, skeletons, clockwork drones, powder crews and decoys can fight beside you. They chase foes near you, apply their weapon's effects, take hits, and fade when their time runs out. Foes turn on allies that come close, and decoys draw them away from you. Your attacks never hurt allies. Wolf Totem, Hawk Companion, Ghoul Pack, Clockwork Drone and Powder Crew summon them; `--allies N` brings a mixed pack in dev runs.
 - Twelve new weapons any class can draft, each with its own icon and evolution:
   - Bloodletter Fan, Hex Whip, Bone Spear and Thunder Drum.

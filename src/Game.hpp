@@ -12,6 +12,7 @@
 #include "DevStart.hpp"
 #include "gfx/Screen.hpp"
 #include "input/Input.hpp"
+#include "campaign/Campaign.hpp"
 #include "level/Level.hpp"
 #include "menu/Menu.hpp"
 #include "meta/Balance.hpp"
@@ -45,7 +46,8 @@ public:
   Hud hud{*this};
   Codex codex;
   float best = 0;
-  bool beatBest = false;
+  bool beatBest = false, wantsCampaign = false;
+  std::unique_ptr<Campaign> campaign;
 
   bool init(SDL_Window *window, const std::string &base);
   void shutdown();
@@ -70,12 +72,16 @@ public:
   void celebrate();
   void onPlayerDied();
   void onDawn();
+  void beginCampaign();
+  void saveCampaign();
+  void endCampaign();
 
 private:
   std::unique_ptr<Menu> nextMenu;
   bool menuChanged = false, showFps = false, worldDebug = false;
   float time = 0, hurt = 0, fps = 0, freeze = 0,
-        lastStop = -1, levelBeat = -1;
+        lastStop = -1, levelBeat = -1, autosave = Campaign::AUTOSAVE;
+  RunRules dawnRules;
   std::string chartPath;
   Camera camera;
   int xView = 0, yView = 0;
