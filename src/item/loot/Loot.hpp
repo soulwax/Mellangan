@@ -25,6 +25,8 @@ struct RarityOdds {
 };
 
 RarityOdds rarityOdds(int ilvl, float magicFind);
+int pickBase(int ilvl, int &tier, Rng &rng);
+void affixItem(Item &item, Rarity r, bool night, Rng &own);
 Item rollItem(int ilvl, float magicFind, bool night, Rng &rng,
               Rarity floor = Rarity::Normal);
 std::vector<Drop> rollLoot(const LootRoll &roll, Rng &rng);

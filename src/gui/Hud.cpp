@@ -1,6 +1,7 @@
 #include "gui/Hud.hpp"
 
 #include "Game.hpp"
+#include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "gfx/StatusVisual.hpp"
@@ -128,6 +129,34 @@ void Hud::champions() {
     double xs = e->x - p.x, ys = e->y - p.y;
     tag(fmt::format("{} {:.0f}", e->title, std::sqrt(xs * xs + ys * ys) / 16), pin, 18, c);
   }
+}
+
+void Hud::merchant() {
+  Level &l = *game.level;
+  Merchant *m = l.get<Merchant>(l.vendor.merchant);
+  if (!m || game.menu)
+    return;
+  Screen &s = game.screen;
+  Player &p = *l.player;
+  double xs = m->x - p.x, ys = m->y - p.y, tiles = std::sqrt(xs * xs + ys * ys) / 16;
+  Color c = Color{0.95f, 0.75f, 0.4f, 1};
+  if (!inView(m->x, m->y, -8)) {
+    Pin pin;
+    if (tiles < 48 && edge(m->x, m->y - 10, pin)) {
+      diamond(pin, c.alpha(0.7f));
+      tag(fmt::format("MERCHANT {:.0f}", tiles), pin, 16, c.alpha(0.7f));
+    }
+    return;
+  }
+  float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
+  float xo = std::floor((s.w - s.vw * k) / 2), yo = std::floor((s.h - s.vh * k) / 2);
+  float gx = xo + float(m->x - xView) * k, gy = yo + float(m->y - yView) * k - 24 * k;
+  bool close = Merchant::near(l);
+  std::string text = close ? "I  TRADE" : "MERCHANT";
+  float w = Screen::textWidth(text, small) + 6 * u, h = 16 * small + 2 * u;
+  s.rect(gx - w / 2, gy - h, w, h, col::panel.alpha(0.82f));
+  s.text(text, gx - w / 2 + 3 * u, gy - h + u, small,
+         close ? col::gold.alpha(0.75f + 0.25f * std::sin(time * 6)) : c.alpha(0.8f));
 }
 
 void Hud::compass() {
@@ -375,6 +404,7 @@ void Hud::draw() {
   night(top);
   landmarks();
   champions();
+  merchant();
   compass();
   minimap();
   loadout(top);

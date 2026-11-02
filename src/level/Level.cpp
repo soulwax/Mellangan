@@ -9,6 +9,7 @@
 #include "Prof.h"
 #include "Workers.hpp"
 #include "audio/Sound.hpp"
+#include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
 #include "entity/pickup/Chest.hpp"
 #include "hero/Hero.hpp"
@@ -93,6 +94,8 @@ void Level::tick() {
   prof_begin(PROF_HOUSEKEEP);
   if (!player->dead() && (!night.dawn || !rules.endsAtDawn))
     night.tick();
+  if (rules.loot && !player->dead())
+    Merchant::visit(*this);
   if (!player->dead() && !night.dawn)
     spawner.tick(), explore(), hunt();
   climate();

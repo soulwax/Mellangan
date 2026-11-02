@@ -18,5 +18,5 @@ extern const UniqueDef UNIQUES[];
 extern const int UNIQUE_COUNT;
 
 void forgeUnique(Item &item, int index);
-bool makeUnique(Item &item, int ilvl, Rng &rng);
+bool makeUnique(Item &item, int ilvl, Rng &rng, int base = -1);
 const UniqueDef *uniqueOf(const Item &item);

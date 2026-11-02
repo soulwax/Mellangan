@@ -6,6 +6,7 @@
 #include <cstdio>
 
 #include "audio/Sound.hpp"
+#include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
 #include "gfx/StatusVisual.hpp"
 #include "entity/enemy/Enemy.hpp"
@@ -19,6 +20,7 @@
 #include "menu/DeadMenu.hpp"
 #include "menu/LevelUpMenu.hpp"
 #include "menu/InventoryMenu.hpp"
+#include "menu/VendorMenu.hpp"
 #include "menu/MapMenu.hpp"
 #include "menu/PauseMenu.hpp"
 #include "menu/ShrineMenu.hpp"
@@ -140,7 +142,10 @@ void Game::tick() {
     setMenu(std::make_unique<MapMenu>(*this));
   } else if (input.inventory.clicked) {
     Sound::select.play(0.5f, 0);
-    setMenu(std::make_unique<InventoryMenu>(*this));
+    if (Merchant::near(*level))
+      setMenu(std::make_unique<VendorMenu>(*this));
+    else
+      setMenu(std::make_unique<InventoryMenu>(*this));
   } else if (freeze > 0) {
     freeze -= DT;
   } else {

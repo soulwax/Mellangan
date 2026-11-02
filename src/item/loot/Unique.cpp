@@ -45,10 +45,11 @@ const UniqueDef UNIQUES[] = {
 };
 const int UNIQUE_COUNT = int(std::size(UNIQUES));
 
-bool makeUnique(Item &item, int ilvl, Rng &rng) {
+bool makeUnique(Item &item, int ilvl, Rng &rng, int base) {
   std::vector<int> fit;
   for (int i = 0; i < UNIQUE_COUNT; i++)
-    if (UNIQUES[i].qlvl <= ilvl && findBase(UNIQUES[i].base) >= 0)
+    if (UNIQUES[i].qlvl <= ilvl && findBase(UNIQUES[i].base) >= 0 &&
+        (base < 0 || findBase(UNIQUES[i].base) == base))
       fit.push_back(i);
   if (fit.empty())
     return false;

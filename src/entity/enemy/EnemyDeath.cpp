@@ -131,10 +131,8 @@ Source lootSource(const Enemy &e) {
 }
 
 int monsterLevel(const Enemy &e) {
-  const RunRules &r = e.level->rules;
-  float t = r.threat ? r.threat(e.x, e.y) : e.level->time;
   int bonus = e.boss ? 5 : e.title ? 3 : e.elite ? 2 : 0;
-  return std::clamp(1 + int(t / 15) + bonus, 1, 99);
+  return std::clamp(e.level->monsterLevel(e.x, e.y) + bonus, 1, 99);
 }
 
 } // namespace

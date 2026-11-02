@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "item/loot/Item.hpp"
+#include "item/loot/Vendor.hpp"
 
 namespace gui {
 
@@ -35,7 +36,7 @@ void compare(Lines &lines, const Item &item, const Item &worn) {
 } // namespace
 
 void itemTooltip(Screen &s, const Item &item, const Item *worn, const char *hero, float x,
-                 float y) {
+                 float y, int cost) {
   const ItemBase &b = item.def();
   Lines lines{{item.name(), item.color()}};
   if (item.rarity == Rarity::Rare || item.rarity == Rarity::Crafted)
@@ -58,7 +59,10 @@ void itemTooltip(Screen &s, const Item &item, const Item *worn, const char *hero
     bool fits = hero && std::strcmp(hero, b.klass) == 0;
     lines.push_back({fmt::format("{} only", b.klass), fits ? col::muted : CURSE});
   }
-  lines.push_back({fmt::format("sells for {} gold", item.value()), col::muted});
+  if (cost >= 0)
+    lines.push_back({fmt::format("costs {} gold", cost), col::gold});
+  else
+    lines.push_back({fmt::format("sells for {} gold", Vendor::sellPrice(item)), col::muted});
   if (worn)
     compare(lines, item, *worn);
 

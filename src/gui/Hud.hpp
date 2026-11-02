@@ -35,6 +35,7 @@ private:
   void night(float top);
   void landmarks();
   void champions();
+  void merchant();
   void compass();
   void minimap();
   void loadout(float top);

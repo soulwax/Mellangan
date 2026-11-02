@@ -14,6 +14,7 @@
 #include "entity/Ally.hpp"
 #include "entity/Entity.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "item/loot/Vendor.hpp"
 #include "level/Bounty.hpp"
 #include "level/BiomeEvents.hpp"
 #include "level/Sky.hpp"
@@ -57,6 +58,7 @@ public:
   float pace = 1, step = 1, xpMul = 1, eliteMul = 1, kindleRate = 1;
   int omen = -1;
   RunRules rules;
+  Vendor vendor;
   const Omen &portent() const;
   Color air;
   float distanceRan = 0, totalDamage = 0;
@@ -139,6 +141,10 @@ public:
   void render(Screen &s);
   void renderLight(Screen &s);
   void collide(double &x, double &y, float radius) const;
+  int monsterLevel(double x, double y) const {
+    float t = rules.threat ? rules.threat(x, y) : time;
+    return std::clamp(1 + int(t / 15), 1, 99);
+  }
   bool blocks(double x, double y) const;
   void retire(entt::entity id) {
     std::lock_guard<std::mutex> lock(addMutex);

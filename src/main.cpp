@@ -14,6 +14,7 @@
 #include "entity/Pool.h"
 #include "Version.hpp"
 #include "item/loot/Loot.hpp"
+#include "item/loot/Vendor.hpp"
 #include "other/Ouroboros.hpp"
 
 static void initLogging(const std::string &base) {
@@ -146,6 +147,10 @@ int main(int argc, char **argv) {
       return mapBiomes(argv[i + 1]);
     else if (std::string_view(argv[i]) == "--loot-sim" && i + 1 < argc)
       return lootSim(std::atoi(argv[i + 1]), i + 2 < argc ? std::atoi(argv[i + 2]) : 20);
+    else if (std::string_view(argv[i]) == "--vendor-sim")
+      return vendorSim(i + 1 < argc ? std::atoi(argv[i + 1]) : 30,
+                       i + 2 < argc ? std::atoi(argv[i + 2]) : 0, true),
+             0;
 
   int code = 0;
   {

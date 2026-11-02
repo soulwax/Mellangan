@@ -14,37 +14,19 @@ struct TreasureClass {
 };
 
 const TreasureClass TREASURE[int(Source::Count)] = {
-    {1, 92, 4, 2, 1, 1, Rarity::Normal, 0},
-    {1, 80, 9, 5, 3, 3, Rarity::Normal, 0},
-    {2, 60, 15, 8, 7, 10, Rarity::Normal, 0},
-    {2, 30, 25, 10, 10, 25, Rarity::Normal, 0},
-    {2, 0, 30, 10, 10, 50, Rarity::Magic, 1},
-    {4, 0, 15, 10, 10, 65, Rarity::Rare, 2},
-    {3, 10, 30, 20, 15, 25, Rarity::Normal, 0},
+    {1, 93, 4, 1, 1, 1, Rarity::Normal, 0},
+    {1, 83, 9, 2, 3, 3, Rarity::Normal, 0},
+    {2, 64, 15, 4, 7, 10, Rarity::Normal, 0},
+    {2, 34, 25, 6, 10, 25, Rarity::Normal, 0},
+    {2, 0, 34, 6, 10, 50, Rarity::Magic, 1},
+    {4, 0, 19, 6, 10, 65, Rarity::Rare, 2},
+    {3, 10, 38, 12, 15, 25, Rarity::Normal, 0},
     {3, 0, 40, 0, 0, 60, Rarity::Magic, 1},
 };
 
 constexpr int NIGHT_TOUCHED = 25;
 
 float diminish(float mf, float k) { return mf * k / (mf + k); }
-
-int pickBase(int ilvl, int &tier, Rng &rng) {
-  const auto &bases = itemBases();
-  int total = 0;
-  auto weight = [&](const ItemBase &b, int t) {
-    int q = b.qlvl + TIER_LEVEL[t];
-    return q > ilvl ? 0 : b.weight * (ilvl - q <= 10 ? 3 : 1);
-  };
-  for (const ItemBase &b : bases)
-    for (int t = 0; t < TIER_COUNT; t++)
-      total += weight(b, t);
-  int r = rng.irange(0, std::max(0, total - 1));
-  for (size_t i = 0; i < bases.size(); i++)
-    for (int t = 0; t < TIER_COUNT; t++)
-      if ((r -= weight(bases[i], t)) < 0)
-        return tier = t, int(i);
-  return tier = 0, 0;
-}
 
 Rarity rollRarity(int ilvl, float magicFind, Rng &rng) {
   RarityOdds o = rarityOdds(ilvl, magicFind);
@@ -89,6 +71,38 @@ void touch(Item &item, Rng &rng) {
 
 } // namespace
 
+int pickBase(int ilvl, int &tier, Rng &rng) {
+  const auto &bases = itemBases();
+  int total = 0;
+  auto weight = [&](const ItemBase &b, int t) {
+    int q = b.qlvl + TIER_LEVEL[t];
+    return q > ilvl ? 0 : b.weight * (ilvl - q <= 10 ? 3 : 1);
+  };
+  for (const ItemBase &b : bases)
+    for (int t = 0; t < TIER_COUNT; t++)
+      total += weight(b, t);
+  int r = rng.irange(0, std::max(0, total - 1));
+  for (size_t i = 0; i < bases.size(); i++)
+    for (int t = 0; t < TIER_COUNT; t++)
+      if ((r -= weight(bases[i], t)) < 0)
+        return tier = t, int(i);
+  return tier = 0, 0;
+}
+
+void affixItem(Item &item, Rarity r, bool night, Rng &own) {
+  int extra = 0;
+  if (r == Rarity::Unique)
+    r = Rarity::Rare, extra = 1;
+  item.rarity = r;
+  if (r == Rarity::Magic)
+    affixMagic(item, own);
+  else if (r == Rarity::Rare)
+    affixRare(item, extra, own);
+  if (night && (r == Rarity::Magic || r == Rarity::Rare) &&
+      own.irange(0, NIGHT_TOUCHED - 1) == 0)
+    touch(item, own);
+}
+
 RarityOdds rarityOdds(int ilvl, float magicFind) {
   float scale = 1 + ilvl / 40.0f;
   return {std::min(1.0f, scale / 700 * (1 + diminish(magicFind, 250) / 100)),
@@ -108,17 +122,7 @@ Item rollItem(int ilvl, float magicFind, bool night, Rng &rng, Rarity floor) {
     r = floor;
   if (r == Rarity::Unique && makeUnique(item, item.ilvl, own))
     return item;
-  int extra = 0;
-  if (r == Rarity::Unique)
-    r = Rarity::Rare, extra = 1;
-  item.rarity = r;
-  if (r == Rarity::Magic)
-    affixMagic(item, own);
-  else if (r == Rarity::Rare)
-    affixRare(item, extra, own);
-  if (night && (r == Rarity::Magic || r == Rarity::Rare) &&
-      own.irange(0, NIGHT_TOUCHED - 1) == 0)
-    touch(item, own);
+  affixItem(item, r, night, own);
   return item;
 }
 
@@ -135,7 +139,7 @@ std::vector<Drop> rollLoot(const LootRoll &roll, Rng &rng) {
     if ((r -= tc.none) < 0)
       continue;
     if ((r -= tc.gold) < 0) {
-      int gold = int(roll.mlvl * rng.range(2, 6) * (1 + roll.goldFind / 100));
+      int gold = int(roll.mlvl * rng.range(1, 3) * (1 + roll.goldFind / 100));
       out.push_back({DropKind::Gold, std::max(1, gold), {}});
     } else if ((r -= tc.potion) < 0) {
       out.push_back({DropKind::Potion, 1, {}});

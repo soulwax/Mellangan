@@ -44,6 +44,11 @@ All notable changes to Mellangan are documented here. The format follows
   - Amber beetles shrug off blows from the front.
   - Spore puffers burst into poison beside you.
   - Sunken priests raise the drowned.
+- A wandering merchant (in runs with loot): once you light a shrine, he camps by its fire with a lantern and a barrel. Walk up and press I to trade.
+  - He sells healing draughts, plain bases and two or three magic items. His wares are fresh at every newly lit shrine and again at dawn.
+  - He buys anything from your bag for a quarter of its worth.
+  - Gamble: pay six times a base's worth for a mystery item of that base. It always rolls magic or better, with rares twice and uniques three times as likely.
+  - His prices climb steeply as the night deepens, so early buys are cheap and gambling becomes the better deal later on.
 - Twelve named unique items with fixed powers, such as Ember Locket, Pack Banner, Last Light and Bone Dice. Unique drops now roll as real uniques instead of rares.
 
 ### Changed
@@ -58,6 +63,7 @@ All notable changes to Mellangan are documented here. The format follows
 - Spirit Swarm spirits drag the foes they marked together when they fade.
 - Mortar shells stagger instead of burning and leave a crater that slows foes.
 - Conduit now gives +15% chain and arc damage instead of a second copy of Keen Eye.
+- Foes drop potions about half as often, and gold drops are half as large. Item tooltips now show the merchant's real buying price.
 
 ## [0.5.15] - 2026-11-01
 

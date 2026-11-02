@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <string_view>
 
+#include "entity/Merchant.hpp"
 #include "entity/Ally.hpp"
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
@@ -27,6 +28,8 @@ void DevStart::parse(int argc, char **argv) {
       give = std::atoi(argv[++i]);
     else if (a == "--foes" && more)
       foes = argv[++i];
+    else if (a == "--merchant" && more)
+      merchant = std::atoi(argv[++i]);
     else if (a == "--allies" && more)
       allies = std::atoi(argv[++i]);
     else if (a == "--landmark" && more)
@@ -110,6 +113,10 @@ void DevStart::apply(Player &p) {
       continue;
     double a = TAU * double(n) / 7;
     p.level->spawner.spawn(EnemyKind(kind), p.x + std::cos(a) * 90, p.y + std::sin(a) * 70);
+  }
+  if (merchant >= 0 && p.level && p.level->rules.loot) {
+    Merchant::camp(*p.level, p.x + 20, p.y);
+    p.gold += merchant;
   }
   for (int i = 0; i < allies && p.level; i++) {
     double a = TAU * i / allies;

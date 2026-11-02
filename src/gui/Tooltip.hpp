@@ -7,6 +7,6 @@ struct Item;
 namespace gui {
 
 void itemTooltip(Screen &s, const Item &item, const Item *worn, const char *hero, float x,
-                 float y);
+                 float y, int cost = -1);
 
 } // namespace gui
