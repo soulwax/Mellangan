@@ -36,6 +36,8 @@ private:
   void landmarks();
   void champions();
   void merchant();
+  void handwork();
+  void questLog();
   void compass();
   void minimap();
   void loadout(float top);

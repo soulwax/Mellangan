@@ -7,7 +7,31 @@
 
 class Prop;
 
-enum class Piece { Campfire, Torch, Rail, Post, Count };
+enum class Piece {
+  Campfire,
+  Torch,
+  Rail,
+  Post,
+  Wall,
+  Bench,
+  PostEast,
+  CornerNW,
+  CornerNE,
+  CornerSW,
+  CornerSE,
+  EndWest,
+  EndEast,
+  Cart,
+  Crates,
+  Sacks,
+  Logs,
+  Thorns,
+  Sign,
+  Charred,
+  Skull,
+  Ribs,
+  Count
+};
 
 struct Edits {
   struct Change {

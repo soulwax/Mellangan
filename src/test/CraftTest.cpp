@@ -64,8 +64,8 @@ void testCrafting() {
     for (const Drop &d : rollLoot({Source::Champion, 30}, r))
       if (d.kind == DropKind::Material)
         kinds[d.material]++;
-  for (int k : kinds)
-    assert(k > 0);
+  for (int m = 0; m < MATS; m++)
+    assert((kinds[m] > 0) == (m < int(Mat::Wood)));
 
   RunRules rules;
   rules.loot = true, rules.spawnRate = 0, rules.waves = rules.bosses = false;
@@ -174,7 +174,7 @@ void testCrafting() {
   level.tick();
   assert(!level.get<Workbench>(first) && level.get<Workbench>(level.vendor.bench));
   game.level.reset();
-  std::cout << "[TEST] Crafting: drops carry all six materials; reroll, reforge, upgrade, "
+  std::cout << "[TEST] Crafting: drops carry the six foe materials and never wood or stone; reroll, reforge, upgrade, "
                "combine, cleanse and eight crafted recipes each work and refuse wrong "
                "inputs; the workbench camps beside the merchant: PASS"
             << std::endl;

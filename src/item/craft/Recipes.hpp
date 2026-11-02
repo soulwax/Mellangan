@@ -7,7 +7,7 @@
 
 class Player;
 
-enum class Mat { Shard, Ore, Rune, Herb, Hide, Bone, Count };
+enum class Mat { Shard, Ore, Rune, Herb, Hide, Bone, Wood, Stone, Count };
 constexpr int MATS = int(Mat::Count);
 
 struct MatDef {

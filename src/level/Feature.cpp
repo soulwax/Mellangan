@@ -59,13 +59,13 @@ bool placeStack(const Feature *f, uint32_t, Prop *p) {
   p->add(sheet(f, f->tile));
   if (f->top >= 0)
     p->add(sheet(f, f->top), -16);
-  p->shadow = f->shadow, p->solid = f->solid, p->light = f->light;
+  p->shadow = f->shadow, p->solid = f->solid, p->light = f->light, p->kind = f->name;
   return true;
 }
 
 bool placeGrave(const Feature *f, uint32_t roll, Prop *p) {
   p->add(sheet(f, roll % 10 < 3 ? t::GraveCross : f->tile));
-  p->shadow = f->shadow, p->solid = f->solid;
+  p->shadow = f->shadow, p->solid = f->solid, p->kind = f->name;
   if (roll % 3 == 0)
     p->light = f->light;
   return true;

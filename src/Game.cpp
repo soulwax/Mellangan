@@ -25,6 +25,10 @@
 #include "menu/CraftMenu.hpp"
 #include "menu/StashMenu.hpp"
 #include "menu/TreeMenu.hpp"
+#include "menu/BuildMenu.hpp"
+#include "menu/QuestMenu.hpp"
+#include "campaign/Elder.hpp"
+#include "campaign/Harvest.hpp"
 #include "campaign/Stash.hpp"
 #include "menu/MapMenu.hpp"
 #include "menu/PauseMenu.hpp"
@@ -145,9 +149,16 @@ void Game::tick() {
 
   if (menu) {
     menu->tick();
+  } else if (campaign && campaign->building >= 0 &&
+             (input.escape.clicked || input.build.clicked)) {
+    campaign->building = -1;
+    Sound::select.play(0.4f, 0);
   } else if (input.escape.clicked || input.pause.clicked) {
     Sound::select.play(0.5f, 0);
     setMenu(std::make_unique<PauseMenu>(*this));
+  } else if (campaign && input.build.clicked) {
+    Sound::select.play(0.5f, 0);
+    setMenu(std::make_unique<BuildMenu>(*this));
   } else if (campaign && input.campaign.clicked) {
     Sound::select.play(0.5f, 0);
     setMenu(std::make_unique<TreeMenu>(*this));
@@ -156,20 +167,38 @@ void Game::tick() {
     setMenu(std::make_unique<MapMenu>(*this));
   } else if (input.inventory.clicked) {
     Sound::select.play(0.5f, 0);
-    if (Merchant::near(*level))
+    if (Elder::near(*level))
+      setMenu(std::make_unique<QuestMenu>(*this));
+    else if (Merchant::near(*level))
       setMenu(std::make_unique<VendorMenu>(*this));
     else if (Stash::near(*level))
       setMenu(std::make_unique<StashMenu>(*this));
-    else if (Workbench::near(*level))
+    else if (Workbench::near(*level) || (campaign && harvest::benchNear(*level, *campaign)))
       setMenu(std::make_unique<CraftMenu>(*this));
     else
       setMenu(std::make_unique<InventoryMenu>(*this));
   } else if (freeze > 0) {
     freeze -= DT;
   } else {
-    if (input.confirm.clicked)
+    if (campaign && campaign->building >= 0 && input.confirm.clicked) {
+      int tx, ty, piece = campaign->building;
+      harvest::aim(*level->player, tx, ty);
+      std::string why = harvest::blocked(*level, *campaign, piece, tx, ty);
+      if (why.empty() && harvest::build(*level, *campaign, piece, tx, ty)) {
+        if (!harvest::affordable(*level->player, piece))
+          campaign->building = -1;
+        saveCampaign();
+      } else {
+        announce(why);
+      }
+    } else if (input.confirm.clicked) {
       level->player->cast();
+    }
+    if (campaign && input.gather.clicked)
+      harvest::strike(*level, *campaign);
     level->tick();
+    if (campaign)
+      campaign->tick(*level);
     if (campaign && (autosave -= DT) <= 0)
       autosave = Campaign::AUTOSAVE, saveCampaign();
     if (dev && start.stripsLevels())
@@ -458,6 +487,9 @@ void Game::beginCampaign() {
   loadBalance();
   build();
   campaign->enter(*level);
+  if (dev)
+    for (int &m : level->player->materials)
+      m += start.mats;
   snapCamera();
   setMenu(nullptr);
   autosave = Campaign::AUTOSAVE;

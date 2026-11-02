@@ -144,6 +144,7 @@ public:
   void renderLight(Screen &s);
   void collide(double &x, double &y, float radius) const;
   void scatter(Screen &s);
+  const std::vector<Prop> &visibleProps() const { return props; }
   int monsterLevel(double x, double y) const {
     float t = rules.threat ? rules.threat(x, y) : time;
     return std::clamp(1 + int(t / 15), 1, 99);

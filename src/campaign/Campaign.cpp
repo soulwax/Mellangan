@@ -6,6 +6,8 @@
 #include <sstream>
 
 #include "Game.hpp"
+#include "campaign/Harvest.hpp"
+#include "campaign/Elder.hpp"
 #include "campaign/Stash.hpp"
 #include "campaign/Waypoint.hpp"
 #include "entity/Merchant.hpp"
@@ -17,6 +19,7 @@
 #include "level/Level.hpp"
 #include "level/World.hpp"
 #include "particle/Shockwave.hpp"
+#include "particle/Drift.hpp"
 
 namespace {
 
@@ -25,6 +28,48 @@ double townX = 0, townY = 0;
 float areaThreat(double x, double y) {
   double xd = x - townX, yd = y - townY;
   return float(std::sqrt(xd * xd + yd * yd) / 8);
+}
+
+constexpr int TOWN_W = 6, TOWN_H = 5;
+
+struct Spot {
+  int dx, dy;
+  Piece piece;
+};
+
+const Spot BARRICADE[] = {
+    {-1, -TOWN_H, Piece::Cart},          {1, -TOWN_H, Piece::Crates},
+    {-1, TOWN_H, Piece::Logs},           {1, TOWN_H, Piece::Sacks},
+    {-TOWN_W, -1, Piece::Crates},        {-TOWN_W, 1, Piece::Sacks},
+    {TOWN_W, -1, Piece::Logs},           {TOWN_W, 1, Piece::Crates},
+    {-1, -TOWN_H - 2, Piece::Thorns},    {1, -TOWN_H - 2, Piece::Thorns},
+    {-1, TOWN_H + 2, Piece::Thorns},     {1, TOWN_H + 2, Piece::Thorns},
+    {-TOWN_W - 2, -1, Piece::Thorns},    {-TOWN_W - 2, 1, Piece::Thorns},
+    {TOWN_W + 2, -1, Piece::Thorns},     {TOWN_W + 2, 1, Piece::Thorns},
+    {2, TOWN_H + 1, Piece::Sign},        {-3, -TOWN_H - 1, Piece::Skull},
+    {4, TOWN_H + 2, Piece::Ribs},        {-TOWN_W - 1, 3, Piece::Skull},
+    {TOWN_W + 1, -3, Piece::Thorns},     {-TOWN_W - 1, -3, Piece::Thorns},
+    {3, -3, Piece::Charred},             {-5, -4, Piece::Sacks},
+    {5, 4, Piece::Crates},               {-5, 4, Piece::Logs},
+    {0, 2, Piece::Campfire},
+};
+
+template <class F> void townLayout(int cx, int cy, F &&fn) {
+  fn(cx - TOWN_W, cy - TOWN_H, Piece::CornerNW), fn(cx + TOWN_W, cy - TOWN_H, Piece::CornerNE);
+  fn(cx - TOWN_W, cy + TOWN_H, Piece::CornerSW), fn(cx + TOWN_W, cy + TOWN_H, Piece::CornerSE);
+  for (int d = 2; d < TOWN_W; d++) {
+    Piece west = d == 2 ? Piece::EndEast : Piece::Rail, east = d == 2 ? Piece::EndWest : Piece::Rail;
+    fn(cx - d, cy - TOWN_H, west), fn(cx - d, cy + TOWN_H, west);
+    fn(cx + d, cy - TOWN_H, east), fn(cx + d, cy + TOWN_H, east);
+  }
+  for (int d = 2; d < TOWN_H; d++)
+    for (int s : {-1, 1})
+      fn(cx - TOWN_W, cy + s * d, Piece::Post), fn(cx + TOWN_W, cy + s * d, Piece::PostEast);
+  for (const Spot &s : BARRICADE)
+    fn(cx + s.dx, cy + s.dy, s.piece);
+  for (int sx : {-4, 4})
+    for (int sy : {-3, 3})
+      fn(cx + sx, cy + sy, Piece::Torch);
 }
 
 std::string_view rest(std::string_view line, int words) {
@@ -45,6 +90,8 @@ std::string Campaign::save() const {
                      world, hero, lvl, exp, expNext, gold, day, points);
   if (!active.empty())
     out += "skill " + active + "\n";
+  out += fmt::format("quest {} {} {} {:.1f} {:.1f} {} {}\n", quest, int(stage), progress, qx, qy,
+                     int(qsite), act);
   out += fmt::format("pos {:.1f} {:.1f}\ntown {:.1f} {:.1f} {}\n", x, y, xTown, yTown,
                      int(founded));
   out += "mats";
@@ -88,6 +135,11 @@ bool Campaign::load(std::string_view text, Campaign &out) {
       words >> out.day;
     else if (key == "points")
       words >> out.points;
+    else if (key == "quest") {
+      int stage = 0;
+      words >> out.quest >> stage >> out.progress >> out.qx >> out.qy >> out.qsite >> out.act;
+      out.stage = QuestStage(std::clamp(stage, 0, int(QuestStage::Done)));
+    }
     else if (key == "skill")
       out.active = std::string(rest(line, 1));
     else if (key == "pos")
@@ -148,8 +200,17 @@ void Campaign::enter(Level &level) {
   world::edits = &edits;
   if (!founded)
     found(level);
+  barricade();
   townX = xTown, townY = yTown;
   level.rules.safe.assign(1, {xTown, yTown, SAFE});
+  for (const auto &[k, e] : edits.changes)
+    if (e.placed && e.piece == Piece::Campfire) {
+      double fx = int(int32_t(k >> 32)) * 16 + 8.0, fy = int(int32_t(k & 0xFFFFFFFFu)) * 16 + 16.0;
+      double xd = fx - xTown, yd = fy - yTown;
+      if (xd * xd + yd * yd > harvest::TOWN * harvest::TOWN)
+        level.rules.safe.push_back({fx, fy, harvest::CAMPFIRE_SAFE});
+    }
+  regrow(day);
   level.night.dawn = true, level.night.dayEnds = level.time + DAY;
   level.night.nights = day;
   restore(level);
@@ -163,16 +224,18 @@ void Campaign::found(Level &level) {
   for (int ty = cy - 5; ty <= cy + 5; ty++)
     for (int tx = cx - 6; tx <= cx + 6; tx++)
       edits.harvest(tx, ty);
-  for (int tx = cx - 6; tx <= cx + 6; tx++)
-    if (std::abs(tx - cx) > 1)
-      edits.place(tx, cy - 5, Piece::Rail), edits.place(tx, cy + 5, Piece::Rail);
-  for (int ty = cy - 4; ty <= cy + 4; ty++)
-    if (std::abs(ty - cy) > 1)
-      edits.place(cx - 6, ty, Piece::Post), edits.place(cx + 6, ty, Piece::Post);
-  edits.place(cx, cy + 2, Piece::Campfire);
-  for (int sx : {-4, 4})
-    for (int sy : {-3, 3})
-      edits.place(cx + sx, cy + sy, Piece::Torch);
+}
+
+void Campaign::barricade() {
+  townLayout(int(std::floor(xTown / 16)), int(std::floor(yTown / 16)),
+             [&](int tx, int ty, Piece piece) { edits.place(tx, ty, piece); });
+}
+
+bool Campaign::founding(int tx, int ty) const {
+  bool hit = false;
+  townLayout(int(std::floor(xTown / 16)), int(std::floor(yTown / 16)),
+             [&](int x, int y, Piece) { hit |= x == tx && y == ty; });
+  return hit;
 }
 
 void Campaign::restore(Level &level) {
@@ -203,6 +266,8 @@ void Campaign::raise(Level &level) {
   waypoint = level.add<Waypoint>(xTown, yTown - 6)->id;
   chest = level.add<Stash>(xTown + 40, yTown)->id;
   Merchant::camp(level, xTown - 62, yTown + 34);
+  elder = level.add<Elder>(xTown - 36, yTown - 26)->id;
+  quests::begin(level, *this);
 }
 
 void Campaign::fall(Level &level) {
@@ -215,6 +280,45 @@ void Campaign::fall(Level &level) {
   level.add<Shockwave>(p.x, p.bodyY(), 5, 50, 0.6f, Color{0.5f, 0.85f, 1, 1});
   level.game.announce(lost > 0 ? fmt::format("YOU WAKE BY THE WAYPOINT  -{} GOLD", lost)
                                : std::string("YOU WAKE BY THE WAYPOINT"));
+}
+
+void Campaign::regrow(int today) {
+  for (auto it = edits.changes.begin(); it != edits.changes.end();)
+    if (!it->second.placed && it->second.regrow > 0 && it->second.regrow <= float(today))
+      it = edits.changes.erase(it);
+    else
+      ++it;
+}
+
+void Campaign::smoulder(Level &level) {
+  if ((smoke -= DT) > 0 || !Drift::room())
+    return;
+  smoke = 0.22f;
+  double cx = std::floor(xTown / 16) * 16 + 8, cy = std::floor(yTown / 16) * 16 + 16;
+  auto plume = [&](double px, double py, float shade) {
+    Drift *d = level.add<Drift>(px + rng.range(-3, 3), py, rng.range(-4, 4), -rng.range(10, 16),
+                                atlas::pt::Puff, Color{shade, shade, shade + 0.03f, 0.55f},
+                                rng.range(2.4f, 3.4f));
+    d->grow = 1.1f, d->sway = 5, d->drag = 0.4f, d->spin = rng.range(-0.6f, 0.6f);
+  };
+  plume(cx + 3 * 16, cy - 3 * 16 - 26, 0.32f);
+  if (rng.chance(0.45f))
+    plume(cx, cy + 2 * 16 - 8, 0.45f);
+  if (rng.chance(0.3f)) {
+    Drift *e = level.add<Drift>(cx + 3 * 16 + rng.range(-5, 5), cy - 3 * 16 - 20,
+                                rng.range(-10, 10), -rng.range(22, 36), atlas::pt::Ember,
+                                Color{1, 0.55f, 0.2f, 1}, rng.range(0.7f, 1.3f));
+    e->sway = 8, e->drag = 0.6f;
+  }
+}
+
+void Campaign::tick(Level &level) {
+  smoulder(level);
+  bool day = level.night.dawn;
+  if (day && !wasDay)
+    regrow(level.night.nights);
+  wasDay = day;
+  quests::tick(level, *this);
 }
 
 void Campaign::leave() {

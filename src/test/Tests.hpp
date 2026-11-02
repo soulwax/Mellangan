@@ -44,6 +44,8 @@ void testCrafting();
 void testLootTies();
 void testCampaign();
 void testSkillTrees();
+void testGathering();
+void testQuests();
 void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();

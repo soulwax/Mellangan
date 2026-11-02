@@ -3,6 +3,10 @@
 #include "Game.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Workbench.hpp"
+#include "campaign/Harvest.hpp"
+#include "campaign/Elder.hpp"
+#include "campaign/Quests.hpp"
+#include "level/Prop.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "gfx/StatusVisual.hpp"
@@ -162,6 +166,88 @@ void Hud::merchant() {
   plate(*m, close ? "I  TRADE" : "MERCHANT", close, 24);
   if (Workbench *b = Workbench::near(l); b && !close)
     plate(*b, "I  CRAFT", true, 18);
+}
+
+void Hud::handwork() {
+  Campaign *c = game.campaign.get();
+  if (!c || game.menu)
+    return;
+  Level &l = *game.level;
+  Screen &s = game.screen;
+  float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
+  float xo = std::floor((s.w - s.vw * k) / 2), yo = std::floor((s.h - s.vh * k) / 2);
+  auto plate = [&](double wx, double wy, const std::string &text, Color ink) {
+    float gx = xo + float(wx - xView) * k, gy = yo + float(wy - yView) * k;
+    float w = Screen::textWidth(text, small) + 6 * u, h = 16 * small + 2 * u;
+    s.rect(gx - w / 2, gy - h, w, h, col::panel.alpha(0.82f));
+    s.text(text, gx - w / 2 + 3 * u, gy - h + u, small, ink);
+  };
+  if (c->building >= 0) {
+    int tx, ty;
+    harvest::aim(*l.player, tx, ty);
+    std::string why = harvest::blocked(l, *c, c->building, tx, ty);
+    Prop prop;
+    world::pieceProp(PIECES[c->building].piece, tx, ty, prop);
+    float gx = xo + float(tx * 16 - xView) * k, gy = yo + float(ty * 16 - yView) * k;
+    Color tint = why.empty() ? Color{0.6f, 1, 0.6f, 0.7f} : Color{1, 0.45f, 0.4f, 0.6f};
+    s.color(tint);
+    for (int i = 0; i < prop.count; i++)
+      s.sprite(prop.parts[i].sprite, gx, gy + prop.parts[i].yo * k, 0, 0, k, k);
+    s.color(col::white);
+    s.frame(gx, gy, 16 * k, 16 * k, u, tint);
+    plate(tx * 16 + 8.0, ty * 16 - 18.0,
+          why.empty() ? fmt::format("{}  Enter build  Esc cancel", PIECES[c->building].name) : why,
+          why.empty() ? col::gold : Color{1, 0.5f, 0.45f, 1});
+    return;
+  }
+  harvest::Target t;
+  if (!harvest::target(l, *c, t))
+    return;
+  if (t.placed)
+    return plate(t.x, t.y - 22, "E  TAKE DOWN", col::muted);
+  auto it = c->chops.find(Edits::key(t.tx, t.ty));
+  int hits = it == c->chops.end() ? 0 : it->second;
+  std::string text = fmt::format("E  {}", MATERIALS[int(t.yield->mat)].name);
+  if (hits > 0)
+    text += fmt::format("  {}/{}", hits, t.yield->hits);
+  plate(t.x, t.y - 22, text, MATERIALS[int(t.yield->mat)].color);
+}
+
+void Hud::questLog() {
+  Campaign *c = game.campaign.get();
+  if (!c || game.menu)
+    return;
+  Level &l = *game.level;
+  Screen &s = game.screen;
+  float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
+  std::string line = quests::status(*c);
+  if (!line.empty())
+    s.text("QUEST  " + line, 8 * u, s.h - 74 * u, small,
+           (c->stage == QuestStage::Ready ? col::gold : col::white).alpha(0.85f));
+  float xo = std::floor((s.w - s.vw * k) / 2), yo = std::floor((s.h - s.vh * k) / 2);
+  if (Elder *e = l.get<Elder>(c->elder); e && inView(e->x, e->y, -8)) {
+    bool near = Elder::near(l) != nullptr, news = c->stage == QuestStage::Offered ||
+                                                  c->stage == QuestStage::Ready;
+    if (near || news) {
+      std::string text = near ? "I  TALK" : "!";
+      float gx = xo + float(e->x - xView) * k, gy = yo + float(e->y - yView) * k - 22 * k;
+      float w = Screen::textWidth(text, small) + 6 * u, h = 16 * small + 2 * u;
+      s.rect(gx - w / 2, gy - h, w, h, col::panel.alpha(0.82f));
+      s.text(text, gx - w / 2 + 3 * u, gy - h + u, small,
+             col::gold.alpha(0.75f + 0.25f * std::sin(time * 5)));
+    }
+  }
+  double tx, ty;
+  if (c->stage != QuestStage::Active || !quests::marker(*c, tx, ty) || inView(tx, ty, -8))
+    return;
+  Pin pin;
+  if (!edge(tx, ty, pin))
+    return;
+  Color tone{1, 0.55f, 0.3f, 0.85f};
+  arrow(pin, 8, 5, tone);
+  Player &p = *l.player;
+  double xs = tx - p.x, ys = ty - p.y;
+  tag(fmt::format("QUEST {:.0f}", std::sqrt(xs * xs + ys * ys) / 16), pin, 20, tone);
 }
 
 void Hud::compass() {
@@ -421,6 +507,8 @@ void Hud::draw() {
   landmarks();
   champions();
   merchant();
+  handwork();
+  questLog();
   compass();
   minimap();
   loadout(top);

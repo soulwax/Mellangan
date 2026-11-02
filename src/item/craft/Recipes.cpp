@@ -115,6 +115,8 @@ const MatDef MATERIALS[MATS] = {
     {"herb", "herbs", {0.55f, 0.85f, 0.4f, 1}, atlas::kit(kt::Sage)},
     {"hide", "hides", {0.8f, 0.6f, 0.4f, 1}, atlas::beast(atlas::bs::Hide)},
     {"bone", "bones", {0.92f, 0.88f, 0.76f, 1}, atlas::beast(atlas::bs::Bone)},
+    {"wood", "wood", {0.72f, 0.5f, 0.3f, 1}, atlas::town(atlas::tt::Log)},
+    {"stone", "stone", {0.7f, 0.7f, 0.72f, 1}, atlas::kit(kt::Pebbles)},
 };
 
 const Formula FORMULAS[] = {

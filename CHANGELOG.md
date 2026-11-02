@@ -9,7 +9,7 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - A first taste of the campaign: press K on the title screen (or start with `--campaign`) to found Hearthwick and keep one hero in one world across sessions. A new campaign asks for your class first; an existing one continues where you left off.
-  - Hearthwick is a fenced clearing with torches, a campfire, a waypoint stone, a stash chest, and the merchant with his workbench, who stay in town and stock wares for your level. Foes never spawn inside it.
+  - Hearthwick is a town under siege: a closed fence with its four gates barricaded by an overturned cart, crates, barrels, sacks and log piles, leaving only a gap to squeeze through. Thorn hedges guard the gates, bones and a warning sign lie outside, and smoke and embers rise from a burnt tree and the campfire within. Inside are torches, a waypoint stone, a stash chest, and the merchant with his workbench, who stay in town and stock wares for your level. Foes never spawn inside it.
   - Days are quieter but not empty: a thin trickle of foes roams by day, and the hordes come at night.
   - Days and nights repeat. The clock shows the day and counts down to dusk, then to dawn.
   - Foes grow stronger the further you roam from town.
@@ -23,6 +23,18 @@ All notable changes to Mellangan are documented here. The format follows
     - Skills rank up to five, and every rank after the first shortens the cooldown by a tenth. Switching between learned skills is free.
     - A weapon that is ready to evolve evolves for a point.
     - Treasure chests still offer their evolution and relic cards.
+  - Gather and build in the campaign:
+    - Press E beside a tree, rock, crystal, flower, fungus, rune stone or bone pile to strike it. After a few strikes it falls and drops wood, stone, shards, herbs, rune stones or bones, and it grows back a few days later.
+    - Press B to build a campfire, torch, fence, stone wall or workbench from your materials. A ghost shows where it will stand: green when it fits, red with the reason when it doesn't. Enter builds and Esc cancels.
+    - A campfire keeps foes from spawning around it. A placed workbench crafts like the merchant's.
+    - Press E on something you built to take it down for half its materials back. Hearthwick's own fence, torches and fire stay put.
+    - Wood and stone are two new materials; foes never drop them.
+  - Act I has a story. Elder Maren in Hearthwick (a "!" floats over her when she has news) gives four quests in turn; press I beside her to take one or claim its reward:
+    - Rekindle the Greenwood: light three shrines.
+    - The Barrow Keeper: the miller is held in the nearest graveyard; reach it and slay the Pale Warden.
+    - Hunt the Pack: slay twenty wolves.
+    - The Pack Lord: find his den at the nearest camp and slay him to clear Act I.
+  - A quest line at the bottom left tracks your progress, and an arrow points to a quest site once it is off screen.
 - Allies: wolves, hawks, ghouls, skeletons, clockwork drones, powder crews and decoys can fight beside you. They chase foes near you, apply their weapon's effects, take hits, and fade when their time runs out. Foes turn on allies that come close, and decoys draw them away from you. Your attacks never hurt allies. Wolf Totem, Hawk Companion, Ghoul Pack, Clockwork Drone and Powder Crew summon them; `--allies N` brings a mixed pack in dev runs.
 - Twelve new weapons any class can draft, each with its own icon and evolution:
   - Bloodletter Fan, Hex Whip, Bone Spear and Thunder Drum.
