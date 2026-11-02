@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "entity/Mob.hpp"
+#include "item/craft/Recipes.hpp"
 #include "item/loot/Item.hpp"
 
 class Upgrade;
@@ -17,7 +18,7 @@ public:
   static constexpr int BAG = 32;
   float dim = 0, guard = 0, skinTime = 0, sanctifyTime = 0;
   int crits = 0, hits = 0, lastLit = 0;
-  int gold = 0, materials = 0;
+  int gold = 0, materials[MATS]{};
   std::vector<Item> bag;
   std::array<Item, GEAR> gear{};
   std::array<bool, GEAR> worn{};

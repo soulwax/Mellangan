@@ -7,6 +7,7 @@
 
 #include "audio/Sound.hpp"
 #include "entity/Merchant.hpp"
+#include "entity/Workbench.hpp"
 #include "entity/Player.hpp"
 #include "gfx/StatusVisual.hpp"
 #include "entity/enemy/Enemy.hpp"
@@ -21,6 +22,7 @@
 #include "menu/LevelUpMenu.hpp"
 #include "menu/InventoryMenu.hpp"
 #include "menu/VendorMenu.hpp"
+#include "menu/CraftMenu.hpp"
 #include "menu/MapMenu.hpp"
 #include "menu/PauseMenu.hpp"
 #include "menu/ShrineMenu.hpp"
@@ -144,6 +146,8 @@ void Game::tick() {
     Sound::select.play(0.5f, 0);
     if (Merchant::near(*level))
       setMenu(std::make_unique<VendorMenu>(*this));
+    else if (Workbench::near(*level))
+      setMenu(std::make_unique<CraftMenu>(*this));
     else
       setMenu(std::make_unique<InventoryMenu>(*this));
   } else if (freeze > 0) {

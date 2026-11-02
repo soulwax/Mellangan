@@ -36,6 +36,7 @@ void testShapeForms();
 void testChampionTraits();
 void testLootDrops();
 void testVendor();
+void testCrafting();
 void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();

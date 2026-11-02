@@ -2,6 +2,7 @@
 
 #include "Game.hpp"
 #include "entity/Merchant.hpp"
+#include "entity/Workbench.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "gfx/StatusVisual.hpp"
@@ -150,13 +151,17 @@ void Hud::merchant() {
   }
   float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
   float xo = std::floor((s.w - s.vw * k) / 2), yo = std::floor((s.h - s.vh * k) / 2);
-  float gx = xo + float(m->x - xView) * k, gy = yo + float(m->y - yView) * k - 24 * k;
+  auto plate = [&](const Entity &e, std::string_view text, bool close, float rise) {
+    float gx = xo + float(e.x - xView) * k, gy = yo + float(e.y - yView) * k - rise * k;
+    float w = Screen::textWidth(text, small) + 6 * u, h = 16 * small + 2 * u;
+    s.rect(gx - w / 2, gy - h, w, h, col::panel.alpha(0.82f));
+    s.text(text, gx - w / 2 + 3 * u, gy - h + u, small,
+           close ? col::gold.alpha(0.75f + 0.25f * std::sin(time * 6)) : c.alpha(0.8f));
+  };
   bool close = Merchant::near(l);
-  std::string text = close ? "I  TRADE" : "MERCHANT";
-  float w = Screen::textWidth(text, small) + 6 * u, h = 16 * small + 2 * u;
-  s.rect(gx - w / 2, gy - h, w, h, col::panel.alpha(0.82f));
-  s.text(text, gx - w / 2 + 3 * u, gy - h + u, small,
-         close ? col::gold.alpha(0.75f + 0.25f * std::sin(time * 6)) : c.alpha(0.8f));
+  plate(*m, close ? "I  TRADE" : "MERCHANT", close, 24);
+  if (Workbench *b = Workbench::near(l); b && !close)
+    plate(*b, "I  CRAFT", true, 18);
 }
 
 void Hud::compass() {

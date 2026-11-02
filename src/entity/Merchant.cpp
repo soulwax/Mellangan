@@ -2,6 +2,7 @@
 
 #include "Game.hpp"
 #include "entity/Player.hpp"
+#include "entity/Workbench.hpp"
 #include "level/Level.hpp"
 #include "particle/Spark.hpp"
 
@@ -46,9 +47,14 @@ Merchant *Merchant::camp(Level &level, double x, double y) {
     Spark::burst(level, old->x, old->y - 6, LAMP, 6, 30, true);
     old->remove();
   }
+  if (Workbench *old = level.get<Workbench>(v.bench))
+    old->remove();
   level.collide(x, y, 5);
   Merchant *m = level.add<Merchant>(x, y);
   v.merchant = m->id;
+  double bx = x + 30, by = y + 2;
+  level.collide(bx, by, 6);
+  v.bench = level.add<Workbench>(bx, by)->id;
   v.restock(level.monsterLevel(x, y), rng);
   Spark::burst(level, x, y - 6, LAMP, 10, 40, true);
   Player &p = *level.player;
@@ -78,6 +84,11 @@ Merchant *Merchant::near(Level &level) {
   Player &p = *level.player;
   if (!m || p.dead())
     return nullptr;
-  double xd = m->x - p.x, yd = m->y - p.y;
-  return xd * xd + yd * yd < REACH * REACH ? m : nullptr;
+  double xd = m->x - p.x, yd = m->y - p.y, d2 = xd * xd + yd * yd;
+  if (Workbench *b = level.get<Workbench>(level.vendor.bench)) {
+    double bx = b->x - p.x, by = b->y - p.y;
+    if (bx * bx + by * by < d2)
+      return nullptr;
+  }
+  return d2 < REACH * REACH ? m : nullptr;
 }

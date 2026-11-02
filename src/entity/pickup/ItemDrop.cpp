@@ -10,7 +10,7 @@
 
 namespace {
 
-constexpr Color GOLD_INK{1, 0.84f, 0.35f, 1}, STUFF{0.75f, 0.68f, 0.58f, 1};
+constexpr Color GOLD_INK{1, 0.84f, 0.35f, 1};
 
 bool isItem(const Drop &d) { return d.kind == DropKind::Item; }
 
@@ -48,7 +48,7 @@ std::string ItemDrop::label() const {
   if (drop.kind == DropKind::Gold)
     return std::to_string(drop.amount) + " gold";
   if (drop.kind == DropKind::Material)
-    return "material";
+    return MATERIALS[drop.material].name;
   return drop.item.name();
 }
 
@@ -56,7 +56,7 @@ Color ItemDrop::color() const {
   if (drop.kind == DropKind::Gold)
     return GOLD_INK;
   if (drop.kind == DropKind::Material)
-    return STUFF;
+    return MATERIALS[drop.material].color;
   return drop.item.color();
 }
 
@@ -72,7 +72,7 @@ void ItemDrop::take(Player &p) {
     return Sound::gem.play(0.25f, 0.1f, 1.4f);
   }
   if (drop.kind == DropKind::Material) {
-    p.materials++;
+    p.materials[drop.material]++;
     return Sound::gem.play(0.2f, 0.1f, 0.8f);
   }
   p.bag.push_back(drop.item);
@@ -95,7 +95,7 @@ void ItemDrop::render(Screen &s) {
   if (drop.kind == DropKind::Gold)
     return s.particle(atlas::pt::Coin, xp, yp, col::white, 1, t * 3);
   if (drop.kind == DropKind::Material)
-    return s.particle(atlas::pt::Pebble, xp, yp, col::white, 1, 0);
+    return s.center(MATERIALS[drop.material].icon, xp, yp, 0.6f, std::sin(t * 2) * 0.08f);
   s.sprite(atlas::Shadow, xp, y + 1, 8, 4, 0.6f, 0.6f);
   s.center(drop.item.def().icon, xp, yp, 0.8f, std::sin(t * 2) * 0.05f);
 }

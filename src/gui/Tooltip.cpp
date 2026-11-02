@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "item/craft/Recipes.hpp"
 #include "item/loot/Item.hpp"
 #include "item/loot/Vendor.hpp"
 
@@ -78,6 +79,20 @@ void itemTooltip(Screen &s, const Item &item, const Item *worn, const char *hero
   s.frame(x, y, w, h, u, item.color().alpha(0.7f));
   for (size_t i = 0; i < lines.size(); i++)
     s.text(lines[i].first, x + pad, y + pad + i * line, small, lines[i].second);
+}
+
+float materials(Screen &s, const int *owned, const int *cost, float x, float y, float size,
+               float alpha) {
+  for (int m = 0; m < MATS; m++) {
+    if (cost && !cost[m])
+      continue;
+    std::string n = cost ? fmt::format("{}/{}", owned[m], cost[m]) : std::to_string(owned[m]);
+    Color ink = cost && owned[m] < cost[m] ? WORSE : MATERIALS[m].color;
+    s.sprite(MATERIALS[m].icon, x, y - 6 * size, 0, 0, size, size);
+    s.text(n, x + 17 * size, y, size, ink.alpha(alpha));
+    x += 17 * size + Screen::textWidth(n, size) + 9 * size;
+  }
+  return x;
 }
 
 } // namespace gui

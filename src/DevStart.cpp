@@ -30,6 +30,8 @@ void DevStart::parse(int argc, char **argv) {
       foes = argv[++i];
     else if (a == "--merchant" && more)
       merchant = std::atoi(argv[++i]);
+    else if (a == "--mats" && more)
+      mats = std::atoi(argv[++i]);
     else if (a == "--allies" && more)
       allies = std::atoi(argv[++i]);
     else if (a == "--landmark" && more)
@@ -115,9 +117,11 @@ void DevStart::apply(Player &p) {
     p.level->spawner.spawn(EnemyKind(kind), p.x + std::cos(a) * 90, p.y + std::sin(a) * 70);
   }
   if (merchant >= 0 && p.level && p.level->rules.loot) {
-    Merchant::camp(*p.level, p.x + 20, p.y);
+    Merchant::camp(*p.level, p.x + (mats > 0 ? -22 : 20), p.y);
     p.gold += merchant;
   }
+  for (int &m : p.materials)
+    m += mats;
   for (int i = 0; i < allies && p.level; i++) {
     double a = TAU * i / allies;
     summon(*p.level, AllyKind(i % int(AllyKind::Decoy)), p.x + std::cos(a) * 24,

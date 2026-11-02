@@ -12,11 +12,12 @@ struct DevStart {
       "lakeshore, --cliff below the nearest cliff, --ramp below the nearest stairs, "
       "--peak on the nearest hilltop, --landmark N by landmark N, --give N puts N random "
       "items in the bag, --allies N summons N allies, --foes A,B rings the start with those "
-      "enemy kinds, --merchant N camps a merchant by the start and gives N gold, --loot "
-      "drops loot";
+      "enemy kinds, --merchant N camps a merchant by the start and gives N gold, --mats N "
+      "gives N of every crafting material, --loot drops loot";
 
   std::string arm, foes;
-  int hero = -1, biome = -1, landmark = -1, x = 0, y = 0, give = 0, allies = 0, merchant = -1;
+  int hero = -1, biome = -1, landmark = -1, x = 0, y = 0, give = 0, allies = 0, merchant = -1,
+      mats = 0;
   bool at = false, lake = false, cliff = false, ramp = false, peak = false;
 
   void parse(int argc, char **argv);

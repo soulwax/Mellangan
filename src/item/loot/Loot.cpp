@@ -1,5 +1,6 @@
 #include "item/loot/Loot.hpp"
 #include "item/loot/Unique.hpp"
+#include "item/craft/Recipes.hpp"
 
 #include <spdlog/fmt/fmt.h>
 
@@ -24,7 +25,24 @@ const TreasureClass TREASURE[int(Source::Count)] = {
     {3, 0, 40, 0, 0, 60, Rarity::Magic, 1},
 };
 
+const int STUFF[int(Source::Count)][MATS] = {
+    {4, 1, 0, 5}, {4, 3, 0, 3}, {2, 6, 1, 1}, {3, 3, 2, 2},
+    {3, 3, 3, 1}, {2, 2, 5, 1}, {3, 3, 2, 2}, {1, 1, 1, 1},
+};
+
 constexpr int NIGHT_TOUCHED = 25;
+
+int pickMaterial(Source source, Rng &rng) {
+  const int *w = STUFF[int(source)];
+  int total = 0;
+  for (int m = 0; m < MATS; m++)
+    total += w[m];
+  int r = rng.irange(0, total - 1);
+  for (int m = 0; m < MATS; m++)
+    if ((r -= w[m]) < 0)
+      return m;
+  return 0;
+}
 
 float diminish(float mf, float k) { return mf * k / (mf + k); }
 
@@ -144,7 +162,7 @@ std::vector<Drop> rollLoot(const LootRoll &roll, Rng &rng) {
     } else if ((r -= tc.potion) < 0) {
       out.push_back({DropKind::Potion, 1, {}});
     } else if ((r -= tc.material) < 0) {
-      out.push_back({DropKind::Material, 1, {}});
+      out.push_back({DropKind::Material, 1, {}, pickMaterial(roll.source, rng)});
     } else {
       out.push_back({DropKind::Item, 1,
                      rollItem(roll.mlvl, roll.magicFind, roll.night, rng)});

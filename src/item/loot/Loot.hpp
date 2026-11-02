@@ -11,6 +11,7 @@ struct Drop {
   DropKind kind;
   int amount;
   Item item;
+  int material = 0;
 };
 
 struct LootRoll {

@@ -22,7 +22,7 @@ struct Vendor {
   std::vector<Ware> wares;
   int ilvl = 1, camp = 0, restocks = 0;
   bool day = false;
-  entt::entity merchant = entt::null;
+  entt::entity merchant = entt::null, bench = entt::null;
 
   void restock(int level, Rng &rng);
   float markup() const { return MARKUP + ilvl * ilvl / 300.0f; }

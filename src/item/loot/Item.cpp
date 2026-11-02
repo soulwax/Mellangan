@@ -124,7 +124,25 @@ bool Item::addAffix(bool prefix, Rng &rng) {
   return true;
 }
 
+bool Item::addFixed(int affix, Rng &rng) {
+  if (affix < 0 || count >= MAX_AFFIXES || hasFamily(affix) ||
+      !(AFFIXES[affix].slots & def().slots))
+    return false;
+  const AffixDef &d = AFFIXES[affix];
+  int t = 0;
+  while (t + 1 < d.tiers && d.tier[t + 1].qlvl <= ilvl)
+    t++;
+  Roll &r = rolls[count++];
+  r.affix = affix, r.tier = t, r.value = rollValue(d.tier[t], rng);
+  return true;
+}
+
 void Item::reroll(int i, Rng &rng) { rolls[i].value = rollValue(tierOf(rolls[i]), rng); }
+
+float Item::quality(int i) const {
+  const AffixTier &t = tierOf(rolls[i]);
+  return t.hi > t.lo ? (rolls[i].value - t.lo) / (t.hi - t.lo) : 1;
+}
 
 std::string Item::baseName() const {
   return fmt::format("{} {}", TIER_NAMES[tier], def().name);

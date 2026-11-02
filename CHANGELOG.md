@@ -57,6 +57,11 @@ All notable changes to Mellangan are documented here. The format follows
   - He buys anything from your bag for a quarter of its worth.
   - Gamble: pay six times a base's worth for a mystery item of that base. It always rolls magic or better, with rares twice and uniques three times as likely.
   - His prices climb steeply as the night deepens, so early buys are cheap and gambling becomes the better deal later on.
+- A workbench at the merchant's camp. Walk up to it and press I to craft:
+  - Foes now drop four crafting materials: crystal shards, ore, rune stones and herbs. Small foes leave shards and herbs, brutes leave ore, and elites and bosses leave rune stones.
+  - Reroll the weakest affix of an item, reforge every affix of a rare while it keeps its name, or raise a Worn or Fine item one tier.
+  - Combine three magic items of one slot into a rare, or cleanse a night-touched item of its curse; the curse goes, and so does the night's gift.
+  - Eight crafted recipes turn a plain item into an orange crafted one with two fixed affixes and up to three random ones: Bloodfang, Stormbrand, Ember Lamp, Sage's Ward, Frostmantle, Thornhide, Blood Charm and Fortune Charm.
 - Twelve named unique items with fixed powers, such as Ember Locket, Pack Banner, Last Light and Bone Dice. Unique drops now roll as real uniques instead of rares.
 
 ### Changed
@@ -71,6 +76,7 @@ All notable changes to Mellangan are documented here. The format follows
 - Spirit Swarm spirits drag the foes they marked together when they fade.
 - Mortar shells stagger instead of burning and leave a crater that slows foes.
 - Conduit now gives +15% chain and arc damage instead of a second copy of Keen Eye.
+- The inventory shows how many of each crafting material you carry.
 - The Codex bestiary now pages through every foe; foes past the 26th never showed before.
 - Foes drop potions about half as often, and gold drops are half as large. Item tooltips now show the merchant's real buying price.
 

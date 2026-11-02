@@ -41,7 +41,9 @@ struct Item {
   float implicit() const;
   float stat(Stat s) const;
   bool addAffix(bool prefix, Rng &rng);
+  bool addFixed(int affix, Rng &rng);
   void reroll(int i, Rng &rng);
+  float quality(int i) const;
   std::string baseName() const;
   std::string name() const;
   const char *grants() const;
