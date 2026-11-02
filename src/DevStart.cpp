@@ -10,6 +10,7 @@
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
 #include "item/loot/Loot.hpp"
+#include "level/Level.hpp"
 #include "level/World.hpp"
 
 void DevStart::parse(int argc, char **argv) {
@@ -24,6 +25,8 @@ void DevStart::parse(int argc, char **argv) {
       biome = std::atoi(argv[++i]);
     else if (a == "--give" && more)
       give = std::atoi(argv[++i]);
+    else if (a == "--foes" && more)
+      foes = argv[++i];
     else if (a == "--allies" && more)
       allies = std::atoi(argv[++i]);
     else if (a == "--landmark" && more)
@@ -98,6 +101,15 @@ void DevStart::apply(Player &p) {
   if (at) {
     p.x = x * 16 + 8, p.y = y * 16 + 8;
     spdlog::info("dev: starting at tile ({}, {})", x, y);
+  }
+  for (size_t at = 0, n = 0; p.level && at < foes.size(); n++) {
+    size_t comma = foes.find(',', at);
+    int kind = std::atoi(foes.c_str() + at);
+    at = comma == std::string::npos ? foes.size() : comma + 1;
+    if (kind < 0 || kind >= int(EnemyKind::Count))
+      continue;
+    double a = TAU * double(n) / 7;
+    p.level->spawner.spawn(EnemyKind(kind), p.x + std::cos(a) * 90, p.y + std::sin(a) * 70);
   }
   for (int i = 0; i < allies && p.level; i++) {
     double a = TAU * i / allies;

@@ -12,7 +12,8 @@ Jungle::Jungle()
            30,
            50,
            {0, 0, 20, 30, 50, 0},
-           foe(EnemyKind::Spider) | foe(EnemyKind::Slime) | foe(EnemyKind::Bat),
+           foe(EnemyKind::Spider) | foe(EnemyKind::Slime) | foe(EnemyKind::Bat) |
+               foe(EnemyKind::Snapjaw) | foe(EnemyKind::StranglerVine),
            {{&f::jungleTree, 25, 300},
             {&f::treeFern, 10, 120},
             {&f::bamboo, 8, 100},

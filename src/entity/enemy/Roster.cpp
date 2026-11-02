@@ -108,6 +108,17 @@ const EnemyType TYPES[] = {
      atlas::beast},
     {bs::MothWisp, 14, 55, 5, 5, 1, 2, 1, {0.85f, 0.8f, 1, 1}, true, 100, atlas::beast},
     {bs::Cutthroat, 36, 60, 10, 6, 1, 5, 0.9f, {0.7f, 0.1f, 0.12f, 1}, false, 140, atlas::beast},
+    {bs::BogToad, 34, 44, 9, 6, 1, 4, 0.9f, {0.4f, 0.6f, 0.3f, 1}, false, 40, atlas::beast},
+    {bs::Drowned, 40, 26, 10, 6, 1, 4, 0.9f, {0.35f, 0.55f, 0.65f, 1}, false, 60, atlas::beast},
+    {bs::Snapjaw, 140, 30, 18, 9, 1.3f, 10, 0.3f, {0.45f, 0.55f, 0.3f, 1}, false, 120,
+     atlas::beast},
+    {bs::StranglerVine, 60, 0, 6, 8, 1.1f, 5, 0, {0.3f, 0.55f, 0.25f, 1}, false, 70,
+     atlas::beast},
+    {bs::AmberBeetle, 55, 34, 11, 7, 1.05f, 6, 0.4f, {0.85f, 0.6f, 0.2f, 1}, false, 100,
+     atlas::beast},
+    {bs::SporePuffer, 10, 52, 3, 5, 1, 1, 1, {0.75f, 0.6f, 0.8f, 1}, false, 30, atlas::beast},
+    {bs::SunkenPriest, 45, 34, 8, 6, 1, 7, 0.8f, {0.4f, 0.6f, 0.7f, 1}, false, 140,
+     atlas::beast},
 };
 static_assert(std::size(TYPES) == int(EnemyKind::Count));
 } // namespace
@@ -161,7 +172,9 @@ const char *Enemy::name() const {
       "a mycelial brute", "an ember imp", "a cinder golem", "a mimic",
       "an outlaw", "a berserker", "a pit fighter", "a deserter",
       "a thornling", "a wild boar", "a goblin archer", "a goblin shaman",
-      "a sapling", "a treant", "a moth wisp", "a cutthroat"
+      "a sapling", "a treant", "a moth wisp", "a cutthroat",
+      "a bog toad", "a drowned", "a snapjaw", "a strangler vine",
+      "an amber beetle", "a spore puffer", "a sunken priest"
   };
   static_assert(std::size(NAMES) == int(EnemyKind::Count));
   return NAMES[&type - TYPES];

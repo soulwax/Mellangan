@@ -12,6 +12,13 @@ Band at y=1380, 24 columns by 6 rows (144 cells). Cell i is atlas::beast(i); the
      5  Treant         the sapling grown: a broad oak with a face in the bark
      6  Moth Wisp      a pale moth with a glowing body
      7  Cutthroat      a hooded bandit with a knife
+     8  Bog Toad       a fat mottled toad with a pale belly
+     9  Drowned        a waterlogged corpse in kelp, glowing eyes
+    10  Snapjaw        a broad marsh crocodile, jaws open
+    11  Strangler Vine a coiled thorny vine with a bulb mouth
+    12  Amber Beetle   a beetle with a polished amber shell
+    13  Spore Puffer   a round violet puffball with tiny feet
+    14  Sunken Priest  a hooded priest in sea-green robes with a coral staff
 
 Usage: python tools/make_bestiary.py [--preview out.png]   (make_assets.py calls add_bestiary too)
 """
@@ -35,6 +42,10 @@ GOBLIN = {"k": (62, 110, 52), "K": (96, 154, 70), "Y": (150, 200, 96)}
 CLOTH = {"c": (110, 34, 40), "C": (164, 56, 58), "D": (210, 96, 84)}
 DUSK = {"s": (38, 36, 48), "S": (64, 62, 80), "U": (100, 98, 120)}
 MOTH = {"m": (122, 104, 150), "M": (178, 160, 206), "N": (232, 222, 246)}
+TOAD = {"o": (64, 86, 40), "V": (104, 132, 58), "P": (170, 182, 104), "Z": (214, 206, 150)}
+SEA = {"w": (34, 70, 84), "A": (60, 112, 120), "a": (110, 164, 160)}
+AMBER = {"y": (120, 64, 20), "Y": (196, 120, 36), "z": (244, 190, 90)}
+SPORE = {"v": (84, 52, 104), "I": (140, 96, 170), "i": (200, 160, 226)}
 EXTRA = {
     "t": (210, 190, 120),
     "R": (220, 60, 50),
@@ -228,7 +239,156 @@ def cutthroat():
     ), DUSK, BARK, HIDE)
 
 
-PAINTERS = (thornling, boar, goblin_archer, goblin_shaman, sapling, treant, moth, cutthroat)
+def bog_toad():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "....oo....oo....",
+        "...oVEo..oEVo...",
+        "..oVVVVooVVVVo..",
+        ".oVVPVVVVVVPVVo.",
+        ".oVVVVVVVVVVVVo.",
+        ".oVZZZZZZZZZZVo.",
+        "..oZZZZZZZZZZo..",
+        ".ooVoZZZZZZoVoo.",
+        "oVVo.oooooo.oVVo",
+        "ooo..........ooo",
+        "................",
+    ), TOAD)
+
+
+def drowned():
+    return draw((
+        "................",
+        "......www.......",
+        ".....wAAAw......",
+        "....wAOAOAw.....",
+        "....wAAAAAw.....",
+        ".....waaaw......",
+        "...gwAAAAAwg....",
+        "..gwAAaAAAAwg...",
+        "..w.wAAAAAw.w...",
+        "..a.wAAaAAw.a...",
+        "....wAAAAAw.....",
+        "....gwAAAwg.....",
+        ".....wA.Aw......",
+        ".....wA.Aw......",
+        "....ww...ww.....",
+        "................",
+    ), SEA, LEAF)
+
+
+def snapjaw():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "..TT............",
+        ".oVVoo..........",
+        "oVEVVVoooooo....",
+        "oVVVVVVVVVVVoo..",
+        ".TTVPVVVPVVVVVo.",
+        "..oVVVVVVVVVVVVo",
+        "...oVVVVVVVVVVo.",
+        "...oo.oo..oo.oo.",
+        "...oo.oo..oo.oo.",
+        "................",
+        "................",
+    ), TOAD)
+
+
+def strangler_vine():
+    return draw((
+        "................",
+        "......gGGg......",
+        ".....gGRRGg.....",
+        "....gGRTTRGg....",
+        "....gGRRRRGg....",
+        ".....gGGGGg.....",
+        "......gGgt......",
+        ".....tgGg.......",
+        "......gGg.......",
+        ".......gGgt.....",
+        "......tgGg......",
+        ".....gGGgg......",
+        "....gGgGGGg.....",
+        "...gGg.ggGGg....",
+        "..ggb...bbgg....",
+        "................",
+    ), LEAF, BARK)
+
+
+def amber_beetle():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "....s......s....",
+        ".....s....s.....",
+        "......ssss......",
+        ".....sEssEs.....",
+        "....yyyyyyyy....",
+        "...yYYzYYzYYy...",
+        "..yYzzYYYYzzYy..",
+        "..yYYYYyyYYYYy..",
+        "..yYYYYyyYYYYy..",
+        "...yYYYyyYYYy...",
+        "..s.yyyyyyyy.s..",
+        ".s..s......s..s.",
+        "................",
+    ), AMBER, DUSK)
+
+
+def spore_puffer():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        ".......i........",
+        ".....vvvvv..i...",
+        "....vIIiIIv.....",
+        "...vIiIIIIIv....",
+        "..ivIIEIIEIv....",
+        "...vIIIIIIIv.i..",
+        "...vIiIIIiIv....",
+        "....vIIIIIv.....",
+        ".....vvvvv......",
+        "......b.b.......",
+        ".....bb.bb......",
+        "................",
+    ), SPORE, BARK)
+
+
+def sunken_priest():
+    return draw((
+        "...........R....",
+        "......www..RR...",
+        ".....wAAAw.R....",
+        "....wAEAEAw.W...",
+        "....wAAAAAw.W...",
+        ".....waaaw..W...",
+        "....wAAAAAwAW...",
+        "...wAAaAAAAwW...",
+        "...wAAAaAAAw.W..",
+        "...wAAAAAAAw.W..",
+        "..wAAaAAAAAAwW..",
+        "..wAAAAAaAAAw.W.",
+        "..wAAAAAAAAAw.W.",
+        "..wwwwwwwwwww.b.",
+        "....ww...ww.....",
+        "................",
+    ), SEA, BARK)
+
+
+PAINTERS = (thornling, boar, goblin_archer, goblin_shaman, sapling, treant, moth, cutthroat,
+            bog_toad, drowned, snapjaw, strangler_vine, amber_beetle, spore_puffer,
+            sunken_priest)
 
 
 def slot(i):

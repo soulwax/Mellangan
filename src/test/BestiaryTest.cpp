@@ -13,6 +13,7 @@
 #include "entity/projectile/Orb.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
+#include "level/World.hpp"
 
 namespace {
 
@@ -186,5 +187,101 @@ void testChampionTraits() {
   }
   std::cout << "[TEST] Cursed, silencing, enchanted, stone skin, multishot and aura bearer "
                "traits: PASS"
+            << std::endl;
+}
+
+void testMarchesFoes() {
+  auto water = [](Player &p, double &wx, double &wy) {
+    int px = int(p.x / 16), py = int(p.y / 16);
+    for (int r = 0; r < 400; r++)
+      for (int i = 0; i < 8 * std::max(1, r); i++) {
+        double a = TAU * i / (8 * std::max(1, r));
+        int tx = px + int(std::cos(a) * r), ty = py + int(std::sin(a) * r);
+        if (world::isWater(tx, ty) && world::isWater(tx + 1, ty) && world::isWater(tx, ty + 1)) {
+          wx = tx * 16 + 8, wy = ty * 16 + 8;
+          return true;
+        }
+      }
+    return false;
+  };
+  {
+    Arena a;
+    WildFoe *toad = a.add(EnemyKind::BogToad, 100, 0);
+    a.run(2);
+    double start = toad->x - a.p.x;
+    bool flew = false, chilled = false;
+    for (int i = 0; i < 240 && !chilled; i++) {
+      a.run(1);
+      flew |= toad->z > 4;
+      chilled |= a.p.status.power(StatusKind::Chill) > 0.5f;
+    }
+    assert(flew && chilled && std::abs(toad->x - a.p.x) < start);
+
+    WildFoe *tongue = a.add(EnemyKind::BogToad, 80, 0);
+    a.run(1);
+    double before = tongue->x - a.p.x;
+    tongue->casts->fn(*tongue);
+    assert(tongue->x - a.p.x < before - 10);
+  }
+  {
+    Arena a;
+    a.p.luck = -1;
+    WildFoe *beetle = a.add(EnemyKind::AmberBeetle, 90, 0);
+    a.run(20);
+    assert(beetle->xMark < -0.9);
+    float hp = beetle->hp;
+    beetle->hurt(10, 1, 0, 0);
+    float front = hp - beetle->hp;
+    hp = beetle->hp;
+    beetle->hurt(10, -1, 0, 0);
+    float back = hp - beetle->hp;
+    assert(std::abs(front - 3) < 0.01f && std::abs(back - 13) < 0.01f);
+  }
+  {
+    Arena a;
+    WildFoe *vine = a.add(EnemyKind::StranglerVine, 60, 0);
+    a.run(2);
+    double home = vine->x;
+    a.run(150);
+    assert(std::abs(vine->x - home) < 0.01);
+    assert(a.p.status.power(StatusKind::Chill) > 0 || vine->x - a.p.x < 60);
+  }
+  {
+    Arena a;
+    WildFoe *puffer = a.add(EnemyKind::SporePuffer, 10, 0);
+    entt::entity id = puffer->id;
+    a.run(10);
+    assert(!a.level.get<Enemy>(id));
+  }
+  {
+    Arena a;
+    double wx, wy;
+    WildFoe *dry = a.add(EnemyKind::Drowned, 300, 300);
+    entt::entity dryId = dry->id;
+    assert(water(a.p, wx, wy));
+    {
+      a.run(2);
+      bool landlocked = true;
+      for (int dy = -8; dy <= 8 && landlocked; dy++)
+        for (int dx = -8; dx <= 8; dx++)
+          landlocked &= !world::isWater(int((a.p.x + 300) / 16) + dx, int((a.p.y + 300) / 16) + dy);
+      if (landlocked)
+        assert(!a.level.get<Enemy>(dryId));
+      a.p.x = wx - 200, a.p.y = wy;
+      WildFoe *snap = a.add(EnemyKind::Snapjaw, 200, 0);
+      a.run(2);
+      assert(a.level.get<Enemy>(snap->id) && snap->buried);
+      a.p.x = snap->x - 40, a.p.y = snap->y;
+      for (int i = 0; i < 30 && snap->buried; i++)
+        a.run(1);
+      assert(!snap->buried);
+      WildFoe *priest = a.add(EnemyKind::SunkenPriest, 200, 30);
+      a.run(1);
+      assert(priest->casts && priest->castCount == 1);
+    }
+  }
+  std::cout << "[TEST] Marches foes: toads leap, stun and pull, beetles shrug off the front, "
+               "vines hold their ground and root, puffers burst, the drowned keep to water, "
+               "snapjaws wait beneath it: PASS"
             << std::endl;
 }

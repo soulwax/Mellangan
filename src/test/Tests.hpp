@@ -29,6 +29,7 @@ void testSupportArts();
 void testTalents();
 void testRelicsAndUniques();
 void testGreenwoodFoes();
+void testMarchesFoes();
 void testRunRules();
 void testShapeForms();
 void testChampionTraits();

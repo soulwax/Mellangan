@@ -15,7 +15,7 @@ FungalWood::FungalWood()
               50,
               {5, 10, 25, 20, 40, 0},
               foe(EnemyKind::Slime) | foe(EnemyKind::Spider) |
-                  foe(EnemyKind::Ghost),
+                  foe(EnemyKind::Ghost) | foe(EnemyKind::SporePuffer),
               {{&f::mushroomTree, 10, 140},
                {&f::brownMushrooms, 8, 30},
                {&f::glowshrooms, 6, 20},

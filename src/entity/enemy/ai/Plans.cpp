@@ -7,6 +7,8 @@
 #include "entity/enemy/ai/Falter.hpp"
 #include "entity/enemy/ai/Flank.hpp"
 #include "entity/enemy/ai/Follow.hpp"
+#include "entity/enemy/ai/Guard.hpp"
+#include "entity/enemy/ai/Leap.hpp"
 #include "entity/enemy/ai/Hide.hpp"
 #include "entity/enemy/ai/Howl.hpp"
 #include "entity/enemy/ai/LookOut.hpp"
@@ -56,6 +58,14 @@ const Melee DIVE{0.2f, 0.35f, 3.2, 1.5f};
 const Melee STAB{0.2f, 0.15f, 3.4, 1.2f};
 const Circle ORBIT{60, 2.5f};
 const Mend MEND{150, 4};
+const Approach HOP_RANGE{110, {}};
+const Leap HOP{0.45f, 0.5f, 1.4f, 18};
+const Approach WADE{0, {0.6, 0.3, 1.5, 0, 0, false}};
+const Lurk SNAP{80};
+const Melee LUNGE{0.35f, 0.5f, 5.0, 2.2f};
+const Totem ROOT;
+const Guard SHELL{3.5f, 0.8, 26};
+const Approach DRIFT{0, {0.7, 0.6, 2.5, 0, 0, false}};
 
 const Plan PLANS[] = {
     {{&FLUTTER}, {}},
@@ -97,6 +107,13 @@ const Plan PLANS[] = {
     {{&LUMBER, &SLAM}, {}},
     {{&HOVER, &ORBIT, &DIVE}, {}},
     {{&FLANK, &STAB}, {&FALTER}},
+    {{&HOP_RANGE, &HOP, &NIP}, {&FALTER}},
+    {{&WADE, &BITE}, {}},
+    {{&SNAP, &CHARGE_RANGE, &LUNGE}, {}},
+    {{&ROOT}, {}},
+    {{&SHELL, &BITE}, {&FALTER}},
+    {{&DRIFT}, {}},
+    {{&CASTING_RANGE, &CAST}, {&FALTER}},
 };
 static_assert(sizeof(PLANS) / sizeof(PLANS[0]) == int(EnemyKind::Count));
 

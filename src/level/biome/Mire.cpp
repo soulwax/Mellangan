@@ -15,7 +15,7 @@ Mire::Mire()
              50,
              {5, 15, 15, 25, 40, 0},
              foe(EnemyKind::Slime) | foe(EnemyKind::Spider) |
-                 foe(EnemyKind::Cultist),
+                 foe(EnemyKind::Cultist) | foe(EnemyKind::BogToad),
              {{&f::willow, 14, 200},
               {&f::reeds, 16, 60},
               {&f::mossPine, 6, 90},

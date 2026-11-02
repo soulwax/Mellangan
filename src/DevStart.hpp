@@ -11,9 +11,10 @@ struct DevStart {
       "--biome N starts in biome N, --at X,Y on tile X,Y, --lake at the nearest "
       "lakeshore, --cliff below the nearest cliff, --ramp below the nearest stairs, "
       "--peak on the nearest hilltop, --landmark N by landmark N, --give N puts N random "
-      "items in the bag, --allies N summons N allies, --loot drops loot";
+      "items in the bag, --allies N summons N allies, --foes A,B rings the start with those "
+      "enemy kinds, --loot drops loot";
 
-  std::string arm;
+  std::string arm, foes;
   int hero = -1, biome = -1, landmark = -1, x = 0, y = 0, give = 0, allies = 0;
   bool at = false, lake = false, cliff = false, ramp = false, peak = false;
 

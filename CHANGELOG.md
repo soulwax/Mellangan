@@ -36,6 +36,14 @@ All notable changes to Mellangan are documented here. The format follows
   - Snow Globe, Sun Shard, Bog Heart and Hollow Crown.
   - Grave Dirt, Pilgrim's Staff, Tidecaller and Lantern of Ages.
   - Wanderer's Boots, Star Chart, Thunder Idol and Dawnstone.
+- Seven new foes of the Marches, each with its own sprite:
+  - Bog toads leap onto you and pull you in with their tongues.
+  - The drowned rise from water and chill what they touch.
+  - Snapjaws wait beneath the surface and lunge at the bank.
+  - Strangler vines root and reel in anyone near.
+  - Amber beetles shrug off blows from the front.
+  - Spore puffers burst into poison beside you.
+  - Sunken priests raise the drowned.
 - Twelve named unique items with fixed powers, such as Ember Locket, Pack Banner, Last Light and Bone Dice. Unique drops now roll as real uniques instead of rares.
 
 ### Changed

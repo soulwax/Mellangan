@@ -128,7 +128,21 @@ void Enemy::adopt() {
   }
 }
 
+void Enemy::land() {
+  pounced = false, z = 0;
+  level->add<Shockwave>(x, y, 3, 26, 0.3f, type.blood.alpha(0.8f), false);
+  Player &p = *level->player;
+  double xd = p.x - x, yd = p.y - y;
+  if (!p.dead() && xd * xd + yd * yd < 28 * 28) {
+    p.afflict(StatusKind::Chill, 0.5f, 0.85f);
+    p.felledBy = name();
+    p.hurt(type.damage * damageMul * 0.6f);
+  }
+}
+
 void Enemy::act() {
+  if (pounced)
+    land();
   if (wantsLeader)
     adopt();
   if (!wantsFire)
@@ -272,7 +286,7 @@ void Enemy::tick() {
     float before = p.hp;
     p.hurt(type.damage * damageMul * status.outgoing() * contactBonus(p));
     if (lands)
-      traits.landed(*this, std::max(before - p.hp, maxHp * 0.1f));
+      traits.landed(*this, std::max(before - p.hp, maxHp * 0.1f)), bit(p);
     if (lands && p.bonus.thorns > 0)
       hurt(p.bonus.thorns, x - p.x, y - p.y, 20, nullptr, true);
   }
@@ -380,7 +394,7 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   if (!periodic)
     damage *= status.incoming();
   if (!periodic)
-    damage = traits.incoming(*this, damage);
+    damage = traits.incoming(*this, damage) * shell(xd, yd);
   if (src && !type.floats &&
       level->heightAt(level->player->x, level->player->y) > level->heightAt(x, y))
     damage *= 1.15f;

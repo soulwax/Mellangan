@@ -47,6 +47,13 @@ enum class EnemyKind {
   Treant,
   MothWisp,
   Cutthroat,
+  BogToad,
+  Drowned,
+  Snapjaw,
+  StranglerVine,
+  AmberBeetle,
+  SporePuffer,
+  SunkenPriest,
   Count
 };
 
@@ -82,7 +89,7 @@ public:
   entt::entity leader = entt::null;
   uint32_t seed;
   bool aware = true, wantsFire = false, wantsLeader = false, faltered = false,
-       alarmed = false, buried = false, gilded = false, boss = false;
+       alarmed = false, buried = false, gilded = false, boss = false, pounced = false;
 
   static constexpr float WIND = 0.6f;
 
@@ -110,6 +117,8 @@ public:
   void split() override;
   bool bossLike() const override { return boss || def; }
   virtual float contactBonus(const Player &) const { return 1; }
+  virtual float shell(double, double) const { return 1; }
+  virtual void bit(Player &) {}
   float power() const override { return damageMul * might * status.outgoing(); }
   void aim(double &ax, double &ay) const override;
   const Mob &quarry() const;
@@ -145,6 +154,7 @@ protected:
 
 private:
   void act();
+  void land();
   void onHit(float damage, Upgrade *src);
   void adopt();
   Sense sense() const;

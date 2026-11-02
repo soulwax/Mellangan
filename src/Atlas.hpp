@@ -203,7 +203,9 @@ constexpr Sprite beast(int index) {
 }
 namespace bs {
 constexpr int Thornling = 0, Boar = 1, GoblinArcher = 2, GoblinShaman = 3, Sapling = 4,
-              Treant = 5, MothWisp = 6, Cutthroat = 7;
+              Treant = 5, MothWisp = 6, Cutthroat = 7, BogToad = 8, Drowned = 9,
+              Snapjaw = 10, StranglerVine = 11, AmberBeetle = 12, SporePuffer = 13,
+              SunkenPriest = 14;
 } // namespace bs
 constexpr Sprite biomeGround(int set, int cell) {
   return {float(((set % 2) * 12 + cell) * 18 + 1),
