@@ -126,7 +126,7 @@ public:
   void tick(RecipeShot &s, Mob &p, float speed) const override;
   void render(RecipeShot &s, Screen &screen) const override;
   void light(RecipeShot &s, Screen &screen) const override;
-  float knock() const override { return 20; }
+  float knock() const override { return 0; }
 };
 
 class SummonForm : public FormBehavior {

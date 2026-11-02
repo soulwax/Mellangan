@@ -18,7 +18,7 @@ public:
   Traits traits;
   double xAim = 1, yAim = 0;
   float invuln = 0, speed = 74, might = 1, haste = 1, magnet = 28, armor = 0,
-        regen = 0, luck = 0, heroTimer = 0, skillTime = 0, knifeCooldown = 0;
+        regen = 0, luck = 0, arcs = 1, heroTimer = 0, skillTime = 0, knifeCooldown = 0;
   int heroCount = 0;
   std::vector<std::unique_ptr<Upgrade>> upgrades;
   ItemStats bonus;

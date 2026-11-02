@@ -26,7 +26,7 @@ public:
   int kind, count;
   float age = 0, damage, reach, pulse = 0;
   double ox, oy, dx, dy;
-  bool returning = false;
+  bool returning = false, landed = false;
   std::vector<entt::entity> hits;
 
 private:
@@ -38,6 +38,11 @@ private:
   void born();
   void trail();
   void blast();
+  bool evolved() const;
+  void spend();
+  void burst(double bx, double by, float r, float k);
+  void converge(float r);
+  void crater();
   void impact(Mob &e);
   void renderBolt(Screen &s, Color c) const;
 };

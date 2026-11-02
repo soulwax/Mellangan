@@ -23,41 +23,52 @@ struct Def {
   Color tint;
   Shape shape;
   float reachBase, reachStep, life, speed, pulse;
+  const char *partner, *evolved;
 };
+
+constexpr float LANDING = 0.6f, CRATER = 2.5f;
 
 const Def DEFS[Count] = {
     {"Ricochet Sling",
      {"Stones bounce between two foes", "+8 stone damage", "+1 ricochet",
       "25% faster firing", "+12 damage, +1 ricochet"},
-     16, 8, 12, 1.3f, {0.9f, 0.75f, 0.5f, 1}, Bolt, 130, 50, 2.5f, 240, 10},
+     16, 8, 12, 1.3f, {0.9f, 0.75f, 0.5f, 1}, Bolt, 130, 50, 2.5f, 240, 10,
+     "Lodestone", "Meteor Sling"},
     {"Harpoon",
      {"Piercing harpoons pull and mark foes", "+12 damage", "+1 piercing hit",
       "25% faster firing", "+16 damage, stronger pull"},
-     24, 12, 16, 2.2f, {0.5f, 0.85f, 1, 1}, Bolt, 130, 50, 2.5f, 320, 10},
+     24, 12, 16, 2.2f, {0.5f, 0.85f, 1, 1}, Bolt, 130, 50, 2.5f, 320, 10,
+     "Sea Legs", "Leviathan Harpoon"},
     {"Ground Sigil",
      {"A ground rune pulses and chills foes", "+4 pulse damage", "+18 rune radius",
       "25% faster casting", "+6 damage, longer chill"},
-     8, 4, 6, 3.5f, {0.55f, 0.65f, 1, 1}, Area, 38, 18, 3.0f, 0, 0.6f},
+     8, 4, 6, 3.5f, {0.55f, 0.65f, 1, 1}, Area, 38, 18, 3.0f, 0, 0.6f,
+     "Farsight", "Astral Sigil"},
     {"Boomerang",
-     {"A curved blade returns for a second hit", "+10 damage", "+50 flight reach",
+     {"A blade marks foes and bursts where it turns", "+10 damage", "+50 flight reach",
       "25% faster throwing", "+14 damage, +1 blade"},
-     18, 10, 14, 2.4f, {1, 0.8f, 0.45f, 1}, Bolt, 130, 50, 2.5f, 240, 10},
+     18, 10, 14, 2.4f, {1, 0.8f, 0.45f, 1}, Bolt, 130, 50, 2.5f, 240, 10,
+     "Quicksilver", "Twin Crescent"},
     {"Mortar",
-     {"Lobs a delayed explosive at a foe", "+18 blast damage", "+18 blast radius",
-      "25% faster loading", "+24 damage, +1 shell"},
-     36, 18, 24, 3.0f, {1, 0.5f, 0.2f, 1}, Area, 38, 18, 0.7f, 0, 10},
+     {"Lobs a shell that staggers and leaves a crater", "+18 blast damage",
+      "+18 blast radius", "25% faster loading", "+24 damage, +1 shell"},
+     36, 18, 24, 3.0f, {1, 0.5f, 0.2f, 1}, Area, 38, 18, LANDING + CRATER, 0, 0.3f,
+     "Fine Gearing", "Siege Battery"},
     {"Thorn Lash",
      {"A thorn whip poisons foes in a line", "+10 lash damage", "+35 lash reach",
       "25% faster lashing", "+14 damage, stronger poison"},
-     22, 10, 14, 1.8f, {0.45f, 1, 0.4f, 1}, Line, 80, 35, 0.3f, 0, 10},
+     22, 10, 14, 1.8f, {0.45f, 1, 0.4f, 1}, Line, 80, 35, 0.3f, 0, 10,
+     "Deep Roots", "Worldvine Lash"},
     {"Prism Beam",
      {"A fixed prism ray cuts through crowds", "+4 ray damage", "+60 beam reach",
       "25% faster channeling", "+6 damage, wider beam"},
-     7, 4, 6, 2.8f, {0.8f, 0.5f, 1, 1}, Line, 160, 60, 0.65f, 0, 0.2f},
+     7, 4, 6, 2.8f, {0.8f, 0.5f, 1, 1}, Line, 160, 60, 0.65f, 0, 0.2f,
+     "Lucky Key", "Spectrum Lance"},
     {"Spirit Swarm",
-     {"Two spirits seek and mark nearby foes", "+6 spirit damage", "+1 spirit",
+     {"Spirits mark foes, then drag the marked together", "+6 spirit damage", "+1 spirit",
       "25% faster summoning", "+10 damage, +1 spirit"},
-     12, 6, 10, 2.7f, {0.5f, 1, 0.9f, 1}, Bolt, 130, 50, 2.5f, 135, 10},
+     12, 6, 10, 2.7f, {0.5f, 1, 0.9f, 1}, Bolt, 130, 50, 2.5f, 135, 10,
+     "Heartroot", "Ancestor Host"},
 };
 
 int clampKind(int kind) { return std::clamp(kind, 0, Count - 1); }
@@ -67,7 +78,9 @@ int clampKind(int kind) { return std::clamp(kind, 0, Count - 1); }
 ExpansionWeapon::ExpansionWeapon(int kind)
     : Upgrade(DEFS[clampKind(kind)].name, atlas::expansion(14 + clampKind(kind)),
               DEFS[clampKind(kind)].desc, true),
-      kind(clampKind(kind)) {}
+      kind(clampKind(kind)) {
+  partner = DEFS[this->kind].partner, evolvedName = DEFS[this->kind].evolved;
+}
 
 void ExpansionWeapon::tick(Mob &p) {
   if ((cd -= DT) > 0 || p.dead())
@@ -87,16 +100,20 @@ void ExpansionWeapon::tick(Mob &p) {
   if (len < 0.001)
     dx = p.facing, dy = 0, len = 1;
   dx /= len, dy /= len;
-  int n = kind == Swarm                          ? 2 + at(level, 3) + at(level, 5)
-          : kind == Boomerang || kind == Mortar ? 1 + at(level, 5)
-                                                : 1;
-  int count = kind == Sling     ? 2 + at(level, 3) + at(level, 5)
-              : kind == Harpoon ? 2 + at(level, 3)
+  int ev = evolved;
+  int n = kind == Swarm       ? 2 + at(level, 3) + at(level, 5) + 2 * ev
+          : kind == Boomerang ? 1 + at(level, 5) + ev
+          : kind == Mortar    ? 1 + at(level, 5) + 2 * ev
+          : kind == Lash      ? 1 + ev
+          : kind == Prism     ? 1 + 2 * ev
+                              : 1;
+  int count = kind == Sling     ? 2 + at(level, 3) + at(level, 5) + ev
+              : kind == Harpoon ? 2 + at(level, 3) + 2 * ev
                                 : 1 + at(level, 5);
   for (int i = 0; i < n; i++) {
-    double a = std::atan2(dy, dx) + (i - (n - 1) * 0.5) * 0.25;
+    double a = std::atan2(dy, dx) + (kind == Lash ? i * PI : (i - (n - 1) * 0.5) * 0.25);
     double x = p.x, y = p.bodyY();
-    if (d.shape == Area) {
+    if (d.shape == Area && !(kind == Sigil && evolved)) {
       x += dx * std::min(len, 150.0);
       y += dy * std::min(len, 150.0);
       if (i > 0)
@@ -141,15 +158,16 @@ void ExpansionAttack::steer(double tx, double ty) {
 void ExpansionAttack::strike(Mob &e) {
   hits.push_back(e.id);
   impact(e);
-  if (kind == Harpoon || kind == Swarm)
+  if (kind == Harpoon || kind == Swarm || (kind == Boomerang && !returning))
     e.afflict(StatusKind::Marked, 2.0f, kind == Harpoon ? 0.2f : 0.1f, source);
   if (kind == Sigil)
     e.afflict(StatusKind::Chill, 0.8f + 0.4f * (count - 1), 0.25f, source);
   if (kind == Lash)
     e.afflict(StatusKind::Poison, 2.0f, damage * 0.2f * count, source);
   if (kind == Mortar)
-    e.afflict(StatusKind::Burn, 1.5f, damage * 0.12f, source);
-  e.strike(damage, dx, dy, kind == Harpoon ? -110.0f * count : 30.0f, source);
+    e.afflict(StatusKind::Chill, 0.6f, 0.65f, source);
+  float force = kind == Harpoon ? -110.0f * count : kind == Mortar ? 150.0f : 30.0f;
+  e.strike(damage, dx, dy, force, source);
 }
 
 void ExpansionAttack::sweep(bool area, bool line, Mob *&bounced) {
@@ -173,8 +191,10 @@ void ExpansionAttack::sweep(bool area, bool line, Mob *&bounced) {
     strike(e);
     if (kind == Sling)
       bounced = &e;
+    if (kind == Sling && evolved())
+      burst(e.x, e.bodyY(), 26, 0.5f);
     if ((kind == Sling || kind == Harpoon || kind == Swarm) && --count <= 0)
-      remove();
+      spend();
   });
 }
 
@@ -187,14 +207,19 @@ void ExpansionAttack::tick() {
   age += DT;
   const Def &d = DEFS[kind];
   if (age >= d.life)
-    return remove();
+    return spend();
   trail();
   bool area = d.shape == Area, line = d.shape == Line;
-  if (kind == Mortar && age < 0.6f)
+  if (kind == Mortar && age < LANDING)
     return;
+  if (kind == Mortar && landed)
+    return crater();
+  if (kind == Sigil && evolved())
+    x = p.x, y = p.y;
   if (kind == Boomerang && !returning && age >= reach / 240) {
     returning = true;
     hits.clear();
+    burst(x, y, 34 + (evolved() ? 16 : 0), 1);
   }
   if (kind == Boomerang && returning) {
     if (std::hypot(p.x - x, p.bodyY() - y) < 15)
@@ -224,10 +249,53 @@ void ExpansionAttack::tick() {
       return remove();
     steer(target->x, target->bodyY());
   }
-  if (kind == Mortar) {
-    blast();
-    remove();
-  }
+  if (kind == Mortar)
+    blast(), landed = true;
+}
+
+bool ExpansionAttack::evolved() const { return source && source->evolved; }
+
+void ExpansionAttack::spend() {
+  if (kind == Swarm && !removed)
+    converge(evolved() ? 110 : 75);
+  remove();
+}
+
+void ExpansionAttack::burst(double bx, double by, float r, float k) {
+  Color c = DEFS[kind].tint;
+  level->add<Shockwave>(bx, by, 3, r, 0.3f, c);
+  if (Spark::alive < 600)
+    Spark::burst(*level, bx, by, c, 6, r * 2, true);
+  level->foes(source && source->hostile(), bx, by, r + 16, [&](Mob &e) {
+    double ex = e.x - bx, ey = e.bodyY() - by;
+    float rr = r + e.radius;
+    if (ex * ex + ey * ey >= rr * rr)
+      return;
+    float marked = e.status.power(StatusKind::Marked) > 0 ? 1.6f : 1.0f;
+    e.strike(damage * k * marked, ex, ey, 60, source);
+  });
+}
+
+void ExpansionAttack::converge(float r) {
+  level->add<Shockwave>(x, y, r, 4, 0.35f, DEFS[kind].tint.alpha(0.7f), false);
+  level->foes(source && source->hostile(), x, y, r + 16, [&](Mob &e) {
+    double ex = e.x - x, ey = e.bodyY() - y;
+    if (ex * ex + ey * ey >= double(r) * r || e.status.power(StatusKind::Marked) <= 0)
+      return;
+    e.strike(damage * 0.3f, ex, ey, -120, source);
+  });
+}
+
+void ExpansionAttack::crater() {
+  if ((pulse -= DT) > 0)
+    return;
+  pulse = DEFS[kind].pulse;
+  level->foes(source && source->hostile(), x, y, reach + 16, [&](Mob &e) {
+    double ex = e.x - x, ey = e.bodyY() - y;
+    float rr = reach + e.radius;
+    if (ex * ex + ey * ey < rr * rr)
+      e.afflict(StatusKind::Chill, 0.5f, evolved() ? 0.45f : 0.3f, source);
+  });
 }
 
 void ExpansionAttack::born() {
@@ -269,8 +337,8 @@ void ExpansionAttack::trail() {
   } else if (kind == Swarm && rng.chance(0.6f) && Spark::alive < 600) {
     level->add<Spark>(x, y, -dx * 20 + rng.range(-8, 8),
                       -dy * 20 - rng.range(4, 12), c, 0.35f, 0.4f, false);
-  } else if (kind == Mortar && age < 0.6f && rng.chance(0.6f) && Drift::room()) {
-    float k = age / 0.6f;
+  } else if (kind == Mortar && age < LANDING && rng.chance(0.6f) && Drift::room()) {
+    float k = age / LANDING;
     Drift *d = level->add<Drift>(x + 40 * (1 - k), y - 120 * (1 - k * k), 0, -6,
                                  atlas::pt::Puff, Color{0.6f, 0.55f, 0.5f, 0.45f},
                                  0.5f);
@@ -350,7 +418,13 @@ void ExpansionAttack::render(Screen &s) {
     break;
   }
   case Mortar: {
-    float k = std::min(1.0f, age / 0.6f);
+    float k = std::min(1.0f, age / LANDING);
+    if (landed) {
+      float fade = std::min(1.0f, (DEFS[kind].life - age) * 2);
+      s.ring(xp, yp, reach, Color{0.55f, 0.4f, 0.3f, 0.45f * fade});
+      s.ring(xp, yp, reach * 0.6f, Color{0.45f, 0.32f, 0.25f, 0.3f * fade});
+      break;
+    }
     s.ring(xp, yp, reach * (1.5f - 0.5f * k), col::gold.alpha(0.3f + 0.5f * k));
     if (k < 1) {
       s.sprite(atlas::Shadow, xp, yp + 1, 8, 4, 0.5f + k, 0.5f + 0.6f * k);

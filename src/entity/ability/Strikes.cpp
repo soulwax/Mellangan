@@ -193,7 +193,7 @@ void chain(Mob &caster, int jumps, float reach, float damage) {
     Mob &foe = **next;
     targets.erase(next);
     path.push_back({foe.x, foe.bodyY()});
-    foe.strike(damage * caster.power(), foe.x - caster.x, foe.y - caster.y, 60);
+    foe.strike(damage * caster.power() * caster.arcs, foe.x - caster.x, foe.y - caster.y, 60);
     Spark::burst(level, foe.x, foe.bodyY(), STORM, 5, 70, false);
   }
   level.add<Arc>(std::move(path), 0.3f, STORM);

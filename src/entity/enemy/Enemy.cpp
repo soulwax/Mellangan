@@ -351,7 +351,7 @@ void Enemy::onHit(float damage, Upgrade *src) {
       if (o != this && !o->removed) {
         level->add<Arc>(std::vector<ArcNode>{{x, bodyY()}, {o->x, o->bodyY()}}, 0.2f,
                         Color{0.6f, 0.8f, 1, 1});
-        o->hurt(damage * 0.5f, o->x - x, o->y - y, 0, nullptr, true);
+        o->hurt(damage * 0.5f * p.arcs, o->x - x, o->y - y, 0, nullptr, true);
         break;
       }
 }

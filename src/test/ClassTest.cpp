@@ -57,7 +57,7 @@ void testClassKits() {
     for (const Hero *h : HEROES) {
       int weapons = 0, skills = 0, kin = 0;
       for (const Recipe &r : RECIPES)
-        weapons += std::strcmp(r.owner, h->name) == 0;
+        weapons += r.owner && std::strcmp(r.owner, h->name) == 0;
       for (auto &u : p.upgrades) {
         if (!u->owner || std::strcmp(u->owner, h->name) != 0)
           continue;

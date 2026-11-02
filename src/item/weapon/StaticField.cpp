@@ -24,7 +24,7 @@ void StaticField::tick(Mob &p) {
     return;
   cd = (level >= 4 ? 0.8f : 1.1f) * p.haste * pace;
   float r = 50.0f + 12 * (at(level, 3) + at(level, 5)),
-        dmg = (6.0f + 3 * (at(level, 2) + at(level, 5))) * p.might * power;
+        dmg = (6.0f + 3 * (at(level, 2) + at(level, 5))) * p.might * power * p.arcs;
   int arcs = 0;
   p.level->foes(p, p.x, p.y, r + 24, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();

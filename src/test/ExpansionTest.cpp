@@ -10,6 +10,8 @@
 #include <set>
 #include <filesystem>
 #include "Game.hpp"
+#include "entity/Ability.hpp"
+#include "entity/enemy/Enemy.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
 #include "item/relic/ExpansionRelics.hpp"
@@ -111,6 +113,88 @@ void weapons() {
   assert(mirror.cd>0);
 }
 
+Enemy *knight(Level &l, double x, double y) {
+  auto e = Enemy::create(EnemyKind::Knight, 30, 1);
+  Enemy *raw = e.get();
+  raw->x = x, raw->y = y;
+  l.add(std::move(e));
+  return raw;
+}
+
+void evolutions() {
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &l = *game.level;
+    Player &p = *l.player;
+    p.god = true;
+    for (auto &u : p.upgrades)
+      u->level = 0;
+    for (int k = 0; k < xw::Count; k++) {
+      ExpansionWeapon w(k);
+      assert(w.partner && w.evolvedName && p.upgrade(w.partner));
+    }
+    for (int i = 0; i < 8; i++)
+      knight(l, p.x + std::cos(TAU * i / 8) * 60, p.y + std::sin(TAU * i / 8) * 60);
+    for (auto &u : p.upgrades)
+      if (auto *w = dynamic_cast<ExpansionWeapon *>(u.get())) {
+        while (!w->maxed())
+          w->levelUp(p);
+        w->evolve();
+        assert(std::string(w->name) == w->evolvedName);
+      }
+    for (int i = 0; i < 240; i++)
+      l.tick();
+    for (auto &u : p.upgrades)
+      if (auto *w = dynamic_cast<ExpansionWeapon *>(u.get()))
+        assert(w->dealt > 0);
+    game.level.reset();
+  }
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &l = *game.level;
+    Player &p = *l.player;
+    p.god = true;
+    for (auto &u : p.upgrades)
+      u->level = 0;
+    Enemy *a = knight(l, p.x + 80, p.y), *b = knight(l, p.x + 80, p.y + 40);
+    Enemy *c = knight(l, p.x + 200, p.y + 20);
+    l.tick();
+    Upgrade *mortar = p.grant("Mortar", 1);
+    auto *shell = l.add<ExpansionAttack>(xw::Mortar, a->x, a->y - 7, 1, 0, 10, 40, 1);
+    shell->source = mortar;
+    bool chilled = false;
+    for (int i = 0; i < 90; i++) {
+      l.tick();
+      assert(a->status.power(StatusKind::Burn) <= 0);
+      chilled |= i > 50 && a->status.power(StatusKind::Chill) > 0;
+    }
+    assert(chilled && a->hp < a->maxHp);
+
+    Upgrade *swarm = p.grant("Spirit Swarm", 1);
+    a->afflict(StatusKind::Marked, 3, 0.1f), b->afflict(StatusKind::Marked, 3, 0.1f);
+    float ha = a->hp, hb = b->hp, hc = c->hp;
+    auto *spirit = l.add<ExpansionAttack>(xw::Swarm, a->x, a->y + 20, 1, 0, 10, 60, 1);
+    spirit->source = swarm, spirit->age = 2.49f;
+    l.tick();
+    l.tick();
+    assert(a->hp < ha && b->hp < hb && c->hp == hc);
+
+    p.luck = -1;
+    auto total = [&] { return a->hp + b->hp + c->hp; };
+    float before = total();
+    ability::chain(p, 1, 400, 10);
+    float plain = before - total();
+    p.grant("Conduit", 1);
+    assert(plain > 0 && std::abs(p.arcs - 1.15f) < 1e-4f);
+    before = total();
+    ability::chain(p, 1, 400, 10);
+    assert(std::abs((before - total()) / plain - 1.15f) < 0.01f);
+    game.level.reset();
+  }
+}
+
 void heroesAndShrines() {
   for (int i=8;i<12;i++) {
     Game game;
@@ -157,6 +241,7 @@ void testExpansionContent() {
   biomes();
   codex();
   weapons();
+  evolutions();
   heroesAndShrines();
-  std::cout << "[TEST] Expansion registries, weapons, relics, heroes, shrine choices and save compatibility: PASS" << std::endl;
+  std::cout << "[TEST] Expansion registries, weapons and their evolutions, relics, heroes, shrine choices and save compatibility: PASS" << std::endl;
 }

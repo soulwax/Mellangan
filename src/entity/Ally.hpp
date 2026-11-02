@@ -3,6 +3,8 @@
 #include "entity/Mob.hpp"
 #include "entity/enemy/Enemy.hpp"
 
+struct Recipe;
+
 enum class AllyKind { Wolf, Hawk, Ghoul, Skeleton, Drone, Crew, Decoy, Count };
 
 struct AllyDef {
@@ -11,7 +13,7 @@ struct AllyDef {
   float hp, speed, every, reach, life, scale;
   bool flies, lure;
   Color tint;
-  const char *kit;
+  const Recipe *shot;
 };
 
 const AllyDef &allyDef(AllyKind kind);
@@ -38,6 +40,7 @@ private:
   Mob *pick() const;
   void stride(double tx, double ty, float pace);
   void bitten();
+  void blast(const Mob &at);
 };
 
 Ally *summon(Level &level, AllyKind kind, double x, double y, float damage, float life,

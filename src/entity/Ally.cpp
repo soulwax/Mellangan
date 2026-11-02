@@ -5,23 +5,27 @@
 #include "entity/Player.hpp"
 #include "item/weapon/Recipe.hpp"
 #include "level/Level.hpp"
+#include "particle/Shockwave.hpp"
 #include "particle/Spark.hpp"
 
 namespace {
 
 using K = EnemyKind;
 
+const Recipe DRONE_BOLT{"Drone Bolt", nullptr, "", "bolt", 50, Form::Bolt, pay::Pierce, 0, 1,
+                        180, 300, 1, {1, 0.8f, 0.45f, 1}, atlas::pt::Coin};
+
 const AllyDef ALLIES[] = {
     {"wolf", "Wolf Totem", K::Wolf, 40, 96, 0.7f, 8, 12, 0.9f, false, false,
      {0.75f, 0.85f, 1, 1}, nullptr},
-    {"hawk", "Hawk Companion", K::DustVulture, 20, 140, 0.5f, 6, 10, 0.8f, true, false,
+    {"hawk", "Hawk Companion", K::DustVulture, 35, 140, 0.5f, 6, 10, 0.8f, true, false,
      {0.95f, 0.85f, 0.6f, 1}, nullptr},
-    {"ghoul", "Ghoul Pack", K::Skeleton, 50, 70, 0.8f, 8, 14, 1, false, false,
+    {"ghoul", "Ghoul Pack", K::Skeleton, 60, 88, 0.8f, 8, 14, 1, false, false,
      {0.6f, 0.9f, 0.55f, 1}, nullptr},
     {"skeleton", "Raise Dead", K::Skeleton, 30, 74, 0.9f, 8, 10, 1, false, false,
      {0.85f, 0.85f, 1, 1}, nullptr},
-    {"drone", "Clockwork Drone", K::BogLantern, 30, 90, 0, 0, 15, 0.8f, true, false,
-     {1, 0.8f, 0.45f, 1}, "Arcane Staff"},
+    {"drone", "Clockwork Drone", K::BogLantern, 30, 90, 0.8f, 90, 15, 0.8f, true, false,
+     {1, 0.8f, 0.45f, 1}, &DRONE_BOLT},
     {"crew", "Powder Crew", K::Outlaw, 45, 70, 1.0f, 10, 12, 1, false, false,
      {0.9f, 0.75f, 0.6f, 1}, nullptr},
     {"decoy", "Mirror Image", K::Knight, 60, 0, 0, 0, 4, 1, false, true,
@@ -56,11 +60,7 @@ Ally::Ally(AllyKind kind, double x, double y, float damage, float life, unsigned
   animT = rng.range(0, 10);
 }
 
-void Ally::onAdded() {
-  level->tag(this);
-  if (def.kit)
-    grant(def.kit, 1);
-}
+void Ally::onAdded() { level->tag(this); }
 
 Mob *Ally::pick() const {
   if (def.lure)
@@ -109,22 +109,37 @@ void Ally::tick() {
   if (Mob *foe = pick()) {
     double xd = foe->x - x, yd = foe->y - y, d = std::max(1e-3, std::sqrt(xd * xd + yd * yd));
     xAim = xd / d, yAim = yd / d;
-    double close = def.kit ? 70 : def.reach + foe->radius + radius;
+    double close = def.reach + foe->radius + radius;
     if (d > close)
       stride(foe->x - xAim * close * 0.8, foe->y - yAim * close * 0.8, def.speed);
     else
       xa = ya = 0;
-    if (!def.kit && d <= close && bite <= 0) {
+    if (d <= close && bite <= 0 && def.shot) {
+      level->add<RecipeShot>(*def.shot, x, bodyY(), xAim, yAim, damage, def.shot->reach)
+          ->source = source;
+      bite = def.every;
+    } else if (d <= close && bite <= 0) {
       landHit(payload, *foe, xAim, yAim, damage, 40, source, this);
+      if (payload & pay::Explode)
+        blast(*foe);
       bite = def.every;
     }
   } else {
-    double a = slot * 2.39996 + age * 0.6;
-    stride(p.x + std::cos(a) * HOME, p.y + std::sin(a) * HOME * 0.7, def.speed * 1.2f);
+    double a = slot * 2.39996 + age * 0.6, home = HOME + slot % 4 * 12;
+    stride(p.x + std::cos(a) * home, p.y + std::sin(a) * home * 0.7, def.speed * 1.2f);
   }
-  if (!upgrades.empty())
-    tickKit();
-  bitten();
+  if (!def.flies)
+    bitten();
+}
+
+void Ally::blast(const Mob &at) {
+  double bx = at.x, by = at.y;
+  level->add<Shockwave>(bx, at.bodyY(), 3, 26, 0.3f, def.tint);
+  level->enemiesNear(bx, by, 40, [&](Enemy &e) {
+    double xd = e.x - bx, yd = e.y - by;
+    if (xd * xd + yd * yd < 26 * 26 && &e != &at)
+      e.hurt(damage * 0.5f, xd, yd, 60, source);
+  });
 }
 
 void Ally::bitten() {

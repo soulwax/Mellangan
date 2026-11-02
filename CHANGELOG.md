@@ -8,7 +8,28 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
-- Allies: wolves, hawks, ghouls, skeletons, clockwork drones, powder crews and decoys can fight beside you. They chase foes near you, apply their weapon's effects, take hits, and fade when their time runs out. Foes turn on allies that come close, and decoys draw them away from you. Your attacks never hurt allies. No weapon summons them yet; `--allies N` brings a pack in dev runs.
+- Allies: wolves, hawks, ghouls, skeletons, clockwork drones, powder crews and decoys can fight beside you. They chase foes near you, apply their weapon's effects, take hits, and fade when their time runs out. Foes turn on allies that come close, and decoys draw them away from you. Your attacks never hurt allies. Wolf Totem, Hawk Companion, Ghoul Pack, Clockwork Drone and Powder Crew summon them; `--allies N` brings a mixed pack in dev runs.
+- Twelve new weapons any class can draft, each with its own icon and evolution:
+  - Bloodletter Fan, Hex Whip, Bone Spear and Thunder Drum.
+  - Frost Lantern, Rot Bellows, Grave Bell and Tidal Ring.
+  - Ember Wall, Sky Lance, Wolf Totem and Mirror Shards.
+- A third signature weapon for every class, each with its own icon and evolution:
+  - Mage: Runic Wall. Ranger: Hawk Companion. Knight: Shield Wall. Alchemist: Philosopher's Spiral.
+  - Stormcaller: Storm Whip. Reaper: Ghoul Pack. Priestess: Sun Spiral. Duelist: Riposte Whip.
+  - Warden: Bramble Wall. Tinkerer: Clockwork Drone. Oracle: Fate Spiral. Corsair: Powder Crew.
+
+### Changed
+
+- Stagger no longer knocks foes away from walls, so wall weapons keep holding and hurting them.
+- The eight expansion weapons now evolve:
+  - Meteor Sling, Leviathan Harpoon, Astral Sigil and Twin Crescent.
+  - Siege Battery, Worldvine Lash, Spectrum Lance and Ancestor Host.
+
+  Each evolved form has its own twist: bursting bounces, a rune that rides with you, a lash that cracks both ways, a fan of three beams and more.
+- Boomerang marks what it hits and bursts where it turns, hitting marked foes harder.
+- Spirit Swarm spirits drag the foes they marked together when they fade.
+- Mortar shells stagger instead of burning and leave a crater that slows foes.
+- Conduit now gives +15% chain and arc damage instead of a second copy of Keen Eye.
 
 ## [0.5.15] - 2026-11-01
 

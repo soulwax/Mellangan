@@ -46,7 +46,7 @@ void landHit(unsigned p, Mob &e, double xd, double yd, float dmg, float knock,
   if (p & pay::Mark)
     e.afflict(StatusKind::Marked, 2.5f, 0.15f, source);
   if (p & pay::Stagger)
-    e.afflict(StatusKind::Chill, 0.5f, 0.65f, source), knock += 120;
+    e.afflict(StatusKind::Chill, 0.5f, 0.65f, source), knock += knock > 0 ? 120 : 0;
   if (p & pay::Bleed)
     e.afflict(StatusKind::Bleed, 3.0f, dmg * 0.15f, source);
   if (p & pay::Weaken)
@@ -66,7 +66,8 @@ void RecipeShot::chain(Mob &from) {
   for (Mob *e : level->nearestFoes(hostile(), from.x, from.y, 90, 4))
     if (e != &from && !hitBefore(e->id)) {
       hits.push_back(e->id);
-      hit(*e, e->x - from.x, e->y - from.y, damage * 0.5f, 30);
+      Mob *w = wielder();
+      hit(*e, e->x - from.x, e->y - from.y, damage * 0.5f * (w ? w->arcs : 1), 30);
       level->add<Arc>(std::vector<ArcNode>{{from.x, from.bodyY()}, {e->x, e->bodyY()}},
                       0.2f, r.tint);
       return;

@@ -26,7 +26,7 @@ void ChainLightning::tick(Mob &p) {
   if (targets.empty())
     return void(cd = 0.2f);
   cd = (level >= 4 ? 1.4f : 1.8f) * p.haste * pace;
-  float dmg = (26.0f + 8 * at(level, 5)) * p.might * power;
+  float dmg = (26.0f + 8 * at(level, 5)) * p.might * power * p.arcs;
   std::vector<ArcNode> chain{{p.x, p.bodyY()}};
   while (!targets.empty()) {
     auto next = std::min_element(targets.begin(), targets.end(),

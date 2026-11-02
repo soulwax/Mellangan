@@ -21,7 +21,8 @@ void Aura::strikeOne() {
   if (near.empty())
     return;
   Mob &e = *near[rng.irange(0, int(near.size()) - 1)];
-  e.strike(d.bolt, e.x - x, e.y - y, 50);
+  Mob *o = level->mob(owner);
+  e.strike(d.bolt * (o ? o->arcs : 1), e.x - x, e.y - y, 50);
   e.afflict(StatusKind::Chill, 0.4f, 0.4f);
   level->add<Arc>(std::vector<ArcNode>{{e.x + rng.range(-10, 10), e.bodyY() - 70},
                                        {e.x, e.bodyY()}},
