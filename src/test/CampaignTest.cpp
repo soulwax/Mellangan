@@ -163,7 +163,7 @@ void testCampaign() {
 
   q.x = second.xTown + 40, q.y = second.yTown;
   again.campaign = std::make_unique<Campaign>(second);
-  again.campaign->chest = second.chest;
+  again.campaign->chests = second.chests;
   assert(Stash::near(*again.level));
   q.hp = 0;
   second.fall(*again.level);

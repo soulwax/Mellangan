@@ -46,6 +46,7 @@ void testCampaign();
 void testSkillTrees();
 void testGathering();
 void testQuests();
+void testDelves();
 void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();

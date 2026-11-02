@@ -35,6 +35,10 @@ void DevStart::parse(int argc, char **argv) {
       mats = std::atoi(argv[++i]);
     else if (a == "--named" && more)
       named = std::atoi(argv[++i]);
+    else if (a == "--act" && more)
+      act = std::atoi(argv[++i]);
+    else if (a == "--delve")
+      delve = true;
     else if (a == "--allies" && more)
       allies = std::atoi(argv[++i]);
     else if (a == "--landmark" && more)

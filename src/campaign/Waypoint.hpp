@@ -2,6 +2,8 @@
 
 #include "entity/Entity.hpp"
 
+class Level;
+
 class Waypoint : public Entity {
 public:
   static constexpr float REACH = 22;
@@ -15,4 +17,6 @@ public:
 
   float t = 0;
   bool inside = true;
+
+  static Waypoint *near(Level &level);
 };

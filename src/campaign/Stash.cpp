@@ -21,10 +21,14 @@ void Stash::renderShadow(Screen &s) {
 Stash *Stash::near(Level &level) {
   if (!level.game.campaign)
     return nullptr;
-  Stash *b = level.get<Stash>(level.game.campaign->chest);
   Player &p = *level.player;
-  if (!b || p.dead())
+  if (p.dead())
     return nullptr;
-  double xd = b->x - p.x, yd = b->y - p.y;
-  return xd * xd + yd * yd < REACH * REACH ? b : nullptr;
+  for (entt::entity id : level.game.campaign->chests)
+    if (Stash *b = level.get<Stash>(id)) {
+      double xd = b->x - p.x, yd = b->y - p.y;
+      if (xd * xd + yd * yd < REACH * REACH)
+        return b;
+    }
+  return nullptr;
 }

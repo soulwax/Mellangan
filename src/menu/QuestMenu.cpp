@@ -47,7 +47,9 @@ void QuestMenu::tick() {
   }
   if (!in.confirm.clicked || t < 0.2f)
     return;
-  if (c.stage == QuestStage::Offered)
+  if (c.stage == QuestStage::Done)
+    c.awaken(*game.level);
+  else if (c.stage == QuestStage::Offered)
     quests::accept(*game.level, c);
   else if (c.stage == QuestStage::Ready)
     quests::turnIn(*game.level, c);
@@ -63,13 +65,15 @@ void QuestMenu::render(Screen &s) {
   float w = 300 * u, h = 150 * u, x0 = (s.w - w) / 2, y0 = (s.h - h) / 2;
   s.rect(x0, y0, w, h, {0.04f, 0.04f, 0.08f, 0.94f * in});
   s.bracket(x0, y0, w, h, u);
-  s.text("ELDER MAREN", x0 + 12 * u, y0 + 8 * u, small, col::muted.alpha(in));
-  std::string title = q ? q->title : "Act I";
-  std::string body = !q                          ? "You have done all I could ask. Rest, and look south."
+  s.text(quests::act(c).elder, x0 + 12 * u, y0 + 8 * u, small, col::muted.alpha(in));
+  std::string title = q && c.stage != QuestStage::Road ? q->title : quests::act(c).town;
+  std::string body = c.stage == QuestStage::Road ? quests::status(c)
+                     : !q ? "It is over. The dark is broken, and the shrines will hold."
                      : c.stage == QuestStage::Offered ? q->offer
                      : c.stage == QuestStage::Ready   ? q->thanks
                                                  : quests::status(c);
-  std::string action = !q                          ? "Esc close"
+  std::string action = c.stage == QuestStage::Done ? "Enter begin Nightmare: every foe stronger"
+                       : !q                        ? "Esc close"
                        : c.stage == QuestStage::Offered ? fmt::format("Enter accept   reward {} gold", q->gold)
                        : c.stage == QuestStage::Ready   ? fmt::format("Enter claim {} gold", q->gold)
                                                    : "Esc close   the task is not done yet";

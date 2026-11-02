@@ -73,6 +73,7 @@ int runTests() {
   testSkillTrees();
   testGathering();
   testQuests();
+  testDelves();
   testInventory();
   testEquipStats();
   testAllies();

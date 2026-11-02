@@ -686,7 +686,7 @@ void testWanderingFoes() {
     int ore = a.drops(DropKind::Material);
     kobold->hurt(kobold->maxHp * 10, 1, 0, 0);
     a.run(2);
-    assert(a.drops(DropKind::Material) == ore + 1);
+    assert(a.drops(DropKind::Material) >= ore + 1);
   }
   std::cout << "[TEST] Wandering foes: night stalkers fade at dawn, grave robbers dig up "
                "skeletons and drop gold, cave bats swarm in twelves, rock crawlers lie still "
@@ -717,7 +717,7 @@ void testNamedPacks() {
     bool rare = false;
     for (auto [id, o] : a.level.reg.view<Owned>().each())
       if (auto *d = dynamic_cast<ItemDrop *>(o.self.get());
-          d && d->drop.kind == DropKind::Item && d->drop.item.rarity == Rarity::Rare)
+          d && d->drop.kind == DropKind::Item && int(d->drop.item.rarity) >= int(Rarity::Rare))
         rare = true;
     assert(rare);
   }

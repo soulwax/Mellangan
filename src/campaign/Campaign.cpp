@@ -24,10 +24,11 @@
 namespace {
 
 double townX = 0, townY = 0;
+float threatScale = 1;
 
 float areaThreat(double x, double y) {
   double xd = x - townX, yd = y - townY;
-  return float(std::sqrt(xd * xd + yd * yd) / 8);
+  return float(std::sqrt(xd * xd + yd * yd) / 8) * threatScale + (threatScale - 1) * 300;
 }
 
 constexpr int TOWN_W = 6, TOWN_H = 5;
@@ -53,6 +54,13 @@ const Spot BARRICADE[] = {
     {5, 4, Piece::Crates},               {-5, 4, Piece::Logs},
     {0, 2, Piece::Campfire},
 };
+
+void clearing(Edits &edits, double x, double y) {
+  int cx = int(std::floor(x / 16)), cy = int(std::floor(y / 16));
+  for (int ty = cy - TOWN_H; ty <= cy + TOWN_H; ty++)
+    for (int tx = cx - TOWN_W; tx <= cx + TOWN_W; tx++)
+      edits.harvest(tx, ty);
+}
 
 template <class F> void townLayout(int cx, int cy, F &&fn) {
   fn(cx - TOWN_W, cy - TOWN_H, Piece::CornerNW), fn(cx + TOWN_W, cy - TOWN_H, Piece::CornerNE);
@@ -94,6 +102,11 @@ std::string Campaign::save() const {
                      int(qsite), act);
   out += fmt::format("pos {:.1f} {:.1f}\ntown {:.1f} {:.1f} {}\n", x, y, xTown, yTown,
                      int(founded));
+  for (const Town &t : outposts)
+    out += fmt::format("outpost {:.1f} {:.1f}\n", t.x, t.y);
+  out += fmt::format("mode {} {}\n", int(hardcore), nightmare);
+  for (const auto &[dx, dy] : delves)
+    out += fmt::format("delved {} {}\n", dx, dy);
   out += "mats";
   for (int m : materials)
     out += fmt::format(" {}", m);
@@ -146,6 +159,17 @@ bool Campaign::load(std::string_view text, Campaign &out) {
       words >> out.x >> out.y;
     else if (key == "town")
       words >> out.xTown >> out.yTown >> out.founded;
+    else if (key == "mode")
+      words >> out.hardcore >> out.nightmare;
+    else if (key == "delved") {
+      std::pair<int, int> d{};
+      words >> d.first >> d.second;
+      out.delves.push_back(d);
+    } else if (key == "outpost") {
+      Town t{};
+      words >> t.x >> t.y;
+      out.outposts.push_back(t);
+    }
     else if (key == "mats")
       for (int &m : out.materials)
         words >> m;
@@ -200,9 +224,14 @@ void Campaign::enter(Level &level) {
   world::edits = &edits;
   if (!founded)
     found(level);
+  Delve::unseal(edits);
+  delve = Delve{};
   barricade();
+  threatScale = 1 + nightmare;
   townX = xTown, townY = yTown;
-  level.rules.safe.assign(1, {xTown, yTown, SAFE});
+  level.rules.safe.clear();
+  for (const Town &t : towns())
+    level.rules.safe.push_back({t.x, t.y, SAFE});
   for (const auto &[k, e] : edits.changes)
     if (e.placed && e.piece == Piece::Campfire) {
       double fx = int(int32_t(k >> 32)) * 16 + 8.0, fy = int(int32_t(k & 0xFFFFFFFFu)) * 16 + 16.0;
@@ -220,21 +249,46 @@ void Campaign::enter(Level &level) {
 void Campaign::found(Level &level) {
   Player &p = *level.player;
   xTown = p.x, yTown = p.y, x = p.x, y = p.y, founded = true;
-  int cx = int(std::floor(xTown / 16)), cy = int(std::floor(yTown / 16));
-  for (int ty = cy - 5; ty <= cy + 5; ty++)
-    for (int tx = cx - 6; tx <= cx + 6; tx++)
-      edits.harvest(tx, ty);
+  clearing(edits, xTown, yTown);
+}
+
+std::vector<Campaign::Town> Campaign::towns() const {
+  std::vector<Town> all{{xTown, yTown}};
+  all.insert(all.end(), outposts.begin(), outposts.end());
+  return all;
+}
+
+void Campaign::settle(Level &level, double tx, double ty) {
+  Town t{tx, ty};
+  outposts.push_back(t);
+  clearing(edits, tx, ty);
+  barricade();
+  level.rules.safe.push_back({tx, ty, SAFE});
+  post(level, t);
+  staff(level);
+  level.add<Shockwave>(tx, ty, 8, 120, 0.8f, col::gold);
+}
+
+void Campaign::travel(Level &level, int town) {
+  std::vector<Town> all = towns();
+  if (town < 0 || town >= int(all.size()))
+    return;
+  Player &p = *level.player;
+  p.x = all[size_t(town)].x, p.y = all[size_t(town)].y + 20;
+  level.add<Shockwave>(p.x, p.bodyY(), 5, 50, 0.6f, Color{0.45f, 0.85f, 1, 1});
 }
 
 void Campaign::barricade() {
-  townLayout(int(std::floor(xTown / 16)), int(std::floor(yTown / 16)),
-             [&](int tx, int ty, Piece piece) { edits.place(tx, ty, piece); });
+  for (const Town &t : towns())
+    townLayout(int(std::floor(t.x / 16)), int(std::floor(t.y / 16)),
+               [&](int tx, int ty, Piece piece) { edits.place(tx, ty, piece); });
 }
 
 bool Campaign::founding(int tx, int ty) const {
   bool hit = false;
-  townLayout(int(std::floor(xTown / 16)), int(std::floor(yTown / 16)),
-             [&](int x, int y, Piece) { hit |= x == tx && y == ty; });
+  for (const Town &t : towns())
+    townLayout(int(std::floor(t.x / 16)), int(std::floor(t.y / 16)),
+               [&](int x, int y, Piece) { hit |= x == tx && y == ty; });
   return hit;
 }
 
@@ -263,19 +317,42 @@ void Campaign::restore(Level &level) {
 }
 
 void Campaign::raise(Level &level) {
-  waypoint = level.add<Waypoint>(xTown, yTown - 6)->id;
-  chest = level.add<Stash>(xTown + 40, yTown)->id;
-  Merchant::camp(level, xTown - 62, yTown + 34);
-  elder = level.add<Elder>(xTown - 36, yTown - 26)->id;
+  waypoints.clear(), chests.clear();
+  for (const Town &t : towns())
+    post(level, t);
+  staff(level);
   quests::begin(level, *this);
 }
 
+void Campaign::post(Level &level, const Town &t) {
+  waypoints.push_back(level.add<Waypoint>(t.x, t.y - 6)->id);
+  chests.push_back(level.add<Stash>(t.x + 40, t.y)->id);
+}
+
+void Campaign::staff(Level &level) {
+  Town h = home();
+  if (Elder *old = level.get<Elder>(elder))
+    old->remove();
+  Merchant::camp(level, h.x - 62, h.y + 34);
+  elder = level.add<Elder>(h.x - 36, h.y - 26)->id;
+}
+
+void Campaign::awaken(Level &level) {
+  nightmare++, act = 1, quest = 0, progress = 0, qsite = false;
+  stage = QuestStage::Offered;
+  threatScale = 1 + nightmare;
+  delves.clear();
+  staff(level);
+  level.game.announce(fmt::format("NIGHTMARE {}  THE DARK RETURNS STRONGER", nightmare));
+}
+
 void Campaign::fall(Level &level) {
+  delve.abort(level, *this);
   Player &p = *level.player;
   int lost = p.gold / 10;
   p.gold -= lost;
   p.hp = p.maxHp, p.invuln = 3;
-  p.x = xTown, p.y = yTown + 20;
+  p.x = home().x, p.y = home().y + 20;
   p.status.clear();
   level.add<Shockwave>(p.x, p.bodyY(), 5, 50, 0.6f, Color{0.5f, 0.85f, 1, 1});
   level.game.announce(lost > 0 ? fmt::format("YOU WAKE BY THE WAYPOINT  -{} GOLD", lost)
@@ -294,7 +371,12 @@ void Campaign::smoulder(Level &level) {
   if ((smoke -= DT) > 0 || !Drift::room())
     return;
   smoke = 0.22f;
-  double cx = std::floor(xTown / 16) * 16 + 8, cy = std::floor(yTown / 16) * 16 + 16;
+  Town near = home();
+  const Player &p = *level.player;
+  for (const Town &t : towns())
+    if (std::hypot(t.x - p.x, t.y - p.y) < std::hypot(near.x - p.x, near.y - p.y))
+      near = t;
+  double cx = std::floor(near.x / 16) * 16 + 8, cy = std::floor(near.y / 16) * 16 + 16;
   auto plume = [&](double px, double py, float shade) {
     Drift *d = level.add<Drift>(px + rng.range(-3, 3), py, rng.range(-4, 4), -rng.range(10, 16),
                                 atlas::pt::Puff, Color{shade, shade, shade + 0.03f, 0.55f},
@@ -319,6 +401,7 @@ void Campaign::tick(Level &level) {
     regrow(level.night.nights);
   wasDay = day;
   quests::tick(level, *this);
+  delve.tick(level, *this);
 }
 
 void Campaign::leave() {

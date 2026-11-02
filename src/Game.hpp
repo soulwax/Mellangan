@@ -46,7 +46,7 @@ public:
   Hud hud{*this};
   Codex codex;
   float best = 0;
-  bool beatBest = false, wantsCampaign = false;
+  bool beatBest = false, wantsCampaign = false, hardcoreNext = false;
   std::unique_ptr<Campaign> campaign;
 
   bool init(SDL_Window *window, const std::string &base);

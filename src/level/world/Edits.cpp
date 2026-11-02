@@ -84,6 +84,11 @@ bool pieceProp(Piece piece, int x, int y, Prop &p) {
     return p.piece(atlas::kit(kt::Skull), 0.3f, 0);
   case Piece::Ribs:
     return p.piece(atlas::frontier(fr::Ribs), 0.4f, 0);
+  case Piece::Rubble:
+    p.piece(atlas::kit((x ^ y) & 1 ? kt::Boulder : kt::MossyBoulder), 1.2f, 9);
+    if ((x + y) % 3 == 0)
+      p.add(atlas::kit(kt::Pebbles), -7);
+    return true;
   default:
     return false;
   }

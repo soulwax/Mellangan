@@ -54,6 +54,10 @@ void ClassMenu::tick() {
     Sound::select.play(0.5f, 0);
     return game.setMenu(std::make_unique<TitleMenu>(game));
   }
+  if (campaign && in.restart.clicked) {
+    game.hardcoreNext = !game.hardcoreNext;
+    return Sound::select.play(0.5f, 0, game.hardcoreNext ? 0.7f : 1.2f);
+  }
   if (in.left.clicked)
     return choose(pick - 1);
   if (in.right.clicked)
@@ -171,4 +175,9 @@ void ClassMenu::render(Screen &s) {
   HeroCard(game, s, pick, t, in).render(s);
   s.textCenter("Left/Right choose   Enter begin   Esc back", s.w * 0.69f,
                s.h - 22 * u, u, col::muted.alpha(in));
+  if (campaign)
+    s.textCenter(game.hardcoreNext ? "R  HARDCORE: one life, death deletes the hero"
+                                   : "R  HARDCORE: off",
+                 s.w * 0.69f, s.h - 44 * u, small,
+                 (game.hardcoreNext ? col::red : col::muted).alpha(in));
 }

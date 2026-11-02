@@ -2,6 +2,7 @@
 
 #include <entt/entity/entity.hpp>
 
+#include <algorithm>
 #include <array>
 #include <unordered_map>
 #include <string>
@@ -13,11 +14,16 @@
 #include "item/loot/Item.hpp"
 #include "level/Edits.hpp"
 #include "level/RunRules.hpp"
+#include "campaign/Delve.hpp"
 #include "campaign/Quests.hpp"
 
 class Level;
 
 struct Campaign {
+  struct Town {
+    double x, y;
+  };
+
   static constexpr int VERSION = 1, STASH = 32;
   static constexpr float SAFE = 150, AUTOSAVE = 60, NIGHT = 180, DAY = 240, DAY_RATE = 0.35f;
 
@@ -36,9 +42,13 @@ struct Campaign {
   std::array<bool, GEAR> worn{};
   std::vector<std::pair<std::string, int>> upgrades;
   double x = 0, y = 0, xTown = 0, yTown = 0;
-  bool founded = false;
+  bool founded = false, hardcore = false;
+  int nightmare = 0;
+  std::vector<Town> outposts;
+  std::vector<std::pair<int, int>> delves;
+  Delve delve;
   Edits edits;
-  entt::entity waypoint = entt::null, chest = entt::null;
+  std::vector<entt::entity> waypoints, chests;
   std::unordered_map<uint64_t, int> chops;
   int building = -1;
   bool wasDay = true;
@@ -54,11 +64,28 @@ struct Campaign {
   void regrow(int day);
   void barricade();
   bool founding(int tx, int ty) const;
+  std::vector<Town> towns() const;
+  Town home() const {
+    std::vector<Town> all = towns();
+    return all[size_t(std::clamp(act, 1, int(all.size())) - 1)];
+  }
+  bool delved(int rx, int ry) const {
+    for (const auto &[x, y] : delves)
+      if (x == rx && y == ry)
+        return true;
+    return false;
+  }
+  void awaken(Level &level);
+  void settle(Level &level, double x, double y);
+  void travel(Level &level, int town);
   void leave();
+
+  void staff(Level &level);
 
 private:
   void found(Level &level);
   void restore(Level &level);
   void raise(Level &level);
+  void post(Level &level, const Town &t);
   void smoulder(Level &level);
 };

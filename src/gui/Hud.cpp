@@ -200,6 +200,16 @@ void Hud::handwork() {
           why.empty() ? col::gold : Color{1, 0.5f, 0.45f, 1});
     return;
   }
+  if (c->delve.active) {
+    std::string depth = c->delve.floor == 0
+                            ? fmt::format("THE CAVE-IN SETTLES  {} FOES", c->delve.inside(l))
+                        : fmt::format("DELVE  FLOOR {}/{}  {} FOES", c->delve.floor,
+                                      Delve::FLOORS, c->delve.inside(l));
+    s.textCenter(depth, s.w / 2, 70 * u, small, Color{0.9f, 0.75f, 0.5f, 0.9f});
+  } else if (Structure mine; Delve::entrance(l, *c, mine)) {
+    return plate(mine.centerX(), mine.centerY() - 26, "E  DELVE INTO THE MINE",
+                 Color{0.9f, 0.75f, 0.5f, 1});
+  }
   harvest::Target t;
   if (!harvest::target(l, *c, t))
     return;

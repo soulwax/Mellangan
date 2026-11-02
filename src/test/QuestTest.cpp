@@ -1,6 +1,7 @@
 #undef NDEBUG
 #include <cassert>
 
+#include <cmath>
 #include <cstring>
 #include <iostream>
 
@@ -90,11 +91,56 @@ void testQuests() {
   slay(level, c);
   assert(c.stage == QuestStage::Ready);
   quests::turnIn(level, c);
-  assert(c.stage == QuestStage::Done && c.act == 2 && !quests::current(c));
-  assert(quests::status(c) == "Act I cleared");
+  assert(c.stage == QuestStage::Road && c.act == 2 && c.quest == 4);
+
+  for (int act = 2; act <= ACT_COUNT; act++) {
+    double rx, ry;
+    assert(quests::road(act, rx, ry));
+    for (const Campaign::Town &t : c.towns())
+      assert(std::hypot(t.x - rx, t.y - ry) > 600);
+    p.x = rx + 500, p.y = ry;
+    quests::tick(level, c);
+    assert(c.stage == QuestStage::Road);
+    p.x = rx + 40, p.y = ry;
+    quests::tick(level, c);
+    level.tick();
+    assert(c.stage == QuestStage::Offered && int(c.towns().size()) == act);
+    assert(c.home().x == rx && level.rules.safeAt(rx, ry));
+    Elder *elder = level.get<Elder>(c.elder);
+    assert(elder && std::hypot(elder->x - rx, elder->y - ry) < 60);
+    for (int k = 0; k < QUESTS_PER_ACT; k++) {
+      const QuestDef &q = *quests::current(c);
+      quests::accept(level, c);
+      assert(c.stage == QuestStage::Active);
+      if (q.goal == Objective::Kindle)
+        level.night.lit += q.count;
+      else if (q.goal == Objective::Hunt)
+        level.slain[int(q.prey[0])] += q.count;
+      else {
+        go(level, c);
+        Enemy *e = level.get<Enemy>(c.foe);
+        assert(e && (q.goal != Objective::Boss || (e->boss && e->is(q.prey[0]))));
+        slay(level, c);
+      }
+      quests::tick(level, c);
+      assert(c.stage == QuestStage::Ready);
+      quests::turnIn(level, c);
+    }
+  }
+  assert(c.stage == QuestStage::Done && c.act == ACT_COUNT && !quests::current(c));
+  assert(quests::status(c) == "The dark is broken");
+  c.capture(level);
+  Campaign saved;
+  assert(Campaign::load(c.save(), saved) && saved.outposts.size() == ACT_COUNT - 1 &&
+         saved.stage == QuestStage::Done);
+  for (size_t i = 0; i < saved.outposts.size(); i++)
+    assert(std::abs(saved.outposts[i].x - c.outposts[i].x) < 0.1);
+  c.travel(level, 2);
+  assert(std::hypot(p.x - c.towns()[2].x, p.y - c.towns()[2].y) < 30);
   c.leave();
-  std::cout << "[TEST] Quests: the elder stands in town; Act I runs kindle, slay the Pale Warden "
-               "at the barrow, hunt twenty of the pack and slay the Pack Lord at his den; "
-               "rewards pay out, progress survives a save, and the act clears: PASS"
+  std::cout << "[TEST] Quests: the elder stands in town; Act I runs kindle, slay, hunt and the "
+               "Pack Lord; each act opens a road to a new barricaded town with its elder, four "
+               "quests and its boss, through the Cinder King; towns save and waypoints travel: "
+               "PASS"
             << std::endl;
 }

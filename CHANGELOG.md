@@ -10,6 +10,15 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
+- Delves: in the campaign, press E at a mine's mouth to delve into it. The mine caves in behind you, sealing you inside a ring of rubble, and three floors of cave bats, kobolds, rock crawlers and ore golems follow. The deepest floor holds the act's guardian: the Cyclops, the Spore Mother, the Frost Colossus or the Glass Tyrant. A cleared mine stays cleared and leaves a treasure chest, a boss's loot, ore and rune stones. Falling in a delve lifts the cave-in.
+- Hardcore campaigns: press R on the campaign's class screen. You get one life, and death deletes the hero.
+- Nightmare: after the Cinder King falls, the last elder offers Nightmare. The acts begin again from Hearthwick with every foe much stronger, and your hero, gear and towns are kept.
+- The campaign runs through all five acts. Clearing an act's boss opens a road to the next act's town, a new barricaded refuge with its own elder, merchant, stash and waypoint:
+  - Act II, Saltmoor (the marshes): drain the bog lanterns, recover the reliquary from the Drowned Abbot, cleanse the spore nests, and slay the Bog Witch.
+  - Act III, Frosthold (the snow): relight the beacons, slay Old Rimefang, break the lich's servants, and slay the Lich.
+  - Act IV, Dunewatch (the dunes): guard the caravans, shatter the Red Mesa, bring down Skyreaver, and slay the Storm Herald.
+  - Act V, Last Ember (the ashlands): walk the burning road, open the Hollow Gate, slay Ashmother, and end the Cinder King.
+  - An arrow points along the road to each new town. Press I at any waypoint stone to travel between the towns you have reached.
 - A first taste of the campaign: press K on the title screen (or start with `--campaign`) to found Hearthwick and keep one hero in one world across sessions. A new campaign asks for your class first; an existing one continues where you left off.
   - Hearthwick is a town under siege: a closed fence with its four gates barricaded by an overturned cart, crates, barrels, sacks and log piles, leaving only a gap to squeeze through. Thorn hedges guard the gates, bones and a warning sign lie outside, and smoke and embers rise from a burnt tree and the campfire within. Inside are torches, a waypoint stone, a stash chest, and the merchant with his workbench, who stay in town and stock wares for your level. Foes never spawn inside it.
   - Days are quieter but not empty: a thin trickle of foes roams by day, and the hordes come at night.

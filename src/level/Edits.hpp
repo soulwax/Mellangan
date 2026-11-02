@@ -30,6 +30,7 @@ enum class Piece {
   Charred,
   Skull,
   Ribs,
+  Rubble,
   Count
 };
 

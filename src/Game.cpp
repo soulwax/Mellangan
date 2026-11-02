@@ -27,6 +27,8 @@
 #include "menu/TreeMenu.hpp"
 #include "menu/BuildMenu.hpp"
 #include "menu/QuestMenu.hpp"
+#include "menu/TravelMenu.hpp"
+#include "campaign/Waypoint.hpp"
 #include "campaign/Elder.hpp"
 #include "campaign/Harvest.hpp"
 #include "campaign/Stash.hpp"
@@ -169,6 +171,8 @@ void Game::tick() {
     Sound::select.play(0.5f, 0);
     if (Elder::near(*level))
       setMenu(std::make_unique<QuestMenu>(*this));
+    else if (Waypoint::near(*level) && campaign->towns().size() > 1)
+      setMenu(std::make_unique<TravelMenu>(*this));
     else if (Merchant::near(*level))
       setMenu(std::make_unique<VendorMenu>(*this));
     else if (Stash::near(*level))
@@ -194,7 +198,10 @@ void Game::tick() {
     } else if (input.confirm.clicked) {
       level->player->cast();
     }
-    if (campaign && input.gather.clicked)
+    if (Structure mine; campaign && input.gather.clicked && !campaign->delve.active &&
+                        Delve::entrance(*level, *campaign, mine))
+      campaign->delve.start(*level, *campaign, mine);
+    else if (campaign && input.gather.clicked)
       harvest::strike(*level, *campaign);
     level->tick();
     if (campaign)
@@ -407,6 +414,16 @@ void Game::setReducedParticles(bool reduced) {
 }
 
 void Game::onPlayerDied() {
+  if (campaign && campaign->hardcore) {
+    spdlog::info("campaign: hardcore hero fell on day {}, the save is gone", level->night.nights);
+    if (!saves.dir().empty() && !bench.enabled)
+      SDL_RemovePath((saves.dir() + "campaign.txt").c_str());
+    campaign->leave();
+    campaign.reset();
+    rules = dawnRules;
+    Sound::death.play(0.8f, 0);
+    return setMenu(std::make_unique<DeadMenu>(*this));
+  }
   if (campaign) {
     campaign->fall(*level);
     return saveCampaign();
@@ -478,6 +495,7 @@ void Game::beginCampaign() {
   if (fresh) {
     *campaign = Campaign{};
     campaign->hero = start.hero >= 0 && start.hero < HERO_COUNT ? start.hero : codex.start;
+    campaign->hardcore = hardcoreNext;
     for (int i = 0; i < 8; i++)
       campaign->world += CODE_CHARS[rng.next() % (sizeof CODE_CHARS - 1)];
   }
@@ -490,6 +508,21 @@ void Game::beginCampaign() {
   if (dev)
     for (int &m : level->player->materials)
       m += start.mats;
+  for (int act = campaign->act + 1; dev && act <= std::min(start.act, ACT_COUNT); act++) {
+    double rx, ry;
+    if (!quests::road(act, rx, ry))
+      break;
+    campaign->act = act, campaign->quest = (act - 1) * QUESTS_PER_ACT;
+    campaign->settle(*level, rx, ry);
+    campaign->stage = QuestStage::Offered;
+    level->player->x = rx, level->player->y = ry + 20;
+  }
+  if (Structure mine; dev && start.delve &&
+                      world::nearestStructure(level->player->x, level->player->y, 60, mine,
+                                              [](const Structure *s, const void *) {
+                                                return s->kind == StructureKind::Mine;
+                                              }))
+    level->player->x = mine.centerX(), level->player->y = mine.centerY() + 24;
   snapCamera();
   setMenu(nullptr);
   autosave = Campaign::AUTOSAVE;

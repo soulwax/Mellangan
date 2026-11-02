@@ -2,6 +2,7 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
+#include "campaign/Campaign.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
 #include "particle/Shockwave.hpp"
@@ -50,4 +51,17 @@ void Waypoint::renderShadow(Screen &s) {
 void Waypoint::renderLight(Screen &s) {
   s.glow(xp, yp - 14, 70, RUNE * (0.25f + 0.08f * std::sin(t * 2.5f)));
   level->lights.add(x, y, 64, 0.6f);
+}
+
+Waypoint *Waypoint::near(Level &level) {
+  if (!level.game.campaign)
+    return nullptr;
+  Player &p = *level.player;
+  for (entt::entity id : level.game.campaign->waypoints)
+    if (Waypoint *w = level.get<Waypoint>(id)) {
+      double xd = w->x - p.x, yd = w->y - p.y;
+      if (!p.dead() && xd * xd + yd * yd < REACH * REACH)
+        return w;
+    }
+  return nullptr;
 }
