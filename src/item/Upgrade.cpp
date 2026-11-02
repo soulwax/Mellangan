@@ -24,6 +24,8 @@
 #include "item/talent/Beacon.hpp"
 #include "item/talent/Riposte.hpp"
 #include "item/talent/ExpansionTalents.hpp"
+#include "item/talent/Talents.hpp"
+#include "item/relic/WorldRelics.hpp"
 #include "item/weapon/FrostNova.hpp"
 #include "item/weapon/Radiance.hpp"
 #include "item/weapon/WhirlingEdge.hpp"
@@ -218,6 +220,7 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   u.push_back(std::make_unique<Glaive>());
   u.push_back(std::make_unique<Censer>());
   addPassives(u, KIN);
+  addTalents(u);
   u.push_back(std::make_unique<SunfireCrown>());
   u.push_back(std::make_unique<TempestEye>());
   u.push_back(std::make_unique<Relic>("Phoenix Feather", atlas::kit(kt::Poppies),
@@ -239,6 +242,7 @@ std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
     u.push_back(std::make_unique<ExpansionWeapon>(i));
   for (int i=0;i<8;i++)
     u.push_back(std::make_unique<ExpansionRelic>(i));
+  addWorldRelics(u);
   for (const Recipe &r : RECIPES)
     u.push_back(std::make_unique<RecipeWeapon>(r));
   for (auto &w : u)

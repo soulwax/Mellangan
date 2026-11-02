@@ -69,6 +69,9 @@ int runTests() {
   testInventory();
   testEquipStats();
   testAllies();
+  testSupportArts();
+  testTalents();
+  testRelicsAndUniques();
   testExpansionEnemies();
   testExpansionContent();
   testArsenal();

@@ -24,7 +24,9 @@ LevelUpMenu::LevelUpMenu(Game &game) : Menu(game) {
       owned[u->weapon]++;
   std::vector<Upgrade *> relics;
   for (auto &u : all)
-    if (u->rare && !u->maxed())
+    if (u->hidden)
+      continue;
+    else if (u->rare && !u->maxed())
       relics.push_back(u.get());
     else if (!u->rare && !u->skill && !u->maxed() &&
              (u->level > 0 || owned[u->weapon] < Upgrade::SLOTS) &&

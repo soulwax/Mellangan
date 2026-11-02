@@ -1,4 +1,5 @@
 #include "gui/Tooltip.hpp"
+#include "item/loot/Unique.hpp"
 
 #include <spdlog/fmt/fmt.h>
 
@@ -41,7 +42,9 @@ void itemTooltip(Screen &s, const Item &item, const Item *worn, const char *hero
     lines.push_back({item.baseName(), col::white});
   lines.push_back({fmt::format("{}  item level {}", gearName(item.gearSlot()), item.ilvl),
                    col::muted});
-  if (b.grants)
+  if (const UniqueDef *u = uniqueOf(item))
+    lines.push_back({u->text, item.color()});
+  else if (b.grants)
     lines.push_back({fmt::format("grants {}", b.grants), col::white});
   if (b.implicit != Stat::None)
     lines.push_back({describe(b.implicit, item.implicit()), col::white});

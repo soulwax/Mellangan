@@ -17,6 +17,26 @@ All notable changes to Mellangan are documented here. The format follows
   - Mage: Runic Wall. Ranger: Hawk Companion. Knight: Shield Wall. Alchemist: Philosopher's Spiral.
   - Stormcaller: Storm Whip. Reaper: Ghoul Pack. Priestess: Sun Spiral. Duelist: Riposte Whip.
   - Warden: Bramble Wall. Tinkerer: Clockwork Drone. Oracle: Fate Spiral. Corsair: Powder Crew.
+- Twenty new skills, each with its own icon.
+  - **For every class:** Smoke Bomb, Blood Rite, Gravity Well, Mirror Image, Rallying Horn, Shatter Wave, Second Sight and Sprint.
+  - **One more per class:**
+    - Mage: Prismatic Prison. Ranger: Call the Hawk. Knight: Last Stand. Alchemist: Transmutation Circle.
+    - Stormcaller: Eye of the Storm. Reaper: Raise Dead. Priestess: Halo of Mercy. Duelist: Perfect Parry.
+    - Warden: Earthen Wall. Tinkerer: Overclock. Oracle: Foresight. Corsair: Cannonade.
+  - Crowned elites can learn seven of them.
+- Twenty-four new talents, each with its own badge.
+  - **For every class:** Bloodthirst, Glass Cannon, Momentum, Cold Blood, Pyromaniac, Scavenger, Thick Skin, Vengeance, Night Owl, Hunter's Instinct, Overflow and Afterimage.
+  - **One more per class:**
+    - Mage: Spellweave. Ranger: Volley Master. Knight: Juggernaut. Alchemist: Catalyst.
+    - Stormcaller: Static Build. Reaper: Soul Hoard. Priestess: Sanctified. Duelist: Flow.
+    - Warden: Rooted. Tinkerer: Spare Parts. Oracle: Prophecy. Corsair: Plunderer.
+- Eight new passives: Spellweave Thread, Wide Grip, Swift Quiver, Keen Edge, Fleet Heart, Ember Heart, Collector and Summoner's Seal.
+- Sixteen relics that react to the world:
+  - Shrinekeeper's Lamp, Cartographer's Quill, Moon Dial and Storm Glass.
+  - Snow Globe, Sun Shard, Bog Heart and Hollow Crown.
+  - Grave Dirt, Pilgrim's Staff, Tidecaller and Lantern of Ages.
+  - Wanderer's Boots, Star Chart, Thunder Idol and Dawnstone.
+- Twelve named unique items with fixed powers, such as Ember Locket, Pack Banner, Last Light and Bone Dice. Unique drops now roll as real uniques instead of rares.
 
 ### Changed
 

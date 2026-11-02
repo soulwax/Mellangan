@@ -1,4 +1,5 @@
 #include "item/loot/Item.hpp"
+#include "item/loot/Unique.hpp"
 
 #include <spdlog/fmt/fmt.h>
 
@@ -129,7 +130,15 @@ std::string Item::baseName() const {
   return fmt::format("{} {}", TIER_NAMES[tier], def().name);
 }
 
+const char *Item::grants() const {
+  if (const UniqueDef *u = uniqueOf(*this))
+    return u->grants ? u->grants : def().grants;
+  return def().grants;
+}
+
 std::string Item::name() const {
+  if (const UniqueDef *u = uniqueOf(*this))
+    return u->name;
   std::string out;
   if (rarity == Rarity::Rare || rarity == Rarity::Crafted) {
     uint32_t h = hash2(int(seed), 17), k = hash2(int(seed), 91);

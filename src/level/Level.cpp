@@ -263,6 +263,7 @@ void Level::explore() {
   if (!world::structureAt(tx, ty, s) || visited(s))
     return;
   visits.insert(structureKey(&s));
+  landmarks += s.kind >= StructureKind::AncientTree;
   entered |= 1u << int(s.kind);
   game.codex.entered[int(s.kind)]++;
   const EncounterDef *e = &ENCOUNTERS[int(s.kind)];

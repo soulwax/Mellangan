@@ -85,7 +85,7 @@ void weapons() {
     assert(names.insert(u->name).second);
     rare+=u->rare;
   }
-  assert(rare==14);
+  assert(rare==38);
   for (int k=0;k<8;k++) {
     ExpansionWeapon w(k);
     for (int n=0;n<5;n++) {

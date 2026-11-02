@@ -15,7 +15,8 @@ class Hero;
 class Player : public Mob {
 public:
   static constexpr int BAG = 32;
-  float dim = 0;
+  float dim = 0, guard = 0, skinTime = 0, sanctifyTime = 0;
+  int crits = 0, hits = 0, lastLit = 0;
   int gold = 0, materials = 0;
   std::vector<Item> bag;
   std::array<Item, GEAR> gear{};
@@ -47,6 +48,7 @@ public:
     hurt(damage);
   }
   void mend(float amount) override;
+  void retaliate();
   void shield(float seconds) override { invuln = std::max(invuln, seconds); }
   Sprite body() const override;
   void gainXp(float amount);

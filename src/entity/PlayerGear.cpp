@@ -14,7 +14,7 @@ bool Player::fits(const Item &item) const {
 void Player::wear(int slot, const Item &item) {
   gear[slot] = item, worn[slot] = true, gearLevels[slot] = 0;
   applyItem(*this, item, 1);
-  if (const char *grants = item.def().grants)
+  if (const char *grants = item.grants())
     if (Upgrade *up = upgrade(grants)) {
       int before = up->level;
       while (up->level < item.tier + 1 && !up->maxed())
@@ -26,9 +26,12 @@ void Player::wear(int slot, const Item &item) {
 void Player::shed(int slot) {
   const Item &item = gear[slot];
   applyItem(*this, item, -1);
-  if (const char *grants = item.def().grants)
-    if (Upgrade *up = upgrade(grants))
+  if (const char *grants = item.grants())
+    if (Upgrade *up = upgrade(grants)) {
       up->level = std::max(0, up->level - gearLevels[slot]);
+      if (up->level == 0)
+        up->forget(*this);
+    }
   worn[slot] = false, gearLevels[slot] = 0;
 }
 

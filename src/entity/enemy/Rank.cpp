@@ -51,6 +51,13 @@ const Cast SKILLS[] = {
     {[](Enemy &e) { ability::drain(e, 80, 8); }, 9, 80, {0.85f, 0.2f, 0.3f, 1}},
     {[](Enemy &e) { ability::overgrowth(e, 70, 5); }, 12, 90, {0.45f, 0.85f, 0.35f, 1}},
     {[](Enemy &e) { ability::eclipse(e, 70, 5); }, 12, 120, {0.6f, 0.5f, 0.95f, 1}},
+    {[](Enemy &e) { ability::smoke(e, 70, 1.5f); }, 11, 70, {0.6f, 0.6f, 0.65f, 1}},
+    {[](Enemy &e) { ability::well(e, 70, 80, 8); }, 10, 150, {0.55f, 0.3f, 0.95f, 1}},
+    {[](Enemy &e) { ability::shatter(e, 120, 10); }, 9, 120, {0.6f, 0.85f, 1, 1}},
+    {[](Enemy &e) { ability::prison(e, 80, 1.5f, 6); }, 13, 80, {0.8f, 0.6f, 1, 1}},
+    {[](Enemy &e) { ability::rampart(e, 50, 14); }, 9, 90, {0.75f, 0.65f, 0.5f, 1}},
+    {[](Enemy &e) { ability::cannonade(e, 4, 10); }, 11, 160, {1, 0.55f, 0.2f, 1}},
+    {[](Enemy &e) { ability::rite(e, 0.1f, 0.25f, 5); }, 14, 100, {0.85f, 0.2f, 0.3f, 1}},
 };
 } // namespace
 

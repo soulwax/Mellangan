@@ -333,6 +333,18 @@ Sprite Enemy::sprite() const {
   return type.art ? type.art(type.tile) : atlas::tile(type.tile);
 }
 
+void Enemy::temper(StatusKind kind, float &duration, float &power) const {
+  if (!level)
+    return;
+  const ItemStats &b = level->player->bonus;
+  duration *= 1 + b.weave / 100;
+  if (kind == StatusKind::Burn)
+    power *= 1 + b.ember / 100;
+  if ((kind == StatusKind::Burn || kind == StatusKind::Poison) && b.catalyst > 0 &&
+      status.power(StatusKind::Marked) > 0)
+    power *= 1 + b.catalyst / 100;
+}
+
 void Enemy::onHit(float damage, Upgrade *src) {
   Player &p = *level->player;
   const ItemStats &b = p.bonus;
@@ -372,9 +384,19 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   if (src && !type.floats &&
       level->heightAt(level->player->x, level->player->y) > level->heightAt(x, y))
     damage *= 1.15f;
-  bool crit = !periodic && rng.chance(0.08f + level->player->luck);
+  Player &p = *level->player;
+  bool ours = !(src && src->hostile());
+  bool crit = !periodic && rng.chance(0.08f + p.luck);
+  if (!periodic && !crit && p.sure > 0)
+    crit = true, p.sure--;
   if (crit)
-    damage *= level->player->hero ? level->player->hero->edge() : 1.8f;
+    damage *= (p.hero ? p.hero->edge() : 1.8f) * (1 + p.bonus.critDamage / 100), p.crits++;
+  if (ours && p.bonus.coldBlood > 0 && status.power(StatusKind::Chill) > 0)
+    damage *= 1 + p.bonus.coldBlood / 100;
+  if (ours && p.bonus.prophecy > 0 && status.power(StatusKind::Marked) > 0)
+    damage *= 1 + p.bonus.prophecy / 100;
+  if (ours)
+    force *= 1 + p.bonus.juggernaut / 100;
   if (src && !src->hostile())
     damage *= 1 + ((boss || def ? level->player->bonus.bossDamage : 0) +
                    (elite || title ? level->player->bonus.eliteDamage : 0) +
@@ -398,6 +420,11 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   ya += yd * f;
   if (src && !src->hostile() && !periodic)
     onHit(damage, src);
+  if (ours && !periodic && p.bonus.staticBuild > 0 &&
+      ++p.hits >= 12 - int(p.bonus.staticBuild)) {
+    p.hits = 0;
+    ability::chain(p, 3, 200, 10);
+  }
   TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)),
                     crit ? col::gold : col::white);
   Sound::hit.play(0.35f);

@@ -18,8 +18,8 @@ public:
   Traits traits;
   double xAim = 1, yAim = 0;
   float invuln = 0, speed = 74, might = 1, haste = 1, magnet = 28, armor = 0,
-        regen = 0, luck = 0, arcs = 1, heroTimer = 0, skillTime = 0, knifeCooldown = 0;
-  int heroCount = 0;
+        regen = 0, luck = 0, arcs = 1, parry = 0, heroTimer = 0, skillTime = 0, knifeCooldown = 0;
+  int heroCount = 0, sure = 0;
   std::vector<std::unique_ptr<Upgrade>> upgrades;
   ItemStats bonus;
 
@@ -40,8 +40,10 @@ public:
   virtual void shield(float) {}
   virtual Sprite body() const { return {}; }
 
+  virtual void temper(StatusKind, float &, float &) const {}
   bool afflict(StatusKind kind, float duration, float power,
                Upgrade *src = nullptr) {
+    temper(kind, duration, power);
     return !removed && hp > 0 && status.apply(kind, duration, power, src);
   }
 

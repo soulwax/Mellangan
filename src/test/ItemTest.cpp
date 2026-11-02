@@ -12,6 +12,7 @@
 #include "item/Upgrade.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "item/loot/Loot.hpp"
+#include "item/loot/Unique.hpp"
 #include "level/Level.hpp"
 #include "menu/InventoryMenu.hpp"
 #include "hero/Hero.hpp"
@@ -20,6 +21,10 @@ namespace {
 
 void checkItem(const Item &item) {
   assert(item.base >= 0 && item.base < int(itemBases().size()));
+  if (item.rarity == Rarity::Unique) {
+    assert(uniqueOf(item) && item.name() == uniqueOf(item)->name && !item.night());
+    return;
+  }
   assert(item.prefixes() <= 3 && item.suffixes() <= 3);
   for (int i = 0; i < item.count; i++) {
     const Roll &r = item.rolls[i];

@@ -157,13 +157,30 @@ void Enemy::die() {
         up->slay(*p, *this);
   }
   Sound::kill.play(0.35f, 0.12f);
-  Gem::drop(*level, x, y - 3,
-            type.xp * (elite ? ELITE_XP : 1) * level->xpMul *
-                (1 + std::min(level->streak, 100) * 0.005f));
+  Player &killer = *level->player;
+  if (killer.bonus.bloodthirst > 0 && !killer.dead())
+    killer.hp = std::min(killer.maxHp, killer.hp + killer.bonus.bloodthirst);
+  if (float burn = status.power(StatusKind::Burn);
+      burn > 0 && killer.bonus.pyro > 0 && rng.chance(killer.bonus.pyro / 100)) {
+    for (Enemy *o : level->nearest(x, y, 60, 4))
+      if (o != this)
+        o->afflict(StatusKind::Burn, 2, burn);
+    level->add<Shockwave>(x, bodyY(), 4, 60, 0.3f, Color{1, 0.5f, 0.2f, 0.8f}, false);
+  }
+  int gems = 1;
+  for (const Gild &g : level->gilds)
+    if (g.until > level->time && (x - g.x) * (x - g.x) + (y - g.y) * (y - g.y) < g.r * g.r)
+      gems = 2;
+  for (int i = 0; i < gems; i++)
+    Gem::drop(*level, x + i * 6, y - 3,
+              type.xp * (elite ? ELITE_XP : 1) * level->xpMul *
+                  (1 + std::min(level->streak, 100) * 0.005f) *
+                  (1 + killer.bonus.scavenge / 100));
   if (elite && rng.chance(0.25f))
     level->add<Potion>(x + 6, y);
   if (level->rules.loot)
-    ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this));
+    for (int i = 0; i <= (title && killer.bonus.extraLoot > 0); i++)
+      ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this));
   if (elite)
     level->game.hitStop(0.035f);
   traits.died(*this, type.damage * damageMul * 2);

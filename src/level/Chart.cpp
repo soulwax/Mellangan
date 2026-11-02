@@ -107,6 +107,33 @@ void Chart::marker(Screen &s, const ChartView &v, double px, double py,
   s.rect(x - h, y - h, size, size, c);
 }
 
+void Chart::chartStars(int rx, int ry) const {
+  if (rx != starX || ry != starY)
+    starX = rx, starY = ry, starRow = -STAR_REACH, stars.clear();
+  if (starRow > STAR_REACH)
+    return;
+  for (int x = rx - STAR_REACH; x <= rx + STAR_REACH; x++) {
+    Structure site;
+    if (world::structureIn(x, ry + starRow, site) && site.kind >= StructureKind::AncientTree)
+      stars.push_back(site);
+  }
+  starRow++;
+}
+
+void Chart::pin(Screen &s, const ChartView &v, double px, double py, float size,
+               Color c) const {
+  double scale = v.cell / (16.0 * CELL);
+  float h = size * 0.5f;
+  float x = float(v.x + v.w * 0.5 + (px * scale - v.cx * v.cell)),
+        y = float(v.y + v.h * 0.5 + (py * scale - v.cy * v.cell));
+  bool inside = x - h >= v.x && y - h >= v.y && x + h <= v.x + v.w && y + h <= v.y + v.h;
+  if (inside)
+    return marker(s, v, px, py, size, c);
+  x = std::clamp(x, v.x + h + 1, v.x + v.w - h - 1);
+  y = std::clamp(y, v.y + h + 1, v.y + v.h - h - 1);
+  s.rect(x - h * 0.6f, y - h * 0.6f, size * 0.6f, size * 0.6f, c.alpha(c.a * 0.7f));
+}
+
 void Chart::draw(Screen &s, const Level &level, const ChartView &v,
                  float time) const {
   float half = v.w * 0.5f / v.cell, tall = v.h * 0.5f / v.cell;
@@ -148,6 +175,15 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
     Color c = lit ? col::gold : STRUCTURES[int(k.kind)].debug;
     marker(s, v, k.centerX(), k.centerY(), dot,
            c.alpha(lit || level.visited(k) ? 1 : 0.55f));
+  }
+  const Player &hero = *level.player;
+  if (hero.bonus.starChart > 0) {
+    int rx = world::regionOf(int(std::floor(hero.x / 16))),
+        ry = world::regionOf(int(std::floor(hero.y / 16)));
+    chartStars(rx, ry);
+    for (const Structure &site : stars)
+      pin(s, v, site.centerX(), site.centerY(), dot,
+          Color{0.75f, 0.55f, 1, level.visited(site) ? 1.0f : 0.75f});
   }
   const Night &n = level.night;
   if (n.hasBeacon) {

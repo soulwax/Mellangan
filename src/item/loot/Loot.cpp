@@ -1,4 +1,5 @@
 #include "item/loot/Loot.hpp"
+#include "item/loot/Unique.hpp"
 
 #include <spdlog/fmt/fmt.h>
 
@@ -105,6 +106,8 @@ Item rollItem(int ilvl, float magicFind, bool night, Rng &rng, Rarity floor) {
   Rarity r = rollRarity(item.ilvl, magicFind, own);
   if (int(r) < int(floor))
     r = floor;
+  if (r == Rarity::Unique && makeUnique(item, item.ilvl, own))
+    return item;
   int extra = 0;
   if (r == Rarity::Unique)
     r = Rarity::Rare, extra = 1;

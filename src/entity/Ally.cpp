@@ -30,6 +30,8 @@ const AllyDef ALLIES[] = {
      {0.9f, 0.75f, 0.6f, 1}, nullptr},
     {"decoy", "Mirror Image", K::Knight, 60, 0, 0, 0, 4, 1, false, true,
      {0.6f, 0.8f, 1, 1}, nullptr},
+    {"ghost", "Grave Dirt", K::Ghost, 30, 90, 0.7f, 8, 12, 1, true, false,
+     {0.7f, 0.85f, 1, 1}, nullptr},
 };
 static_assert(std::size(ALLIES) == size_t(AllyKind::Count), "every AllyKind needs a row");
 
@@ -117,12 +119,12 @@ void Ally::tick() {
     if (d <= close && bite <= 0 && def.shot) {
       level->add<RecipeShot>(*def.shot, x, bodyY(), xAim, yAim, damage, def.shot->reach)
           ->source = source;
-      bite = def.every;
+      bite = def.every * haste;
     } else if (d <= close && bite <= 0) {
       landHit(payload, *foe, xAim, yAim, damage, 40, source, this);
       if (payload & pay::Explode)
         blast(*foe);
-      bite = def.every;
+      bite = def.every * haste;
     }
   } else {
     double a = slot * 2.39996 + age * 0.6, home = HOME + slot % 4 * 12;
@@ -190,7 +192,8 @@ void Ally::renderShadow(Screen &s) { drawShadow(s, xp, yp, def.flies); }
 
 Ally *summon(Level &level, AllyKind kind, double x, double y, float damage, float life,
              unsigned payload, Upgrade *source) {
-  Ally *a = level.add<Ally>(kind, x, y, damage, life, payload);
+  Ally *a = level.add<Ally>(kind, x, y, damage, life * (1 + level.player->bonus.spare / 100),
+                            payload);
   a->source = source;
   a->slot = nextSlot++;
   Spark::burst(level, x, y - 7, a->def.tint, 6, 40, true);

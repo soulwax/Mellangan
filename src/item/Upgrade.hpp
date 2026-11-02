@@ -23,7 +23,7 @@ public:
   float dealt = 0, power = 1, pace = 1;
   const char *partner = nullptr, *evolvedName = nullptr, *owner = nullptr;
   Mob *holder = nullptr;
-  bool foe = false;
+  bool foe = false, hidden = false;
   bool hostile() const { return foe; }
 
   Upgrade(const char *name, Sprite icon,
@@ -39,6 +39,7 @@ public:
   virtual void slay(Mob &, Enemy &) {}
   virtual float guard(Mob &, float damage) { return damage; }
   virtual void cast(Mob &) {}
+  virtual void forget(Mob &) {}
 
   static std::vector<std::unique_ptr<Upgrade>> all();
 

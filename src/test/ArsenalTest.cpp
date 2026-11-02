@@ -104,7 +104,7 @@ void skills() {
     if (std::strcmp(s->name, "TIME WARP") == 0)
       warp = s;
   }
-  assert(mage == 5 && surge && warp);
+  assert(mage == 6 && surge && warp);
   surge->levelUp(p);
   p.cast();
   assert(p.haste < haste);

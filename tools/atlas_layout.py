@@ -60,9 +60,12 @@ EXPANSION_PROPS = {
     "spare": range(40, 48),
 }
 ARSENAL = {
-    "weapons": range(0, 192),
+    "weapons": range(0, 152),
+    "passives": range(152, 160),
+    "relics": range(160, 176),
+    "uniques": range(176, 192),
     "skills": range(192, 264),
-    "spare": range(264, 288),
+    "talents": range(264, 288),
 }
 EXPANSION_GROUNDS = {f"biome {i}": range(i * 12, (i + 1) * 12) for i in range(10)}
 

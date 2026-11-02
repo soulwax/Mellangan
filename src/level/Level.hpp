@@ -38,6 +38,11 @@ template <class T> struct Is {
 class Upgrade;
 struct Omen;
 
+struct Gild {
+  double x, y;
+  float r, until;
+};
+
 class Level {
 public:
   Game &game;
@@ -45,7 +50,7 @@ public:
   Player *player = nullptr;
   float time = 0;
   uint32_t ticks = 0;
-  int kills = 0, streak = 0, bestStreak = 0;
+  int kills = 0, streak = 0, bestStreak = 0, landmarks = 0;
   float streakTime = 0;
   int slain[int(EnemyKind::Count)]{};
   uint32_t entered = 0, litBiomes = 0;
@@ -58,6 +63,7 @@ public:
   int handicaps = 0;
   std::vector<entt::entity> bossIds;
   std::vector<Ally *> allies;
+  std::vector<Gild> gilds;
   Bounty bounties[3];
   Spawner spawner{*this};
   Night night{*this};

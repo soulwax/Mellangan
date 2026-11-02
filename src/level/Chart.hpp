@@ -51,6 +51,10 @@ private:
   mutable uint64_t lastKey = ~0ull;
   uint32_t seen = 0;
   int xLast = INT32_MIN, yLast = INT32_MIN;
+  mutable std::vector<Structure> stars;
+  mutable int starX = INT32_MIN, starY = INT32_MIN, starRow = 0;
+  static constexpr int STAR_REACH = 12;
+  void chartStars(int rx, int ry) const;
 
   static uint64_t keyOf(int px, int py) {
     return uint64_t(uint32_t(px)) << 32 | uint32_t(py);
@@ -58,6 +62,7 @@ private:
   const Page *page(int px, int py) const;
   void reveal(int cx, int cy);
   void survey(int cx, int cy);
+  void pin(Screen &s, const ChartView &v, double px, double py, float size, Color c) const;
   void marker(Screen &s, const ChartView &v, double px, double py, float size,
               Color c) const;
 };

@@ -25,6 +25,7 @@ public:
   float left() const;
   float daylight() const;
   bool isLit(const Structure &s) const;
+  const Structure *lastLit() const { return lit ? &shrines[std::min(lit, MAX_LIT) - 1] : nullptr; }
 
 private:
   Level &level;

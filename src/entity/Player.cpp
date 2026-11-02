@@ -9,6 +9,7 @@
 #include "item/skill/Skill.hpp"
 #include "level/Level.hpp"
 #include "hero/Hero.hpp"
+#include "particle/Shockwave.hpp"
 #include "particle/Spark.hpp"
 #include "particle/TextParticle.hpp"
 #include "particle/debris/FlameDebris.hpp"
@@ -47,6 +48,8 @@ void Player::tick() {
 
   status.moving = xa * xa + ya * ya > 100;
   dim = std::max(0.0f, dim - DT);
+  parry = std::max(0.0f, parry - DT);
+  skinTime = std::max(0.0f, skinTime - DT), sanctifyTime = std::max(0.0f, sanctifyTime - DT);
   status.tick(DT, [&](float damage, Upgrade *) {
     felledBy = "a lingering affliction";
     hurt(damage, true);
@@ -135,6 +138,12 @@ void Player::renderLight(Screen &s) {
 void Player::hurt(float damage, bool periodic) {
   if ((!periodic && invuln > 0) || dead() || god)
     return;
+  if (!periodic && parry > 0) {
+    parry = 0, invuln = std::max(invuln, 0.3f);
+    for (Mob *foe : level->nearestFoes(*this, x, y, 90, 1))
+      foe->strike(std::max(damage, 12.0f) * 2 * might, foe->x - x, foe->y - y, 160);
+    return Spark::burst(*level, x, bodyY(), col::gold, 10, 80, true);
+  }
   if (!periodic && bonus.block > 0 && rng.chance(bonus.block / 100)) {
     invuln = std::max(invuln, 0.25f);
     return Spark::burst(*level, x, bodyY(), col::white, 6, 50, true);
@@ -148,16 +157,30 @@ void Player::hurt(float damage, bool periodic) {
   for (auto &up : upgrades)
     if (up->level > 0 && (damage = up->guard(*this, damage)) <= 0)
       return;
+  if (!periodic && bonus.thickSkin > 0 && skinTime <= 0)
+    damage *= 1 - std::min(bonus.thickSkin, 90.0f) / 100, skinTime = 8;
   damage = std::max(periodic ? 0.1f : 1.0f, damage - armor);
+  if (float soak = std::min(guard, damage); soak > 0)
+    guard -= soak, damage -= soak;
+  if (damage <= 0)
+    return;
   hp -= damage;
   if (!periodic)
-    invuln = level->game.balance.invuln, level->game.hitStop(0.05f);
+    retaliate();
+  if (!periodic)
+    invuln = level->game.balance.invuln + bonus.grace, level->game.hitStop(0.05f);
   level->game.onPlayerHurt();
   Sound::hurt.play(0.7f);
   TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);
   Spark::burst(*level, x, bodyY(), col::red, 6, 60, false);
   if (hp > 0)
     return;
+  if (bonus.lastLight > 0 && lastLit != level->night.nights) {
+    lastLit = level->night.nights, hp = 1;
+    shield(3);
+    level->add<Shockwave>(x, bodyY(), 4, 60, 0.5f, Color{1, 0.9f, 0.6f, 1});
+    return;
+  }
   if (revives > 0)
     return rise();
   hp = 0;
@@ -198,7 +221,32 @@ void Player::rise() {
   Sound::nova.play(0.8f, 0);
 }
 
+void Player::retaliate() {
+  if (bonus.vengeance > 0) {
+    level->foes(*this, x, y, 90, [&](Mob &e) {
+      double xd = e.x - x, yd = e.y - y;
+      if (xd * xd + yd * yd < 70 * 70)
+        e.strike(bonus.vengeance * might, xd, yd, 120);
+    });
+    level->add<Shockwave>(x, bodyY(), 4, 70, 0.3f, Color{1, 0.35f, 0.3f, 0.8f});
+  }
+  if (bonus.afterimage > 0)
+    summon(*level, AllyKind::Decoy, x, y, 0, bonus.afterimage);
+}
+
 void Player::mend(float amount) {
+  float over = hp + amount - maxHp;
+  if (over > 0 && bonus.overflow > 0)
+    guard = std::min(maxHp * 0.3f, guard + over * bonus.overflow / 100);
+  if (bonus.sanctified > 0 && amount >= 2 && sanctifyTime <= 0) {
+    sanctifyTime = 0.5f;
+    level->foes(*this, x, y, 80, [&](Mob &e) {
+      double xd = e.x - x, yd = e.y - y;
+      if (xd * xd + yd * yd < 60 * 60)
+        e.afflict(StatusKind::Burn, 2, bonus.sanctified * might);
+    });
+    level->add<Shockwave>(x, bodyY(), 4, 60, 0.3f, Color{1, 0.9f, 0.6f, 0.7f}, false);
+  }
   hp = std::min(maxHp, hp + amount);
   TextParticle::pop(*level, x, bodyY(), int(amount), col::heal);
 }
@@ -207,6 +255,8 @@ void Player::gainXp(float amount) {
   if (hero)
     amount *= hero->wisdom();
   amount *= 1 + bonus.wisdom / 100;
+  if (bonus.nightOwl > 0 && level)
+    amount *= 1 + bonus.nightOwl / 100 * level->night.lit;
   exp += amount;
   while (exp >= expNext) {
     exp -= expNext;

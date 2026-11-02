@@ -42,5 +42,25 @@ void sanctuary(Mob &caster, float radius, float seconds);
 void flash(Mob &caster, int count, float damage);
 void overgrowth(Mob &caster, float radius, float seconds);
 void eclipse(Mob &caster, float radius, float seconds);
+void smoke(Mob &caster, float radius, float seconds);
+void rite(Mob &caster, float cost, float might, float seconds);
+void well(Mob &caster, float reach, float radius, float damage);
+void mirror(Mob &caster, float seconds);
+void horn(Mob &caster, float radius, float seconds);
+void shatter(Mob &caster, float radius, float damage);
+void sight(Mob &caster, float radius);
+void sprint(Mob &caster, float seconds);
+void prison(Mob &caster, float radius, float seconds, float damage);
+void hawk(Mob &caster, float seconds, float damage);
+void stand(Mob &caster, float radius, float damage);
+void transmute(Mob &caster, float radius, float seconds);
+void storm(Mob &caster, float seconds, float damage);
+void raise(Mob &caster, int count, float seconds, float damage);
+void mercy(Mob &caster, int wards);
+void parry(Mob &caster, float window);
+void rampart(Mob &caster, float reach, float damage);
+void overclock(Mob &caster, float seconds, float jam);
+void foresight(Mob &caster, int count);
+void cannonade(Mob &caster, int count, float damage);
 
 } // namespace ability

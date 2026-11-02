@@ -314,7 +314,12 @@ void testArtsBothSides() {
                               "GROUND SLAM", "FIRE RING", "SNARE NET",
                               "HUNTER'S MARK", "FLASK BARRAGE", "TEMPEST",
                               "BLOOD PACT", "HALLOWED GROUND", "FLASH STEP",
-                              "OVERGROWTH"};
+                              "OVERGROWTH", "SMOKE BOMB", "BLOOD RITE",
+                              "GRAVITY WELL", "RALLYING HORN", "SHATTER WAVE",
+                              "SECOND SIGHT", "PRISMATIC PRISON", "CALL THE HAWK",
+                              "LAST STAND", "TRANSMUTATION CIRCLE", "EYE OF THE STORM",
+                              "RAISE DEAD", "HALO OF MERCY", "PERFECT PARRY",
+                              "EARTHEN WALL", "OVERCLOCK", "FORESIGHT", "CANNONADE"};
   for (const char *art : ARTS) {
     for (int side = 0; side < 2; side++) {
       Game game;

@@ -16,12 +16,13 @@ void SummonForm::fire(const FormCast &c) const {
       alive++;
       a->life = std::max(a->life, def.life), a->damage = c.damage;
     }
-  for (int i = alive; i < c.count; i++) {
-    double a = c.base + TAU * i / c.count;
+  int cap = c.count + int(c.p.bonus.allyCap);
+  for (int i = alive; i < cap; i++) {
+    double a = c.base + TAU * i / cap;
     summon(level, kind, c.p.x + std::cos(a) * 20, c.p.y + std::sin(a) * 14, c.damage, def.life,
            c.r.payload, c.source)
         ->might = c.p.might;
   }
-  if (alive < c.count)
+  if (alive < cap)
     Sound::cast.play(0.25f, 0.05f, 0.9f);
 }

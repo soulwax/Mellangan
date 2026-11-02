@@ -113,6 +113,7 @@ public:
   float power() const override { return damageMul * might * status.outgoing(); }
   void aim(double &ax, double &ay) const override;
   const Mob &quarry() const;
+  void temper(StatusKind kind, float &duration, float &power) const override;
   void strike(float damage, double xd, double yd, float force,
               Upgrade *src = nullptr) override {
     hurt(damage, xd, yd, force, src);

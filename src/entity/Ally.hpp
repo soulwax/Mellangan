@@ -5,7 +5,7 @@
 
 struct Recipe;
 
-enum class AllyKind { Wolf, Hawk, Ghoul, Skeleton, Drone, Crew, Decoy, Count };
+enum class AllyKind { Wolf, Hawk, Ghoul, Skeleton, Drone, Crew, Decoy, Ghost, Count };
 
 struct AllyDef {
   const char *name, *recipe;

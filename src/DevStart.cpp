@@ -137,7 +137,7 @@ void DevStart::armPlayer(Player &p) const {
       continue;
     }
     Upgrade &u = *found;
-    while (!u.maxed())
+    for (int i = 0; i < Upgrade::MAX_LEVEL && !u.maxed(); i++)
       u.levelUp(p);
     if (evolve && u.evolvedName)
       u.evolve();

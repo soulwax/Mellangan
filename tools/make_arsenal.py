@@ -897,6 +897,204 @@ def powder_crew():
     return c.image()
 
 
+SMOKE_PAL = ((90, 90, 104), (150, 150, 164), (214, 214, 226))
+
+
+def smoke_bomb():
+    c = Canvas()
+    c.ellipse(6, 10, 4, 4, SMOKE_PAL)
+    c.ellipse(10, 7, 4, 4, SMOKE_PAL)
+    c.ellipse(8, 11, 3, 3, IRON)
+    c.line(9, 8, 11, 5, WOOD[1])
+    c.put(12, 4, EMBER[2])
+    return c.image()
+
+
+def blood_rite():
+    c = Canvas()
+    c.tri(8, 2, 13, 5, BLOOD)
+    c.ellipse(8, 11, 4, 3, BLOOD)
+    c.put(7, 9, (255, 200, 200))
+    c.line(3, 14, 13, 14, DUSK[1])
+    return c.image()
+
+
+def gravity_well():
+    c = Canvas()
+    c.ellipse(8, 8, 7, 6, VOID)
+    c.ellipse(8, 8, 4, 3, ARC)
+    c.ellipse(8, 8, 2, 1, CORE)
+    c.curve(2, 8, 6, -5, -1, ARC[2])
+    return c.image()
+
+
+def mirror_image():
+    c = Canvas()
+    c.ellipse(5, 8, 3, 5, ICE)
+    c.ellipse(11, 8, 3, 5, ((90, 110, 160), (150, 170, 220), (220, 230, 255)))
+    c.line(8, 2, 8, 14, LINEN[2])
+    return c.image()
+
+
+def rallying_horn():
+    c = Canvas()
+    for x, y, r in ((3, 13, 1), (5, 11, 1), (7, 9, 2), (10, 7, 3), (12, 5, 3)):
+        c.ellipse(x, y, r, r, BONE)
+    c.ellipse(12, 5, 1, 1, WOOD)
+    c.line(5, 11, 8, 8, GOLD[1])
+    return c.image()
+
+
+def shatter_wave():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, ICE)
+    c.ellipse(8, 8, 3, 3, ((150, 210, 240), (214, 240, 255), (255, 255, 255)))
+    c.line(2, 2, 6, 6, ICE[2])
+    c.line(14, 2, 10, 6, ICE[2])
+    c.line(2, 14, 6, 10, ICE[2])
+    c.line(14, 14, 10, 10, ICE[2])
+    return c.image()
+
+
+def second_sight():
+    c = Canvas()
+    c.ellipse(8, 8, 7, 4, LINEN)
+    c.ellipse(8, 8, 3, 3, ARC)
+    c.ellipse(8, 8, 1, 1, CORE)
+    c.put(7, 7, (255, 255, 255))
+    return c.image()
+
+
+def sprint():
+    c = Canvas()
+    c.tri(11, 3, 13, 3, STEEL)
+    c.line(2, 6, 7, 6, LINEN[1])
+    c.line(1, 9, 8, 9, LINEN[1])
+    c.line(2, 12, 7, 12, LINEN[1])
+    c.line(7, 6, 9, 9, LINEN[0])
+    c.line(7, 12, 9, 9, LINEN[0])
+    return c.image()
+
+
+def prismatic_prison():
+    c = Canvas()
+    for x in (3, 6, 9, 12):
+        c.line(x, 3, x, 13, PRISM_PAL[1 if x % 2 else 2])
+    c.line(2, 2, 13, 2, ARC[1])
+    c.line(2, 14, 13, 14, ARC[1])
+    return c.image()
+
+
+PRISM_PAL = ((120, 90, 180), (200, 160, 255), (240, 220, 255))
+
+
+def call_the_hawk():
+    c = Canvas()
+    c.tri(5, 3, 9, 4, BONE)
+    c.tri(11, 3, 9, 4, BONE)
+    c.ellipse(8, 9, 2, 3, WOOD)
+    c.ellipse(8, 6, 2, 2, LINEN)
+    c.put(9, 6, GOLD[1])
+    c.line(5, 14, 11, 14, BLOOD[1])
+    return c.image()
+
+
+def last_stand():
+    c = Canvas()
+    c.ellipse(8, 8, 5, 6, STEEL)
+    c.line(8, 3, 8, 13, GOLD[1])
+    c.line(4, 7, 12, 7, GOLD[1])
+    c.put(8, 7, (255, 255, 255))
+    return c.image()
+
+
+def transmutation_circle():
+    c = Canvas()
+    c.ellipse(8, 8, 7, 7, GOLD)
+    c.ellipse(8, 8, 5, 5, ((60, 40, 20), (90, 60, 30), (120, 90, 50)))
+    c.tri(8, 4, 11, 3, TOXIC)
+    c.put(8, 12, GOLD[2])
+    return c.image()
+
+
+def eye_of_the_storm():
+    c = Canvas()
+    c.ellipse(8, 8, 7, 5, ((50, 60, 90), (90, 110, 150), (150, 170, 210)))
+    c.ellipse(8, 8, 3, 2, MAG)
+    c.ellipse(8, 8, 1, 1, CORE)
+    c.line(12, 2, 10, 5, MAG[2])
+    c.line(4, 14, 6, 11, MAG[2])
+    return c.image()
+
+
+def raise_dead():
+    c = Canvas()
+    c.ellipse(8, 6, 4, 4, BONE)
+    c.put(6, 6, CORE[0])
+    c.put(10, 6, CORE[0])
+    c.line(6, 9, 10, 9, BONE[0])
+    c.line(3, 14, 13, 14, ((60, 50, 40), (90, 70, 50), (120, 100, 70))[1], 2)
+    c.line(8, 10, 8, 13, BONE[1])
+    return c.image()
+
+
+def halo_of_mercy():
+    c = Canvas()
+    c.ellipse(8, 5, 6, 2, HOLY)
+    c.ellipse(8, 5, 4, 1, ((90, 80, 50), (120, 110, 70), (150, 140, 90)))
+    c.tri(8, 8, 15, 4, LINEN)
+    c.put(8, 10, HOLY[2])
+    return c.image()
+
+
+def perfect_parry():
+    c = Canvas()
+    c.line(2, 14, 13, 3, STEEL[1], 2)
+    c.line(3, 3, 14, 14, STEEL[2])
+    c.ellipse(8, 8, 2, 2, GOLD)
+    return c.image()
+
+
+def earthen_wall():
+    c = Canvas()
+    c.tri(4, 4, 14, 3, ((90, 70, 50), (150, 120, 85), (200, 175, 135)))
+    c.tri(9, 2, 14, 3, ((90, 70, 50), (150, 120, 85), (200, 175, 135)))
+    c.tri(13, 6, 14, 2, ((90, 70, 50), (150, 120, 85), (200, 175, 135)))
+    c.line(1, 14, 15, 14, LEAF[0])
+    return c.image()
+
+
+def overclock():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, GOLD)
+    c.ellipse(8, 8, 3, 3, IRON)
+    c.line(8, 8, 8, 4, LINEN[2])
+    c.line(8, 8, 11, 9, LINEN[2])
+    c.put(14, 3, EMBER[2])
+    return c.image()
+
+
+def foresight():
+    c = Canvas()
+    c.ellipse(8, 9, 6, 5, ARC)
+    c.ellipse(8, 9, 3, 3, ((200, 190, 255), (230, 225, 255), (255, 255, 255)))
+    c.ellipse(8, 9, 1, 1, VOID)
+    c.line(8, 1, 8, 3, ARC[2])
+    c.line(3, 3, 4, 4, ARC[2])
+    c.line(13, 3, 12, 4, ARC[2])
+    return c.image()
+
+
+def cannonade():
+    c = Canvas()
+    c.rect(2, 9, 11, 12, IRON)
+    c.ellipse(4, 13, 2, 2, WOOD)
+    c.ellipse(10, 13, 2, 2, WOOD)
+    c.ellipse(13, 5, 2, 2, IRON)
+    c.line(11, 9, 12, 7, SMOKE_PAL[2])
+    return c.image()
+
+
 WEAPONS = (ember_lance, hoarfrost_fan, arcane_orbit, starfall, void_rift,
            seeker_runes, flame_ring, lionheart_cleave, bastion_shields,
            hawk_talon, bear_trap, caustic_flask, witchfire_phial,
@@ -913,13 +1111,427 @@ SKILLS = (time_warp, mana_surge, arcane_missiles, singularity, arrow_storm,
           brambles, minefield, comet, powder_keg, war_cry, bandage, tumble,
           whirlwind, ground_slam, fire_ring, lodestar, snare_net, war_banner,
           hunters_mark, flask_barrage, tempest, blood_pact, hallowed_ground,
-          flash_step, overgrowth, scrap_barrage, eclipse, whirlpool)
+          flash_step, overgrowth, scrap_barrage, eclipse, whirlpool, smoke_bomb,
+          blood_rite, gravity_well, mirror_image, rallying_horn, shatter_wave,
+          second_sight, sprint, prismatic_prison, call_the_hawk, last_stand,
+          transmutation_circle, eye_of_the_storm, raise_dead, halo_of_mercy,
+          perfect_parry, earthen_wall, overclock, foresight, cannonade)
+
+
+BADGE = ((44, 36, 56), (72, 60, 88), (108, 94, 128))
+
+
+def badge(glyph):
+    def paint():
+        c = Canvas()
+        c.ellipse(8, 8, 7, 7, BADGE)
+        glyph(c)
+        return c.image()
+    paint.__name__ = glyph.__name__
+    return paint
+
+
+@badge
+def bloodthirst(c):
+    c.tri(8, 3, 12, 4, BLOOD)
+    c.put(7, 8, (255, 200, 200))
+
+
+@badge
+def glass_cannon(c):
+    c.rect(4, 7, 11, 10, ICE)
+    c.ellipse(12, 8, 2, 2, ICE)
+    c.line(5, 7, 9, 10, (255, 255, 255))
+
+
+@badge
+def momentum(c):
+    c.line(3, 10, 12, 10, WIND_PAL[2])
+    c.line(5, 7, 12, 7, WIND_PAL[1])
+    c.tri(12, 5, 12, 2, GOLD)
+
+
+WIND_PAL = ((150, 170, 190), (200, 215, 230), (240, 248, 255))
+
+
+@badge
+def cold_blood(c):
+    c.tri(8, 3, 12, 4, ICE)
+    c.put(8, 9, BLOOD[2])
+
+
+@badge
+def pyromaniac(c):
+    c.tri(6, 4, 12, 3, EMBER)
+    c.tri(10, 3, 12, 3, EMBER)
+
+
+@badge
+def scavenger(c):
+    c.ellipse(6, 9, 2, 2, GOLD)
+    c.ellipse(10, 7, 2, 2, ICE)
+    c.ellipse(9, 11, 1, 1, GOLD)
+
+
+@badge
+def thick_skin(c):
+    c.ellipse(8, 8, 4, 5, WOOD)
+    c.line(6, 6, 10, 10, WOOD[0])
+
+
+@badge
+def vengeance(c):
+    c.ellipse(8, 8, 4, 4, RAGE)
+    c.ellipse(8, 8, 2, 2, CORE)
+    c.put(8, 8, RAGE[2])
+
+
+@badge
+def night_owl(c):
+    c.ellipse(6, 8, 2, 2, GOLD)
+    c.ellipse(10, 8, 2, 2, GOLD)
+    c.put(6, 8, CORE[0])
+    c.put(10, 8, CORE[0])
+    c.tri(8, 10, 12, 1, WOOD)
+
+
+@badge
+def hunters_instinct(c):
+    c.line(3, 8, 13, 8, BLOOD[1])
+    c.line(8, 3, 8, 13, BLOOD[1])
+    c.ellipse(8, 8, 2, 2, STEEL)
+
+
+@badge
+def overflow(c):
+    c.ellipse(8, 9, 4, 3, HOLY)
+    c.tri(8, 3, 7, 2, HOLY)
+
+
+@badge
+def afterimage(c):
+    c.ellipse(6, 8, 2, 4, ((80, 90, 130), (120, 130, 180), (170, 180, 230)))
+    c.ellipse(10, 8, 2, 4, LINEN)
+
+
+@badge
+def spellweave(c):
+    c.curve(3, 6, 10, 0, 3, ARC[2])
+    c.curve(3, 10, 10, 0, -3, ICE[2])
+
+
+@badge
+def volley_master(c):
+    for y in (5, 8, 11):
+        c.line(3, y, 12, y, WOOD[1])
+        c.put(13, y, STEEL[2])
+
+
+@badge
+def juggernaut(c):
+    c.rect(4, 6, 11, 11, STEEL)
+    c.line(4, 8, 11, 8, GOLD[1])
+
+
+@badge
+def catalyst(c):
+    c.ellipse(8, 10, 3, 3, TOXIC)
+    c.rect(7, 4, 9, 7, LINEN)
+    c.put(8, 10, EMBER[2])
+
+
+@badge
+def static_build(c):
+    c.line(10, 3, 6, 8, MAG[2])
+    c.line(6, 8, 10, 8, MAG[2])
+    c.line(10, 8, 6, 13, MAG[1])
+
+
+@badge
+def soul_hoard(c):
+    c.ellipse(8, 9, 3, 4, DUSK)
+    c.tri(8, 3, 6, 2, DUSK)
+    c.put(7, 9, (255, 220, 240))
+
+
+@badge
+def sanctified(c):
+    c.line(8, 3, 8, 13, HOLY[2])
+    c.line(5, 6, 11, 6, HOLY[2])
+    c.put(8, 13, EMBER[2])
+
+
+@badge
+def flow(c):
+    c.curve(3, 11, 10, -6, 2, PETAL_PAL[2])
+    c.curve(4, 13, 9, -4, 1, PETAL_PAL[1])
+
+
+PETAL_PAL = ((150, 100, 130), (230, 170, 210), (255, 220, 240))
+
+
+@badge
+def rooted(c):
+    c.line(8, 3, 8, 10, WOOD[1])
+    c.line(8, 10, 5, 13, WOOD[0])
+    c.line(8, 10, 11, 13, WOOD[0])
+    c.ellipse(8, 4, 2, 1, LEAF)
+
+
+@badge
+def spare_parts(c):
+    c.ellipse(8, 8, 4, 4, IRON)
+    c.ellipse(8, 8, 2, 2, GOLD)
+    c.put(8, 3, IRON[2])
+    c.put(13, 8, IRON[2])
+
+
+@badge
+def prophecy(c):
+    c.ellipse(8, 8, 5, 3, LINEN)
+    c.ellipse(8, 8, 2, 2, ARC)
+    c.put(8, 8, CORE[0])
+
+
+@badge
+def plunderer(c):
+    c.rect(4, 7, 11, 11, WOOD)
+    c.line(4, 7, 11, 7, GOLD[1])
+    c.put(8, 9, GOLD[2])
+
+
+TALENTS = (bloodthirst, glass_cannon, momentum, cold_blood, pyromaniac, scavenger,
+           thick_skin, vengeance, night_owl, hunters_instinct, overflow, afterimage,
+           spellweave, volley_master, juggernaut, catalyst, static_build, soul_hoard,
+           sanctified, flow, rooted, spare_parts, prophecy, plunderer)
+
+
+def spellweave_thread():
+    c = Canvas()
+    c.ellipse(8, 9, 4, 5, ARC)
+    c.curve(3, 4, 10, 2, 3, ICE[2])
+    c.line(8, 4, 8, 13, ARC[2])
+    return c.image()
+
+
+def wide_grip():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, LEAF)
+    c.ellipse(8, 8, 3, 3, ((30, 70, 30), (60, 120, 50), (120, 190, 100)))
+    c.line(1, 8, 4, 8, LINEN[2])
+    c.line(12, 8, 15, 8, LINEN[2])
+    return c.image()
+
+
+def swift_quiver():
+    c = Canvas()
+    c.rect(4, 6, 8, 14, WOOD)
+    c.line(6, 1, 6, 6, STEEL[2])
+    c.line(9, 2, 11, 6, STEEL[2])
+    c.line(12, 6, 14, 4, LINEN[1])
+    return c.image()
+
+
+def keen_edge():
+    c = Canvas()
+    c.line(3, 13, 12, 4, STEEL[1], 2)
+    c.line(4, 13, 13, 4, STEEL[2])
+    c.put(13, 3, (255, 255, 255))
+    c.line(2, 10, 5, 13, GOLD[1])
+    return c.image()
+
+
+def fleet_heart():
+    c = Canvas()
+    c.ellipse(6, 7, 3, 3, BLOOD)
+    c.ellipse(10, 7, 3, 3, BLOOD)
+    c.tri(8, 8, 13, 5, BLOOD)
+    c.line(1, 11, 4, 11, LINEN[2])
+    return c.image()
+
+
+def ember_heart():
+    c = Canvas()
+    c.ellipse(6, 8, 3, 3, EMBER)
+    c.ellipse(10, 8, 3, 3, EMBER)
+    c.tri(8, 9, 14, 5, EMBER)
+    c.tri(8, 2, 6, 1, STAR)
+    return c.image()
+
+
+def collector():
+    c = Canvas()
+    c.ellipse(8, 10, 5, 4, WOOD)
+    c.line(5, 6, 11, 6, WOOD[0])
+    c.ellipse(6, 5, 1, 1, ICE)
+    c.ellipse(10, 5, 1, 1, GOLD)
+    return c.image()
+
+
+def summoners_seal():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, DUSK)
+    c.ellipse(8, 8, 4, 4, ((40, 14, 30), (70, 30, 55), (110, 60, 90)))
+    c.tri(8, 4, 11, 3, LINEN)
+    return c.image()
+
+
+PASSIVES = (spellweave_thread, wide_grip, swift_quiver, keen_edge, fleet_heart, ember_heart,
+            collector, summoners_seal)
+
+
+def shrinekeepers_lamp():
+    c = Canvas()
+    c.line(8, 1, 8, 3, IRON[1])
+    c.rect(5, 4, 11, 12, IRON)
+    c.ellipse(8, 8, 2, 3, STAR)
+    c.line(4, 13, 12, 13, IRON[0])
+    return c.image()
+
+
+def cartographers_quill():
+    c = Canvas()
+    c.rect(2, 8, 11, 14, LINEN)
+    c.line(4, 10, 9, 12, WOOD[0])
+    c.line(13, 1, 8, 9, BONE[2], 2)
+    return c.image()
+
+
+def moon_dial():
+    c = Canvas()
+    c.ellipse(8, 8, 6, 6, STEEL)
+    c.ellipse(9, 7, 3, 3, VOID)
+    c.line(8, 8, 8, 4, GOLD[2])
+    return c.image()
+
+
+def storm_glass():
+    c = Canvas()
+    c.ellipse(8, 9, 5, 5, ICE)
+    c.rect(6, 2, 10, 4, WOOD)
+    c.line(9, 6, 7, 9, MAG[2])
+    c.line(7, 9, 9, 12, MAG[2])
+    return c.image()
+
+
+def snow_globe():
+    c = Canvas()
+    c.ellipse(8, 7, 5, 5, ICE)
+    c.rect(4, 12, 12, 14, WOOD)
+    c.tri(8, 6, 10, 2, LEAF)
+    c.put(6, 5, (255, 255, 255))
+    return c.image()
+
+
+def sun_shard():
+    c = Canvas()
+    c.tri(8, 1, 14, 4, STAR)
+    c.put(7, 6, (255, 255, 255))
+    c.line(3, 14, 13, 14, EMBER[1])
+    return c.image()
+
+
+def bog_heart():
+    c = Canvas()
+    c.ellipse(6, 8, 3, 3, TOXIC)
+    c.ellipse(10, 8, 3, 3, TOXIC)
+    c.tri(8, 9, 14, 5, TOXIC)
+    c.put(6, 7, (230, 255, 200))
+    return c.image()
+
+
+def hollow_crown():
+    c = Canvas()
+    c.rect(3, 8, 13, 12, GOLD)
+    c.tri(4, 4, 8, 1, GOLD)
+    c.tri(8, 3, 8, 1, GOLD)
+    c.tri(12, 4, 8, 1, GOLD)
+    c.rect(6, 9, 10, 11, CORE)
+    return c.image()
+
+
+def grave_dirt():
+    c = Canvas()
+    c.ellipse(8, 12, 6, 3, WOOD)
+    c.rect(6, 3, 10, 10, STEEL)
+    c.line(6, 5, 10, 5, STEEL[0])
+    return c.image()
+
+
+def pilgrims_staff():
+    c = Canvas()
+    c.line(5, 14, 10, 3, WOOD[1], 2)
+    c.ellipse(11, 3, 2, 2, BONE)
+    c.line(4, 9, 6, 11, LINEN[1])
+    return c.image()
+
+
+def tidecaller():
+    c = Canvas()
+    c.ellipse(8, 10, 6, 4, SEA)
+    c.curve(3, 8, 10, -4, 2, SEA[2])
+    c.ellipse(8, 4, 2, 2, ICE)
+    return c.image()
+
+
+def lantern_of_ages():
+    c = Canvas()
+    c.line(8, 1, 8, 3, GOLD[1])
+    c.ellipse(8, 8, 4, 5, GOLD)
+    c.ellipse(8, 8, 2, 3, STAR)
+    c.rect(5, 13, 11, 14, GOLD)
+    return c.image()
+
+
+def wanderers_boots():
+    c = Canvas()
+    c.rect(5, 3, 9, 11, WOOD)
+    c.rect(5, 10, 13, 13, WOOD)
+    c.line(5, 5, 9, 5, GOLD[1])
+    return c.image()
+
+
+def star_chart():
+    c = Canvas()
+    c.rect(2, 3, 13, 13, LINEN)
+    c.put(5, 6, VOID[1])
+    c.put(10, 5, VOID[1])
+    c.put(8, 10, VOID[1])
+    c.line(5, 6, 8, 10, ARC[1])
+    c.line(10, 5, 8, 10, ARC[1])
+    return c.image()
+
+
+def thunder_idol():
+    c = Canvas()
+    c.rect(4, 4, 11, 14, STEEL)
+    c.put(6, 7, MAG[2])
+    c.put(9, 7, MAG[2])
+    c.line(10, 1, 7, 4, MAG[2])
+    c.line(5, 11, 10, 11, IRON[0])
+    return c.image()
+
+
+def dawnstone():
+    c = Canvas()
+    c.ellipse(8, 9, 5, 5, ((150, 90, 60), (240, 160, 110), (255, 220, 170)))
+    c.line(2, 12, 14, 12, HOLY[2])
+    c.put(7, 7, (255, 255, 255))
+    return c.image()
+
+
+RELICS = (shrinekeepers_lamp, cartographers_quill, moon_dial, storm_glass, snow_globe,
+          sun_shard, bog_heart, hollow_crown, grave_dirt, pilgrims_staff, tidecaller,
+          lantern_of_ages, wanderers_boots, star_chart, thunder_idol, dawnstone)
 
 
 def icons():
     out = [(i, f()) for i, f in enumerate(WEAPONS)]
     start = ARSENAL["skills"].start
     out += [(start + i, f()) for i, f in enumerate(SKILLS)]
+    out += [(ARSENAL["talents"].start + i, f()) for i, f in enumerate(TALENTS)]
+    out += [(ARSENAL["passives"].start + i, f()) for i, f in enumerate(PASSIVES)]
+    out += [(ARSENAL["relics"].start + i, f()) for i, f in enumerate(RELICS)]
     return out
 
 

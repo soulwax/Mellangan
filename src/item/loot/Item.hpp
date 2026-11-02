@@ -44,6 +44,7 @@ struct Item {
   void reroll(int i, Rng &rng);
   std::string baseName() const;
   std::string name() const;
+  const char *grants() const;
   Color color() const;
   int value() const;
   std::string save() const;
