@@ -20,12 +20,13 @@ const FoeMask FOES[]={
     foe(K::MireLeech)|foe(K::BogLantern)|foe(K::Drowned)|foe(K::Snapjaw),
     foe(K::FrostWisp)|foe(K::Ghost)|foe(K::MoonHound),
     foe(K::MireLeech)|foe(K::Necromancer)|foe(K::Drowned)|foe(K::SunkenPriest),
-    foe(K::EmberImp)|foe(K::MireLeech),
+    foe(K::EmberImp)|foe(K::MireLeech)|foe(K::AshWraith)|foe(K::EmberDrake),
     foe(K::Sporeling)|foe(K::Wolf)|foe(K::Alpha)|foe(K::AmberBeetle),
     foe(K::DustVulture)|foe(K::Iceback)|foe(K::StormKite),
     foe(K::GlassMantis)|foe(K::Burrower)|foe(K::GlassSpitter),
-    foe(K::Spider)|foe(K::MycelialBrute),
-    foe(K::CinderGolem)|foe(K::Cultist)};
+    foe(K::Spider)|foe(K::MycelialBrute)|foe(K::CaveHorror)|foe(K::HollowSentinel)|
+    foe(K::CaveBat)|foe(K::RockCrawler)|foe(K::OreGolem)|foe(K::KoboldMiner),
+    foe(K::CinderGolem)|foe(K::Cultist)|foe(K::StarSpawn)};
 
 const int WEIGHTS[][int(StructureKind::Count)]={
     {5,5,15,35,15,0,25,10},

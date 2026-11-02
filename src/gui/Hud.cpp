@@ -320,15 +320,17 @@ void Hud::bossBar() {
   ids.erase(std::remove_if(ids.begin(), ids.end(),
                            [&](entt::entity id) {
                              Enemy *e = l.get<Enemy>(id);
-                             return !e || e->removed;
+                             return e ? e->removed : !l.reg.valid(id);
                            }),
             ids.end());
-  if (ids.empty() || l.player->dead())
+  if (l.player->dead())
     return;
-  Enemy *top = l.get<Enemy>(ids.front());
+  Enemy *top = nullptr;
   for (entt::entity id : ids)
-    if (Enemy *e = l.get<Enemy>(id); e->def && !top->def)
+    if (Enemy *e = l.get<Enemy>(id); e && (!top || (e->def && !top->def)))
       top = e;
+  if (!top)
+    return;
   Enemy &b = *top;
   const char *name = b.name();
   float bw = 160 * u, bx = (s.w - bw) / 2, by = s.h - 22 * u;

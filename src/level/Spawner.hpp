@@ -16,12 +16,12 @@ public:
   void wave(int index, int count);
   Enemy *champion(double x, double y);
   static constexpr int WAVES = 6;
-  static constexpr float WYRM_GAP = 150;
+  static constexpr float MINI_GAP = 150;
 
 private:
   Level &level;
   float timer = 1, nextWave = 60, nextBoss = 150, nextBarrel = 15,
-        nextMimic = 70, nextBand = 160, nextChampion = 110, nextWyrm = 0;
+        nextMimic = 70, nextBand = 160, nextChampion = 110, nextMini = 0;
   int bosses = 0, lastWave = -1;
 
   struct Roster {

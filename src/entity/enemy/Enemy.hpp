@@ -70,12 +70,27 @@ enum class EnemyKind {
   DuneRaider,
   TotemShaman,
   WarTotem,
+  MagmaSlug,
+  AshWraith,
+  CaveHorror,
+  StarSpawn,
+  Starlet,
+  FlameCultist,
+  HollowSentinel,
+  EmberDrake,
+  NightStalker,
+  GraveRobber,
+  CaveBat,
+  RockCrawler,
+  OreGolem,
+  KoboldMiner,
   Count
 };
 
 class Enemy;
 class Player;
 struct BossDef;
+struct NamedPack;
 
 struct Cast {
   void (*fn)(Enemy &);
@@ -150,6 +165,7 @@ public:
   int castCount = 0;
   const char *title = nullptr;
   const BossDef *def = nullptr;
+  const NamedPack *pack = nullptr;
   int phase = 0;
   void makeBoss(float health, float damage);
   void learn();

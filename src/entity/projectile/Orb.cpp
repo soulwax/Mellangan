@@ -20,6 +20,8 @@ void Orb::tick() {
     m.strike(damage, xa, ya, 0);
     if (chill > 0)
       m.afflict(StatusKind::Chill, 0.5f, chill);
+    if (burn > 0)
+      m.afflict(StatusKind::Burn, 2, burn);
     Spark::burst(*level, x, y, tone, 6, 50, false);
     remove();
   });

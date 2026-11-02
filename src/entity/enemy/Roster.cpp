@@ -145,6 +145,28 @@ const EnemyType TYPES[] = {
     {bs::TotemShaman, 36, 36, 7, 6, 1, 6, 0.8f, {0.6f, 0.3f, 0.2f, 1}, false, 120,
      atlas::beast},
     {bs::WarTotem, 30, 0, 0, 6, 1, 2, 0, {0.6f, 0.4f, 0.25f, 1}, false, 1e9f, atlas::beast},
+    {bs::MagmaSlug, 45, 26, 10, 7, 1.1f, 5, 0.5f, {1, 0.5f, 0.2f, 1}, false, 100, atlas::beast},
+    {bs::AshWraith, 36, 44, 10, 6, 1, 6, 0.9f, {0.5f, 0.45f, 0.45f, 1}, true, 130,
+     atlas::beast},
+    {bs::CaveHorror, 170, 30, 20, 10, 1.4f, 14, 0.2f, {0.5f, 0.3f, 0.4f, 1}, false, 160,
+     atlas::beast},
+    {bs::StarSpawn, 40, 46, 10, 6, 1, 6, 0.8f, {0.6f, 0.6f, 1, 1}, false, 140, atlas::beast},
+    {bs::StarSpawn, 10, 70, 4, 4, 0.55f, 1, 1, {0.6f, 0.6f, 1, 1}, false, 1e9f, atlas::beast},
+    {bs::FlameCultist, 38, 36, 9, 6, 1, 7, 0.8f, {0.9f, 0.35f, 0.15f, 1}, false, 150,
+     atlas::beast},
+    {bs::HollowSentinel, 160, 24, 18, 9, 1.3f, 12, 0.15f, {0.55f, 0.55f, 0.6f, 1}, false, 180,
+     atlas::beast},
+    {bs::EmberDrake, 520, 46, 20, 14, 2.2f, 32, 0, {1, 0.45f, 0.15f, 1}, true, 320,
+     atlas::beast},
+    {bs::NightStalker, 44, 62, 12, 6, 1, 7, 0.8f, {0.3f, 0.2f, 0.4f, 1}, false, 120,
+     atlas::beast},
+    {bs::GraveRobber, 34, 56, 8, 6, 1, 5, 0.9f, {0.5f, 0.4f, 0.3f, 1}, false, 60, atlas::beast},
+    {bs::CaveBat, 6, 74, 3, 4, 0.8f, 1, 1, {0.5f, 0.35f, 0.35f, 1}, true, 40, atlas::beast},
+    {bs::RockCrawler, 40, 40, 11, 7, 1, 6, 0.6f, {0.5f, 0.45f, 0.4f, 1}, false, 90,
+     atlas::beast},
+    {bs::OreGolem, 180, 18, 18, 10, 1.4f, 14, 0.15f, {0.7f, 0.5f, 0.3f, 1}, false, 150,
+     atlas::beast},
+    {bs::KoboldMiner, 14, 62, 5, 5, 0.9f, 2, 1, {0.8f, 0.4f, 0.2f, 1}, false, 60, atlas::beast},
 };
 static_assert(std::size(TYPES) == int(EnemyKind::Count));
 } // namespace
@@ -204,7 +226,11 @@ const char *Enemy::name() const {
       "a yeti", "an ice wraith", "a barrow wight", "a crystal golem",
       "a crystal shard", "a moon hound", "a lynx", "a barrow archer",
       "the sand wyrm", "a hyena", "a salt golem", "a glass spitter",
-      "a storm kite", "a dune raider", "a totem shaman", "a war totem"
+      "a storm kite", "a dune raider", "a totem shaman", "a war totem",
+      "a magma slug", "an ash wraith", "a cave horror", "a star spawn",
+      "a starlet", "a flame cultist", "a hollow sentinel", "the ember drake",
+      "a night stalker", "a grave robber", "a cave bat", "a rock crawler",
+      "an ore golem", "a kobold miner"
   };
   static_assert(std::size(NAMES) == int(EnemyKind::Count));
   return NAMES[&type - TYPES];

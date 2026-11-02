@@ -60,6 +60,27 @@ All notable changes to Mellangan are documented here. The format follows
   - Storm kites circle overhead and call lightning down where you stand (Storm Steppe).
   - Dune raiders throw one spear, then close in with a blade (Desert, Badlands).
   - Totem shamans plant up to two war totems that hasten and ward the foes around them; break the totems first (Savanna).
+- Seven new foes of the Burning lands, each with its own sprite:
+  - Magma slugs leave a burning trail that lasts four seconds (Ashlands).
+  - Ash wraiths stay veiled and hard to hurt until you are close, and their touch burns (Ember Fen).
+  - Cave horrors sleep, blind, until fighting breaks out nearby, then hunt the noise (Hollow Caverns).
+  - Star spawn split into three starlets when they fall (Starfall Basin).
+  - Flame cultists call down a meteor on where you stand two seconds later (Ashlands).
+  - Hollow sentinels raise a shield that turns slowly, so circle them to strike the back (Hollow Caverns).
+  - The ember drake, a mini-boss, circles overhead breathing cones of fire, then lands to rest every ten seconds and takes extra damage while grounded (Ember Fen).
+- Six wandering and underground foes, each with its own sprite:
+  - Night stalkers can turn up anywhere at night. Only their eyes show until you hit them, and they are gone at dawn.
+  - Grave robbers lurk around graveyards, dig skeletons out of the ground and drop extra gold.
+  - Cave bats swarm in twelves (Hollow Caverns).
+  - Rock crawlers lie still as stones and drop onto you when you pass (Hollow Caverns).
+  - Ore golems are slow and always drop ore (Hollow Caverns, Badlands).
+  - Kobold miners throw pickaxes, steal ore from you and run off; slay one to get the ore back (Hollow Caverns, Badlands).
+- Ten named packs, one per region, rise the first time you enter their home. Each has a fixed name, two fixed traits and its own followers, and always drops a rare item:
+  - Bramblemaw (Meadows) and Grizzlegut the Goblin King (Heath).
+  - Mother Mire (Mire) and the Drowned Abbot (Sunken Ruins).
+  - Old Rimefang (Snowfields) and the Pale Warden (Barrows).
+  - The Red Mesa (Salt Flats) and Skyreaver (Storm Steppe).
+  - Ashmother (Ember Fen) and the Hollow King (Hollow Caverns).
 - A wandering merchant (in runs with loot): once you light a shrine, he camps by its fire with a lantern and a barrel. Walk up and press I to trade.
   - He sells healing draughts, plain bases and two or three magic items. His wares are fresh at every newly lit shrine and again at dawn.
   - He buys anything from your bag for a quarter of its worth.
@@ -84,6 +105,7 @@ All notable changes to Mellangan are documented here. The format follows
 - Spirit Swarm spirits drag the foes they marked together when they fade.
 - Mortar shells stagger instead of burning and leave a crater that slows foes.
 - Conduit now gives +15% chain and arc damage instead of a second copy of Keen Eye.
+- The boss bar now also appears for leaders that join a run at its very start.
 - The inventory shows how many of each crafting material you carry.
 - The Codex bestiary now pages through every foe; foes past the 26th never showed before.
 - Foes drop potions about half as often, and gold drops are half as large. Item tooltips now show the merchant's real buying price.

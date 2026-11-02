@@ -49,7 +49,9 @@ public:
   Game &game;
   entt::registry reg;
   Player *player = nullptr;
-  float time = 0;
+  float time = 0, noiseAt = -1, namedScan = 0;
+  uint32_t namedRaised = 0;
+  double xNoise = 0, yNoise = 0;
   uint32_t ticks = 0;
   int kills = 0, streak = 0, bestStreak = 0, landmarks = 0;
   float streakTime = 0;

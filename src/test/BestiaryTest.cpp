@@ -8,7 +8,9 @@
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Hazard.hpp"
+#include "entity/enemy/Named.hpp"
 #include "entity/enemy/WildFoe.hpp"
+#include "entity/pickup/ItemDrop.hpp"
 #include "entity/projectile/Arrow.hpp"
 #include "entity/projectile/Orb.hpp"
 #include "item/Upgrade.hpp"
@@ -70,6 +72,14 @@ struct Arena {
     int n = 0;
     for (auto [id, o] : level.reg.view<Owned>().each())
       if (auto *e = dynamic_cast<Enemy *>(o.self.get()); e && !e->removed && e->is(kind))
+        n++;
+    return n;
+  }
+
+  int drops(DropKind kind) {
+    int n = 0;
+    for (auto [id, o] : level.reg.view<Owned>().each())
+      if (auto *d = dynamic_cast<ItemDrop *>(o.self.get()); d && !d->removed && d->drop.kind == kind)
         n++;
     return n;
   }
@@ -514,5 +524,234 @@ void testScorchedFoes() {
                "soft and only one hunts at a time; hyenas run in sixes and flee when hurt; salt "
                "golems leave crust; glass ricochets off walls; kites call lightning; raiders "
                "throw one spear; shamans plant two totems that haste and ward: PASS"
+            << std::endl;
+}
+
+void testBurningFoes() {
+  {
+    Arena a;
+    a.add(EnemyKind::MagmaSlug, 120, 0);
+    a.run(120);
+    int burning = 0;
+    for (auto &q : a.level.particles)
+      if (auto *f = dynamic_cast<FrostPatch *>(q.get()); f && !f->removed)
+        burning += f->kind == StatusKind::Burn && f->maxLife == 4;
+    assert(burning > 0);
+  }
+  {
+    Arena a;
+    a.p.luck = -1;
+    WildFoe *wraith = a.add(EnemyKind::AshWraith, 150, 0);
+    a.run(1);
+    assert(wraith->veiled());
+    float hp = wraith->hp;
+    wraith->hurt(10, 1, 0, 0);
+    assert(std::abs(hp - wraith->hp - 5) < 0.01f);
+    a.p.x = wraith->x - 20, a.p.y = wraith->y;
+    assert(!wraith->veiled());
+    wraith->bit(a.p);
+    assert(a.p.status.power(StatusKind::Burn) > 0);
+  }
+  {
+    Arena a;
+    WildFoe *horror = a.add(EnemyKind::CaveHorror, 100, 0);
+    WildFoe *far = a.add(EnemyKind::CaveHorror, -300, 0);
+    a.run(120);
+    assert(horror->buried && far->buried);
+    WildFoe *vine = a.add(EnemyKind::StranglerVine, 100, 30);
+    a.run(1);
+    vine->hurt(1, 1, 0, 0);
+    a.run(2);
+    assert(!horror->buried && far->buried && horror->frenzy > 0);
+  }
+  {
+    Arena a;
+    WildFoe *star = a.add(EnemyKind::StarSpawn, 100, 0);
+    a.run(1);
+    star->hurt(star->maxHp * 10, 1, 0, 0);
+    a.run(2);
+    assert(a.count(EnemyKind::StarSpawn) == 0 && a.count(EnemyKind::Starlet) == 3);
+  }
+  {
+    Arena a;
+    WildFoe *cultist = a.add(EnemyKind::FlameCultist, 120, 0);
+    a.run(1);
+    int blasts = a.particles<Blast>();
+    cultist->casts->fn(*cultist);
+    a.run(1);
+    assert(a.particles<Blast>() == blasts + 1);
+  }
+  {
+    Arena a;
+    WildFoe *sentinel = a.add(EnemyKind::HollowSentinel, 140, 0);
+    a.run(60);
+    assert(sentinel->xMark > 0);
+    a.run(200);
+    assert(sentinel->xMark < -0.9);
+  }
+  {
+    Arena a;
+    a.p.luck = -1;
+    WildFoe *drake = a.add(EnemyKind::EmberDrake, 90, 0);
+    a.run(1);
+    int breath = 0;
+    for (int i = 0; i < 700 && drake->restTime <= 0; i++) {
+      a.run(1);
+      breath = std::max(breath, a.orbs());
+    }
+    assert(drake->restTime > 0 && breath >= 7);
+    double x = drake->x, y = drake->y;
+    a.run(60);
+    assert(drake->x == x && drake->y == y && drake->z == 0);
+    float hp = drake->hp;
+    drake->hurt(10, 1, 0, 0);
+    assert(std::abs(hp - drake->hp - 15) < 0.01f);
+    a.run(200);
+    assert(drake->restTime <= 0);
+    a.level.spawner.spawn(EnemyKind::EmberDrake, a.p.x + 200, a.p.y);
+    a.level.spawner.spawn(EnemyKind::EmberDrake, a.p.x - 200, a.p.y);
+    a.run(1);
+    assert(a.count(EnemyKind::EmberDrake) == 2 && a.count(EnemyKind::AshWraith) == 1);
+  }
+  std::cout << "[TEST] Burning foes: slugs leave burning trails, ash wraiths hide until close and "
+               "burn, cave horrors wake only to nearby fighting, star spawn split in three, "
+               "cultists call meteors, sentinels turn slowly, the drake breathes fire and lands "
+               "soft, one mini-boss at a time: PASS"
+            << std::endl;
+}
+
+void testWanderingFoes() {
+  {
+    Arena a;
+    WildFoe *stalker = a.add(EnemyKind::NightStalker, 120, 0);
+    a.run(30);
+    assert(a.level.get<Enemy>(stalker->id));
+    a.level.night.dawn = true;
+    a.run(2);
+    assert(a.count(EnemyKind::NightStalker) == 0);
+  }
+  {
+    Arena a;
+    a.level.rules.loot = true;
+    WildFoe *robber = a.add(EnemyKind::GraveRobber, 150, 0);
+    a.run(1);
+    int bones = a.count(EnemyKind::Skeleton);
+    robber->casts->fn(*robber);
+    a.run(1);
+    assert(a.count(EnemyKind::Skeleton) == bones + 1);
+    int gold = a.drops(DropKind::Gold);
+    robber->hurt(robber->maxHp * 10, 1, 0, 0);
+    a.run(2);
+    assert(a.drops(DropKind::Gold) > gold);
+  }
+  {
+    Arena a;
+    a.level.spawner.spawn(EnemyKind::CaveBat, a.p.x + 150, a.p.y);
+    a.run(1);
+    assert(a.count(EnemyKind::CaveBat) == 12);
+  }
+  {
+    Arena a;
+    WildFoe *crawler = a.add(EnemyKind::RockCrawler, 200, 0);
+    a.run(30);
+    assert(crawler->buried);
+    a.p.x = crawler->x - 45, a.p.y = crawler->y;
+    bool flew = false;
+    for (int i = 0; i < 120 && !flew; i++)
+      a.run(1), flew = crawler->z > 4;
+    assert(!crawler->buried && flew);
+  }
+  {
+    Arena a;
+    a.level.rules.loot = true;
+    WildFoe *golem = a.add(EnemyKind::OreGolem, 150, 0);
+    a.run(1);
+    golem->hurt(golem->maxHp * 10, 1, 0, 0);
+    a.run(2);
+    assert(a.drops(DropKind::Material) >= 2);
+  }
+  {
+    Arena a;
+    a.level.rules.loot = true;
+    a.p.materials[int(Mat::Ore)] = 3;
+    WildFoe *kobold = a.add(EnemyKind::KoboldMiner, 150, 0);
+    a.run(1);
+    int arrows = a.hostileArrows();
+    kobold->casts->fn(*kobold);
+    a.run(1);
+    assert(a.hostileArrows() == arrows + 1);
+    kobold->bit(a.p);
+    kobold->bit(a.p);
+    assert(a.p.materials[int(Mat::Ore)] == 2 && kobold->stolen == 1 && kobold->status.afraid());
+    int ore = a.drops(DropKind::Material);
+    kobold->hurt(kobold->maxHp * 10, 1, 0, 0);
+    a.run(2);
+    assert(a.drops(DropKind::Material) == ore + 1);
+  }
+  std::cout << "[TEST] Wandering foes: night stalkers fade at dawn, grave robbers dig up "
+               "skeletons and drop gold, cave bats swarm in twelves, rock crawlers lie still "
+               "then drop on you, ore golems drop ore, kobolds steal ore, run and give it back "
+               "when slain: PASS"
+            << std::endl;
+}
+
+void testNamedPacks() {
+  for (int i = 0; i < NAMED_COUNT; i++) {
+    Arena a;
+    a.level.rules.loot = true;
+    a.level.time = 600;
+    const NamedPack &n = NAMED[i];
+    int before = a.count(n.minion);
+    Enemy *leader = named::raise(a.level, i, a.p.x + 160, a.p.y);
+    assert(leader && a.level.namedRaised >> i & 1);
+    a.run(1);
+    uint32_t want = 1u << int(n.traits[0]) | 1u << int(n.traits[1]);
+    assert(leader->title == n.name && leader->pack == &n && leader->elite);
+    auto &ids = a.level.bossIds;
+    assert(std::find(ids.begin(), ids.end(), leader->id) != ids.end());
+    assert(a.level.get<Enemy>(leader->id) == leader);
+    assert(leader->traits.bits == want);
+    assert(a.count(n.minion) - (n.minion == n.base) >= before + n.count);
+    leader->hurt(leader->maxHp * 100, 1, 0, 0);
+    a.run(2);
+    bool rare = false;
+    for (auto [id, o] : a.level.reg.view<Owned>().each())
+      if (auto *d = dynamic_cast<ItemDrop *>(o.self.get());
+          d && d->drop.kind == DropKind::Item && d->drop.item.rarity == Rarity::Rare)
+        rare = true;
+    assert(rare);
+  }
+  {
+    Arena a;
+    a.level.time = 600;
+    int home = -1;
+    double sx = a.p.x, sy = a.p.y;
+    for (int r = 0; r < 4000 && home < 0; r += 64)
+      for (int k = 0; k < 16 && home < 0; k++) {
+        double x = sx + std::cos(TAU * k / 16) * r, y = sy + std::sin(TAU * k / 16) * r;
+        for (int i = 0; i < NAMED_COUNT; i++)
+          if (NAMED[i].home == world::biomeUnder(x, y))
+            home = i, a.p.x = x, a.p.y = y;
+      }
+    assert(home >= 0);
+    named::tick(a.level);
+    assert(a.level.namedRaised == 1u << home);
+    a.run(1);
+    int leaders = 0;
+    for (auto [id, o] : a.level.reg.view<Owned>().each())
+      if (auto *e = dynamic_cast<Enemy *>(o.self.get()); e && e->pack)
+        leaders++;
+    a.level.namedScan = 0;
+    named::tick(a.level);
+    a.run(1);
+    int again = 0;
+    for (auto [id, o] : a.level.reg.view<Owned>().each())
+      if (auto *e = dynamic_cast<Enemy *>(o.self.get()); e && e->pack)
+        again++;
+    assert(leaders == 1 && again == 1);
+  }
+  std::cout << "[TEST] Named packs: all ten rise with their own name, exactly their two traits "
+               "and their minions, drop a rare when slain, and each rises once in its home "
+               "biome: PASS"
             << std::endl;
 }

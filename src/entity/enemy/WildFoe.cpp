@@ -5,6 +5,7 @@
 #include "entity/Player.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "entity/enemy/ai/Mend.hpp"
+#include "entity/pickup/ItemDrop.hpp"
 #include "entity/projectile/Arrow.hpp"
 #include "entity/projectile/Orb.hpp"
 #include "particle/debris/SmokeDebris.hpp"
@@ -23,7 +24,10 @@ constexpr Color HEX{0.55f, 0.85f, 0.35f, 1}, TONGUE{0.9f, 0.45f, 0.5f, 1},
                 CRYSTAL{0.8f, 0.65f, 1, 1}, MOON{0.75f, 0.8f, 1, 1},
                 SAND{0.9f, 0.72f, 0.42f, 1}, SALT{0.95f, 0.95f, 0.9f, 1},
                 GLASS{0.6f, 0.95f, 0.9f, 1}, STORM{0.65f, 0.75f, 1, 1},
-                HASTE{1, 0.6f, 0.25f, 1}, WARD{0.45f, 0.7f, 1, 1};
+                HASTE{1, 0.6f, 0.25f, 1}, WARD{0.45f, 0.7f, 1, 1},
+                FIRE{1, 0.5f, 0.2f, 1}, ASH{0.55f, 0.5f, 0.5f, 1},
+                SOIL{0.5f, 0.38f, 0.25f, 1}, GLARE{1, 0.25f, 0.3f, 1},
+                STONE{0.55f, 0.52f, 0.5f, 0.85f};
 
 void volley(Enemy &e) { ability::volley(e, 3, 0.22, 150, 6, 0); }
 
@@ -128,6 +132,31 @@ void plant(Enemy &e) {
   e.level->add<Shockwave>(e.x, e.bodyY(), 3, 24, 0.35f, HASTE, false);
 }
 
+void meteor(Enemy &e) {
+  Player &p = *e.level->player;
+  double xd, yd;
+  if (!sight(e, 0, 220, xd, yd))
+    return;
+  Blast *b = e.level->add<Blast>(p.x, p.y, 16 * e.power(), true);
+  b->life = b->maxLife = 2, b->radius = 34, b->tone = FIRE, b->by = e.name();
+}
+
+void dig(Enemy &e) {
+  float a = e.roll() * TAU;
+  double gx = e.x + std::cos(a) * 18, gy = e.y + std::sin(a) * 12;
+  e.level->spawner.spawn(EnemyKind::Skeleton, gx, gy);
+  e.level->add<Shockwave>(gx, gy, 3, 20, 0.4f, SOIL, false);
+  Spark::burst(*e.level, gx, gy - 2, SOIL, 8, 50, true);
+}
+
+void pickaxe(Enemy &e) {
+  double xd, yd;
+  if (!sight(e, 30, 160, xd, yd))
+    return;
+  Arrow *a = e.level->add<Arrow>(e.x, e.bodyY(), xd * 140, yd * 140, 6 * e.power(), 1);
+  a->hostile = true;
+}
+
 bool wet(double x, double y) {
   return world::isWater(int(std::floor(x / 16)), int(std::floor(y / 16)));
 }
@@ -166,6 +195,20 @@ const WildDef WildFoe::DEFS[] = {
     {.cast = {javelin, 1.5f, 200, SAND}, .casts = 1},
     {.cast = {plant, 7, 200, HASTE}, .casts = 1},
     {.totem = true},
+    {.trail = true},
+    {.veil = true, .scorches = true},
+    {.blind = true},
+    {.shatters = true},
+    {},
+    {.cast = {meteor, 5, 220, FIRE}, .casts = 1},
+    {.guarded = true},
+    {.drake = true},
+    {.nocturnal = true, .stalker = true},
+    {.cast = {dig, 6, 200, SOIL}, .casts = 1, .robber = true},
+    {},
+    {.lurks = true, .clings = true},
+    {.ore = true},
+    {.cast = {pickaxe, 3, 160, SOIL}, .casts = 1, .pilfers = true},
 };
 static_assert(std::size(WildFoe::DEFS) == int(WildFoe::LAST) - int(WildFoe::FIRST) + 1);
 
@@ -184,8 +227,9 @@ void WildFoe::surface() {
   xHome = x, yHome = y;
   if (wild.nocturnal && level->night.dawn)
     return remove();
-  if (!wild.waterborn) {
-    buried = wild.lurks || wild.wyrm;
+  if (!wild.waterborn || leader != entt::null) {
+    buried = (wild.lurks && !wild.waterborn) || wild.wyrm || wild.blind;
+    heard = level->noiseAt;
     return;
   }
   for (int i = 0; i < 16 && !wet(x, y); i++) {
@@ -245,6 +289,16 @@ void WildFoe::tick() {
   }
   if (wild.totem)
     pulse();
+  if (wild.trail && xWant * xWant + yWant * yWant > 4 && (saltTime -= DT) <= 0) {
+    saltTime = 0.5f;
+    FrostPatch *f = level->add<FrostPatch>(x, y, true);
+    f->tone = FIRE, f->kind = StatusKind::Burn, f->power = 2.5f * power();
+    f->life = f->maxLife = 4;
+  }
+  if (wild.blind)
+    listen();
+  if (wild.drake)
+    fly(p, std::sqrt(d2));
   if (wild.dims && d2 < reach * reach)
     p.dim = 4;
   if (wild.roots)
@@ -359,12 +413,79 @@ void WildFoe::pulse() {
   level->add<Shockwave>(x, bodyY(), 4, 72, 0.45f, (ward ? WARD : HASTE).alpha(0.4f), false);
 }
 
+void WildFoe::listen() {
+  if (level->noiseAt <= heard)
+    return;
+  heard = level->noiseAt;
+  double xd = level->xNoise - x, yd = level->yNoise - y;
+  if (xd * xd + yd * yd > (buried ? 160 * 160 : 240 * 240))
+    return;
+  frenzy = std::max(frenzy, 1.0f);
+  if (!buried)
+    return;
+  buried = false, aware = true;
+  level->add<Shockwave>(x, bodyY(), 5, 44, 0.45f, type.blood, false);
+  voice(Sound::erupt, 0.45f);
+}
+
+void WildFoe::fly(Player &p, double d) {
+  if (restTime > 0) {
+    x = xRest, y = yRest, z = 0;
+    if ((restTime -= DT) <= 0) {
+      flightTime = 10;
+      level->add<Shockwave>(x, y, 6, 44, 0.4f, FIRE, false);
+    }
+    return;
+  }
+  if ((flightTime -= DT) <= 0) {
+    restTime = 3, xRest = x, yRest = y, z = 0;
+    level->add<Shockwave>(x, y, 6, 54, 0.5f, ASH, false);
+    return;
+  }
+  if ((breathTime -= DT) <= 0 && d < 120 && !p.dead()) {
+    breathTime = 2.5f;
+    breathe();
+  }
+}
+
+void WildFoe::breathe() {
+  double xd, yd;
+  if (!sight(*this, 0, 140, xd, yd))
+    return;
+  double aim = std::atan2(yd, xd);
+  for (int i = 0; i < 7; i++) {
+    double a = aim + (i - 3) * 0.15, v = 120 + 30 * roll();
+    Orb *o = level->add<Orb>(x + xd * radius, bodyY() + yd * radius, std::cos(a) * v,
+                             std::sin(a) * v, 5 * power());
+    o->by = name(), o->tone = FIRE, o->burn = 2 * power(), o->size = 1;
+  }
+}
+
+bool WildFoe::veiled() const {
+  const Player &p = *level->player;
+  double xd = p.x - x, yd = p.y - y;
+  return wild.veil && xd * xd + yd * yd >= 60 * 60;
+}
+
 Color WildFoe::tint() const {
+  if (wild.veil)
+    return col::white.alpha(veiled() ? 0.14f : 0.75f);
+  if (wild.blind && buried)
+    return Color{0.6f, 0.6f, 0.7f, 0.7f};
+  if (wild.clings && buried)
+    return STONE;
   return wild.aura ? col::white.alpha(0.6f + 0.15f * std::sin(animT * 2)) : col::white;
 }
 
 void WildFoe::render(Screen &s) {
-  if (!buried)
+  if (wild.stalker && flash <= 0) {
+    if (std::fmod(animT, 2.6f) < 0.15f)
+      return;
+    s.rect(xp - 3, yp - 8, 2, 1, GLARE.alpha(0.9f));
+    s.rect(xp + 2, yp - 8, 2, 1, GLARE.alpha(0.9f));
+    return;
+  }
+  if (!buried || wild.blind || wild.clings)
     return Enemy::render(s);
   if (wild.wyrm) {
     float k = 0.5f + 0.5f * std::sin(animT * 4);
@@ -385,7 +506,9 @@ void WildFoe::render(Screen &s) {
 }
 
 void WildFoe::renderShadow(Screen &s) {
-  if (!buried)
+  if (wild.stalker)
+    return;
+  if (!buried || wild.blind || wild.clings)
     Enemy::renderShadow(s);
 }
 
@@ -396,6 +519,10 @@ float WildFoe::contactBonus(const Player &p) const {
 float WildFoe::shell(double xd, double yd) {
   if (wild.wyrm)
     return buried ? 0 : 1.5f;
+  if (wild.drake)
+    return restTime > 0 ? 1.5f : 1;
+  if (wild.veil && veiled())
+    return 0.5f;
   if (!wild.guarded || (xd == 0 && yd == 0))
     return 1;
   double facing = xd * xMark + yd * yMark;
@@ -406,16 +533,38 @@ float WildFoe::shell(double xd, double yd) {
 void WildFoe::bit(Player &p) {
   if (wild.chills)
     p.afflict(StatusKind::Chill, 1.5f, 0.35f);
+  if (wild.scorches)
+    p.afflict(StatusKind::Burn, 3, 2 * power());
+  int &ore = p.materials[int(Mat::Ore)];
+  if (wild.pilfers && !fled && ore > 0) {
+    ore--, stolen++, fled = true;
+    afflict(StatusKind::Fear, 8, 1);
+    Spark::burst(*level, x, bodyY(), MATERIALS[int(Mat::Ore)].color, 6, 40, true);
+  }
+}
+
+void WildFoe::bequeath() {
+  if (!level->rules.loot)
+    return;
+  auto spill = [&](Drop d) {
+    float a = roll() * TAU, r = 8 + roll() * 18;
+    level->add<ItemDrop>(x, y, d, x + std::cos(a) * r, y + std::sin(a) * r * 0.7f);
+  };
+  if (wild.robber)
+    spill({DropKind::Gold, level->monsterLevel(x, y) * 6, {}});
+  for (int i = 0; i < (wild.ore ? 2 : 0) + stolen; i++)
+    spill({DropKind::Material, 1, {}, int(Mat::Ore)});
 }
 
 void WildFoe::die() {
+  bequeath();
   if (wild.bramble)
     level->add<Bramble>(x, y);
   for (int i = 0; wild.shatters && i < 3; i++) {
     float a = TAU * i / 3 + roll();
-    level->spawner.spawn(EnemyKind::CrystalShard, x + std::cos(a) * 10, y + std::sin(a) * 10);
+    level->spawner.spawn(EnemyKind(kind() + 1), x + std::cos(a) * 10, y + std::sin(a) * 10);
   }
   if (wild.shatters)
-    level->add<Shockwave>(x, bodyY(), 4, 34, 0.4f, CRYSTAL, false);
+    level->add<Shockwave>(x, bodyY(), 4, 34, 0.4f, type.blood, false);
   Enemy::die();
 }

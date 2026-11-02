@@ -58,7 +58,7 @@ void FrostPatch::tick() {
   Player &p = *level->player;
   double xd = p.x - x, yd = p.y - y;
   if (xd * xd + yd * yd < 10 * 10)
-    p.afflict(StatusKind::Chill, 0.4f, 0.4f);
+    p.afflict(kind, 0.4f, power);
 }
 
 void FrostPatch::render(Screen &s) {

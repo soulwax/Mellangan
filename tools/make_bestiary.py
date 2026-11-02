@@ -34,6 +34,19 @@ Band at y=1380, 24 columns by 6 rows (144 cells). Cell i is atlas::beast(i); the
     27  Dune Raider    a sand-wrapped raider with a red scarf and a spear
     28  Totem Shaman   a masked shaman with a feather crown and a staff
     29  War Totem      a carved pole with painted faces and wings
+    30  Magma Slug     a crusted slug with glowing cracks and a molten underside
+    31  Ash Wraith     a grey hooded spectre with ember eyes
+    32  Cave Horror    a pale eyeless brute with a wide maw and claws
+    33  Star Spawn     a five-pointed star creature with one eye (the starlet reuses it, scaled)
+    34  Flame Cultist  an orange-robed cultist holding fire in both hands
+    35  Hollow Sentinel a hollow knight with a tower shield and a spear
+    36  Ember Drake    a red drake, wings spread, fire in its belly (drawn at 2.2x)
+    37  Night Stalker  a hunched shadow with red eyes (in game only the eyes show)
+    38  Grave Robber   a hooded robber with a sack and a shovel
+    39  Cave Bat       a small dusky bat with red eyes
+    40  Rock Crawler   a grey stone crab that passes for a rock
+    41  Ore Golem      the salt golem's shape in rust brown with gold ore
+    42  Kobold Miner   a small kobold in a lamp helmet with a pickaxe
 
 Usage: python tools/make_bestiary.py [--preview out.png]   (make_assets.py calls add_bestiary too)
 """
@@ -78,6 +91,19 @@ RAIDER = {"C": (214, 190, 140), "D": (190, 50, 40), "h": (110, 80, 50), "H": (16
           "J": (196, 140, 100)}
 SHAMAN = {"w": (226, 206, 160), "Y": (230, 200, 60), "J": (150, 100, 70)}
 GILT = {"Y": (230, 200, 60)}
+SLUG = {"k": (60, 40, 40), "f": (255, 140, 40)}
+ASHEN = {"f": (40, 34, 34), "u": (110, 104, 104), "n": (176, 170, 168)}
+HORROR = {"p": (110, 90, 110), "P": (170, 150, 170)}
+STAR = {"s": (40, 40, 110), "U": (110, 110, 220), "n": (230, 230, 255)}
+ROBE = {"c": (130, 50, 20), "C": (200, 90, 30), "D": (240, 160, 60), "f": (255, 120, 40),
+        "y": (255, 220, 90)}
+SENTINEL = {"s": (60, 62, 74), "S": (120, 124, 140), "U": (80, 60, 40), "W": (150, 120, 80)}
+DRAKE = {"r": (110, 30, 20), "y": (255, 200, 80), "f": (200, 90, 30)}
+SHADOW = {"s": (30, 20, 40), "S": (70, 50, 90)}
+CBAT = {"s": (50, 30, 40), "S": (100, 70, 80)}
+ROCK = {"v": (80, 76, 72), "I": (140, 134, 126), "i": (180, 174, 166)}
+ORE = {"v": (90, 60, 40), "I": (150, 110, 70), "n": (230, 170, 60)}
+KOBOLD = {"k": (150, 70, 40), "K": (110, 90, 60), "y": (220, 190, 60)}
 EXTRA = {
     "t": (210, 190, 120),
     "R": (220, 60, 50),
@@ -607,8 +633,7 @@ def hyena():
     ), HYENA, BARK)
 
 
-def salt_golem():
-    return draw((
+GOLEM_ROWS = (
         "................",
         "......nn........",
         "...n.nIIn...n...",
@@ -625,7 +650,15 @@ def salt_golem():
         "...vvvv...vvvv..",
         "................",
         "................",
-    ), SALT)
+)
+
+
+def salt_golem():
+    return draw(GOLEM_ROWS, SALT)
+
+
+def ore_golem():
+    return draw(GOLEM_ROWS, ORE)
 
 
 def glass_spitter():
@@ -733,11 +766,265 @@ def war_totem():
     ), BARK, GILT)
 
 
+def magma_slug():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "..O.O...........",
+        "..k.k...........",
+        ".kkkkkkk........",
+        "kkfkkkfkkkk.....",
+        "kfkkfkkkfkkkk...",
+        "kkkfkkkfkkkkkkk.",
+        ".kkkkfkkkkfkkkkk",
+        "..fffffffffffff.",
+        "................",
+        "................",
+        "................",
+    ), SLUG)
+
+
+def ash_wraith():
+    return draw((
+        "................",
+        "......uuuu......",
+        ".....unnnnu.....",
+        "....unffffnu....",
+        "....ufOffOfu....",
+        "....uffffffu....",
+        "...unuffffunu...",
+        "..un.unnnnu.nu..",
+        ".un..unnnnu..nu.",
+        ".u...unnnnu...u.",
+        ".....uunnuu.....",
+        "......unnu......",
+        ".....u.uu.u.....",
+        "......u..u......",
+        "................",
+        "................",
+    ), ASHEN)
+
+
+def cave_horror():
+    return draw((
+        "................",
+        "....pppppp......",
+        "...pPPPPPPp.....",
+        "..pPPPPPPPPp....",
+        "..pPEEEEEEPp....",
+        "..pPTETETEPp....",
+        "..pPPPPPPPPp....",
+        ".pPPPPPPPPPPp...",
+        "pPPpPPPPPPpPPp..",
+        "pPp.pPPPPp.pPp..",
+        "pPp.pPPPPp.pPp..",
+        "TTp.pPPPPp.pTT..",
+        "....pPp.pPp.....",
+        "...ppp...ppp....",
+        "................",
+        "................",
+    ), HORROR)
+
+
+def star_spawn():
+    return draw((
+        "................",
+        ".......nn.......",
+        ".......nn.......",
+        "......nUUn......",
+        "......sUUs......",
+        "nn...sUUUUs...nn",
+        ".nUssUUOUUssUn..",
+        "..nUUUUUUUUUUn..",
+        "....sUUUUUUs....",
+        "....sUUnnUUs....",
+        "...sUUs..sUUs...",
+        "..sUUs....sUUs..",
+        ".nUs........sUn.",
+        ".nn..........nn.",
+        "................",
+        "................",
+    ), STAR)
+
+
+def flame_cultist():
+    return draw((
+        "................",
+        "......ccc.......",
+        ".....cCCCc......",
+        "....cCEEECc.....",
+        "....cCOEOCc.....",
+        "....cCEEECc.....",
+        "...ccCCCCCcc....",
+        "..fcCCDDCCCcf...",
+        ".fycCCDDCCCcyf..",
+        "..f.cCCDCCCc.f..",
+        "....cCCDCCCc....",
+        "...cCCCDCCCCc...",
+        "...cccccccccc...",
+        "....cc....cc....",
+        "................",
+        "................",
+    ), ROBE)
+
+
+def hollow_sentinel():
+    return draw((
+        "............X...",
+        "......sss...X...",
+        ".....sSSSs..b...",
+        ".....SEOES..b...",
+        ".....sSSSs..b...",
+        "..UUU.sSSSsSb...",
+        ".UWWU.sSSSSsb...",
+        ".UWWUsSSSSSSb...",
+        ".UWWUsSSSSSs.b..",
+        ".UWWU.sSSSs..b..",
+        ".UWWU.sS.Ss..b..",
+        "..UU..sS.Ss..b..",
+        "......sS.Ss.....",
+        ".....sss.sss....",
+        "................",
+        "................",
+    ), SENTINEL, BARK)
+
+
+def ember_drake():
+    return draw((
+        "................",
+        "......k..k......",
+        "......rRRr......",
+        ".....rROROr.....",
+        "f....rRRRRr....f",
+        "ff...rRyyRr...ff",
+        "fRf.rRRyyRRr.fRf",
+        "fRRfrRRyyRRrfRRf",
+        ".fRRRRRyyRRRRRf.",
+        "..fRRRRyyRRRRf..",
+        "...ffrRyyRrff...",
+        ".....rRRRRr.....",
+        "......rRRr......",
+        ".......rr.r.....",
+        "..........rr....",
+        "................",
+    ), DRAKE, SLUG)
+
+
+def night_stalker():
+    return draw((
+        "................",
+        "......sss.......",
+        ".....sSSSs......",
+        "....sSRSRSs.....",
+        "....sSSSSSs.....",
+        "...ssSSSSSss....",
+        "..sSSsSSSsSSs...",
+        ".sSs.sSSSs.sSs..",
+        "sSs..sSSSs..sSs.",
+        "Ss...sSSSs...sS.",
+        ".....sSsSs......",
+        "....sSs.sSs.....",
+        "...sSs...sSs....",
+        "..ss.......ss...",
+        "................",
+        "................",
+    ), SHADOW)
+
+
+def grave_robber():
+    return draw((
+        "................",
+        "......hhh.......",
+        ".....hHHHh......",
+        ".....hJEJh......",
+        ".....hJJJh......",
+        "....hhHHHhh..b..",
+        "...hHHHHHHHh.b..",
+        "..WWhHHHHHhJb...",
+        ".WWWhHHHHHh.b...",
+        ".WWWhHHHHHh.b...",
+        "..WW.hHHHh..b...",
+        ".....hH.Hh..X...",
+        ".....h...h.XXX..",
+        "....hh...hh.....",
+        "................",
+        "................",
+    ), HIDE, BARK)
+
+
+def cave_bat():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "S.....s..s.....S",
+        "SS...sSssSs...SS",
+        "SSS.sSRSSRSs.SSS",
+        "SSSSsSSSSSSsSSSS",
+        ".SSSSsSTTSsSSSS.",
+        "..SS..sSSs..SS..",
+        "......s..s......",
+        "................",
+        "................",
+        "................",
+        "................",
+    ), CBAT)
+
+
+def rock_crawler():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        ".....vvvvv......",
+        "...vvIIIIIvv....",
+        "..vIIIiIIIIIv...",
+        ".vIIiIIIIiIIIv..",
+        "vIIIIIOIOIIIIIv.",
+        "v.vIIIIIIIIIv.v.",
+        ".v.v.v...v.v.v..",
+        "v.v.........v.v.",
+        "................",
+        "................",
+    ), ROCK)
+
+
+def kobold_miner():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "......O.........",
+        ".....yyy........",
+        "....yyyyy.......",
+        "....kEkEk..b....",
+        "....kkkkkk.Xb...",
+        "...KkKKKk..b....",
+        "..k.KKKK.kb.....",
+        "....KKKK........",
+        "....k..k........",
+        "...kk..kk.......",
+        "................",
+        "................",
+        "................",
+    ), KOBOLD, BARK)
+
+
 PAINTERS = (thornling, boar, goblin_archer, goblin_shaman, sapling, treant, moth, cutthroat,
             bog_toad, drowned, snapjaw, strangler_vine, amber_beetle, spore_puffer,
             sunken_priest, yeti, ice_wraith, barrow_wight, crystal_golem, moon_hound, lynx,
             barrow_archer, sand_wyrm, hyena, salt_golem, glass_spitter, storm_kite, dune_raider,
-            totem_shaman, war_totem)
+            totem_shaman, war_totem, magma_slug, ash_wraith, cave_horror, star_spawn,
+            flame_cultist, hollow_sentinel, ember_drake, night_stalker, grave_robber, cave_bat,
+            rock_crawler, ore_golem, kobold_miner)
 
 
 def slot(i):

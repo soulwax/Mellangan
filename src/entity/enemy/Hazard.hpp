@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entity/Status.hpp"
 #include "particle/Particle.hpp"
 
 class Blast : public Particle {
@@ -28,6 +29,8 @@ class FrostPatch : public Particle {
 public:
   bool hostile;
   Color tone{0.7f, 0.88f, 1, 1};
+  StatusKind kind = StatusKind::Chill;
+  float power = 0.4f;
 
   FrostPatch(double x, double y, bool hostile) : Particle(x, y, 3), hostile(hostile) {}
   int layer() const override { return 0; }

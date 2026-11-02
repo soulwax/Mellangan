@@ -400,6 +400,8 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
     damage *= 1.15f;
   Player &p = *level->player;
   bool ours = !(src && src->hostile());
+  if (ours && !periodic)
+    level->xNoise = x, level->yNoise = y, level->noiseAt = level->time;
   bool crit = !periodic && rng.chance(0.08f + p.luck);
   if (!periodic && !crit && p.sure > 0)
     crit = true, p.sure--;

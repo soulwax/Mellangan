@@ -74,6 +74,10 @@ const Lurk AMBUSH{90};
 const Leap POUNCE{0.25f, 0.45f, 2.2f, 22};
 const Approach SNIPE{165, {1, 0, 0, 30, 3, false}};
 const Approach TEND{150, {0.9, 0, 0, 24, 2, false}};
+const Lurk SLUMBER{0};
+const Guard BULWARK{4.5f, 0.7, 28, 1.1};
+const Melee THRUST{0.35f, 0.3f, 3.6, 1.8f};
+const Lurk CLING{55};
 
 const Plan PLANS[] = {
     {{&FLUTTER}, {}},
@@ -138,6 +142,20 @@ const Plan PLANS[] = {
     {{&CLOSE, &STAB}, {&FALTER}},
     {{&TEND}, {&FALTER}},
     {{&ROOT}, {}},
+    {{&OOZE}, {}},
+    {{&STALK, &CLOSE, &BITE}, {&FALTER}},
+    {{&SLUMBER, &LUMBER, &SLAM}, {}},
+    {{&CLOSE, &BITE}, {&FALTER}},
+    {{&CHARGE, &NIP}, {}},
+    {{&CASTING_RANGE}, {&FALTER}},
+    {{&BULWARK, &THRUST}, {}},
+    {{&HOVER, &ORBIT}, {}},
+    {{&FLANK, &BITE}, {&FALTER}},
+    {{&TEND}, {&FALTER}},
+    {{&FLUTTER}, {}},
+    {{&CLING, &HOP_RANGE, &POUNCE, &NIP}, {}},
+    {{&LUMBER, &SLAM}, {}},
+    {{&SCUTTLE, &NIP}, {&FALTER}},
 };
 static_assert(sizeof(PLANS) / sizeof(PLANS[0]) == int(EnemyKind::Count));
 

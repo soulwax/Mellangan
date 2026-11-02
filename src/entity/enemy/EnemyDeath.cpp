@@ -12,6 +12,7 @@
 #include "entity/enemy/Cyclops.hpp"
 #include "entity/enemy/Ghost.hpp"
 #include "entity/enemy/Mimic.hpp"
+#include "entity/enemy/Named.hpp"
 #include "entity/enemy/Necromancer.hpp"
 #include "entity/enemy/Renegade.hpp"
 #include "entity/enemy/Thief.hpp"
@@ -179,6 +180,8 @@ void Enemy::die() {
   if (level->rules.loot)
     for (int i = 0; i <= (title && killer.bonus.extraLoot > 0); i++)
       ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this));
+  if (pack)
+    named::fall(*this);
   if (elite)
     level->game.hitStop(0.035f);
   traits.died(*this, type.damage * damageMul * 2);

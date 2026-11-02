@@ -45,10 +45,31 @@ struct FeatureSpawn {
   int base, dense;
 };
 
-typedef uint64_t FoeMask;
-static_assert(int(EnemyKind::Count) <= 64);
-static_assert(int(EnemyKind::Count) <= 64, "FoeMask holds 64 kinds");
-constexpr FoeMask foe(EnemyKind k) { return FoeMask(1) << int(k); }
+struct FoeMask {
+  static constexpr int WORDS = 2;
+  uint64_t bits[WORDS]{};
+
+  constexpr FoeMask operator|(const FoeMask &o) const {
+    FoeMask m;
+    for (int i = 0; i < WORDS; i++)
+      m.bits[i] = bits[i] | o.bits[i];
+    return m;
+  }
+  constexpr FoeMask operator&(const FoeMask &o) const {
+    FoeMask m;
+    for (int i = 0; i < WORDS; i++)
+      m.bits[i] = bits[i] & o.bits[i];
+    return m;
+  }
+  constexpr FoeMask &operator|=(const FoeMask &o) { return *this = *this | o; }
+  constexpr explicit operator bool() const { return bits[0] || bits[1]; }
+};
+static_assert(int(EnemyKind::Count) <= 64 * FoeMask::WORDS, "FoeMask is too narrow");
+constexpr FoeMask foe(EnemyKind k) {
+  FoeMask m;
+  m.bits[int(k) / 64] = uint64_t(1) << (int(k) % 64);
+  return m;
+}
 
 constexpr int MAX_SPAWNS = 20;
 struct BiomeData {

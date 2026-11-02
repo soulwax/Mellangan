@@ -6,7 +6,9 @@
 #include "entity/Player.hpp"
 #include "entity/enemy/SupplyBarrel.hpp"
 #include "level/Level.hpp"
+#include "level/World.hpp"
 #include "entity/enemy/Boss.hpp"
+#include "entity/enemy/Named.hpp"
 #include "level/Flavour.hpp"
 #include "level/biome/Biome.hpp"
 #include "particle/Spark.hpp"
@@ -66,6 +68,14 @@ EnemyKind Spawner::pick(const Roster &r, double x, double y) const {
   const Balance &b = level.game.balance;
   if (level.time >= 70 && rng.chance(0.015f))
     return EnemyKind::Thief;
+  const EnemyType &stalker = Enemy::typeOf(EnemyKind::NightStalker);
+  if (!level.night.dawn && level.time >= stalker.unlockAt && rng.chance(0.02f))
+    return EnemyKind::NightStalker;
+  Structure site;
+  if (level.time >= Enemy::typeOf(EnemyKind::GraveRobber).unlockAt &&
+      world::structureAt(int(std::floor(x / 16)), int(std::floor(y / 16)), site, 4) &&
+      site.kind == StructureKind::Graveyard && rng.chance(0.3f))
+    return EnemyKind::GraveRobber;
   FoeMask foes = localFoes(world::biomeUnder(x, y));
   EnemyKind local[int(EnemyKind::Count)];
   int m = 0, n = int(r.common.size());
@@ -186,6 +196,7 @@ void Spawner::tick() {
     barrel();
   if (t >= nextBoss && level.rules.bosses)
     boss();
+  named::tick(level);
 }
 
 void Spawner::wave(int index, int count) {
@@ -299,11 +310,11 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   std::lock_guard<std::mutex> lock(spawnMutex);
   if (level.rules.safeAt(x, y))
     return nullptr;
-  if (kind == EnemyKind::SandWyrm && !boss) {
-    if (level.time < nextWyrm)
-      kind = EnemyKind::DuneRaider;
+  if ((kind == EnemyKind::SandWyrm || kind == EnemyKind::EmberDrake) && !boss) {
+    if (level.time < nextMini)
+      kind = kind == EnemyKind::SandWyrm ? EnemyKind::DuneRaider : EnemyKind::AshWraith;
     else
-      nextWyrm = level.time + WYRM_GAP;
+      nextMini = level.time + MINI_GAP;
   }
   const Balance &b = level.game.balance;
   const Omen &o = level.portent();
@@ -331,9 +342,11 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   }
   entt::entity alphaId = added->id;
 
-  if (kind == EnemyKind::Alpha || kind == EnemyKind::MoonHound || kind == EnemyKind::Hyena) {
+  if (kind == EnemyKind::Alpha || kind == EnemyKind::MoonHound || kind == EnemyKind::Hyena ||
+      kind == EnemyKind::CaveBat) {
     bool hounds = kind != EnemyKind::Alpha;
-    int packSize = kind == EnemyKind::Hyena ? 5
+    int packSize = kind == EnemyKind::CaveBat ? 11
+                   : kind == EnemyKind::Hyena ? 5
                    : hounds                 ? 3
                    : boss                   ? rng.irange(6, 8)
                                             : rng.irange(2, 4);

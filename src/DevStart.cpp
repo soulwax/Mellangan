@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include "entity/Merchant.hpp"
+#include "entity/enemy/Named.hpp"
 #include "entity/Ally.hpp"
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
@@ -32,6 +33,8 @@ void DevStart::parse(int argc, char **argv) {
       merchant = std::atoi(argv[++i]);
     else if (a == "--mats" && more)
       mats = std::atoi(argv[++i]);
+    else if (a == "--named" && more)
+      named = std::atoi(argv[++i]);
     else if (a == "--allies" && more)
       allies = std::atoi(argv[++i]);
     else if (a == "--landmark" && more)
@@ -122,6 +125,8 @@ void DevStart::apply(Player &p) {
   }
   for (int &m : p.materials)
     m += mats;
+  if (named >= 0 && named < NAMED_COUNT && p.level)
+    named::raise(*p.level, named, p.x + 110, p.y);
   for (int i = 0; i < allies && p.level; i++) {
     double a = TAU * i / allies;
     summon(*p.level, AllyKind(i % int(AllyKind::Decoy)), p.x + std::cos(a) * 24,

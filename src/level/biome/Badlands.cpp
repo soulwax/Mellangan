@@ -12,7 +12,8 @@ Badlands::Badlands()
               45,
               {0, 10, 15, 30, 25, 0, 0, 45},
               foe(EnemyKind::Scorpion) | foe(EnemyKind::Rat) |
-                  foe(EnemyKind::Burrower) | foe(EnemyKind::DuneRaider),
+                  foe(EnemyKind::Burrower) | foe(EnemyKind::DuneRaider) |
+                  foe(EnemyKind::KoboldMiner) | foe(EnemyKind::OreGolem),
               {{&f::mesa, 5, 50},
                {&f::hoodoo, 5, 30},
                {&f::juniper, 4, 30},

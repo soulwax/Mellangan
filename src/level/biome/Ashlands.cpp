@@ -16,7 +16,8 @@ Ashlands::Ashlands()
               45,
               {0, 10, 20, 10, 60, 0, 0, 20},
               foe(EnemyKind::Demon) | foe(EnemyKind::Cultist) |
-                  foe(EnemyKind::Bat),
+                  foe(EnemyKind::Bat) | foe(EnemyKind::MagmaSlug) |
+                  foe(EnemyKind::FlameCultist),
               {{&f::charredTree, 8, 80},
                {&f::obsidian, 4, 20},
                {&f::ashTuft, 8, 0},
