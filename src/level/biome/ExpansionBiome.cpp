@@ -18,7 +18,7 @@ using K=EnemyKind;
 const FoeMask FOES[]={
     foe(K::GlassMantis)|foe(K::DustVulture),
     foe(K::MireLeech)|foe(K::BogLantern)|foe(K::Drowned)|foe(K::Snapjaw),
-    foe(K::FrostWisp)|foe(K::Ghost),
+    foe(K::FrostWisp)|foe(K::Ghost)|foe(K::MoonHound),
     foe(K::MireLeech)|foe(K::Necromancer)|foe(K::Drowned)|foe(K::SunkenPriest),
     foe(K::EmberImp)|foe(K::MireLeech),
     foe(K::Sporeling)|foe(K::Wolf)|foe(K::Alpha)|foe(K::AmberBeetle),

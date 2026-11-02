@@ -10,7 +10,8 @@
 #include "menu/TitleMenu.hpp"
 
 namespace {
-constexpr int PAGE_COUNT = 2, LIST_ROWS = 13, RELIC_ROWS = 7;
+constexpr int LIST_ROWS = 13, RELIC_ROWS = 7,
+              PAGE_COUNT = (Codex::KINDS + LIST_ROWS - 1) / LIST_ROWS;
 
 SDL_FRect pageButton(const Screen &s, int direction) {
   float u = s.u, small = std::max(1.0f, u - 1), size = 22 * small;
@@ -35,7 +36,9 @@ const char *const FOES[Codex::KINDS] = {
     "THORNLING", "WILD BOAR", "GOBLIN ARCHER", "GOBLIN SHAMAN",
     "SAPLING", "TREANT", "MOTH WISP", "CUTTHROAT",
     "BOG TOAD", "DROWNED", "SNAPJAW", "STRANGLER VINE",
-    "AMBER BEETLE", "SPORE PUFFER", "SUNKEN PRIEST"
+    "AMBER BEETLE", "SPORE PUFFER", "SUNKEN PRIEST",
+    "YETI", "ICE WRAITH", "BARROW WIGHT", "CRYSTAL GOLEM",
+    "CRYSTAL SHARD", "MOON HOUND", "LYNX", "BARROW ARCHER"
 };
 } // namespace
 

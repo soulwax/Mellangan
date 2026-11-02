@@ -16,7 +16,9 @@ void Orb::tick() {
     if (Player *p = m.asPlayer())
       p->felledBy = by;
     m.strike(damage, xa, ya, 0);
-    Spark::burst(*level, x, y, {0.75f, 0.35f, 1, 1}, 6, 50, false);
+    if (chill > 0)
+      m.afflict(StatusKind::Chill, 0.5f, chill);
+    Spark::burst(*level, x, y, tone, 6, 50, false);
     remove();
   });
 }
@@ -26,12 +28,12 @@ void Orb::render(Screen &s) {
   s.line(xp - 5, yp - 5, xp - 5, yp - 2, 1, col::red);
   s.line(xp + 5, yp + 5, xp + 2, yp + 5, 1, col::red);
   s.line(xp + 5, yp + 5, xp + 5, yp + 2, 1, col::red);
-  s.color({0.75f, 0.35f, 1, 1});
-  s.center(atlas::Bolt, xp, yp, 1.2f, life * 4);
+  s.color(tone);
+  s.center(atlas::Bolt, xp, yp, size, life * 4);
   s.color(col::white);
   s.center(atlas::Dot, xp, yp, 0.4f);
 }
 
 void Orb::renderLight(Screen &s) {
-  s.glow(xp, yp, 44, {0.25f, 0.08f, 0.35f, 1});
+  s.glow(xp, yp, 44, tone * 0.33f);
 }

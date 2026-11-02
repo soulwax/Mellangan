@@ -325,16 +325,17 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   }
   entt::entity alphaId = added->id;
 
-  if (kind == EnemyKind::Alpha) {
-    int packSize = boss ? rng.irange(6, 8) : rng.irange(2, 4);
+  if (kind == EnemyKind::Alpha || kind == EnemyKind::MoonHound) {
+    bool hounds = kind == EnemyKind::MoonHound;
+    int packSize = hounds ? 3 : boss ? rng.irange(6, 8) : rng.irange(2, 4);
     for (int i = 0; i < packSize; i++) {
       double a = TAU * i / packSize + rng.range(-0.3f, 0.3f);
       double d = rng.range(22, 38);
-      auto w = Enemy::create(EnemyKind::Wolf, hpMul, dmgMul);
+      auto w = Enemy::create(hounds ? kind : EnemyKind::Wolf, hpMul, dmgMul);
       w->x = x + std::cos(a) * d;
       w->y = y + std::sin(a) * d;
       w->aware = aware;
-      w->leader = alphaId;
+      w->leader = hounds ? entt::null : alphaId;
       level.add(std::move(w));
     }
   }

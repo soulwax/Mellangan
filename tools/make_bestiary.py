@@ -19,6 +19,13 @@ Band at y=1380, 24 columns by 6 rows (144 cells). Cell i is atlas::beast(i); the
     12  Amber Beetle   a beetle with a polished amber shell
     13  Spore Puffer   a round violet puffball with tiny feet
     14  Sunken Priest  a hooded priest in sea-green robes with a coral staff
+    15  Yeti           a hulking white ape with a blue-grey face
+    16  Ice Wraith     a floating frost-blue hood trailing tatters
+    17  Barrow Wight   a gaunt corpse in a rotted shroud, green eyes
+    18  Crystal Golem  a violet crystal giant with spiked shoulders (the shard reuses it, scaled)
+    19  Moon Hound     a lean silver-blue hound with glowing eyes
+    20  Lynx           a tawny spotted cat with black ear tufts
+    21  Barrow Archer  a hooded skeleton with a bow and a frost arrow
 
 Usage: python tools/make_bestiary.py [--preview out.png]   (make_assets.py calls add_bestiary too)
 """
@@ -46,6 +53,13 @@ TOAD = {"o": (64, 86, 40), "V": (104, 132, 58), "P": (170, 182, 104), "Z": (214,
 SEA = {"w": (34, 70, 84), "A": (60, 112, 120), "a": (110, 164, 160)}
 AMBER = {"y": (120, 64, 20), "Y": (196, 120, 36), "z": (244, 190, 90)}
 SPORE = {"v": (84, 52, 104), "I": (140, 96, 170), "i": (200, 160, 226)}
+YETI = {"f": (150, 164, 186), "u": (206, 216, 230), "n": (246, 250, 255), "p": (96, 110, 140)}
+WRAITH = {"f": (40, 60, 100), "u": (110, 160, 210), "n": (200, 232, 250)}
+WIGHT = {"k": (44, 54, 50), "K": (78, 96, 84), "Y": (118, 140, 120), "e": (140, 255, 160)}
+CRYSTAL = {"v": (78, 56, 138), "I": (146, 116, 214), "i": (206, 186, 250), "n": (250, 246, 255)}
+HOUND = {"s": (48, 52, 82), "S": (98, 106, 146), "U": (170, 180, 216)}
+LYNX = {"h": (130, 86, 44), "H": (196, 146, 78), "J": (236, 206, 150)}
+BONE = {"k": (40, 40, 52), "K": (70, 70, 90), "e": (150, 230, 255), "n": (200, 236, 250)}
 EXTRA = {
     "t": (210, 190, 120),
     "R": (220, 60, 50),
@@ -386,9 +400,157 @@ def sunken_priest():
     ), SEA, BARK)
 
 
+def yeti():
+    return draw((
+        "................",
+        ".....uuuuuu.....",
+        "....unnnnnnu....",
+        "....nppppppn....",
+        "...unpEppEpnu...",
+        "...unppppppnu...",
+        "..uunnpTTpnnuu..",
+        ".unnnnnnnnnnnnu.",
+        "unnnnnnnnnnnnnnu",
+        "unnuunnnnnnuunnu",
+        "unu.unnnnnnu.unu",
+        "pnu.unnnnnnu.unp",
+        "pp..uunnnnuu..pp",
+        "....unnu.unnu...",
+        "...uffu..uffu...",
+        "................",
+    ), YETI)
+
+
+def ice_wraith():
+    return draw((
+        "................",
+        "......uuuu......",
+        ".....unnnnu.....",
+        "....unffffnu....",
+        "....ufQffQfu....",
+        "....uffffffu....",
+        "...unuffffunu...",
+        "..un.unnnnu.nu..",
+        ".un..unnnnu..nu.",
+        ".u...unnnnu...u.",
+        ".....uunnuu.....",
+        "......unnu......",
+        ".....u.uu.u.....",
+        "......u..u......",
+        "................",
+        "................",
+    ), WRAITH)
+
+
+def barrow_wight():
+    return draw((
+        "................",
+        "......kkkk......",
+        ".....kKKKKk.....",
+        "....kKXXXXKk....",
+        "....kXeXXeXk....",
+        "....kXXXXXXk....",
+        ".....kXTTXk.....",
+        "...kkKKKKKKkk...",
+        "..kKKYKKKKYKKk..",
+        ".XkKKKYKKYKKKkX.",
+        "XX.kKKKKKKKKk.XX",
+        "...kKKYKKYKKk...",
+        "...kKKKKKKKKk...",
+        "..kKKKYKKYKKKk..",
+        "..kkk.kkkk.kkk..",
+        "................",
+    ), WIGHT)
+
+
+def crystal_golem():
+    return draw((
+        "................",
+        "...n........n...",
+        "..nI..iiii..In..",
+        "..vI.iIIIIi.Iv..",
+        "..vIiIOIIOIiIv..",
+        ".vIIiIIIIIIiIIv.",
+        ".vIiiiIIIIiiiIv.",
+        "vIIv.iIIIIi.vIIv",
+        "vIv..ivIIvi..vIv",
+        ".v...iIIIIi...v.",
+        "....iIIvvIIi....",
+        "....iIv..vIi....",
+        "...vIIv..vIIv...",
+        "...vvvv..vvvv...",
+        "................",
+        "................",
+    ), CRYSTAL)
+
+
+def moon_hound():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "...s.s..........",
+        "..sUsUs.........",
+        ".sSSSSSs........",
+        "sSOSSSSSs.....s.",
+        "EsSSSSUUSsssssUs",
+        ".ssSSUUUUUUUSSs.",
+        "...sSSSSSSSSSs..",
+        "...sSs.....sSs..",
+        "...sS.......sS..",
+        "...sS.......sS..",
+        "..ss.......ss...",
+        "................",
+        "................",
+    ), HOUND)
+
+
+def lynx():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "..E.E...........",
+        "..hHhH..........",
+        ".hHJHHh.........",
+        "hHOHHJHh........",
+        "EhJJJHHhhhhhhh..",
+        ".hhHHHbHHHbHHHh.",
+        "..hHHHHHbHHHHHhE",
+        "..hJJHHHHHHJJh..",
+        "...hH......hH...",
+        "...hH......hH...",
+        "..hh......hh....",
+        "................",
+        "................",
+    ), LYNX, BARK)
+
+
+def barrow_archer():
+    return draw((
+        "................",
+        "................",
+        "......kkk.......",
+        ".....kKKKk...b..",
+        "....kKXXXKk..Bb.",
+        "....kXeXeXk..B.b",
+        ".....XXTXX...B.b",
+        "......kXk...B..b",
+        "....kKXXXKnnnnnb",
+        "....kXKXKXk.B..b",
+        "....kKXXXKk..B.b",
+        ".....kKKKk...B.b",
+        ".....X...X...Bb.",
+        ".....X...X...b..",
+        "....XX...XX.....",
+        "................",
+    ), BONE, BARK)
+
+
 PAINTERS = (thornling, boar, goblin_archer, goblin_shaman, sapling, treant, moth, cutthroat,
             bog_toad, drowned, snapjaw, strangler_vine, amber_beetle, spore_puffer,
-            sunken_priest)
+            sunken_priest, yeti, ice_wraith, barrow_wight, crystal_golem, moon_hound, lynx,
+            barrow_archer)
 
 
 def slot(i):

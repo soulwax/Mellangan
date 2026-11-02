@@ -44,6 +44,14 @@ All notable changes to Mellangan are documented here. The format follows
   - Amber beetles shrug off blows from the front.
   - Spore puffers burst into poison beside you.
   - Sunken priests raise the drowned.
+- Seven new foes of the Frost, each with its own sprite:
+  - Yetis throw staggering snowballs from range, then close in (Snowfields).
+  - Ice wraiths drift through anything and chill you when close (Snowfields, Barrows).
+  - Barrow wights drain your life with a beam until you step out of reach (Barrows).
+  - Crystal golems throw blows from the front back at you as shards and break into three crystal shards when they fall (Crystal Fields).
+  - Moon hounds hunt in packs of four by night, blink to your flanks and fade at dawn (Moonlit Grove).
+  - Lynxes wait hidden among the trees, their eyes glinting, and pounce when you pass (Taiga).
+  - Barrow archers loose chilling arrows (Barrows).
 - A wandering merchant (in runs with loot): once you light a shrine, he camps by its fire with a lantern and a barrel. Walk up and press I to trade.
   - He sells healing draughts, plain bases and two or three magic items. His wares are fresh at every newly lit shrine and again at dawn.
   - He buys anything from your bag for a quarter of its worth.
@@ -63,6 +71,7 @@ All notable changes to Mellangan are documented here. The format follows
 - Spirit Swarm spirits drag the foes they marked together when they fade.
 - Mortar shells stagger instead of burning and leave a crater that slows foes.
 - Conduit now gives +15% chain and arc damage instead of a second copy of Keen Eye.
+- The Codex bestiary now pages through every foe; foes past the 26th never showed before.
 - Foes drop potions about half as often, and gold drops are half as large. Item tooltips now show the merchant's real buying price.
 
 ## [0.5.15] - 2026-11-01

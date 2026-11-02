@@ -4,6 +4,8 @@
 #include "entity/Player.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "entity/enemy/ai/Mend.hpp"
+#include "entity/projectile/Arrow.hpp"
+#include "entity/projectile/Orb.hpp"
 #include "level/Level.hpp"
 #include "level/World.hpp"
 #include "particle/Arc.hpp"
@@ -14,7 +16,9 @@ namespace {
 
 constexpr Color HEX{0.55f, 0.85f, 0.35f, 1}, TONGUE{0.9f, 0.45f, 0.5f, 1},
                 WATER{0.45f, 0.7f, 0.9f, 1}, VINE{0.4f, 0.7f, 0.3f, 1},
-                SPORE{0.75f, 0.6f, 0.85f, 1};
+                SPORE{0.75f, 0.6f, 0.85f, 1}, SNOW{0.92f, 0.96f, 1, 1},
+                FROST{0.55f, 0.85f, 1, 1}, LEECH{0.5f, 0.95f, 0.6f, 1},
+                CRYSTAL{0.8f, 0.65f, 1, 1}, MOON{0.75f, 0.8f, 1, 1};
 
 void volley(Enemy &e) { ability::volley(e, 3, 0.22, 150, 6, 0); }
 
@@ -49,6 +53,33 @@ void drown(Enemy &e) {
   e.level->add<Shockwave>(e.x, e.bodyY(), 4, 40, 0.5f, WATER, false);
 }
 
+bool sight(Enemy &e, double near, double far, double &xd, double &yd) {
+  Player &p = *e.level->player;
+  xd = p.x - e.x, yd = p.bodyY() - e.bodyY();
+  double d = std::sqrt(xd * xd + yd * yd);
+  if (p.dead() || d < near || d > far)
+    return false;
+  xd /= d, yd /= d;
+  return true;
+}
+
+void snowball(Enemy &e) {
+  double xd, yd;
+  if (!sight(e, 50, 170, xd, yd))
+    return;
+  Orb *o = e.level->add<Orb>(e.x, e.bodyY(), xd * 95, yd * 95, 8 * e.power());
+  o->by = e.name(), o->tone = SNOW, o->chill = 0.85f, o->size = 1.9f;
+}
+
+void frostshot(Enemy &e) {
+  double xd, yd;
+  if (!sight(e, 0, 240, xd, yd))
+    return;
+  Arrow *a = e.level->add<Arrow>(e.x, e.bodyY(), xd * 150, yd * 150, 6 * e.power(), 1);
+  a->hostile = true, a->chill = 0.35f;
+  Spark::burst(*e.level, e.x + xd * 6, e.bodyY() + yd * 6, FROST, 3, 30, false);
+}
+
 bool wet(double x, double y) {
   return world::isWater(int(std::floor(x / 16)), int(std::floor(y / 16)));
 }
@@ -71,6 +102,14 @@ const WildDef WildFoe::DEFS[] = {
     {{}, 0, 0, false, false, false, false, false, true},
     {{}, 0, 0, false, false, false, false, false, false, false, false, false, true},
     {{drown, 8, 220, WATER}, 1, 0},
+    {.cast = {snowball, 3.5f, 170, SNOW}, .casts = 1},
+    {.aura = true},
+    {.drains = true},
+    {.guarded = true, .reflects = true, .shatters = true},
+    {},
+    {.nocturnal = true, .blinks = true},
+    {.lurks = true},
+    {.cast = {frostshot, 2.6f, 240, FROST}, .casts = 1},
 };
 static_assert(std::size(WildFoe::DEFS) == int(WildFoe::LAST) - int(WildFoe::FIRST) + 1);
 
@@ -87,8 +126,12 @@ void WildFoe::onAdded() {
 
 void WildFoe::surface() {
   xHome = x, yHome = y;
-  if (!wild.waterborn)
+  if (wild.nocturnal && level->night.dawn)
+    return remove();
+  if (!wild.waterborn) {
+    buried = wild.lurks;
     return;
+  }
   for (int i = 0; i < 16 && !wet(x, y); i++) {
     float a = roll() * TAU, r = 16 + roll() * 96;
     if (wet(xHome + std::cos(a) * r, yHome + std::sin(a) * r))
@@ -119,10 +162,23 @@ void WildFoe::tick() {
       Spark::burst(*level, ally->x, ally->bodyY(), HEX, 4, 30, true);
     }
   }
+  if (wild.nocturnal && level->night.dawn) {
+    Spark::burst(*level, x, bodyY(), MOON, 6, 40, true);
+    return remove();
+  }
+  glintCool -= DT;
+  if (glint)
+    reflect();
   if (p.dead())
     return;
   double xd = p.x - x, yd = p.y - y, d2 = xd * xd + yd * yd;
   float reach = type.radius + p.radius + 4;
+  if (wild.aura && d2 < 40 * 40)
+    p.afflict(StatusKind::Chill, 0.3f, 0.3f);
+  if (wild.drains)
+    leech(p, std::sqrt(d2));
+  if (wild.blinks && aware)
+    blink(p, std::sqrt(d2));
   if (wild.dims && d2 < reach * reach)
     p.dim = 4;
   if (wild.roots)
@@ -152,9 +208,66 @@ void WildFoe::puff(Player &) {
   hurt(maxHp * 10, 0, 0, 0);
 }
 
+void WildFoe::leech(Player &p, double d) {
+  if (drainTime <= 0) {
+    if ((drainCool -= DT) > 0 || d > 100)
+      return;
+    drainTime = 2, drainTick = 0;
+  }
+  if (d > 130) {
+    drainTime = 0, drainCool = 3;
+    Spark::burst(*level, x, bodyY(), LEECH, 4, 30, true);
+    return;
+  }
+  if ((drainTick -= DT) <= 0) {
+    drainTick = 0.25f;
+    level->add<Arc>(std::vector<ArcNode>{{x, bodyY()}, {p.x, p.bodyY()}}, 0.26f, LEECH);
+    float sip = 2.5f * power();
+    p.felledBy = name();
+    p.hurt(sip, true);
+    hp = std::min(maxHp, hp + sip);
+  }
+  if ((drainTime -= DT) <= 0)
+    drainCool = 4;
+}
+
+void WildFoe::blink(Player &p, double d) {
+  if ((blinkTime -= DT) > 0 || d < 60 || d > 200)
+    return;
+  blinkTime = 3.5f + 1.5f * roll();
+  Spark::burst(*level, x, bodyY(), MOON, 5, 40, true);
+  double a = std::atan2(y - p.y, x - p.x) + (roll() < 0.5f ? 1.3 : -1.3);
+  x = p.x + std::cos(a) * 34, y = p.y + std::sin(a) * 34;
+  level->collide(x, y, radius);
+  Spark::burst(*level, x, bodyY(), MOON, 5, 40, true);
+}
+
+void WildFoe::reflect() {
+  glint = false;
+  double xd, yd;
+  if (glintCool > 0 || !sight(*this, 0, 260, xd, yd))
+    return;
+  glintCool = 0.6f;
+  Orb *o = level->add<Orb>(x + xd * radius, bodyY() + yd * radius, xd * 110, yd * 110,
+                           6 * power());
+  o->by = name(), o->tone = CRYSTAL, o->size = 0.9f;
+  Spark::burst(*level, x + xd * radius, bodyY() + yd * radius, CRYSTAL, 4, 50, false);
+}
+
+Color WildFoe::tint() const {
+  return wild.aura ? col::white.alpha(0.6f + 0.15f * std::sin(animT * 2)) : col::white;
+}
+
 void WildFoe::render(Screen &s) {
   if (!buried)
     return Enemy::render(s);
+  if (!wild.waterborn) {
+    if (std::fmod(animT, 3.2f) < 0.18f)
+      return;
+    s.rect(xp - 3, yp - 8, 2, 1, col::gold.alpha(0.8f));
+    s.rect(xp + 2, yp - 8, 2, 1, col::gold.alpha(0.8f));
+    return;
+  }
   float k = 0.5f + 0.5f * std::sin(animT * 3);
   s.ring(xp, yp - 2, 4 + 2 * k, WATER.alpha(0.35f));
   s.ring(xp + 5, yp, 2 + k, WATER.alpha(0.25f));
@@ -169,10 +282,11 @@ float WildFoe::contactBonus(const Player &p) const {
   return wild.backstab && (x - p.x) * p.facing < 0 ? 1.5f : 1.0f;
 }
 
-float WildFoe::shell(double xd, double yd) const {
+float WildFoe::shell(double xd, double yd) {
   if (!wild.guarded || (xd == 0 && yd == 0))
     return 1;
   double facing = xd * xMark + yd * yMark;
+  glint |= wild.reflects && facing < -0.3;
   return facing < -0.3 ? 0.3f : facing > 0.3 ? 1.3f : 1.0f;
 }
 
@@ -184,5 +298,11 @@ void WildFoe::bit(Player &p) {
 void WildFoe::die() {
   if (wild.bramble)
     level->add<Bramble>(x, y);
+  for (int i = 0; wild.shatters && i < 3; i++) {
+    float a = TAU * i / 3 + roll();
+    level->spawner.spawn(EnemyKind::CrystalShard, x + std::cos(a) * 10, y + std::sin(a) * 10);
+  }
+  if (wild.shatters)
+    level->add<Shockwave>(x, bodyY(), 4, 34, 0.4f, CRYSTAL, false);
   Enemy::die();
 }

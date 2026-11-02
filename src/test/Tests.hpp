@@ -30,6 +30,7 @@ void testTalents();
 void testRelicsAndUniques();
 void testGreenwoodFoes();
 void testMarchesFoes();
+void testFrostFoes();
 void testRunRules();
 void testShapeForms();
 void testChampionTraits();

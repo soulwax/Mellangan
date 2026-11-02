@@ -15,7 +15,7 @@ CrystalFields::CrystalFields()
               50,
               {0, 0, 50, 10, 30, 10, 30},
               foe(EnemyKind::Ghost) | foe(EnemyKind::Cultist) |
-                  foe(EnemyKind::Knight),
+                  foe(EnemyKind::Knight) | foe(EnemyKind::CrystalGolem),
               {{&f::crystalSpire, 6, 60},
                {&f::amethyst, 6, 20},
                {&f::iceChunk, 3, 0},

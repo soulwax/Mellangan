@@ -66,6 +66,14 @@ struct Arena {
     return n;
   }
 
+  int count(EnemyKind kind) {
+    int n = 0;
+    for (auto [id, o] : level.reg.view<Owned>().each())
+      if (auto *e = dynamic_cast<Enemy *>(o.self.get()); e && !e->removed && e->is(kind))
+        n++;
+    return n;
+  }
+
   int hostileArrows() {
     int n = 0;
     for (auto [id, o] : level.reg.view<Owned>().each())
@@ -283,5 +291,113 @@ void testMarchesFoes() {
   std::cout << "[TEST] Marches foes: toads leap, stun and pull, beetles shrug off the front, "
                "vines hold their ground and root, puffers burst, the drowned keep to water, "
                "snapjaws wait beneath it: PASS"
+            << std::endl;
+}
+
+void testFrostFoes() {
+  {
+    Arena a;
+    WildFoe *yeti = a.add(EnemyKind::Yeti, 120, 0);
+    a.run(1);
+    int orbs = a.orbs();
+    yeti->casts->fn(*yeti);
+    a.run(1);
+    assert(a.orbs() == orbs + 1);
+    bool staggered = false;
+    for (int i = 0; i < 150 && !staggered; i++)
+      a.run(1), staggered = a.p.status.power(StatusKind::Chill) > 0.6f;
+    assert(staggered);
+    yeti->x = a.p.x + 30, yeti->y = a.p.y;
+    orbs = a.orbs();
+    yeti->casts->fn(*yeti);
+    a.run(1);
+    assert(a.orbs() == orbs);
+  }
+  {
+    Arena a;
+    WildFoe *wraith = a.add(EnemyKind::IceWraith, 20, 0);
+    a.run(5);
+    assert(wraith->type.floats && a.p.status.power(StatusKind::Chill) > 0);
+  }
+  {
+    Arena a;
+    a.p.god = false;
+    WildFoe *wight = a.add(EnemyKind::BarrowWight, 70, 0);
+    a.run(1);
+    wight->hp = wight->maxHp / 2;
+    float hp = a.p.hp;
+    for (int i = 0; i < 240 && wight->drainTime <= 0; i++)
+      a.run(1);
+    assert(wight->drainTime > 0);
+    a.run(30);
+    assert(a.p.hp < hp && wight->hp > wight->maxHp / 2);
+    a.p.x = wight->x - 200, a.p.y = wight->y;
+    a.run(2);
+    assert(wight->drainTime <= 0);
+  }
+  {
+    Arena a;
+    a.p.luck = -1;
+    WildFoe *golem = a.add(EnemyKind::CrystalGolem, 90, 0);
+    a.run(20);
+    assert(golem->xMark < -0.9);
+    int orbs = a.orbs();
+    float hp = golem->hp;
+    golem->hurt(10, 1, 0, 0);
+    a.run(1);
+    assert(std::abs(hp - golem->hp - 3) < 0.01f && a.orbs() > orbs);
+    golem->hurt(golem->maxHp * 10, 1, 0, 0);
+    a.run(2);
+    assert(a.count(EnemyKind::CrystalGolem) == 0 && a.count(EnemyKind::CrystalShard) == 3);
+  }
+  {
+    Arena a;
+    a.level.spawner.spawn(EnemyKind::MoonHound, a.p.x + 150, a.p.y);
+    a.run(1);
+    assert(a.count(EnemyKind::MoonHound) == 4);
+    WildFoe *hound = a.add(EnemyKind::MoonHound, -120, 0);
+    a.run(1);
+    bool blinked = false;
+    for (int i = 0; i < 400 && !blinked; i++) {
+      double x = hound->x, y = hound->y;
+      a.run(1);
+      blinked = (hound->x - x) * (hound->x - x) + (hound->y - y) * (hound->y - y) > 20 * 20;
+    }
+    assert(blinked);
+    a.level.night.dawn = true;
+    a.run(2);
+    assert(a.count(EnemyKind::MoonHound) == 0);
+  }
+  {
+    Arena a;
+    WildFoe *lynx = a.add(EnemyKind::Lynx, 250, 0);
+    a.run(2);
+    assert(lynx->buried);
+    a.p.x = lynx->x - 70, a.p.y = lynx->y;
+    for (int i = 0; i < 30 && lynx->buried; i++)
+      a.run(1);
+    assert(!lynx->buried);
+    bool flew = false;
+    for (int i = 0; i < 120 && !flew; i++)
+      a.run(1), flew = lynx->z > 4;
+    assert(flew);
+  }
+  {
+    Arena a;
+    WildFoe *archer = a.add(EnemyKind::BarrowArcher, 100, 0);
+    a.run(1);
+    int arrows = a.hostileArrows();
+    archer->casts->fn(*archer);
+    a.run(1);
+    assert(a.hostileArrows() == arrows + 1);
+    bool chilled = false;
+    for (int i = 0; i < 90 && !chilled; i++)
+      a.run(1), chilled = a.p.status.power(StatusKind::Chill) > 0.3f;
+    assert(chilled);
+  }
+  std::cout << "[TEST] Frost foes: yetis throw staggering snowballs from range, wraiths chill "
+               "close by, wights drain until you step away, golems throw frontal hits back "
+               "and shatter into three shards, moon hounds hunt in fours, blink and fade at "
+               "dawn, lynxes wait hidden and pounce, barrow arrows chill: PASS"
             << std::endl;
 }

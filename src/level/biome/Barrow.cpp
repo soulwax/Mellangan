@@ -12,7 +12,9 @@ Barrow::Barrow()
              55,
              {0, 65, 25, 0, 10, 0, 20},
              foe(EnemyKind::Bat) | foe(EnemyKind::Ghost) |
-                 foe(EnemyKind::Cultist) | foe(EnemyKind::Necromancer),
+                 foe(EnemyKind::Cultist) | foe(EnemyKind::Necromancer) |
+                 foe(EnemyKind::IceWraith) | foe(EnemyKind::BarrowWight) |
+                 foe(EnemyKind::BarrowArcher),
              {{&f::grave, 8, 90},
               {&f::deadPine, 6, 60},
               {&f::bush, 4, 30},

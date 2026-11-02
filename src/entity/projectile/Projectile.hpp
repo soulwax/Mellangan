@@ -8,7 +8,7 @@ class Mob;
 
 class Projectile : public Entity {
 public:
-  float life, maxLife, damage, knock;
+  float life, maxLife, damage, knock, chill = 0;
   int pierce;
   bool hostile = false;
   std::vector<entt::entity> hits;

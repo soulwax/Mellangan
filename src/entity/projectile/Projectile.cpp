@@ -16,6 +16,8 @@ void Projectile::collide() {
       double xd, yd;
       push(p, xd, yd);
       p.strike(damage, xd, yd, knock);
+      if (chill > 0)
+        p.afflict(StatusKind::Chill, 1.2f, chill);
       if (--pierce <= 0)
         spent(), remove();
     });

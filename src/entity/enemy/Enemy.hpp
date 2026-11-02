@@ -54,6 +54,14 @@ enum class EnemyKind {
   AmberBeetle,
   SporePuffer,
   SunkenPriest,
+  Yeti,
+  IceWraith,
+  BarrowWight,
+  CrystalGolem,
+  CrystalShard,
+  MoonHound,
+  Lynx,
+  BarrowArcher,
   Count
 };
 
@@ -117,7 +125,7 @@ public:
   void split() override;
   bool bossLike() const override { return boss || def; }
   virtual float contactBonus(const Player &) const { return 1; }
-  virtual float shell(double, double) const { return 1; }
+  virtual float shell(double, double) { return 1; }
   virtual void bit(Player &) {}
   float power() const override { return damageMul * might * status.outgoing(); }
   void aim(double &ax, double &ay) const override;

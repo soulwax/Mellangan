@@ -66,6 +66,13 @@ const Melee LUNGE{0.35f, 0.5f, 5.0, 2.2f};
 const Totem ROOT;
 const Guard SHELL{3.5f, 0.8, 26};
 const Approach DRIFT{0, {0.7, 0.6, 2.5, 0, 0, false}};
+const Approach THROW_RANGE{60, {}};
+const Approach HAUNT{0, {0.8, 0.5, 2, 30, 4, false}};
+const Approach DRAIN_RANGE{80, {1, 0, 0, 24, 3, false}};
+const Guard WARD{4.0f, 0.7, 30};
+const Lurk AMBUSH{90};
+const Leap POUNCE{0.25f, 0.45f, 2.2f, 22};
+const Approach SNIPE{165, {1, 0, 0, 30, 3, false}};
 
 const Plan PLANS[] = {
     {{&FLUTTER}, {}},
@@ -114,6 +121,14 @@ const Plan PLANS[] = {
     {{&SHELL, &BITE}, {&FALTER}},
     {{&DRIFT}, {}},
     {{&CASTING_RANGE, &CAST}, {&FALTER}},
+    {{&THROW_RANGE, &LUMBER, &SLAM}, {}},
+    {{&STALK, &HAUNT}, {}},
+    {{&DRAIN_RANGE}, {&FALTER}},
+    {{&WARD, &SLAM}, {}},
+    {{&CHARGE, &NIP}, {}},
+    {{&FLANK, &BITE}, {&FALTER}},
+    {{&AMBUSH, &HOP_RANGE, &POUNCE, &STAB}, {&FALTER}},
+    {{&SNIPE}, {&FALTER}},
 };
 static_assert(sizeof(PLANS) / sizeof(PLANS[0]) == int(EnemyKind::Count));
 
