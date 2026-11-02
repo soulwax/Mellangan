@@ -70,7 +70,7 @@ void testDelves() {
     }
     level.tick(), level.tick();
     assert(c.delve.floor == f && c.delve.inside(level) > 0);
-    assert(p.dim > 0);
+    assert(c.delve.gloom > 0.5f);
     if (f == Delve::FLOORS) {
       bool guardian = false;
       level.each<Enemy>([&](Enemy &e) { guardian |= e.boss && e.is(Delve::guardian(c.act)); });
@@ -87,6 +87,9 @@ void testDelves() {
     chests += dynamic_cast<Chest *>(o.self.get()) != nullptr;
   assert((chests > 0 || p.pendingTreasures > 0) && !Delve::entrance(level, c, at) && level.rules.spawnRate == 1);
 
+  for (int i = 0; i < 120; i++)
+    c.tick(level);
+  assert(c.delve.gloom == 0);
   c.delve.start(level, c, mine);
   assert(rubble(cx + Delve::RING, cy));
   c.fall(level);

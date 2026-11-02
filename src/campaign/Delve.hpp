@@ -16,7 +16,7 @@ struct Delve {
   bool active = false;
   int floor = 0, rx = 0, ry = 0;
   double x = 0, y = 0;
-  float wait = 0, outside = 1;
+  float wait = 0, outside = 1, gloom = 0, dust = 0;
 
   bool start(Level &level, Campaign &c, const Structure &mine);
   void tick(Level &level, Campaign &c);
@@ -32,4 +32,6 @@ private:
   void seal(Campaign &c);
   void populate(Level &level, Campaign &c);
   void finish(Level &level, Campaign &c);
+  void sift(Level &level);
+  void quake(Level &level, int strength);
 };

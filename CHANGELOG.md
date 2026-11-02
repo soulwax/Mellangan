@@ -10,7 +10,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
-- Delves: in the campaign, press E at a mine's mouth to delve into it. The mine caves in behind you, sealing you inside a ring of rubble, and three floors of cave bats, kobolds, rock crawlers and ore golems follow. The deepest floor holds the act's guardian: the Cyclops, the Spore Mother, the Frost Colossus or the Glass Tyrant. A cleared mine stays cleared and leaves a treasure chest, a boss's loot, ore and rune stones. Falling in a delve lifts the cave-in.
+- Delves: in the campaign, press E at a mine's mouth to delve into it. The mine caves in behind you, crushing whatever stood too close and sealing you inside a ring of rubble. The world fades to near black, so only your light, the mine's lanterns and its fire show the way, while dust sifts down from above. Each new floor shakes the ground harder, and three floors of cave bats, kobolds, rock crawlers and ore golems follow. The deepest floor holds the act's guardian: the Cyclops, the Spore Mother, the Frost Colossus or the Glass Tyrant. A cleared mine stays cleared and leaves a treasure chest, a boss's loot, ore and rune stones. Falling in a delve lifts the cave-in.
 - Hardcore campaigns: press R on the campaign's class screen. You get one life, and death deletes the hero.
 - Nightmare: after the Cinder King falls, the last elder offers Nightmare. The acts begin again from Hearthwick with every foe much stronger, and your hero, gear and towns are kept.
 - The campaign runs through all five acts. Clearing an act's boss opens a road to the next act's town, a new barricaded refuge with its own elder, merchant, stash and waypoint:

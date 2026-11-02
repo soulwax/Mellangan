@@ -12,6 +12,7 @@
 #include "entity/pickup/ItemDrop.hpp"
 #include "level/Level.hpp"
 #include "level/World.hpp"
+#include "particle/Drift.hpp"
 #include "particle/Shockwave.hpp"
 #include "particle/Spark.hpp"
 
@@ -72,7 +73,7 @@ int Delve::inside(Level &level) const {
   int n = 0;
   level.enemiesNear(x, y, RING * 16, [&](Enemy &e) {
     double xd = e.x - x, yd = e.y - y;
-    n += !e.removed && xd * xd + yd * yd < RING * 16.0 * RING * 16;
+    n += !e.removed && !e.buried && xd * xd + yd * yd < RING * 16.0 * RING * 16;
   });
   return n;
 }
@@ -84,6 +85,12 @@ bool Delve::start(Level &level, Campaign &c, const Structure &site) {
   x = site.centerX(), y = site.centerY();
   outside = level.rules.spawnRate, level.rules.spawnRate = 0;
   seal(c);
+  level.enemiesNear(x, y, (RING + 1) * 16, [&](Enemy &e) {
+    if (e.bossLike() || std::hypot(e.x - x, e.y - y) > (RING + 1) * 16)
+      return;
+    Spark::burst(level, e.x, e.bodyY(), DUST, 8, 60, true);
+    e.remove();
+  });
   level.add<Shockwave>(x, y, 8, RING * 16, 0.8f, DUST);
   Spark::burst(level, x, y - 6, DUST, 24, 120, true);
   level.game.onExplosion();
@@ -93,7 +100,10 @@ bool Delve::start(Level &level, Campaign &c, const Structure &site) {
 }
 
 void Delve::populate(Level &level, Campaign &c) {
-  level.game.announce(floor == FLOORS - 1 ? "THE DEEPEST FLOOR" : fmt::format("FLOOR {}", floor + 1));
+  constexpr const char *DEPTHS[FLOORS] = {"FLOOR 1  THE TUNNELS STIR",
+                                          "FLOOR 2  THE GROUND GIVES WAY",
+                                          "THE DEEPEST FLOOR  SOMETHING WAKES"};
+  level.game.announce(DEPTHS[floor]);
   for (const Wave &w : WAVES[floor]) {
     K kind = w.kind == K::Count && w.count ? guardian(c.act) : w.kind;
     for (int i = 0; kind != K::Count && i < w.count; i++) {
@@ -104,17 +114,47 @@ void Delve::populate(Level &level, Campaign &c) {
   }
 }
 
+void Delve::sift(Level &level) {
+  if ((dust -= DT) > 0 || !Drift::room())
+    return;
+  dust = 0.08f;
+  const Player &p = *level.player;
+  double a = rng.range(0, TAU), r = rng.range(0, (RING - 1) * 16);
+  double dx = x + std::cos(a) * r, dy = y + std::sin(a) * r;
+  if (std::hypot(dx - p.x, dy - p.y) > 220)
+    return;
+  Drift *d = level.add<Drift>(dx, dy - 40, rng.range(-3, 3), rng.range(14, 26),
+                              atlas::pt::Puff, Color{0.55f, 0.5f, 0.45f, 0.35f},
+                              rng.range(1.2f, 2));
+  d->grow = 0.3f, d->sway = 3, d->drag = 0.2f;
+}
+
+void Delve::quake(Level &level, int strength) {
+  level.game.onExplosion();
+  for (int i = 0; i < strength; i++)
+    level.game.onExplosion();
+  for (int i = 0; i < 6 * strength && Drift::room(); i++) {
+    double a = rng.range(0, TAU), r = RING * 16 - rng.range(0, 12);
+    Drift *d = level.add<Drift>(x + std::cos(a) * r, y + std::sin(a) * r - 10,
+                                -std::cos(a) * 20, -std::sin(a) * 20, atlas::pt::Puff,
+                                Color{0.5f, 0.46f, 0.4f, 0.55f}, rng.range(1, 1.8f));
+    d->grow = 0.8f, d->drag = 1.2f;
+  }
+  Sound::erupt.play(0.25f + 0.15f * strength, 0.1f);
+}
+
 void Delve::tick(Level &level, Campaign &c) {
+  gloom = std::clamp(gloom + (active ? DT : -DT) / 1.5f, 0.0f, 1.0f);
   if (!active)
     return;
-  Player &p = *level.player;
-  p.dim = std::max(p.dim, 0.6f);
+  sift(level);
   if ((wait -= DT) > 0)
     return;
   if (inside(level) > 0)
     return;
   if (floor >= FLOORS)
     return finish(level, c);
+  quake(level, floor + 1);
   populate(level, c);
   floor++, wait = PAUSE;
 }
