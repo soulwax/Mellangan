@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - A first taste of the campaign: press K on the title screen (or start with `--campaign`) to found Hearthwick and keep one hero in one world across sessions. A new campaign asks for your class first; an existing one continues where you left off.
