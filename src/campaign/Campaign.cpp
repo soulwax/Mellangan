@@ -12,6 +12,7 @@
 #include "campaign/Waypoint.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
+#include "entity/enemy/Enemy.hpp"
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
 #include "item/skill/Skill.hpp"
@@ -25,6 +26,20 @@ namespace {
 
 double townX = 0, townY = 0;
 float threatScale = 1;
+
+bool burning(int tx, int ty) {
+  const Edits::Change *c = world::edits ? world::edits->at(tx, ty) : nullptr;
+  return c && c->placed && (c->piece == Piece::Torch || c->piece == Piece::Campfire);
+}
+
+bool torchlit(double x, double y) {
+  int cx = int(std::floor(x / 16)), cy = int(std::floor(y / 16));
+  for (int ty = cy - 7; ty <= cy + 7; ty++)
+    for (int tx = cx - 7; tx <= cx + 7; tx++)
+      if (burning(tx, ty) && (tx - cx) * (tx - cx) + (ty - cy) * (ty - cy) <= 49)
+        return true;
+  return false;
+}
 
 float areaThreat(double x, double y) {
   double xd = x - townX, yd = y - townY;
@@ -60,6 +75,26 @@ void clearing(Edits &edits, double x, double y) {
   for (int ty = cy - TOWN_H; ty <= cy + TOWN_H; ty++)
     for (int tx = cx - TOWN_W; tx <= cx + TOWN_W; tx++)
       edits.harvest(tx, ty);
+}
+
+struct Dressing {
+  Piece hedge, debris, ruin;
+};
+
+const Dressing DRESS[] = {
+    {Piece::Thorns, Piece::Skull, Piece::Charred},
+    {Piece::Reeds, Piece::Driftwood, Piece::Charred},
+    {Piece::Ice, Piece::Ribs, Piece::Crystal},
+    {Piece::Cactus, Piece::Ribs, Piece::Charred},
+    {Piece::Embers, Piece::Skull, Piece::Charred},
+};
+
+Piece dress(Piece piece, int town) {
+  const Dressing &d = DRESS[std::clamp(town, 0, int(std::size(DRESS)) - 1)];
+  return piece == Piece::Thorns ? d.hedge
+         : piece == Piece::Skull ? d.debris
+         : piece == Piece::Charred ? d.ruin
+                                   : piece;
 }
 
 template <class F> void townLayout(int cx, int cy, F &&fn) {
@@ -197,7 +232,7 @@ RunRules Campaign::rules() const {
   r.nightLength = NIGHT, r.dayLength = DAY, r.endsAtDawn = false;
   r.loot = true, r.bosses = false, r.town = true, r.omen = -1, r.dayRate = DAY_RATE;
   r.safe.push_back({xTown, yTown, SAFE});
-  r.threat = areaThreat;
+  r.threat = areaThreat, r.warded = torchlit;
   return r;
 }
 
@@ -252,6 +287,14 @@ void Campaign::found(Level &level) {
   clearing(edits, xTown, yTown);
 }
 
+Campaign::Town Campaign::nearest(double px, double py) const {
+  Town near = home();
+  for (const Town &t : towns())
+    if (std::hypot(t.x - px, t.y - py) < std::hypot(near.x - px, near.y - py))
+      near = t;
+  return near;
+}
+
 std::vector<Campaign::Town> Campaign::towns() const {
   std::vector<Town> all{{xTown, yTown}};
   all.insert(all.end(), outposts.begin(), outposts.end());
@@ -279,9 +322,10 @@ void Campaign::travel(Level &level, int town) {
 }
 
 void Campaign::barricade() {
-  for (const Town &t : towns())
-    townLayout(int(std::floor(t.x / 16)), int(std::floor(t.y / 16)),
-               [&](int tx, int ty, Piece piece) { edits.place(tx, ty, piece); });
+  std::vector<Town> all = towns();
+  for (size_t i = 0; i < all.size(); i++)
+    townLayout(int(std::floor(all[i].x / 16)), int(std::floor(all[i].y / 16)),
+               [&](int tx, int ty, Piece piece) { edits.place(tx, ty, dress(piece, int(i))); });
 }
 
 bool Campaign::founding(int tx, int ty) const {
@@ -298,12 +342,20 @@ void Campaign::restore(Level &level) {
   p.lvl = lvl, p.exp = exp, p.expNext = expNext, p.gold = gold;
   for (int m = 0; m < MATS; m++)
     p.materials[m] = materials[m];
-  for (const auto &[name, want] : upgrades)
-    if (Upgrade *up = p.upgrade(name); up && up->skill)
+  for (const auto &[name, want] : upgrades) {
+    Upgrade *up = p.upgrade(name);
+    bool evolved = false;
+    for (auto &u : p.upgrades)
+      if (!up && u->evolvedName && name == u->evolvedName)
+        up = u.get(), evolved = true;
+    if (up && up->skill)
       Tree::rank(*up, want);
     else if (up)
       while (up->level < want && !up->maxed())
         up->levelUp(p);
+    if (up && evolved && !up->evolved)
+      up->evolve();
+  }
   if (Upgrade *up = active.empty() ? nullptr : p.upgrade(active); up && up->level > 0)
     up->levelUp(p);
   if (p.skill && p.skill->level == 0)
@@ -337,6 +389,15 @@ void Campaign::staff(Level &level) {
   elder = level.add<Elder>(h.x - 36, h.y - 26)->id;
 }
 
+int Campaign::spent() const {
+  int n = 0;
+  for (const auto &[name, level] : upgrades)
+    n += level;
+  return n;
+}
+
+int Campaign::forgetCost() const { return 25 * lvl; }
+
 void Campaign::awaken(Level &level) {
   nightmare++, act = 1, quest = 0, progress = 0, qsite = false;
   stage = QuestStage::Offered;
@@ -352,11 +413,21 @@ void Campaign::fall(Level &level) {
   int lost = p.gold / 10;
   p.gold -= lost;
   p.hp = p.maxHp, p.invuln = 3;
-  p.x = home().x, p.y = home().y + 20;
+  double bx = home().x, by = home().y + 20, best = std::hypot(bx - p.x, by - p.y);
+  bool fire = false;
+  for (const auto &[k, e] : edits.changes) {
+    int tx = int(int32_t(k >> 32)), ty = int(int32_t(k & 0xFFFFFFFFu));
+    if (!e.placed || e.piece != Piece::Campfire || founding(tx, ty))
+      continue;
+    double fx = tx * 16 + 8.0, fy = ty * 16 + 30.0, d = std::hypot(fx - p.x, fy - p.y);
+    if (d < best)
+      best = d, bx = fx, by = fy, fire = true;
+  }
+  p.x = bx, p.y = by;
   p.status.clear();
   level.add<Shockwave>(p.x, p.bodyY(), 5, 50, 0.6f, Color{0.5f, 0.85f, 1, 1});
-  level.game.announce(lost > 0 ? fmt::format("YOU WAKE BY THE WAYPOINT  -{} GOLD", lost)
-                               : std::string("YOU WAKE BY THE WAYPOINT"));
+  const char *where = fire ? "YOU WAKE BY YOUR CAMPFIRE" : "YOU WAKE BY THE WAYPOINT";
+  level.game.announce(lost > 0 ? fmt::format("{}  -{} GOLD", where, lost) : std::string(where));
 }
 
 void Campaign::regrow(int today) {
@@ -371,11 +442,7 @@ void Campaign::smoulder(Level &level) {
   if ((smoke -= DT) > 0 || !Drift::room())
     return;
   smoke = 0.22f;
-  Town near = home();
-  const Player &p = *level.player;
-  for (const Town &t : towns())
-    if (std::hypot(t.x - p.x, t.y - p.y) < std::hypot(near.x - p.x, near.y - p.y))
-      near = t;
+  Town near = nearest(level.player->x, level.player->y);
   double cx = std::floor(near.x / 16) * 16 + 8, cy = std::floor(near.y / 16) * 16 + 16;
   auto plume = [&](double px, double py, float shade) {
     Drift *d = level.add<Drift>(px + rng.range(-3, 3), py, rng.range(-4, 4), -rng.range(10, 16),
@@ -394,8 +461,32 @@ void Campaign::smoulder(Level &level) {
   }
 }
 
+void Campaign::lure(Level &level) {
+  if (level.night.dawn || delve.active || (shadeTime -= DT) > 0)
+    return;
+  shadeTime = SHADE_GAP;
+  int shades = 0;
+  level.each<Enemy>([&](Enemy &e) { shades += e.is(EnemyKind::Shade); });
+  const Player &p = *level.player;
+  int px = int(std::floor(p.x / 16)), py = int(std::floor(p.y / 16)), lx = 0, ly = 0;
+  bool found = false;
+  for (int ty = py - 20; ty <= py + 20 && !found; ty++)
+    for (int tx = px - 20; tx <= px + 20 && !found; tx++)
+      if (burning(tx, ty))
+        lx = tx, ly = ty, found = true;
+  if (!found || shades >= MAX_SHADES)
+    return;
+  for (int i = 0; i < 12; i++) {
+    double a = rng.range(0, TAU), sx = lx * 16 + 8 + std::cos(a) * 240,
+           sy = ly * 16 + 16 + std::sin(a) * 240;
+    if (!level.rules.safeAt(sx, sy) && level.spawner.spawn(EnemyKind::Shade, sx, sy, true))
+      return;
+  }
+}
+
 void Campaign::tick(Level &level) {
   smoulder(level);
+  lure(level);
   bool day = level.night.dawn;
   if (day && !wasDay)
     regrow(level.night.nights);

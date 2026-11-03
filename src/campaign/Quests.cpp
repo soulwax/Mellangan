@@ -6,10 +6,13 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
+#include "item/craft/Recipes.hpp"
 #include "campaign/Campaign.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Boss.hpp"
 #include "entity/enemy/Named.hpp"
+#include "entity/enemy/WildFoe.hpp"
+#include "campaign/Pilgrim.hpp"
 #include "level/Level.hpp"
 #include "level/World.hpp"
 #include "level/biome/Biome.hpp"
@@ -56,7 +59,8 @@ bool deep(int biome, int tx, int ty) {
   for (int dy = -7; dy <= 7; dy++)
     for (int dx = -8; dx <= 8; dx++)
       if (world::heightAt(tx + dx, ty + dy) != ground || world::isRamp(tx + dx, ty + dy) ||
-          world::isWater(tx + dx, ty + dy))
+          world::isWater(tx + dx, ty + dy) ||
+          BIOMES[world::biomeAt(tx + dx, ty + dy)]->fixedGround(tx + dx, ty + dy))
         return false;
   return true;
 }
@@ -110,19 +114,21 @@ const QuestDef QUESTS[QUEST_COUNT] = {
      "Recover the reliquary from the Drowned Abbot", "The reliquary is ours again. Bless you.",
      O::Slay, 1, S::Ruin, 3, {NONE, NONE, NONE}, 400, 120},
     {"Cleanse the Nests",
-     "Spores drift into Saltmoor from the fungal wood. Burn out the puffers and their kin.",
-     "Destroy twenty-five spore beasts", "The air is clean again, mostly.", O::Hunt, 25,
-     S::Count, -1, {K::SporePuffer, K::Sporeling, K::MycelialBrute}, 350, 110},
+     "Spore nests have taken root in the old ruins and breed puffers by the dozen. Burn out "
+     "every nest.",
+     "Destroy the spore nests", "The air is clean again, mostly.", O::Purge, 4, S::Ruin, -1,
+     {K::SporePuffer, NONE, NONE}, 350, 110},
     {"The Bog Witch",
      "The witch herself waits in her camp. Unmake her and the snow road opens north of the "
      "marsh.",
      "Slay the Bog Witch", "The witch is ash and the marsh breathes. Frosthold waits beyond.",
      O::Boss, 1, S::Camp, -1, {K::BogLantern, NONE, NONE}, 800, 240},
 
-    {"Relight the Beacons",
-     "The frozen beacons went dark one by one. Light three and the passes will be ours again.",
-     "Light three shrines", "Three beacons burn over the snow.", O::Kindle, 3, S::Shrine, -1,
-     {NONE, NONE, NONE}, 450, 140},
+    {"Fuel the Beacons",
+     "The beacons on the walls burn through our wood faster than we can cut it. Bring me "
+     "twelve good logs and the passes stay lit.",
+     "Bring twelve wood to Warden Kell", "The beacons roar. The passes are ours again.",
+     O::Gather, 12, S::Count, -1, {NONE, NONE, NONE}, 450, 140, int(Mat::Wood)},
     {"Old Rimefang",
      "A yeti older than the walls hunts by the standing stones. He took our lens-bearer. End "
      "him.",
@@ -139,9 +145,10 @@ const QuestDef QUESTS[QUEST_COUNT] = {
      S::Graveyard, -1, {K::Necromancer, NONE, NONE}, 1200, 360},
 
     {"Guard the Caravan",
-     "Raiders and hyenas tear at every caravan. Clear the routes, twenty-five of them.",
-     "Slay twenty-five raiders and hyenas", "The caravan made it through.", O::Hunt, 25, S::Count,
-     -1, {K::DuneRaider, K::Hyena, NONE}, 650, 200},
+     "A caravan waits at the camp with water for the whole town. Raiders and hyenas are "
+     "circling. Stand with it until it can leave.",
+     "Hold the caravan camp", "The caravan made it through. Dunewatch will drink tonight.",
+     O::Defend, 45, S::Camp, -1, {K::DuneRaider, K::Hyena, NONE}, 650, 200},
     {"The Red Mesa",
      "A golem of salt and fire walks the flats. The glass spires answer to it. Shatter it.",
      "Shatter the Red Mesa", "The Red Mesa is gravel.", O::Slay, 1, S::Ruin, 6,
@@ -156,9 +163,10 @@ const QuestDef QUESTS[QUEST_COUNT] = {
      S::Camp, -1, {K::Cultist, NONE, NONE}, 1600, 480},
 
     {"The Burning Road",
-     "The road south is lined with dead fires. Light three and we can walk it.",
-     "Light three shrines", "The burning road has lights again.", O::Kindle, 3, S::Shrine, -1,
-     {NONE, NONE, NONE}, 900, 280},
+     "Sister Imra must carry the last lantern to the shrine at the end of the burning road. "
+     "She will not walk it alone. Stay close, and keep her alive.",
+     "Escort Sister Imra to the shrine", "Her lantern burns at the shrine. The road is lit.",
+     O::Escort, 100, S::Shrine, -1, {NONE, NONE, NONE}, 900, 280},
     {"The Hollow Gate",
      "The Hollow King holds the gate below the ash. Break his court and open the way.",
      "Slay the Hollow King", "The gate stands open.", O::Slay, 1, S::Ruin, 9, {NONE, NONE, NONE},
@@ -203,6 +211,8 @@ void begin(Level &level, Campaign &c) {
   if (const QuestDef *q = current(c))
     c.slainSeen = slainOf(level, *q);
   c.foe = entt::null;
+  c.nests.clear(), c.holding = false, c.holdTick = 0, c.waveTime = 0;
+  c.pilgrim = entt::null;
 }
 
 void accept(Level &level, Campaign &c) {
@@ -212,6 +222,11 @@ void accept(Level &level, Campaign &c) {
   c.stage = QuestStage::Active, c.progress = 0, c.qsite = false;
   if (q->site != StructureKind::Count && q->goal != Objective::Kindle)
     findSite(c, *q);
+  if (q->goal == Objective::Escort) {
+    Campaign::Town h = c.home();
+    if (!c.qsite || std::hypot(c.qx - h.x, c.qy - h.y) < 300)
+      c.qx = h.x + 700, c.qy = h.y + 300, c.qsite = true;
+  }
   begin(level, c);
   level.game.announce(fmt::format("QUEST  {}", q->title));
 }
@@ -221,6 +236,15 @@ void turnIn(Level &level, Campaign &c) {
   if (!q || c.stage != QuestStage::Ready)
     return;
   Player &p = *level.player;
+  if (q->goal == Objective::Gather) {
+    int &have = p.materials[q->material];
+    if (have < q->count) {
+      c.stage = QuestStage::Active;
+      return level.game.announce(fmt::format("{} NEEDS {} {}", act(c).elder, q->count,
+                                             MATERIALS[q->material].plural));
+    }
+    have -= q->count;
+  }
   p.gold += q->gold;
   p.gainXp(float(q->xp));
   level.game.announce(fmt::format("{} DONE  +{} GOLD", q->title, q->gold));
@@ -272,6 +296,77 @@ void tick(Level &level, Campaign &c) {
     c.slainSeen = now;
     break;
   }
+  case Objective::Purge: {
+    double xd = p.x - c.qx, yd = p.y - c.qy;
+    if (c.nests.empty() && !p.dead() && xd * xd + yd * yd < ARRIVE * ARRIVE) {
+      for (int i = 0; i < q->count - c.progress; i++) {
+        double a = TAU * i / std::max(1, q->count - c.progress) + 0.4, r = 70;
+        Enemy *e = level.spawner.spawn(K::Nest, c.qx + std::cos(a) * r,
+                                       c.qy + std::sin(a) * r * 0.7, true);
+        if (auto *w = dynamic_cast<WildFoe *>(e)) {
+          w->brood = q->prey[0];
+          c.nests.push_back(e->id);
+        }
+      }
+      if (!c.nests.empty())
+        level.game.announce("THE NESTS PULSE  BURN THEM OUT");
+    }
+    int alive = 0;
+    for (entt::entity id : c.nests)
+      if (level.reg.valid(id)) {
+        Enemy *e = level.get<Enemy>(id);
+        alive += !e || !e->removed;
+      }
+    if (!c.nests.empty())
+      c.progress = q->count - alive;
+    break;
+  }
+  case Objective::Defend: {
+    double xd = p.x - c.qx, yd = p.y - c.qy, d2 = xd * xd + yd * yd;
+    if (!c.holding) {
+      if (!p.dead() && d2 < ARRIVE * ARRIVE)
+        c.holding = true, c.waveTime = 1, level.game.announce("HOLD THE CAMP");
+      break;
+    }
+    if (d2 < HOLD * HOLD && !p.dead() && (c.holdTick += DT) >= 1)
+      c.holdTick -= 1, c.progress++;
+    if ((c.waveTime -= DT) <= 0) {
+      c.waveTime = WAVE;
+      double a = rng.range(0, TAU);
+      for (int i = 0; i < 3 + c.progress / 15; i++) {
+        K kind = q->prey[i % 2] != NONE ? q->prey[i % 2] : q->prey[0];
+        level.spawner.spawn(kind, c.qx + std::cos(a) * 230 + rng.range(-20, 20),
+                            c.qy + std::sin(a) * 230 + rng.range(-20, 20), true);
+      }
+    }
+    break;
+  }
+  case Objective::Gather:
+    c.progress = std::min(q->count, p.materials[q->material]);
+    break;
+  case Objective::Escort: {
+    Pilgrim *w = c.pilgrim == entt::null ? nullptr : level.get<Pilgrim>(c.pilgrim);
+    if (c.pilgrim != entt::null && !w && !level.reg.valid(c.pilgrim)) {
+      c.pilgrim = entt::null, c.progress = 0, c.stage = QuestStage::Offered, c.qsite = false;
+      level.game.announce("SISTER IMRA HAS FALLEN  RETURN TO THE KEEPER");
+      Sound::death.play(0.5f, 0);
+      return;
+    }
+    if (c.pilgrim == entt::null) {
+      Campaign::Town h = c.home();
+      double sx = h.x, sy = std::floor(h.y / 16) * 16 + 7 * 16;
+      c.journey = std::max(1.0, std::hypot(c.qx - sx, c.qy - sy));
+      c.pilgrim = level.add<Pilgrim>(sx, sy, c.qx, c.qy)->id;
+      level.game.announce("SISTER IMRA SETS OUT  STAY CLOSE");
+      break;
+    }
+    if (!w)
+      break;
+    double left = std::hypot(w->tx - w->x, w->ty - w->y);
+    c.progress = w->arrived() ? q->count
+                              : std::clamp(int(100 * (1 - left / c.journey)), 0, q->count - 1);
+    break;
+  }
   case Objective::Slay:
   case Objective::Boss: {
     if (c.foe != entt::null) {
@@ -314,6 +409,11 @@ std::string status(const Campaign &c) {
   case QuestStage::Ready:
     return fmt::format("{}: return to {}", q->title, act(c).elder);
   default:
+    if (q->goal == Objective::Escort)
+      return fmt::format("{}  {}%", q->task, c.progress);
+    if (q->goal == Objective::Defend)
+      return c.holding ? fmt::format("{}  {}/{} s", q->task, c.progress, q->count)
+                       : fmt::format("{}: reach the camp", q->task);
     return q->count > 1 ? fmt::format("{}  {}/{}", q->task, c.progress, q->count) : q->task;
   }
 }

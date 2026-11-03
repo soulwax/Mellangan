@@ -142,6 +142,12 @@ void testGathering() {
   assert(harvest::target(level, c, town) && town.placed && town.tx == cx + 2);
 
   c.edits.place(cx + 40, cy, Piece::Campfire);
+  p.x = (cx + 44) * 16, p.y = cy * 16;
+  c.fall(level);
+  assert(std::abs(p.x - ((cx + 40) * 16 + 8.0)) < 1 && std::abs(p.y - (cy * 16 + 30.0)) < 1);
+  p.x = c.xTown + 30, p.y = c.yTown;
+  c.fall(level);
+  assert(std::abs(p.x - c.xTown) < 1);
   c.capture(level);
   Campaign back;
   assert(Campaign::load(c.save(), back));

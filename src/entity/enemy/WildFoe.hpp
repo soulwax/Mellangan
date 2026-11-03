@@ -8,12 +8,12 @@ struct WildDef {
   float grow;
   bool dims, backstab, bramble, mends, chills, guarded, waterborn, lurks, roots, puffs, aura,
       drains, reflects, shatters, nocturnal, blinks, wyrm, skittish, salty, totem, trail, veil,
-      scorches, blind, drake, stalker, robber, clings, ore, pilfers;
+      scorches, blind, drake, stalker, robber, clings, ore, pilfers, shade, nest;
 };
 
 class WildFoe : public Enemy {
 public:
-  static constexpr EnemyKind FIRST = EnemyKind::Thornling, LAST = EnemyKind::KoboldMiner;
+  static constexpr EnemyKind FIRST = EnemyKind::Thornling, LAST = EnemyKind::Nest;
   static const WildDef DEFS[int(LAST) - int(FIRST) + 1];
 
   WildFoe(const EnemyType &type, float hpMul, float damageMul, int index);
@@ -32,7 +32,10 @@ public:
         glintCool = 0, blinkTime = 2, wyrmTime = 1, saltTime = 0, pulseTime = 1;
   float flightTime = 10, restTime = 0, breathTime = 2, heard = -1;
   double xRest = 0, yRest = 0;
-  int eruptions = 0, pulses = 0, stolen = 0;
+  int eruptions = 0, pulses = 0, stolen = 0, lightX = 0, lightY = 0;
+  float seek = 0, snuff = 0, hatch = 2;
+  EnemyKind brood = EnemyKind::SporePuffer;
+  bool hunting = false;
   bool glint = false, fled = false;
   double xHome = 0, yHome = 0;
 
@@ -52,4 +55,6 @@ private:
   void fly(Player &p, double d);
   void breathe();
   void bequeath();
+  void haunt(Player &p);
+  void breed(Player &p);
 };

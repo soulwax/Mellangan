@@ -49,7 +49,7 @@ public:
   Game &game;
   entt::registry reg;
   Player *player = nullptr;
-  float time = 0, noiseAt = -1, namedScan = 0;
+  float time = 0, noiseAt = -1, namedScan = 0, snuffed = -10;
   uint32_t namedRaised = 0;
   double xNoise = 0, yNoise = 0;
   uint32_t ticks = 0;

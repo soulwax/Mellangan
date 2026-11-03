@@ -9,6 +9,7 @@
 #include "audio/Sound.hpp"
 #include "campaign/Campaign.hpp"
 #include "campaign/Quests.hpp"
+#include "entity/Player.hpp"
 #include "level/Level.hpp"
 
 namespace {
@@ -44,6 +45,11 @@ void QuestMenu::tick() {
   if (in.inventory.clicked || in.escape.clicked) {
     Sound::select.play(0.5f, 0);
     return game.setMenu(nullptr);
+  }
+  if (in.restart.clicked && t > 0.2f) {
+    if (!game.forget())
+      Sound::hurt.play(0.3f, 0);
+    return;
   }
   if (!in.confirm.clicked || t < 0.2f)
     return;
@@ -83,4 +89,8 @@ void QuestMenu::render(Screen &s) {
     s.text(line, x0 + 12 * u, y, small, col::white.alpha(0.9f * in)), y += 14 * u;
   s.text(action, x0 + 12 * u, y0 + h - 22 * u, small,
          (c.stage == QuestStage::Active ? col::muted : col::gold).alpha(in));
+  std::string forget = fmt::format("R  forget your path and relearn it: {} gold", c.forgetCost());
+  bool afford = game.level->player->gold >= c.forgetCost();
+  s.text(forget, x0 + 12 * u, y0 + h - 40 * u, small,
+         (afford ? col::muted : col::red * 0.8f).alpha(in));
 }

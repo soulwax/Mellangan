@@ -10,6 +10,17 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
+- Four new kinds of campaign quest:
+  - Gather: in Act III's "Fuel the Beacons", bring Warden Kell twelve wood.
+  - Escort: in Act V's "The Burning Road", Sister Imra carries the last lantern to a shrine. She walks only while you stay close, foes that reach her wear her down, and if she falls the quest must be taken again.
+  - Purge: in Act II's "Cleanse the Nests", four spore nests take root in the ruins and keep breeding spore puffers until you destroy them.
+  - Defend: in Act IV's "Guard the Caravan", hold the caravan camp for 45 seconds while raiders and hyenas come in waves. The clock only runs while you stay at the camp.
+- Forget your path: press R while talking to an act's elder to unlearn your whole skill tree for 25 gold per hero level and get every spent point back. Relics stay.
+- Each campaign town wears its act. Saltmoor is hedged with reeds and driftwood, Frosthold with ice blocks around a glowing crystal spire, Dunewatch with cacti, and Last Ember with smouldering obsidian. A wooden plate below each town's south gate carries its name.
+- Falling in the campaign wakes you at your nearest campfire when one is closer than your town's waypoint.
+- Hold E to keep striking a tree, rock or crystal.
+- Shades: on campaign nights, when torches or campfires burn near you, shades drift in. They ignore you and hunt the lights, snuffing torches and smothering fires; a smothered campfire no longer keeps foes from spawning. Press E beside a dead light to relight it: 1 wood for a torch, 2 for a fire. Hearthwick's own lights return each time you come back.
+- Torches and campfires now turn most foe spawns away from their surroundings in the campaign.
 - Delves: in the campaign, press E at a mine's mouth to delve into it. The mine caves in behind you, crushing whatever stood too close and sealing you inside a ring of rubble. The world fades to near black, so only your light, the mine's lanterns and its fire show the way, while dust sifts down from above. Each new floor shakes the ground harder, and three floors of cave bats, kobolds, rock crawlers and ore golems follow. The deepest floor holds the act's guardian: the Cyclops, the Spore Mother, the Frost Colossus or the Glass Tyrant. A cleared mine stays cleared and leaves a treasure chest, a boss's loot, ore and rune stones. Falling in a delve lifts the cave-in.
 - Hardcore campaigns: press R on the campaign's class screen. You get one life, and death deletes the hero.
 - Nightmare: after the Cinder King falls, the last elder offers Nightmare. The acts begin again from Hearthwick with every foe much stronger, and your hero, gear and towns are kept.
@@ -133,6 +144,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Changed
 
+- Evolved weapons now survive saving and reloading a campaign; before, they were lost on every reload.
+- Wall weapons (Ember Wall, Runic Wall, Bramble Wall and the rest) now raise a thick, glowing band with two rows of flickering tongues instead of a thin dotted line.
+- The Fleet Heart, Ember Heart and Bog Heart icons are drawn as clear hearts, with speed lines, a flame and a drip.
+- The README lists the campaign's keys and explains how the campaign works.
 - Stagger no longer knocks foes away from walls, so wall weapons keep holding and hurting them.
 - The eight expansion weapons now evolve:
   - Meteor Sling, Leviathan Harpoon, Astral Sigil and Twin Crescent.

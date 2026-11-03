@@ -31,6 +31,14 @@ enum class Piece {
   Skull,
   Ribs,
   Rubble,
+  Snuffed,
+  Ashes,
+  Reeds,
+  Ice,
+  Cactus,
+  Embers,
+  Driftwood,
+  Crystal,
   Count
 };
 

@@ -84,6 +84,29 @@ bool pieceProp(Piece piece, int x, int y, Prop &p) {
     return p.piece(atlas::kit(kt::Skull), 0.3f, 0);
   case Piece::Ribs:
     return p.piece(atlas::frontier(fr::Ribs), 0.4f, 0);
+  case Piece::Snuffed:
+    return p.piece(atlas::frontier(fr::LanternPost), 0.6f, 3);
+  case Piece::Ashes:
+    p.piece(atlas::town(tt::Log), 0.6f, 5);
+    p.lamp({0.12f, 0.04f, 0.01f, 1}, 30, -4);
+    return true;
+  case Piece::Reeds:
+    return p.piece(atlas::flora(atlas::fl::Reeds), 0.5f, 5);
+  case Piece::Ice:
+    return p.piece(atlas::kit(kt::IceChunk), 0.9f, 6);
+  case Piece::Cactus:
+    return p.piece(atlas::flora((x ^ y) & 1 ? atlas::fl::Cactus : atlas::fl::BarrelCactus), 0.8f, 5);
+  case Piece::Embers:
+    p.piece(atlas::kit(kt::Obsidian), 0.8f, 6);
+    p.lamp({0.3f, 0.09f, 0.02f, 1}, 40, -4);
+    return true;
+  case Piece::Driftwood:
+    return p.piece(atlas::kit(kt::Driftwood), 0.6f, 4);
+  case Piece::Crystal:
+    p.piece(atlas::kit(kt::CrystalSpireLow), 0.9f, 4);
+    p.add(atlas::kit(kt::CrystalSpireHigh), -16);
+    p.lamp({0.12f, 0.1f, 0.3f, 1}, 60, -12);
+    return true;
   case Piece::Rubble:
     p.piece(atlas::kit((x ^ y) & 1 ? kt::Boulder : kt::MossyBoulder), 1.2f, 9);
     if ((x + y) % 3 == 0)

@@ -82,7 +82,8 @@ bool target(const Level &level, const Campaign &c, Target &out) {
       continue;
     int tx = int(std::floor(prop.x / 16)), ty = int(std::floor((prop.y - 1) / 16));
     const Edits::Change *edit = c.edits.at(tx, ty);
-    bool placed = edit && edit->placed && !c.founding(tx, ty);
+    bool dark = edit && edit->placed && (edit->piece == Piece::Snuffed || edit->piece == Piece::Ashes);
+    bool placed = edit && edit->placed && (dark || !c.founding(tx, ty));
     const Yield *y = edit ? nullptr : yieldOf(prop.kind);
     if (!placed && !y)
       continue;
@@ -97,6 +98,22 @@ bool strike(Level &level, Campaign &c) {
   if (!target(level, c, t))
     return false;
   uint64_t key = Edits::key(t.tx, t.ty);
+  if (t.placed && harvest::relight(c.edits.at(t.tx, t.ty)->piece) >= 0) {
+    Piece dark = c.edits.at(t.tx, t.ty)->piece;
+    int &wood = level.player->materials[int(Mat::Wood)], cost = harvest::relight(dark);
+    if (wood < cost) {
+      level.game.announce(fmt::format("RELIGHTING NEEDS {} WOOD", cost));
+      return true;
+    }
+    wood -= cost;
+    bool fire = dark == Piece::Ashes;
+    c.edits.place(t.tx, t.ty, fire ? Piece::Campfire : Piece::Torch);
+    if (fire && !c.founding(t.tx, t.ty))
+      level.rules.safe.push_back({t.x, t.y, CAMPFIRE_SAFE});
+    level.add<Shockwave>(t.x, t.y - 8, 3, 26, 0.4f, Color{1, 0.6f, 0.2f, 1}, false);
+    Sound::confirm.play(0.4f, 0, 1.2f);
+    return true;
+  }
   if (t.placed) {
     if (const PieceDef *d = defOf(c.edits.at(t.tx, t.ty)->piece))
       for (int m = 0; m < MATS; m++)
@@ -160,6 +177,10 @@ bool build(Level &level, Campaign &c, int piece, int tx, int ty) {
   level.add<Shockwave>(x, y - 4, 3, 22, 0.35f, col::gold, false);
   Sound::confirm.play(0.4f, 0, 0.9f);
   return true;
+}
+
+int relight(Piece piece) {
+  return piece == Piece::Snuffed ? 1 : piece == Piece::Ashes ? 2 : -1;
 }
 
 bool affordable(const Player &p, int piece) {

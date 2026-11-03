@@ -201,8 +201,11 @@ void Game::tick() {
     if (Structure mine; campaign && input.gather.clicked && !campaign->delve.active &&
                         Delve::entrance(*level, *campaign, mine))
       campaign->delve.start(*level, *campaign, mine);
-    else if (campaign && input.gather.clicked)
+    else if (campaign && (input.gather.clicked ||
+                          (input.gather.down && (gatherTime -= DT) <= 0))) {
       harvest::strike(*level, *campaign);
+      gatherTime = GATHER_REPEAT;
+    }
     level->tick();
     if (campaign)
       campaign->tick(*level);
@@ -517,6 +520,15 @@ void Game::beginCampaign() {
     campaign->stage = QuestStage::Offered;
     level->player->x = rx, level->player->y = ry + 20;
   }
+  if (dev && start.quest >= 0 && start.quest < QUEST_COUNT) {
+    campaign->quest = start.quest, campaign->stage = QuestStage::Offered;
+    quests::accept(*level, *campaign);
+    Campaign::Town h = campaign->home();
+    if (QUESTS[start.quest].goal == Objective::Escort)
+      level->player->x = h.x + 20, level->player->y = std::floor(h.y / 16) * 16 + 7 * 16;
+    else if (campaign->qsite)
+      level->player->x = campaign->qx, level->player->y = campaign->qy + 90;
+  }
   if (Structure mine; dev && start.delve &&
                       world::nearestStructure(level->player->x, level->player->y, 60, mine,
                                               [](const Structure *s, const void *) {
@@ -545,6 +557,39 @@ void Game::saveCampaign() {
   campaign->capture(*level);
   if (!saves.dir().empty() && !bench.enabled)
     saves.write("campaign.txt", campaign->save());
+}
+
+bool Game::forget() {
+  if (!campaign || !level)
+    return false;
+  Player &p = *level->player;
+  int cost = campaign->forgetCost();
+  if (p.gold < cost)
+    return false;
+  campaign->capture(*level);
+  int before = campaign->spent(), relics = 0;
+  std::vector<std::pair<std::string, int>> keep;
+  for (const auto &[name, lvl] : campaign->upgrades) {
+    Upgrade *u = p.upgrade(name);
+    if (u && u->rare)
+      keep.emplace_back(name, lvl), relics += lvl;
+    else if (u && u->evolved)
+      before++;
+  }
+  campaign->upgrades = keep, campaign->active.clear();
+  campaign->gold -= cost;
+  campaign->delve.abort(*level, *campaign);
+  build();
+  campaign->enter(*level);
+  campaign->capture(*level);
+  campaign->points += std::max(0, before - campaign->spent());
+  snapCamera();
+  setMenu(nullptr);
+  saveCampaign();
+  spdlog::info("campaign: forgot the path for {} gold, {} points to spend", cost,
+               campaign->points);
+  announce(fmt::format("YOUR PATH IS FORGOTTEN  {} SKILL POINTS", campaign->points));
+  return true;
 }
 
 void Game::endCampaign() {

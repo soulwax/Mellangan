@@ -43,5 +43,6 @@ std::string blocked(const Level &level, const Campaign &c, int piece, int tx, in
 bool build(Level &level, Campaign &c, int piece, int tx, int ty);
 bool benchNear(const Level &level, const Campaign &c);
 bool affordable(const Player &p, int piece);
+int relight(Piece piece);
 
 } // namespace harvest

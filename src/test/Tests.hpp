@@ -47,6 +47,8 @@ void testSkillTrees();
 void testGathering();
 void testQuests();
 void testDelves();
+void testShades();
+void testForget();
 void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();

@@ -17,6 +17,7 @@ struct RunRules {
   int omen = ROLL_OMEN;
   std::vector<SafeZone> safe;
   float (*threat)(double x, double y) = nullptr;
+  bool (*warded)(double x, double y) = nullptr;
 
   bool safeAt(double x, double y) const {
     for (const SafeZone &z : safe) {

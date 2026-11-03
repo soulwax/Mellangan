@@ -84,6 +84,8 @@ enum class EnemyKind {
   RockCrawler,
   OreGolem,
   KoboldMiner,
+  Shade,
+  Nest,
   Count
 };
 

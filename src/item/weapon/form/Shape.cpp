@@ -87,18 +87,29 @@ void WallForm::render(RecipeShot &s, Screen &screen) const {
   Color c = s.r.tint;
   float fade = std::min(1.0f, (s.life - s.age) * 2) * std::min(1.0f, s.age * 6);
   double tx = -s.dy, ty = s.dx, half = s.reach / 2;
-  screen.line(s.x - tx * half, s.y - ty * half, s.x + tx * half, s.y + ty * half, 3,
-              c.alpha(0.45f * fade));
-  int n = std::max(3, int(s.reach / 10));
-  for (int j = 0; j <= n; j++) {
-    double t = (j / double(n) - 0.5) * 2 * half;
-    screen.particle(s.r.particle, s.x + tx * t, s.y + ty * t - 3, c.alpha(fade), 1,
-                    float(j) + s.age);
-  }
+  double x0 = s.x - tx * half, y0 = s.y - ty * half, x1 = s.x + tx * half, y1 = s.y + ty * half;
+  screen.line(x0, y0, x1, y1, 8, c.alpha(0.18f * fade));
+  screen.line(x0, y0 - 1, x1, y1 - 1, 4, c.alpha(0.4f * fade));
+  screen.line(x0, y0 - 1, x1, y1 - 1, 1, Color{1, 1, 0.85f, 0.7f * fade});
+  int n = std::max(4, int(s.reach / 6));
+  for (int row = 0; row < 2; row++)
+    for (int j = 0; j <= n; j++) {
+      double t = ((j + 0.5 * row) / double(n) - 0.5) * 2 * half;
+      if (std::abs(t) > half)
+        continue;
+      float flick = 0.5f + 0.5f * std::sin(s.age * 9 + j * 1.7f + row * 2.3f);
+      float rise = (row ? 7 : 3) + 3 * flick, size = (row ? 0.8f : 1.15f) + 0.25f * flick;
+      double side = row ? 2.5 : -2.5;
+      screen.particle(s.r.particle, s.x + tx * t + s.dx * side, s.y + ty * t + s.dy * side - rise,
+                      c.alpha(fade * (row ? 0.75f : 1)), size, float(j) + s.age * (2 + row));
+    }
 }
 
 void WallForm::light(RecipeShot &s, Screen &screen) const {
-  screen.glow(s.x, s.y, s.reach * 0.8f, s.r.tint * 0.08f);
+  double tx = -s.dy, ty = s.dx, half = s.reach / 2;
+  for (int i = -1; i <= 1; i++)
+    screen.glow(s.x + tx * half * 0.6 * i, s.y + ty * half * 0.6 * i - 4, s.reach * 0.45f,
+                s.r.tint * 0.09f);
 }
 
 void SpiralForm::fire(const FormCast &c) const {

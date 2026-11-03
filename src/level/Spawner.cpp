@@ -313,6 +313,9 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   std::lock_guard<std::mutex> lock(spawnMutex);
   if (level.rules.safeAt(x, y))
     return nullptr;
+  if (!boss && kind != EnemyKind::Shade && level.rules.warded && level.rules.warded(x, y) &&
+      rng.chance(WARD))
+    return nullptr;
   if ((kind == EnemyKind::SandWyrm || kind == EnemyKind::EmberDrake) && !boss) {
     if (level.time < nextMini)
       kind = kind == EnemyKind::SandWyrm ? EnemyKind::DuneRaider : EnemyKind::AshWraith;

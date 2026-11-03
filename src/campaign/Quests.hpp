@@ -8,7 +8,7 @@
 class Level;
 struct Campaign;
 
-enum class Objective { Kindle, Slay, Hunt, Boss };
+enum class Objective { Kindle, Slay, Hunt, Boss, Purge, Defend, Gather, Escort };
 enum class QuestStage { Offered, Active, Ready, Done, Road };
 
 struct QuestDef {
@@ -19,6 +19,7 @@ struct QuestDef {
   int named;
   EnemyKind prey[3];
   int gold, xp;
+  int material = -1;
 };
 
 struct ActDef {
@@ -33,7 +34,7 @@ extern const ActDef ACTS[ACT_COUNT];
 
 namespace quests {
 
-constexpr float ARRIVE = 150, SETTLE = 200;
+constexpr float ARRIVE = 150, SETTLE = 200, HOLD = 110, WAVE = 7;
 
 const QuestDef *current(const Campaign &c);
 const ActDef &act(const Campaign &c);

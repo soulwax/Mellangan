@@ -76,12 +76,14 @@ public:
   bool campaignSaved() const;
   void saveCampaign();
   void endCampaign();
+  bool forget();
 
 private:
   std::unique_ptr<Menu> nextMenu;
   bool menuChanged = false, showFps = false, worldDebug = false;
   float time = 0, hurt = 0, fps = 0, freeze = 0,
-        lastStop = -1, levelBeat = -1, autosave = Campaign::AUTOSAVE;
+        lastStop = -1, levelBeat = -1, autosave = Campaign::AUTOSAVE, gatherTime = 0;
+  static constexpr float GATHER_REPEAT = 0.3f;
   RunRules dawnRules;
   std::string chartPath;
   Camera camera;

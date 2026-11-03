@@ -10,9 +10,11 @@
 #include "Game.hpp"
 #include "campaign/Campaign.hpp"
 #include "campaign/Elder.hpp"
+#include "campaign/Pilgrim.hpp"
 #include "campaign/Quests.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "entity/enemy/WildFoe.hpp"
 #include "level/Level.hpp"
 
 namespace {
@@ -116,7 +118,75 @@ void testQuests() {
         level.night.lit += q.count;
       else if (q.goal == Objective::Hunt)
         level.slain[int(q.prey[0])] += q.count;
-      else {
+      else if (q.goal == Objective::Gather) {
+        p.materials[q.material] = 0;
+        quests::tick(level, c);
+        assert(c.stage == QuestStage::Active && c.progress == 0);
+        p.materials[q.material] = q.count + 2;
+      } else if (q.goal == Objective::Escort) {
+        quests::tick(level, c);
+        level.tick();
+        Pilgrim *w = level.get<Pilgrim>(c.pilgrim);
+        assert(w && c.qsite);
+        w->hp = -1;
+        level.tick();
+        quests::tick(level, c);
+        assert(c.stage == QuestStage::Offered && c.progress == 0);
+        quests::accept(level, c);
+        quests::tick(level, c);
+        level.tick();
+        w = level.get<Pilgrim>(c.pilgrim);
+        assert(w);
+        w->hp = 1e9f;
+        double sx = w->x, sy = w->y;
+        p.x = w->x + 400, p.y = w->y;
+        for (int i = 0; i < 60; i++)
+          level.tick(), quests::tick(level, c);
+        assert(w->waiting && std::hypot(w->x - sx, w->y - sy) < 1);
+        int moved = 0;
+        for (int i = 0; i < 60 * 120 && c.stage == QuestStage::Active; i++) {
+          p.x = w->x + 30, p.y = w->y;
+          level.tick(), quests::tick(level, c);
+          moved = std::max(moved, c.progress);
+        }
+        assert(moved > 0);
+      } else if (q.goal == Objective::Purge) {
+        go(level, c);
+        assert(int(c.nests.size()) == q.count && c.progress == 0 && c.stage == QuestStage::Active);
+        auto *nest = dynamic_cast<WildFoe *>(level.get<Enemy>(c.nests[0]));
+        assert(nest && nest->is(EnemyKind::Nest) && nest->brood == q.prey[0]);
+        Enemy *last = level.get<Enemy>(c.nests.back());
+        last->hp = last->maxHp = 1e12f;
+        int brood = 0;
+        for (int i = 0; i < 400 && !brood; i++) {
+          p.x = c.qx + 260, p.y = c.qy;
+          level.tick();
+          level.each<Enemy>([&](Enemy &e) { brood += e.is(q.prey[0]); });
+        }
+        assert(brood > 0);
+        for (size_t n = 0; n + 1 < c.nests.size(); n++)
+          if (Enemy *e = level.get<Enemy>(c.nests[n]))
+            e->hurt(1e9f, 1, 0, 0);
+        level.tick(), quests::tick(level, c);
+        assert(c.progress == q.count - 1 && c.stage == QuestStage::Active);
+        level.get<Enemy>(c.nests.back())->hurt(1e15f, 1, 0, 0);
+        level.tick();
+      } else if (q.goal == Objective::Defend) {
+        go(level, c);
+        assert(c.holding);
+        p.x = c.qx + 300, p.y = c.qy;
+        for (int i = 0; i < 180; i++)
+          level.tick(), quests::tick(level, c);
+        assert(c.progress == 0);
+        p.x = c.qx, p.y = c.qy;
+        int waves = 0;
+        for (int i = 0; i < 60 * (q.count + 2) && c.stage == QuestStage::Active; i++) {
+          level.tick(), quests::tick(level, c);
+          waves += c.waveTime > quests::WAVE - DT * 1.5f;
+          p.x = c.qx, p.y = c.qy, p.hp = p.maxHp;
+        }
+        assert(waves >= q.count / int(quests::WAVE) - 1);
+      } else {
         go(level, c);
         Enemy *e = level.get<Enemy>(c.foe);
         assert(e && (q.goal != Objective::Boss || (e->boss && e->is(q.prey[0]))));
@@ -125,11 +195,18 @@ void testQuests() {
       quests::tick(level, c);
       assert(c.stage == QuestStage::Ready);
       quests::turnIn(level, c);
+      if (q.goal == Objective::Gather)
+        assert(p.materials[q.material] == 2);
     }
   }
   assert(c.stage == QuestStage::Done && c.act == ACT_COUNT && !quests::current(c));
   assert(quests::status(c) == "The dark is broken");
   c.capture(level);
+  for (size_t i = 0; i < c.towns().size(); i++) {
+    int tx = int(std::floor(c.towns()[i].x / 16)) - 1, ty = int(std::floor(c.towns()[i].y / 16)) - 7;
+    constexpr Piece HEDGES[] = {Piece::Thorns, Piece::Reeds, Piece::Ice, Piece::Cactus, Piece::Embers};
+    assert(c.edits.at(tx, ty) && c.edits.at(tx, ty)->piece == HEDGES[i]);
+  }
   Campaign saved;
   assert(Campaign::load(c.save(), saved) && saved.outposts.size() == ACT_COUNT - 1 &&
          saved.stage == QuestStage::Done);

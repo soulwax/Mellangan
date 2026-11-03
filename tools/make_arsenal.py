@@ -1341,21 +1341,50 @@ def keen_edge():
     return c.image()
 
 
-def fleet_heart():
+HEART = (
+    "................",
+    "................",
+    "................",
+    "...MMM....MMM...",
+    "..MHHMM..MMMMM..",
+    "..MHMMMMMMMMMM..",
+    "..MMMMMMMMMMMD..",
+    "..MMMMMMMMMMMD..",
+    "...MMMMMMMMMD...",
+    "....MMMMMMMD....",
+    ".....MMMMMD.....",
+    "......MMMD......",
+    ".......MD.......",
+    "................",
+    "................",
+    "................",
+)
+
+
+def heart(pal, dx=0, dy=0):
     c = Canvas()
-    c.ellipse(6, 7, 3, 3, BLOOD)
-    c.ellipse(10, 7, 3, 3, BLOOD)
-    c.tri(8, 8, 13, 5, BLOOD)
-    c.line(1, 11, 4, 11, LINEN[2])
+    tone = {"M": pal[1], "H": pal[2], "D": pal[0]}
+    for y, row in enumerate(HEART):
+        for x, k in enumerate(row):
+            if k != ".":
+                c.put(x + dx, y + dy, tone[k])
+    return c
+
+
+def fleet_heart():
+    c = heart(BLOOD, 1)
+    for y, x0 in ((5, 0), (8, 0), (11, 1)):
+        c.line(x0, y, x0 + 2, y, LINEN[2])
     return c.image()
 
 
 def ember_heart():
-    c = Canvas()
-    c.ellipse(6, 8, 3, 3, EMBER)
-    c.ellipse(10, 8, 3, 3, EMBER)
-    c.tri(8, 9, 14, 5, EMBER)
-    c.tri(8, 2, 6, 1, STAR)
+    c = heart(EMBER, 0, 1)
+    c.tri(8, 1, 6, 3, EMBER)
+    c.put(8, 2, STAR[2])
+    c.put(8, 3, STAR[1])
+    c.put(6, 3, EMBER[2])
+    c.put(10, 3, EMBER[2])
     return c.image()
 
 
@@ -1432,11 +1461,11 @@ def sun_shard():
 
 
 def bog_heart():
-    c = Canvas()
-    c.ellipse(6, 8, 3, 3, TOXIC)
-    c.ellipse(10, 8, 3, 3, TOXIC)
-    c.tri(8, 9, 14, 5, TOXIC)
-    c.put(6, 7, (230, 255, 200))
+    c = heart(TOXIC, 0, -1)
+    c.ellipse(13, 2, 1, 1, TOXIC)
+    c.put(11, 1, TOXIC[2])
+    c.line(8, 12, 8, 14, TOXIC[1])
+    c.put(8, 15, TOXIC[2])
     return c.image()
 
 

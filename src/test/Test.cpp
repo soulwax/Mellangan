@@ -74,6 +74,8 @@ int runTests() {
   testGathering();
   testQuests();
   testDelves();
+  testShades();
+  testForget();
   testInventory();
   testEquipStats();
   testAllies();

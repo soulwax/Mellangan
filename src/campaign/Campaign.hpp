@@ -25,7 +25,9 @@ struct Campaign {
   };
 
   static constexpr int VERSION = 1, STASH = 32;
-  static constexpr float SAFE = 150, AUTOSAVE = 60, NIGHT = 180, DAY = 240, DAY_RATE = 0.35f;
+  static constexpr float SAFE = 150, AUTOSAVE = 60, NIGHT = 180, DAY = 240, DAY_RATE = 0.35f,
+                         SHADE_GAP = 18;
+  static constexpr int MAX_SHADES = 3;
 
   std::string world;
   int hero = 0, lvl = 1, gold = 0, day = 1, points = 0, act = 1;
@@ -34,6 +36,11 @@ struct Campaign {
   double qx = 0, qy = 0;
   bool qsite = false;
   entt::entity foe = entt::null, elder = entt::null;
+  std::vector<entt::entity> nests;
+  entt::entity pilgrim = entt::null;
+  double journey = 0;
+  bool holding = false;
+  float holdTick = 0, waveTime = 0;
   std::string active;
   float exp = 0, expNext = 5;
   int materials[MATS]{};
@@ -52,7 +59,7 @@ struct Campaign {
   std::unordered_map<uint64_t, int> chops;
   int building = -1;
   bool wasDay = true;
-  float smoke = 0;
+  float smoke = 0, shadeTime = 8;
 
   std::string save() const;
   static bool load(std::string_view text, Campaign &out);
@@ -65,6 +72,7 @@ struct Campaign {
   void barricade();
   bool founding(int tx, int ty) const;
   std::vector<Town> towns() const;
+  Town nearest(double x, double y) const;
   Town home() const {
     std::vector<Town> all = towns();
     return all[size_t(std::clamp(act, 1, int(all.size())) - 1)];
@@ -76,6 +84,8 @@ struct Campaign {
     return false;
   }
   void awaken(Level &level);
+  int spent() const;
+  int forgetCost() const;
   void settle(Level &level, double x, double y);
   void travel(Level &level, int town);
   void leave();
@@ -88,4 +98,5 @@ private:
   void raise(Level &level);
   void post(Level &level, const Town &t);
   void smoulder(Level &level);
+  void lure(Level &level);
 };

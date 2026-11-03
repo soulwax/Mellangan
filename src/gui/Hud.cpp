@@ -213,6 +213,8 @@ void Hud::handwork() {
   harvest::Target t;
   if (!harvest::target(l, *c, t))
     return;
+  if (int cost = t.placed ? harvest::relight(c->edits.at(t.tx, t.ty)->piece) : -1; cost > 0)
+    return plate(t.x, t.y - 22, fmt::format("E  RELIGHT  {} wood", cost), col::gold);
   if (t.placed)
     return plate(t.x, t.y - 22, "E  TAKE DOWN", col::muted);
   auto it = c->chops.find(Edits::key(t.tx, t.ty));
@@ -230,6 +232,19 @@ void Hud::questLog() {
   Level &l = *game.level;
   Screen &s = game.screen;
   float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
+  std::vector<Campaign::Town> all = c->towns();
+  for (size_t i = 0; i < all.size(); i++) {
+    double gx = all[i].x, gy = std::floor(all[i].y / 16) * 16 + 5 * 16 + 34;
+    if (!inView(gx, gy, -8))
+      continue;
+    float sx = std::floor((s.w - s.vw * k) / 2) + float(gx - xView) * k,
+          sy = std::floor((s.h - s.vh * k) / 2) + float(gy - yView) * k;
+    std::string name = ACTS[i].town;
+    float w = Screen::textWidth(name, small) + 10 * u, h = 16 * small + 4 * u;
+    s.rect(sx - w / 2, sy - h, w, h, Color{0.12f, 0.08f, 0.05f, 0.85f});
+    s.frame(sx - w / 2, sy - h, w, h, u, Color{0.55f, 0.38f, 0.2f, 0.9f});
+    s.text(name, sx - w / 2 + 5 * u, sy - h + 2 * u, small, col::gold.alpha(0.9f));
+  }
   std::string line = quests::status(*c);
   if (!line.empty())
     s.text("QUEST  " + line, 8 * u, s.h - 74 * u, small,

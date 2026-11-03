@@ -1,5 +1,8 @@
 #include "entity/enemy/WildFoe.hpp"
 
+#include <algorithm>
+
+#include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Ability.hpp"
 #include "entity/Player.hpp"
@@ -10,6 +13,7 @@
 #include "entity/projectile/Orb.hpp"
 #include "particle/debris/SmokeDebris.hpp"
 #include "level/Level.hpp"
+#include "level/Edits.hpp"
 #include "level/World.hpp"
 #include "particle/Arc.hpp"
 #include "particle/Shockwave.hpp"
@@ -209,6 +213,8 @@ const WildDef WildFoe::DEFS[] = {
     {.lurks = true, .clings = true},
     {.ore = true},
     {.cast = {pickaxe, 3, 160, SOIL}, .casts = 1, .pilfers = true},
+    {.nocturnal = true, .shade = true},
+    {.nest = true},
 };
 static_assert(std::size(WildFoe::DEFS) == int(WildFoe::LAST) - int(WildFoe::FIRST) + 1);
 
@@ -289,6 +295,10 @@ void WildFoe::tick() {
   }
   if (wild.totem)
     pulse();
+  if (wild.shade)
+    haunt(p);
+  if (wild.nest)
+    breed(p);
   if (wild.trail && xWant * xWant + yWant * yWant > 4 && (saltTime -= DT) <= 0) {
     saltTime = 0.5f;
     FrostPatch *f = level->add<FrostPatch>(x, y, true);
@@ -468,6 +478,8 @@ bool WildFoe::veiled() const {
 }
 
 Color WildFoe::tint() const {
+  if (wild.shade)
+    return col::white.alpha(0.55f + 0.2f * std::sin(animT * 3));
   if (wild.veil)
     return col::white.alpha(veiled() ? 0.14f : 0.75f);
   if (wild.blind && buried)
@@ -541,6 +553,68 @@ void WildFoe::bit(Player &p) {
     afflict(StatusKind::Fear, 8, 1);
     Spark::burst(*level, x, bodyY(), MATERIALS[int(Mat::Ore)].color, 6, 40, true);
   }
+}
+
+void WildFoe::breed(Player &p) {
+  x = xHome, y = yHome;
+  if ((hatch -= DT) > 0 || std::hypot(p.x - x, p.y - y) > 320)
+    return;
+  hatch = 4.5f;
+  int kin = 0;
+  level->enemiesNear(x, y, 140, [&](Enemy &e) { kin += e.is(brood); });
+  if (kin >= 6)
+    return;
+  for (int i = 0; i < 2; i++) {
+    float a = roll() * TAU;
+    level->spawner.spawn(brood, x + std::cos(a) * 22, y + std::sin(a) * 16, true);
+  }
+  level->add<Shockwave>(x, bodyY(), 4, 30, 0.4f, type.blood, false);
+  Spark::burst(*level, x, bodyY() - 4, type.blood, 8, 50, true);
+}
+
+void WildFoe::haunt(Player &p) {
+  Edits *e = world::edits;
+  auto lit = [&](int tx, int ty) {
+    const Edits::Change *c = e ? e->at(tx, ty) : nullptr;
+    return c && c->placed && (c->piece == Piece::Torch || c->piece == Piece::Campfire);
+  };
+  if (hunting && !lit(lightX, lightY))
+    hunting = false, snuff = 0;
+  if (!hunting && (seek -= DT) <= 0) {
+    seek = 0.5f;
+    int cx = int(std::floor(x / 16)), cy = int(std::floor(y / 16)), best = 1 << 30;
+    for (int ty = cy - 16; ty <= cy + 16; ty++)
+      for (int tx = cx - 16; tx <= cx + 16; tx++)
+        if (int d = (tx - cx) * (tx - cx) + (ty - cy) * (ty - cy); d < best && lit(tx, ty))
+          best = d, lightX = tx, lightY = ty, hunting = true;
+  }
+  double tx = hunting ? lightX * 16 + 8.0 : p.x, ty = hunting ? lightY * 16 + 6.0 : p.y - 40;
+  double xd = tx - x, yd = ty - y, d = std::sqrt(xd * xd + yd * yd);
+  facing = xd < 0 ? -1.0f : 1.0f;
+  if (d > 8) {
+    double v = type.speed * level->pace * status.movement();
+    x += xd / d * v * DT, y += yd / d * v * DT;
+    return;
+  }
+  if (!hunting || (snuff += DT) < 1.6f) {
+    if (hunting && level->ticks % 4 == 0)
+      Spark::burst(*level, tx, ty - 8, Color{0.35f, 0.25f, 0.5f, 1}, 2, 20, false);
+    return;
+  }
+  bool fire = e->at(lightX, lightY)->piece == Piece::Campfire;
+  e->place(lightX, lightY, fire ? Piece::Ashes : Piece::Snuffed);
+  level->rules.safe.erase(
+      std::remove_if(level->rules.safe.begin(), level->rules.safe.end(),
+                     [&](const SafeZone &z) {
+                       return std::abs(z.x - tx) < 9 && std::abs(z.y - (lightY * 16 + 16.0)) < 9;
+                     }),
+      level->rules.safe.end());
+  level->add<Shockwave>(tx, ty, 4, 30, 0.5f, Color{0.3f, 0.2f, 0.45f, 1}, false);
+  Spark::burst(*level, tx, ty - 8, Color{0.2f, 0.15f, 0.3f, 1}, 10, 50, true);
+  if (level->time - level->snuffed > 4)
+    level->game.announce(fire ? "A SHADE SMOTHERS A FIRE" : "A SHADE SNUFFS A TORCH");
+  level->snuffed = level->time;
+  hunting = false, snuff = 0;
 }
 
 void WildFoe::bequeath() {

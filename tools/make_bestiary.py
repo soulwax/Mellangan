@@ -49,6 +49,8 @@ Band at y=1380, 24 columns by 6 rows (144 cells). Cell i is atlas::beast(i); the
     42  Kobold Miner   a small kobold in a lamp helmet with a pickaxe
     43  Hide           a stretched pelt (crafting material, not a foe)
     44  Bone           a long bone (crafting material, not a foe)
+    45  Shade          a hooded violet wisp with pale eyes that hunts lights
+    46  Nest           a fleshy brood mound with glowing pores
 
 Usage: python tools/make_bestiary.py [--preview out.png]   (make_assets.py calls add_bestiary too)
 """
@@ -106,6 +108,8 @@ CBAT = {"s": (50, 30, 40), "S": (100, 70, 80)}
 ROCK = {"v": (80, 76, 72), "I": (140, 134, 126), "i": (180, 174, 166)}
 ORE = {"v": (90, 60, 40), "I": (150, 110, 70), "n": (230, 170, 60)}
 KOBOLD = {"k": (150, 70, 40), "K": (110, 90, 60), "y": (220, 190, 60)}
+SHADE = {"f": (22, 14, 34), "u": (60, 40, 92), "n": (110, 84, 150)}
+NEST = {"d": (70, 34, 60), "m": (128, 70, 104), "l": (186, 120, 150), "g": (190, 240, 120)}
 EXTRA = {
     "t": (210, 190, 120),
     "R": (220, 60, 50),
@@ -1062,13 +1066,55 @@ def bone():
     ))
 
 
+def shade():
+    return draw((
+        "................",
+        "......uuuu......",
+        ".....unnnnu.....",
+        "....unffffnu....",
+        "....ufQffQfu....",
+        "....uffffffu....",
+        "...uuffffffuu...",
+        "..uffuffffuffu..",
+        ".uf.uffffffu.fu.",
+        ".u..ufffnffu..u.",
+        "....ufffffnu....",
+        ".....uffffu.....",
+        "....u.uffu.u....",
+        "...u...uu...u...",
+        "......u..u......",
+        "................",
+    ), SHADE)
+
+
+def nest():
+    return draw((
+        "................",
+        "................",
+        "................",
+        "................",
+        "......mmmm......",
+        "....mmllmmmm....",
+        "...mlldmgmmmm...",
+        "..mlmmmmmmdmmm..",
+        "..mmgmmmlmmmgm..",
+        ".mmmmdmmmmmmmmm.",
+        ".mmlmmmmgmmdmmm.",
+        "mmmmmmmmmmmmmmmd",
+        "dmmmdmmmmmdmmmdd",
+        ".ddddddddddddd..",
+        "................",
+        "................",
+    ), NEST)
+
+
 PAINTERS = (thornling, boar, goblin_archer, goblin_shaman, sapling, treant, moth, cutthroat,
             bog_toad, drowned, snapjaw, strangler_vine, amber_beetle, spore_puffer,
             sunken_priest, yeti, ice_wraith, barrow_wight, crystal_golem, moon_hound, lynx,
             barrow_archer, sand_wyrm, hyena, salt_golem, glass_spitter, storm_kite, dune_raider,
             totem_shaman, war_totem, magma_slug, ash_wraith, cave_horror, star_spawn,
             flame_cultist, hollow_sentinel, ember_drake, night_stalker, grave_robber, cave_bat,
-            rock_crawler, ore_golem, kobold_miner, hide, bone)
+            rock_crawler, ore_golem, kobold_miner, hide, bone, shade, nest)
 
 
 def slot(i):

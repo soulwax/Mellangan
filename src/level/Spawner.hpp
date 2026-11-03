@@ -16,7 +16,7 @@ public:
   void wave(int index, int count);
   Enemy *champion(double x, double y);
   static constexpr int WAVES = 6;
-  static constexpr float MINI_GAP = 150;
+  static constexpr float MINI_GAP = 150, WARD = 0.7f;
 
 private:
   Level &level;

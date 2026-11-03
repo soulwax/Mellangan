@@ -167,6 +167,8 @@ const EnemyType TYPES[] = {
     {bs::OreGolem, 180, 18, 18, 10, 1.4f, 14, 0.15f, {0.7f, 0.5f, 0.3f, 1}, false, 150,
      atlas::beast},
     {bs::KoboldMiner, 14, 62, 5, 5, 0.9f, 2, 1, {0.8f, 0.4f, 0.2f, 1}, false, 60, atlas::beast},
+    {bs::Shade, 30, 34, 0, 6, 1, 6, 0.9f, {0.35f, 0.25f, 0.5f, 1}, true, 1e9f, atlas::beast},
+    {bs::Nest, 140, 0, 0, 10, 1.4f, 10, 0, {0.55f, 0.35f, 0.5f, 1}, false, 1e9f, atlas::beast},
 };
 static_assert(std::size(TYPES) == int(EnemyKind::Count));
 } // namespace
@@ -230,7 +232,7 @@ const char *Enemy::name() const {
       "a magma slug", "an ash wraith", "a cave horror", "a star spawn",
       "a starlet", "a flame cultist", "a hollow sentinel", "the ember drake",
       "a night stalker", "a grave robber", "a cave bat", "a rock crawler",
-      "an ore golem", "a kobold miner"
+      "an ore golem", "a kobold miner", "a shade", "a nest"
   };
   static_assert(std::size(NAMES) == int(EnemyKind::Count));
   return NAMES[&type - TYPES];

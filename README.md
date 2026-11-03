@@ -134,11 +134,35 @@ and fire pools leave a short burn when enemies move away. Afflictions clear on d
 | F11 | Fullscreen |
 | F3 | FPS counter |
 | V | Toggle full or reduced cosmetic particles (also available while paused) |
+| I | Inventory; beside a merchant, workbench, stash, elder or waypoint it opens theirs instead |
+| Alt (hold) | Show the names of items on the ground |
+| K (title) | Begin or continue the campaign |
+| K (campaign) | Skill tree |
+| R (campaign class screen) | Toggle Hardcore |
+| E (campaign) | Strike a tree, rock or crystal (hold to keep striking), relight a dead torch, take down something you built, or delve into a mine |
+| B (campaign) | Build a campfire, torch, fence, stone wall or workbench |
 
 Enemy attack warnings use red markers, including directional melee windups and hostile projectiles.
 Burn, chill, poison, and marked effects have distinct icons and player HUD timers. Reduced particles hides
 some cosmetic sparks and debris while keeping gameplay indicators and damage numbers visible; the setting
 is remembered between sessions.
+
+### Campaign
+
+Press K on the title screen to start a campaign. One hero lives in one world across sessions,
+starting in Hearthwick, a barricaded town with a waypoint, a stash, a merchant and Elder Maren.
+Days and nights repeat, and foes grow stronger the further you roam from town.
+
+- **Acts.** Five acts, each with four quests and an act boss. Clearing an act opens the road to the
+  next act's town; waypoints travel between the towns you have reached.
+- **Skill tree.** Levelling up gives skill points for the Arms, Arts and Instincts tabs.
+- **Gathering and building.** Trees, rocks, crystals and flowers give materials. Campfires,
+  torches, fences, walls and workbenches can be built from them, and lights keep most foes from
+  spawning nearby. At night, shades come to put the lights out.
+- **Delves.** A mine seals you in for three floors of underground foes and the act's guardian boss.
+- **Saving.** The waypoint saves, as do a timer, the stash and quitting. Falling wakes you at the
+  waypoint or your nearest campfire for a tenth of your gold; Hardcore heroes get one life.
+- **Nightmare.** After the last act, the acts begin again with every foe stronger.
 
 Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits when it is done).
 
