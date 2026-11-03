@@ -204,7 +204,7 @@ void Enemy::die() {
   if (elite && !garrison && rng.chance(0.25f))
     level->add<Potion>(x + 6, y);
   if (level->rules.loot && !garrison)
-    for (int i = 0; i <= (title && killer.bonus.extraLoot > 0); i++)
+    for (int i = 0, n = title && killer.bonus.extraLoot > 0; i <= n; i++)
       ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this), leanOf(*this));
   if (pack)
     named::fall(*this);

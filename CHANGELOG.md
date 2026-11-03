@@ -6,6 +6,16 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Ground warnings under burrowers, hazards and other telegraphed attacks spin again; the ring's tick marks had stopped turning when the ring was redrawn as geometry.
+- The landmark pointer no longer reads an unset site when every landmark nearby has been visited.
+
+### Changed
+
+- The Windows build is warning-free at `/W4` and treats warnings as errors. Third-party headers are compiled quietly, and shadowed names, narrowing conversions, an uninitialised test value and a hidden virtual overload (`ExpansionEnemy::mend`, now `tend`) are cleaned up.
+- New CMake switches: `MELLANGAN_WERROR` (on by default with MSVC), `MELLANGAN_ANALYZE` for the MSVC static analyzer, and `MELLANGAN_ASAN` for AddressSanitizer, plus UBSan with GCC and Clang.
+
 ## [0.6.2] - 2026-11-03
 
 ### Added

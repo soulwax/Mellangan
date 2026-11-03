@@ -99,7 +99,7 @@ void Spawner::trickle(float t) {
   Player &hero = *level.player;
   Roster r = roster(level.rules.threat ? level.rules.threat(hero.x, hero.y) : t);
   for (int i = 0, batch = 1 + int(t / b.batchEvery);
-       i < batch && level.count<Enemy>() < int(b.enemyCap); i++) {
+       i < batch && int(level.count<Enemy>()) < int(b.enemyCap); i++) {
     double x, y;
     ring(rng.range(280, 320), x, y);
     spawn(pick(r, x, y), x, y, false);

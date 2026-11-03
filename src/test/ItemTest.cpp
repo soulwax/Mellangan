@@ -242,8 +242,8 @@ void testEquipStats() {
   };
 
   float might = p.might, maxHp = p.maxHp, speed = p.speed, armor = p.armor;
-  p.bag = {ring({{Stat::Damage, 20}, {Stat::Life, 30}, {Stat::Speed, 10}, {Stat::Armour, 3},
-                 {Stat::ResistBurn, 50}})};
+  p.bag = {ring({{Stat::Damage, 20.0f}, {Stat::Life, 30.0f}, {Stat::Speed, 10.0f}, {Stat::Armour, 3.0f},
+                 {Stat::ResistBurn, 50.0f}})};
   assert(p.equip(0));
   assert(std::abs(p.might - might - 0.2f) < 1e-3f && std::abs(p.maxHp - maxHp - 30) < 1e-3f);
   assert(p.speed > speed && p.armor == armor + 3);
@@ -275,7 +275,7 @@ void testEquipStats() {
   }
   assert(granted);
 
-  p.bag = {ring({{Stat::Thorns, 5}})};
+  p.bag = {ring({{Stat::Thorns, 5.0f}})};
   assert(p.equip(0) && p.bonus.thorns == 5);
   p.maxHp = p.hp = 1e6f;
   auto made = Enemy::create(EnemyKind::Rat, 4, 1);
@@ -283,11 +283,12 @@ void testEquipStats() {
   e->x = p.x, e->y = p.y;
   level.add(std::move(made));
   float full = e->hp;
-  for (int i = 0; i < 120 && e->hp >= full && !e->removed; i++) {
+  entt::entity foe = e->id;
+  for (int i = 0; i < 120 && level.reg.valid(foe) && e->hp >= full; i++) {
     e->x = p.x, e->y = p.y, p.invuln = 0;
     level.tick();
   }
-  assert(e->removed || e->hp < full);
+  assert(!level.reg.valid(foe) || e->hp < full);
   game.level.reset();
   std::cout << "[TEST] Equipped items move stats both ways, resist, grant levels, block and "
                "thorns: PASS" << std::endl;

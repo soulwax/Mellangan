@@ -50,8 +50,8 @@ void Slash::emit() {
               : i == 0 ? atlas::pt::Crescent : atlas::pt::FrostGlint,
         petal ? col::white : c.alpha(0.9f), rng.range(0.5f, 0.9f));
     d->spin = rng.range(-4, 4);
-    d->sway = petal ? 14 : 4;
-    d->gravity = petal ? 30 : -10;
+    d->sway = petal ? 14.0f : 4.0f;
+    d->gravity = petal ? 30.0f : -10.0f;
     d->scale = petal ? 0.9f : 0.6f;
   }
   if (style == SlashStyle::Crusader) {

@@ -20,7 +20,7 @@ void testExpansionEnemies() {
   p.god = true;
   for (int variant = 0; variant < 10; variant++) {
     auto owned = std::make_unique<ExpansionEnemy>(
-        Enemy::typeOf(EnemyKind::Rat), 1, 1, variant);
+        Enemy::typeOf(EnemyKind::Rat), 1.0f, 1.0f, variant);
     ExpansionEnemy *e = owned.get();
     level.add(std::move(owned));
     e->x = p.x + 16;

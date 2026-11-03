@@ -19,7 +19,7 @@ public:
   void announce(std::string text);
   void clear();
   void tick(bool running);
-  void render(float time, int xView, int yView);
+  void render(float now, int xv, int yv);
 
 private:
   struct Pin {

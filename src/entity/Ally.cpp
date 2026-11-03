@@ -89,7 +89,7 @@ void Ally::stride(double tx, double ty, float pace) {
   xa = xd / d * step, ya = yd / d * step;
   x += xa * DT, y += ya * DT;
   if (std::abs(xa) > 1)
-    facing = xa > 0 ? 1 : -1;
+    facing = xa > 0 ? 1.0f : -1.0f;
   if (!def.flies)
     level->collide(x, y, radius);
 }

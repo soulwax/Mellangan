@@ -43,8 +43,8 @@ void Sentry::shove() {
 
 float Sentry::might() const {
   const Balance &b = level->game.balance;
-  float t = level->rules.threat ? level->rules.threat(post.x, post.y) : level->time;
-  return DAMAGE * b.enemyHp * (1 + t / b.enemyHpRamp);
+  float age = level->rules.threat ? level->rules.threat(post.x, post.y) : level->time;
+  return DAMAGE * b.enemyHp * (1 + age / b.enemyHpRamp);
 }
 
 void Sentry::cleave() {
@@ -104,7 +104,7 @@ void Sentry::renderShadow(Screen &s) {
 }
 
 void Bridge::render(Screen &s) {
-  float w = across ? 22 : 48, h = across ? 48 : 22, x0 = xp - w / 2, y0 = yp - 5 - h / 2;
+  float w = across ? 22.0f : 48.0f, h = across ? 48.0f : 22.0f, x0 = xp - w / 2, y0 = yp - 5 - h / 2;
   s.rect(x0, y0, w, h, DECK_DARK);
   s.rect(x0 + 1, y0 + 1, w - 2, h - 2, DECK);
   for (int i = 3; i < (across ? w : h) - 1; i += 4)

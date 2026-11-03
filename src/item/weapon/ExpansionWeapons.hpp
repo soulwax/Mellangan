@@ -31,7 +31,7 @@ public:
 
 private:
   bool hitBefore(entt::entity id) const;
-  Mob *freshFoe(double range) const;
+  Mob *freshFoe(float range) const;
   void steer(double tx, double ty);
   void strike(Mob &e);
   void sweep(bool area, bool line, Mob *&bounced);

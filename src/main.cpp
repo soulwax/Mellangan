@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
 
 #if defined(_WIN32)
 #include <windows.h>
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
   return main(__argc, __argv);
 }
 #endif

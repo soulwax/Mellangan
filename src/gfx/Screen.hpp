@@ -49,7 +49,7 @@ public:
   bool saveTarget(VK2DTexture target, const std::string &path);
 
   void color(Color c);
-  void mirror(double axis, Color veil) { mirrorY = axis, this->veil = veil, mirrored = true; }
+  void mirror(double axis, Color tint) { mirrorY = axis, veil = tint, mirrored = true; }
   void unmirror() { mirrored = false; }
   void submerge(double line) { waterline = line, sunk = true; }
   void emerge() { sunk = false; }

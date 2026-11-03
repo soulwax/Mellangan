@@ -115,10 +115,11 @@ void testGreenwoodFoes() {
   {
     Arena a;
     WildFoe *sapling = a.add(EnemyKind::Sapling, 90, 0);
+    entt::entity id = sapling->id;
     a.run(2);
     sapling->life = sapling->wild.grow - DT * 0.5f;
     a.run(3);
-    assert(sapling->removed && a.level.count<Enemy>() >= 1);
+    assert(!a.level.get<Enemy>(id) && a.level.count<Enemy>() >= 1);
     bool treant = false;
     a.level.each<Enemy>([&](Enemy &e) { treant |= e.is(EnemyKind::Treant); });
     assert(treant);

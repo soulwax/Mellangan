@@ -139,13 +139,13 @@ void Screen::color(Color c) {
   vk2dRendererSetColourMod(v);
 }
 
-void Screen::particle(int icon, double x, double y, Color c, float scale,
+void Screen::particle(int icon, double x, double y, Color c, float k,
                       float rot) {
   if (mirrored)
     return;
   color(c);
-  vk2dRendererDrawTexture(particles, float(x - xOffset - 4 * scale),
-                          float(y - yOffset - 4 * scale), scale, scale, rot, 4,
+  vk2dRendererDrawTexture(particles, float(x - xOffset - 4 * k),
+                          float(y - yOffset - 4 * k), k, k, rot, 4,
                           4, float(icon % 8 * 8), float(icon / 8 * 8), 8, 8);
   color(col::white);
 }
@@ -163,10 +163,10 @@ void Screen::sprite(const Sprite &s, double x, double y, float xo, float yo,
                     float xs, float ys, float rot) {
   if (mirrored)
     y = 2 * mirrorY - y, ys = -ys, rot = -rot;
-  float h = s.h;
+  float hh = s.h;
   if (sunk && ys > 0) {
-    h = std::min(s.h, float((waterline - (y - yo * ys)) / ys));
-    if (h <= 0)
+    hh = std::min(s.h, float((waterline - (y - yo * ys)) / ys));
+    if (hh <= 0)
       return;
   }
   float xp = float(x - xOffset - xo * xs), yp = float(y - yOffset - yo * ys);
@@ -234,13 +234,13 @@ void Screen::frame(double x, double y, float rw, float rh, float t, Color c) {
   rect(x + rw - t, y + t, t, rh - 2 * t, c);
 }
 
-void Screen::bracket(float x, float y, float w, float h, float u) {
-  float tick = std::min(8 * u, std::min(w, h) * 0.25f);
-  frame(x, y, w, h, u, col::muted.alpha(0.18f));
+void Screen::bracket(float x, float y, float bw, float bh, float bu) {
+  float tick = std::min(8 * bu, std::min(bw, bh) * 0.25f);
+  frame(x, y, bw, bh, bu, col::muted.alpha(0.18f));
   Color c = col::muted.alpha(0.8f);
   for (int i = 0; i < 4; i++) {
-    rect(i & 1 ? x + w - tick : x, i & 2 ? y + h - u : y, tick, u, c);
-    rect(i & 1 ? x + w - u : x, i & 2 ? y + h - tick : y, u, tick, c);
+    rect(i & 1 ? x + bw - tick : x, i & 2 ? y + bh - bu : y, tick, bu, c);
+    rect(i & 1 ? x + bw - bu : x, i & 2 ? y + bh - tick : y, bu, tick, c);
   }
 }
 

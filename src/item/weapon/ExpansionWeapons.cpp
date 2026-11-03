@@ -135,14 +135,14 @@ ExpansionAttack::ExpansionAttack(int kind, double x, double y, double dx,
     this->dx /= len, this->dy /= len;
   else
     this->dx = 1, this->dy = 0;
-  radius = this->kind == Harpoon ? 4 : 7;
+  radius = this->kind == Harpoon ? 4.0f : 7.0f;
 }
 
-bool ExpansionAttack::hitBefore(entt::entity id) const {
-  return std::find(hits.begin(), hits.end(), id) != hits.end();
+bool ExpansionAttack::hitBefore(entt::entity who) const {
+  return std::find(hits.begin(), hits.end(), who) != hits.end();
 }
 
-Mob *ExpansionAttack::freshFoe(double range) const {
+Mob *ExpansionAttack::freshFoe(float range) const {
   for (Mob *e : level->nearestFoes(source && source->hostile(), x, y, range, 24))
     if (!hitBefore(e->id))
       return e;
@@ -219,7 +219,7 @@ void ExpansionAttack::tick() {
   if (kind == Boomerang && !returning && age >= reach / 240) {
     returning = true;
     hits.clear();
-    burst(x, y, 34 + (evolved() ? 16 : 0), 1);
+    burst(x, y, evolved() ? 50.0f : 34.0f, 1);
   }
   if (kind == Boomerang && returning) {
     if (std::hypot(p.x - x, p.bodyY() - y) < 15)
@@ -257,7 +257,7 @@ bool ExpansionAttack::evolved() const { return source && source->evolved; }
 
 void ExpansionAttack::spend() {
   if (kind == Swarm && !removed)
-    converge(evolved() ? 110 : 75);
+    converge(evolved() ? 110.0f : 75.0f);
   remove();
 }
 

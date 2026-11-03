@@ -120,9 +120,10 @@ void testClassKits() {
     e->x = p.x + 120, e->y = p.y, e->aware = false, e->plan = nullptr;
     level.add(std::move(made));
     float hp = e->hp;
-    for (int i = 0; i < 10 && !shot->removed; i++)
+    entt::entity trapId = shot->id;
+    for (int i = 0; i < 10 && level.reg.valid(trapId); i++)
       level.tick();
-    assert(shot->removed && e->hp < hp);
+    assert(!level.reg.valid(trapId) && e->hp < hp);
     game.level.reset();
   }
   {

@@ -104,8 +104,8 @@ void FloorPainter::blend(int x, int y, int own, float shade, float n) {
     bool fill = blend.count != 1 || id != own;
     Sprite ground = fill ? BIOMES[id]->transitionGround(transitionKind(id, variant))
                          : world::groundTile(x, y);
-    for (int k = 0; !fill && k < 3; k++)
-      fill = ground.x == BIOMES[id]->grass(k).x && ground.y == BIOMES[id]->grass(k).y;
+    for (int m = 0; !fill && m < 3; m++)
+      fill = ground.x == BIOMES[id]->grass(m).x && ground.y == BIOMES[id]->grass(m).y;
     s.sprite(ground, x * 16 + 8, y * 16, 8, 0, fill && hash2(x, y) >> 20 & 1 ? -1.0f : 1.0f, 1);
   }
 }

@@ -116,10 +116,10 @@ void DevStart::apply(Player &p) {
     p.x = x * 16 + 8, p.y = y * 16 + 8;
     spdlog::info("dev: starting at tile ({}, {})", x, y);
   }
-  for (size_t at = 0, n = 0; p.level && at < foes.size(); n++) {
-    size_t comma = foes.find(',', at);
-    int kind = std::atoi(foes.c_str() + at);
-    at = comma == std::string::npos ? foes.size() : comma + 1;
+  for (size_t pos = 0, n = 0; p.level && pos < foes.size(); n++) {
+    size_t comma = foes.find(',', pos);
+    int kind = std::atoi(foes.c_str() + pos);
+    pos = comma == std::string::npos ? foes.size() : comma + 1;
     if (kind < 0 || kind >= int(EnemyKind::Count))
       continue;
     double a = TAU * double(n) / 7;

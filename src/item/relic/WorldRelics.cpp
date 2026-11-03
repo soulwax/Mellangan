@@ -115,14 +115,14 @@ void WorldRelic::tick(Mob &p) {
   Player *pl = p.asPlayer();
   if (!pl)
     return;
-  Level &level = *p.level;
+  Level &lv = *p.level;
   BiomeId biome = world::biomeUnder(p.x, p.y);
   cd = std::max(0.0f, cd - DT), timer = std::max(0.0f, timer - DT);
   switch (kind) {
   case Charm::ShrineLamp:
-    if (level.night.lit > lit)
-      timer = 20, Spark::burst(level, p.x, p.bodyY(), GOLD, 12, 80, true);
-    lit = level.night.lit;
+    if (lv.night.lit > lit)
+      timer = 20, Spark::burst(lv, p.x, p.bodyY(), GOLD, 12, 80, true);
+    lit = lv.night.lit;
     return hold(p, &Mob::might, timer > 0 ? 0.2f : 0);
   case Charm::Quill: {
     int tx = int(std::floor(p.x / 16)), ty = int(std::floor(p.y / 16));
@@ -132,17 +132,17 @@ void WorldRelic::tick(Mob &p) {
     return;
   }
   case Charm::MoonDial:
-    return hold(p, &Mob::haste, !level.night.dawn && level.night.left() < 180 ? -0.25f : 0);
+    return hold(p, &Mob::haste, !lv.night.dawn && lv.night.left() < 180 ? -0.25f : 0);
   case Charm::StormGlass:
-    if (pl->crits != seen && level.sky.rainfall() > 0.2f && cd <= 0)
+    if (pl->crits != seen && lv.sky.rainfall() > 0.2f && cd <= 0)
       cd = 0.4f, ability::chain(p, 2, 160, 12);
     seen = pl->crits;
     return;
   case Charm::SnowGlobe:
-    return hold(p, &Mob::armor, among(biome, {BIOME_SNOW, BIOME_TAIGA}) ? 2 : 0);
+    return hold(p, &Mob::armor, among(biome, {BIOME_SNOW, BIOME_TAIGA}) ? 2.0f : 0.0f);
   case Charm::SunShard:
     return lend(p, &S::burn,
-                among(biome, {BIOME_DESERT, BIOME_SALT, BIOME_BADLANDS}) ? 25 : 0);
+                among(biome, {BIOME_DESERT, BIOME_SALT, BIOME_BADLANDS}) ? 25.0f : 0.0f);
   case Charm::BogHeart: {
     bool bog = among(biome, {BIOME_MIRE, BIOME_FLOOD});
     if (bog)
@@ -158,25 +158,25 @@ void WorldRelic::tick(Mob &p) {
       return;
     cd = 12;
     for (int i = 0; i < 2; i++)
-      summon(level, AllyKind::Ghost, p.x + (i ? 20 : -20), p.y + 8, 14 * p.might, 12);
-    flourish::sigil(level, p.x, p.bodyY(), 30, Color{0.7f, 0.85f, 1, 1}, 6);
+      summon(lv, AllyKind::Ghost, p.x + (i ? 20 : -20), p.y + 8, 14 * p.might, 12);
+    flourish::sigil(lv, p.x, p.bodyY(), 30, Color{0.7f, 0.85f, 1, 1}, 6);
     return Sound::raise.play(0.4f, 0, 1.3f);
   }
   case Charm::PilgrimStaff:
-    return hold(p, &Mob::speed, 0.74f * level.landmarks);
+    return hold(p, &Mob::speed, 0.74f * lv.landmarks);
   case Charm::Tidecaller:
   case Charm::SeaCharm:
-    if (level.swimming(&p)) {
+    if (lv.swimming(&p)) {
       p.hp = std::min(p.maxHp, p.hp + (kind == Charm::Tidecaller ? 3 : 2) * DT);
       if (rng.chance(0.1f) && Spark::alive < 600)
-        level.add<Spark>(p.x, p.bodyY(), 0, -30, TIDE, 0.4f, 0.4f, true);
+        lv.add<Spark>(p.x, p.bodyY(), 0, -30, TIDE, 0.4f, 0.4f, true);
     }
     return;
   case Charm::WandererBoots: {
-    int seen = 0;
+    int lands = 0;
     for (int b = 0; b < BIOME_COUNT; b++)
-      seen += level.chart.knows(BiomeId(b));
-    return hold(p, &Mob::speed, 0.74f * std::min(25, 5 * seen));
+      lands += lv.chart.knows(BiomeId(b));
+    return hold(p, &Mob::speed, 0.74f * std::min(25, 5 * lands));
   }
   case Charm::ThunderIdol:
     if (cd > 0)
@@ -186,26 +186,26 @@ void WorldRelic::tick(Mob &p) {
   case Charm::Hearthstone:
     if (cd > 0 || p.hp > p.maxHp * 0.25f || p.dead())
       return;
-    if (const Structure *home = level.night.lastLit()) {
+    if (const Structure *home = lv.night.lastLit()) {
       cd = 90;
-      flourish::echo(level, p.x, p.y, p.body(), GOLD);
+      flourish::echo(lv, p.x, p.y, p.body(), GOLD);
       p.x = home->centerX(), p.y = home->centerY() + 20;
       p.shield(1.5f);
-      level.add<Shockwave>(p.x, p.bodyY(), 4, 50, 0.4f, GOLD);
+      lv.add<Shockwave>(p.x, p.bodyY(), 4, 50, 0.4f, GOLD);
       Sound::raise.play(0.5f, 0, 1.4f);
     }
     return;
   case Charm::ShrineKey:
-    if (level.night.nights != nights)
-      nights = level.night.nights, lit = level.night.lit;
-    if (level.night.lit == lit)
-      level.kindleRate *= 1.5f;
+    if (lv.night.nights != nights)
+      nights = lv.night.nights, lit = lv.night.lit;
+    if (lv.night.lit == lit)
+      lv.kindleRate *= 1.5f;
     return;
   case Charm::PackBanner:
-    if (level.mob(pet) || cd > 0)
+    if (lv.mob(pet) || cd > 0)
       return;
     cd = 10;
-    pet = summon(level, AllyKind::Wolf, p.x - 16, p.y, 12 * p.might, 600, pay::Bleed, this)->id;
+    pet = summon(lv, AllyKind::Wolf, p.x - 16, p.y, 12 * p.might, 600, pay::Bleed, this)->id;
     return;
   default:
     return;

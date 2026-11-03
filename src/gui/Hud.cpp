@@ -33,8 +33,8 @@ void Hud::tick(bool running) {
     banner = std::move(banners.front()), banners.pop_front(), bannerTime = 3;
 }
 
-void Hud::render(float time, int xView, int yView) {
-  this->time = time, this->xView = xView, this->yView = yView;
+void Hud::render(float now, int xv, int yv) {
+  time = now, xView = xv, yView = yv;
   draw();
 }
 
@@ -117,6 +117,8 @@ void Hud::landmarks() {
       if (xd * xd + yd * yd < bestD)
         bestD = xd * xd + yd * yd, best = site;
     }
+  if (bestD >= 1e18)
+    return;
   double tiles = std::sqrt(bestD) / 16, bx = best.centerX(),
          by = (best.y + 5) * 16.0;
   if (bx > xView - 24 && bx < xView + game.screen.vw + 24 && by > yView &&
@@ -372,7 +374,7 @@ void Hud::lootLabels() {
     std::string text;
     Color c;
   };
-  std::vector<Tag> tags;
+  std::vector<Tag> labels;
   game.level->each<ItemDrop>([&](ItemDrop &d) {
     if (d.removed || !d.labelled(held))
       return;
@@ -381,15 +383,15 @@ void Hud::lootLabels() {
       return;
     std::string text = d.label();
     float w = Screen::textWidth(text, small) + 6 * u, h = 16 * small + 2 * u;
-    tags.push_back({gx - w / 2, gy - h, w, h, std::move(text), d.color()});
+    labels.push_back({gx - w / 2, gy - h, w, h, std::move(text), d.color()});
   });
-  std::sort(tags.begin(), tags.end(), [](const Tag &a, const Tag &b) { return a.y > b.y; });
-  for (size_t i = 0; i < tags.size(); i++) {
-    Tag &t = tags[i];
+  std::sort(labels.begin(), labels.end(), [](const Tag &a, const Tag &b) { return a.y > b.y; });
+  for (size_t i = 0; i < labels.size(); i++) {
+    Tag &t = labels[i];
     for (int tries = 0; tries < 12; tries++) {
       const Tag *hit = nullptr;
       for (size_t j = 0; j < i && !hit; j++) {
-        const Tag &o = tags[j];
+        const Tag &o = labels[j];
         if (t.x < o.x + o.w && o.x < t.x + t.w && t.y < o.y + o.h && o.y < t.y + t.h)
           hit = &o;
       }

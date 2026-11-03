@@ -128,8 +128,8 @@ void testQuests() {
         p.x = box->x, p.y = box->y;
         quests::tick(level, c);
         assert(c.stage == QuestStage::Active && box->sealed);
-        if (Enemy *keeper = level.get<Enemy>(c.foe))
-          keeper->hurt(1e15f, 1, 0, 0);
+        if (Enemy *foe = level.get<Enemy>(c.foe))
+          foe->hurt(1e15f, 1, 0, 0);
         for (int i = 0; i < 4; i++)
           level.tick(), quests::tick(level, c);
         assert(c.stage == QuestStage::Ready && !level.get<Cache>(c.cache));

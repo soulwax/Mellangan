@@ -88,7 +88,7 @@ void Sky::respawn(Drop &d, bool fresh) const {
   d.phase = rng.unit(), d.gust = gustAt(d.x, d.y);
   d.age = rng.range(0, 6), d.landed = false;
   d.idle = rng.unit() > local(d.x, d.y);
-  float top = f.fall == Fall::Rain ? 240 : f.fall == Fall::Flake ? 190 : 1;
+  float top = f.fall == Fall::Rain ? 240.0f : f.fall == Fall::Flake ? 190.0f : 1.0f;
   d.z = d.idle ? rng.range(0.15f, 0.6f)
                : top * (fresh ? rng.unit() : rng.range(0.6f, 1));
 }

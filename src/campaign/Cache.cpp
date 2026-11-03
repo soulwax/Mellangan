@@ -35,6 +35,6 @@ void Cache::renderShadow(Screen &s) {
 }
 
 void Cache::renderLight(Screen &s) {
-  s.glow(xp, yp - 6, sealed ? 50 : 80, (sealed ? SEAL : GILT) * 0.3f);
+  s.glow(xp, yp - 6, sealed ? 50.0f : 80.0f, (sealed ? SEAL : GILT) * 0.3f);
   level->lights.add(x, y, 60, 0.5f);
 }

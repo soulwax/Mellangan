@@ -91,7 +91,7 @@ bool Delve::start(Level &level, Campaign &c, const Structure &site) {
     Spark::burst(level, e.x, e.bodyY(), DUST, 8, 60, true);
     e.remove();
   });
-  level.add<Shockwave>(x, y, 8, RING * 16, 0.8f, DUST);
+  level.add<Shockwave>(x, y, 8.0f, float(RING * 16), 0.8f, DUST);
   Spark::burst(level, x, y - 6, DUST, 24, 120, true);
   level.game.onExplosion();
   Sound::erupt.play(0.7f, 0);

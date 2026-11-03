@@ -296,7 +296,7 @@ std::vector<Mob *> Level::nearestFoes(bool hostile, double x, double y,
 void Level::foesOf(const Mob &self, double x, double y, double r,
                    const std::function<void(Mob &)> &fn) {
   if (!self.hostile()) {
-    enemiesNear(x, y, r, [&](Enemy &e) { fn(e); });
+    enemiesNear(x, y, float(r), [&](Enemy &e) { fn(e); });
     return;
   }
   friends(x, y, float(r), fn);

@@ -36,6 +36,13 @@ cmake --build build --config Release
 Shaders in `res/shaders` are compiled to SPIR-V at build time with the SDK's `slangc`, so Vulkan2D's
 runtime Slang compiler is disabled and never built. The executable lands next to a copy of `res/`.
 
+Checking switches, each a CMake option:
+
+- `MELLANGAN_WERROR` treats warnings in `src/` as errors. It is on by default with MSVC and off elsewhere.
+- `MELLANGAN_ANALYZE` runs MSVC's `/analyze` over `src/`. Use it for audits; it is slow.
+- `MELLANGAN_ASAN` builds every target with AddressSanitizer, plus UBSan with GCC and Clang. Use a separate build
+  directory, for example `cmake -S . -B build-asan -DMELLANGAN_ASAN=ON`, then run `--test` from it.
+
 ### Windows
 
 If `VULKAN_SDK` is not set, CMake picks the newest install under `C:/VulkanSDK`. The executable is

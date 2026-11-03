@@ -157,9 +157,9 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
         float left = v.x + v.w * 0.5f + float(from - v.cx) * v.cell;
         float xa = std::max(left, v.x),
               xb = std::min(left + float(cx - from) * v.cell, right);
-        int c = run / 2;
-        Color t = tone(BiomeId((c & BIOME) - 1)) * (run & 1 ? 0.7f : 1.0f);
-        if (!(c & NOW))
+        int cc = run / 2;
+        Color t = tone(BiomeId((cc & BIOME) - 1)) * (run & 1 ? 0.7f : 1.0f);
+        if (!(cc & NOW))
           t = {lerpf(t.r, 0.1f, 0.6f), lerpf(t.g, 0.1f, 0.6f),
                lerpf(t.b, 0.14f, 0.6f), 1};
         if (xb > xa)

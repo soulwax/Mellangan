@@ -17,6 +17,11 @@ static pthread_mutex_t poolLock = PTHREAD_MUTEX_INITIALIZER;
 #define GRAIN_SHIFT 4
 #define CLASSES 32
 #define SLAB (64 * 1024)
+#ifdef __SANITIZE_ADDRESS__
+#define DIRECT 1
+#else
+#define DIRECT 0
+#endif
 
 typedef struct Node {
   struct Node *next;
@@ -52,7 +57,7 @@ static void refill(size_t c) {
 
 void *pool_alloc(size_t size) {
   size_t c = classOf(size);
-  if (c >= CLASSES) {
+  if (c >= CLASSES || DIRECT) {
     void *p = malloc(size);
     if (!p)
       abort();
@@ -71,7 +76,7 @@ void pool_free(void *p, size_t size) {
   if (!p)
     return;
   size_t c = classOf(size);
-  if (c >= CLASSES) {
+  if (c >= CLASSES || DIRECT) {
     free(p);
     return;
   }

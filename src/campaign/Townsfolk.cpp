@@ -39,8 +39,8 @@ const char *Townsfolk::line() const {
   return LINES[town % 5][(voice + said) % 4];
 }
 
-void Townsfolk::settle(double cx, double cy, int t) {
-  mode = Mode::Home, home = {cx, cy}, town = t, wander = 0, hp = HP;
+void Townsfolk::settle(double cx, double cy, int tn) {
+  mode = Mode::Home, home = {cx, cy}, town = tn, wander = 0, hp = HP;
 }
 
 void Townsfolk::trail() {

@@ -128,7 +128,7 @@ void sight(Mob &caster, float radius) {
     bool marked = e && (e->elite || e->title || e->boss);
     double xd = foe.x - caster.x, yd = foe.y - caster.y;
     if (marked || xd * xd + yd * yd < 160 * 160) {
-      foe.afflict(StatusKind::Marked, marked ? 8 : 3, marked ? 0.3f : 0.15f);
+      foe.afflict(StatusKind::Marked, marked ? 8.0f : 3.0f, marked ? 0.3f : 0.15f);
       foe.strike(4 * caster.power(), xd, yd, 0);
     }
   });

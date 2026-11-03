@@ -43,9 +43,9 @@
 #include "particle/Spark.hpp"
 
 
-bool Game::init(SDL_Window *w, const std::string &base) {
+bool Game::init(SDL_Window *w, const std::string &root) {
   window = w;
-  this->base = base;
+  base = root;
   rng.state ^= SDL_GetPerformanceCounter() * 0x2545F4914F6CDD1Dull;
   if (!screen.load(base))
     return false;

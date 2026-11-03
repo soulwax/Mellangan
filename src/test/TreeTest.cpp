@@ -99,7 +99,8 @@ void testSkillTrees() {
   Tree tree = Tree::of(p);
   p.lvl = 6, c.points = 3;
   const Node *art = first(tree, Tab::Arts, 1);
-  assert(tree.spend(p, *art, c.points) && tree.spend(p, *art, c.points));
+  assert(tree.spend(p, *art, c.points));
+  assert(tree.spend(p, *art, c.points));
   float cool = dynamic_cast<Skill *>(art->up)->cooldown;
   c.capture(*game.level);
   std::string text = c.save();

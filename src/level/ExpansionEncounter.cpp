@@ -92,7 +92,7 @@ void ExpansionChallenge::render(Screen &s) {
   else
     s.center(atlas::tile(atlas::t::Chest), xp, yp - 6);
   s.color(STYLES[objective.kind].color.alpha(0.35f));
-  s.ring(xp, yp, objective.kind == 2 ? 38 : 64);
+  s.ring(xp, yp, objective.kind == 2 ? 38.0f : 64.0f);
   s.color(col::white);
   int defeated = 0;
   for (int i = 0; i < defenders; i++)

@@ -84,8 +84,12 @@ public:
 
   Entity *add(std::unique_ptr<Entity> e);
   SpriteObject *spawn(std::unique_ptr<SpriteObject> p);
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4244)
+#endif
   template <class T, class... A> T *add(A &&...args) {
-    auto p = std::make_unique<T>(std::forward<A>(args)...);
+    std::unique_ptr<T> p(new T(std::forward<A>(args)...));
     T *raw = p.get();
     if constexpr (std::is_base_of_v<Entity, T>)
       add(std::unique_ptr<Entity>(std::move(p)));
@@ -93,6 +97,9 @@ public:
       spawn(std::move(p));
     return raw;
   }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
   template <class T> void tag(T *e) {
     reg.emplace_or_replace<Is<T>>(e->id, Is<T>{e});
   }

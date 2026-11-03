@@ -102,7 +102,7 @@ void ItemDrop::render(Screen &s) {
 
 void ItemDrop::renderLight(Screen &s) {
   if (isItem(drop) && int(drop.item.rarity) >= int(Rarity::Magic))
-    s.glow(xp, yp, beams() ? 46 : 28, color() * (beams() ? 0.22f : 0.12f));
+    s.glow(xp, yp, beams() ? 46.0f : 28.0f, color() * (beams() ? 0.22f : 0.12f));
 }
 
 void ItemDrop::spill(Level &level, double x, double y, Source source, int mlvl, Lean lean) {

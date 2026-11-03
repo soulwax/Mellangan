@@ -299,7 +299,7 @@ void Campaign::enter(Level &level) {
   delve = Delve{};
   companion = entt::null;
   barricade();
-  threatScale = 1 + nightmare;
+  threatScale = float(1 + nightmare);
   townX = xTown, townY = yTown;
   level.rules.safe.clear();
   for (const Town &t : towns())
@@ -482,7 +482,7 @@ std::string Campaign::fortify(Level &level) {
 void Campaign::awaken(Level &level) {
   nightmare++, act = 1, quest = 0, progress = 0, qsite = false;
   stage = QuestStage::Offered;
-  threatScale = 1 + nightmare;
+  threatScale = float(1 + nightmare);
   delves.clear();
   staff(level);
   level.game.announce(fmt::format("NIGHTMARE {}  THE DARK RETURNS STRONGER", nightmare));
@@ -654,21 +654,21 @@ void Campaign::honour(Level &level) {
   if (fell <= 0)
     return;
   Player &p = *level.player;
-  int gold = fell * HONOUR_GOLD;
-  p.gold += gold;
+  int reward = fell * HONOUR_GOLD;
+  p.gold += reward;
   p.gainXp(fell * HONOUR_XP);
-  level.game.announce(fmt::format("THE BASTION HELD  {} FELL AT THE BRIDGE  +{} GOLD", fell, gold));
+  level.game.announce(fmt::format("THE BASTION HELD  {} FELL AT THE BRIDGE  +{} GOLD", fell, reward));
 }
 
 void Campaign::tick(Level &level) {
-  bool day = level.night.dawn;
-  if (day && !wasDay) {
+  bool dawn = level.night.dawn;
+  if (dawn && !wasDay) {
     regrow(level.night.nights);
     if (hound && houndDown)
       houndDown = false, level.game.announce("YOUR HOUND IS BACK AT YOUR SIDE");
     honour(level);
   }
-  wasDay = day;
+  wasDay = dawn;
   smoulder(level);
   lure(level);
   stray(level);

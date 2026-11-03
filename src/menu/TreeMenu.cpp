@@ -39,10 +39,10 @@ float TreeMenu::columnX(int tab) const {
 float TreeMenu::tierY(int tab, int tier) const {
   const Screen &s = game.screen;
   float y = s.h * 0.16f;
-  for (int t = 0; t < tier; t++) {
+  for (int row = 0; row < tier; row++) {
     int n = 0;
     for (const Node &o : tree.nodes)
-      n += int(o.tab) == tab && o.tier == t;
+      n += int(o.tab) == tab && o.tier == row;
     if (n)
       y += (LABEL + lines(n) * (CELL + GAP) + 4) * s.u;
   }

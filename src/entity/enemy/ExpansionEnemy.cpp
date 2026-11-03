@@ -131,11 +131,11 @@ void ExpansionEnemy::burst(float reach, float damage, StatusKind kind,
   Spark::burst(*level, x, bodyY(), DEFS[variant].tone, 16, reach * 1.5f, true);
 }
 
-void ExpansionEnemy::hazard(float radius, float life, float delay, float damage) {
-  level->add<EnemyHazard>(x, y, variant, radius, life, delay, damage * damageMul, name());
+void ExpansionEnemy::hazard(float r, float life, float delay, float damage) {
+  level->add<EnemyHazard>(x, y, variant, r, life, delay, damage * damageMul, name());
 }
 
-void ExpansionEnemy::mend() {
+void ExpansionEnemy::tend() {
   timer = 2.0f;
   Enemy *nearby[24];
   for (int i = 0, n = level->gather(x, y, 70, nearby, 24); i < n; i++) {
@@ -236,7 +236,7 @@ void ExpansionEnemy::tick() {
     return;
   case Brute:
     if (timer <= 0)
-      mend();
+      tend();
     return;
   case Golem:
     if (timer <= 0 && dist < 70) {

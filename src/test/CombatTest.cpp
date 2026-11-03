@@ -53,7 +53,7 @@ void testCombatReadability() {
   std::vector<std::unique_ptr<Spark>> sparks;
   int shown = 0;
   for (int i = 0; i < 128; i++) {
-    sparks.push_back(std::make_unique<Spark>(0, 0, 0, 0, col::white, 1, 1, false));
+    sparks.push_back(std::make_unique<Spark>(0.0, 0.0, 0.0, 0.0, col::white, 1.0f, 1.0f, false));
     bool visible = showParticle(*sparks.back(), true);
     assert(showParticle(*sparks.back(), false));
     assert(visible == showParticle(*sparks.back(), true));
@@ -185,13 +185,15 @@ void testSidedAbilities() {
   float hp = p.hp, foeHp = e->hp;
   Arrow *hostile = level.add<Arrow>(e->x - 6, e->bodyY(), -300, 0, 10, 1);
   hostile->hostile = true;
-  for (int i = 0; i < 30 && !hostile->removed; i++)
+  entt::entity shot = hostile->id;
+  for (int i = 0; i < 30 && level.reg.valid(shot); i++)
     level.tick();
   assert(p.hp < hp && e->hp == foeHp);
 
   p.invuln = 0, hp = p.hp;
   Arrow *friendly = level.add<Arrow>(p.x + 6, p.bodyY(), 300, 0, 10, 1);
-  for (int i = 0; i < 30 && !friendly->removed; i++)
+  shot = friendly->id;
+  for (int i = 0; i < 30 && level.reg.valid(shot); i++)
     level.tick();
   assert(e->hp < foeHp && p.hp == hp);
 
@@ -231,21 +233,22 @@ void testSidedEffects() {
   level.tick();
 
   float hp = p.hp;
-  Sweep *sweep = level.add<Sweep>(*e, 30, 10);
-  for (int i = 0; i < 40 && !sweep->removed; i++)
+  entt::entity shot = level.add<Sweep>(*e, 30, 10)->id;
+  for (int i = 0; i < 40 && level.reg.valid(shot); i++)
     level.tick();
   assert(p.hp < hp);
 
   p.invuln = 0, hp = p.hp;
   Bomb *bomb = level.add<Bomb>(e->x, e->bodyY(), p.x, p.y, 10, 20, 1, 0.5f);
   bomb->hostile = true;
-  for (int i = 0; i < 60 && !bomb->removed; i++)
+  shot = bomb->id;
+  for (int i = 0; i < 60 && level.reg.valid(shot); i++)
     level.tick();
   assert(p.hp < hp);
 
   p.invuln = 0, hp = p.hp;
-  Slash *slash = level.add<Slash>(*e, -1, 10, 1.2f);
-  for (int i = 0; i < 20 && !slash->removed; i++)
+  shot = level.add<Slash>(*e, -1, 10, 1.2f)->id;
+  for (int i = 0; i < 20 && level.reg.valid(shot); i++)
     level.tick();
   assert(p.hp < hp);
 
@@ -256,11 +259,11 @@ void testSidedEffects() {
   level.tick();
   assert(p.hp < hp && e->hp == foeHp);
 
-  Sweep *orphan = level.add<Sweep>(*e, 30, 10);
+  entt::entity orphan = level.add<Sweep>(*e, 30, 10)->id;
   e->hurt(1e6f, 0, 0, 0);
   for (int i = 0; i < 3; i++)
     level.tick();
-  assert(orphan->removed);
+  assert(!level.reg.valid(orphan));
   game.level.reset();
   std::cout << "[TEST] Sided sweeps, slashes, strikes, bombs and orphaned effects: PASS" << std::endl;
 }

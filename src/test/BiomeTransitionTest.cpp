@@ -91,7 +91,7 @@ BiomeId legacyRawBiomeAt(int x, int y) {
   LegacyMemo &m = memo[(x & 127) | (y & 63) << 7];
   if (m.epoch == noise_epoch && m.x == x && m.y == y)
     return m.biome;
-  m = {x, y, noise_epoch, legacyBiomeOf(legacyClimateAt(x, y))};
+  m = {x, y, noise_epoch, legacyBiomeOf(legacyClimateAt(float(x), float(y)))};
   return m.biome;
 }
 

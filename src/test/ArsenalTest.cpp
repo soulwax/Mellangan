@@ -22,7 +22,7 @@ namespace {
 void ring(Level &l, Player &p, int n) {
   for (int i = 0; i < n; i++) {
     auto e = Enemy::create(EnemyKind::Knight, 30, 1);
-    float a = TAU * i / n, d = 30 + 20 * (i % 4);
+    float a = TAU * i / n, d = float(30 + 20 * (i % 4));
     e->x = p.x + std::cos(a) * d, e->y = p.y + std::sin(a) * d;
     l.add(std::move(e));
   }

@@ -66,6 +66,7 @@ void testRunRules() {
     game.level = std::make_unique<Level>(game, rules);
     Level &level = *game.level;
     Player &q = *level.player;
+    double qx = q.x, qy = q.y;
     assert(!level.spawner.spawn(EnemyKind::Rat, q.x + 10, q.y));
     level.time = 600;
     Enemy *far = level.spawner.spawn(EnemyKind::Rat, q.x + 500, q.y);
@@ -74,7 +75,7 @@ void testRunRules() {
     RunRules plain;
     plain.omen = level.omen;
     game.level = std::make_unique<Level>(game, plain);
-    Enemy *base = game.level->spawner.spawn(EnemyKind::Rat, q.x + 500, q.y);
+    Enemy *base = game.level->spawner.spawn(EnemyKind::Rat, qx + 500, qy);
     assert(base && std::abs(base->maxHp - calm) < 1e-3f);
     game.level.reset();
   }

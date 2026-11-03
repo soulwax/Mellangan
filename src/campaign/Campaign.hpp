@@ -86,8 +86,8 @@ struct Campaign {
     return all[size_t(std::clamp(act, 1, int(all.size())) - 1)];
   }
   bool delved(int rx, int ry) const {
-    for (const auto &[x, y] : delves)
-      if (x == rx && y == ry)
+    for (const auto &[dx, dy] : delves)
+      if (dx == rx && dy == ry)
         return true;
     return false;
   }

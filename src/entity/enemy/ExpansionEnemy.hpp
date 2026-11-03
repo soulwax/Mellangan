@@ -23,7 +23,7 @@ private:
   void windup(float seconds, double xd, double yd, double distance);
   void burst(float reach, float damage, StatusKind kind, float power);
   void hazard(float radius, float life, float delay, float damage);
-  void mend();
+  void tend();
   void stalk(Player &p, double xd, double yd, double dist);
   void release();
   void charge(Player &p, double dist);

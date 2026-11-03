@@ -25,8 +25,8 @@ Mob *RecipeShot::wielder() const {
   return hostile() ? nullptr : level->player;
 }
 
-bool RecipeShot::hitBefore(entt::entity id) const {
-  return std::find(hits.begin(), hits.end(), id) != hits.end();
+bool RecipeShot::hitBefore(entt::entity who) const {
+  return std::find(hits.begin(), hits.end(), who) != hits.end();
 }
 
 void RecipeShot::hit(Mob &e, double xd, double yd, float dmg, float knock) {
@@ -107,13 +107,13 @@ void RecipeShot::strike(Mob &e, double xd, double yd) {
     }
 }
 
-void RecipeShot::blast(float radius, float dmg) {
-  level->add<Shockwave>(x, y, 3, radius, 0.3f, r.tint);
+void RecipeShot::blast(float rad, float dmg) {
+  level->add<Shockwave>(x, y, 3, rad, 0.3f, r.tint);
   if (Spark::alive < 600)
-    Spark::burst(*level, x, y, r.tint, 8, radius * 2, true);
-  level->foes(hostile(), x, y, radius + 16, [&](Mob &e) {
+    Spark::burst(*level, x, y, r.tint, 8, rad * 2, true);
+  level->foes(hostile(), x, y, rad + 16, [&](Mob &e) {
     double ex = e.x - x, ey = e.bodyY() - y;
-    float rr = radius + e.radius;
+    float rr = rad + e.radius;
     if (ex * ex + ey * ey >= rr * rr)
       return;
     hit(e, ex, ey, dmg, 70);
@@ -129,10 +129,10 @@ void RecipeShot::steer(float range) {
     }
   if (!target)
     return;
-  double tx = target->x - x, ty = target->bodyY() - y;
-  unit(tx, ty);
+  double ax = target->x - x, ay = target->bodyY() - y;
+  unit(ax, ay);
   double k = std::min(1.0f, 5 * DT);
-  dx = dx * (1 - k) + tx * k, dy = dy * (1 - k) + ty * k;
+  dx = dx * (1 - k) + ax * k, dy = dy * (1 - k) + ay * k;
   unit(dx, dy);
 }
 

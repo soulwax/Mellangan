@@ -27,17 +27,17 @@ void Sky::renderCover(Screen &s) const {
       y0 = int(std::floor(s.yOffset / 16.0)) - 1;
   for (int y = y0; y <= y0 + s.vh / 16 + 2; y++)
     for (int x = x0; x <= x0 + s.vw / 16 + 2; x++) {
-      uint32_t h = hash2(x * 7 + 1, y * 13 + 5);
-      if (h % (wet ? 2 : 4))
+      uint32_t hv = hash2(x * 7 + 1, y * 13 + 5);
+      if (hv % (wet ? 2 : 4))
         continue;
       float a = wet ? puddle(x, y) / cover
                     : clampf((0.34f + 0.32f * cover - lowland(x, y)) * 7, 0, 1);
       if (a <= 0)
         continue;
-      int v = h >> 16 & 1;
+      int v = hv >> 16 & 1;
       float k = grow * (0.8f + 0.4f * a);
       s.sky(wet ? atlas::wx::puddle(v) : atlas::wx::drift(v),
-            x * 16 + 8 + int(h >> 8 & 7) - 4, y * 16 + 8 + int(h >> 12 & 7) - 4,
+            x * 16 + 8 + int(hv >> 8 & 7) - 4, y * 16 + 8 + int(hv >> 12 & 7) - 4,
             tint.alpha(tint.a * a), k, k);
     }
 }
@@ -138,9 +138,9 @@ void Sky::renderLight(Screen &s) const {
       }
       if (a < 0.3f)
         continue;
-      uint32_t h = hash2(x * 7 + 1, y * 13 + 5);
-      float px = x * 16 + 8 + int(h >> 8 & 7) - 4,
-            py = y * 16 + 8 + int(h >> 12 & 7) - 4;
+      uint32_t hv = hash2(x * 7 + 1, y * 13 + 5);
+      float px = float(x * 16 + 8 + int(hv >> 8 & 7) - 4),
+            py = float(y * 16 + 8 + int(hv >> 12 & 7) - 4);
       float shine = a * (closeness(px, py, cx, cy, 110) * 0.5f + flash * 0.8f);
       if (shine > 0.04f)
         s.glow(px, py - 1, 14, Color{0.45f, 0.55f, 0.75f, 1} * shine);

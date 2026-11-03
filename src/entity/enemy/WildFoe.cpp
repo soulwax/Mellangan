@@ -537,9 +537,9 @@ float WildFoe::shell(double xd, double yd) {
     return 0.5f;
   if (!wild.guarded || (xd == 0 && yd == 0))
     return 1;
-  double facing = xd * xMark + yd * yMark;
-  glint |= wild.reflects && facing < -0.3;
-  return facing < -0.3 ? 0.3f : facing > 0.3 ? 1.3f : 1.0f;
+  double dot = xd * xMark + yd * yMark;
+  glint |= wild.reflects && dot < -0.3;
+  return dot < -0.3 ? 0.3f : dot > 0.3 ? 1.3f : 1.0f;
 }
 
 void WildFoe::bit(Player &p) {
@@ -605,8 +605,8 @@ void WildFoe::haunt(Player &p) {
   e->place(lightX, lightY, fire ? Piece::Ashes : Piece::Snuffed);
   level->rules.safe.erase(
       std::remove_if(level->rules.safe.begin(), level->rules.safe.end(),
-                     [&](const SafeZone &z) {
-                       return std::abs(z.x - tx) < 9 && std::abs(z.y - (lightY * 16 + 16.0)) < 9;
+                     [&](const SafeZone &zone) {
+                       return std::abs(zone.x - tx) < 9 && std::abs(zone.y - (lightY * 16 + 16.0)) < 9;
                      }),
       level->rules.safe.end());
   level->add<Shockwave>(tx, ty, 4, 30, 0.5f, Color{0.3f, 0.2f, 0.45f, 1}, false);

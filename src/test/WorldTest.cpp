@@ -83,7 +83,7 @@ void testSpawnShore() {
   int sites = 0, straight = 0;
   for (uint32_t seed = 0; seed < 10; seed++) {
     noise_reseed(seed);
-    Structure st;
+    Structure st{};
     for (int ry = -6; ry < 6; ry++)
       for (int rx = -6; rx < 6; rx++) {
         bool found = false;
