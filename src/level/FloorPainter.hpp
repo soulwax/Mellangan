@@ -17,6 +17,7 @@ private:
 
   void tint(Color t, float shade, float n, float alpha = 1);
   void blend(int x, int y, int own, float shade, float n);
+  void edge(int x, int y, int own, bool water);
   void pool(int x, int y, float shade);
   void settle(int x, int y, float shade);
   void wall(int x, int y, float shade);

@@ -37,6 +37,16 @@ int transitionKind(int id, int variant) {
 
 int blockCentre(int v) { return (v - (v < 0 ? 2 : 0)) / 3 * 3 + 1; }
 
+constexpr int BUMP[3] = {2, 3, -2};
+
+struct Fillet {
+  int dx, dy, rim, sx, sy, ax, ay;
+};
+constexpr Fillet FILLETS[4] = {{-1, -1, 26, 10, 10, 0, 0},
+                               {1, -1, 24, 0, 10, 10, 0},
+                               {-1, 1, 2, 10, 0, 0, 10},
+                               {1, 1, 0, 0, 0, 10, 10}};
+
 } // namespace
 
 FloorPainter::FloorPainter(Screen &s, const Sky &sky)
@@ -56,13 +66,16 @@ void FloorPainter::tile(int x, int y) {
   dry = BIOMES[own]->winter() ? 0.5f
                               : noise_unit(noise_fbm(x * 0.065f + 7.3f, y * 0.065f + 1.9f, 2, 707) * 1.6f);
   Structure st;
-  bool wet = world::isWater(x, y);
-  if (wet || world::structureAt(x, y, st) || world::isDirt(x, y) ||
-      BIOMES[own]->fixedGround(x, y)) {
+  bool wet = world::isWater(x, y), built = world::structureAt(x, y, st),
+       bare = !wet && !built && world::isDirt(x, y);
+  if (wet || built || bare || BIOMES[own]->fixedGround(x, y)) {
     if (wet)
       shade *= world::isIce(x, y) ? 0.95f : 0.82f;
     tint(world::groundTint(x, y), shade, n);
-    s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
+    if (bare || (wet && !built))
+      edge(x, y, own, wet);
+    else
+      s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
   } else {
     blend(x, y, own, shade, n);
     if (flooded)
@@ -95,6 +108,44 @@ void FloorPainter::blend(int x, int y, int own, float shade, float n) {
       fill = ground.x == BIOMES[id]->grass(k).x && ground.y == BIOMES[id]->grass(k).y;
     s.sprite(ground, x * 16 + 8, y * 16, 8, 0, fill && hash2(x, y) >> 20 & 1 ? -1.0f : 1.0f, 1);
   }
+}
+
+void FloorPainter::edge(int x, int y, int own, bool water) {
+  auto at = [water](int px, int py) {
+    return water ? world::isWater(px, py) : world::isDirt(px, py);
+  };
+  const Biome *b = BIOMES[own];
+  auto rimOf = [&](int o) { return water ? b->lakeRim(o) : b->dirtRim(o); };
+  int offset = world::rim(sides(x, y, at));
+  Sprite rim = rimOf(offset);
+  uint32_t h = hash2(x * 5 + 1, y * 9 + 2);
+  bool across = offset == 1 || offset == 25 || offset == 13,
+       along = offset == 12 || offset == 14 || offset == 13;
+  s.sprite(rim, x * 16 + 8, y * 16 + 8, 8, 8, across && h & 1 ? -1.0f : 1.0f,
+           along && h & 2 ? -1.0f : 1.0f);
+  auto piece = [&](Sprite src, int sx, int sy, int w, int ht, int px, int py) {
+    s.sprite({src.x + sx, src.y + sy, float(w), float(ht)}, px, py, 0, 0);
+  };
+  for (int k = 0; k < 2; k++) {
+    uint32_t q = hash2(x * 31 + k, y * 17 + 7 * k);
+    if (q % 3 == 0)
+      continue;
+    int w = 4 + int(q % 4), a = 1 + int(q >> 4) % 8, d = BUMP[(q >> 8) % 3];
+    if (offset == 1)
+      piece(rim, a, 0, w, 7, x * 16 + a, y * 16 + d);
+    else if (offset == 25)
+      piece(rim, a, 9, w, 7, x * 16 + a, y * 16 + 9 - d);
+    else if (offset == 12)
+      piece(rim, 0, a, 7, w, x * 16 + d, y * 16 + a);
+    else if (offset == 14)
+      piece(rim, 9, a, 7, w, x * 16 + 9 - d, y * 16 + a);
+  }
+  for (const Fillet &f : FILLETS)
+    if (at(x + f.dx, y) && at(x, y + f.dy) && !at(x + f.dx, y + f.dy)) {
+      Sprite src = rimOf(f.rim);
+      s.sprite({src.x + f.sx, src.y + f.sy, 6, 6}, x * 16 + f.ax + 3, y * 16 + f.ay + 3, 3,
+               3, -1, -1);
+    }
 }
 
 void FloorPainter::pool(int x, int y, float shade) {

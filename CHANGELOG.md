@@ -6,12 +6,20 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-11-03
+
+### Added
+
+- Dirt patches and lakeshores have natural edges: the border wobbles in and out along its length, inside corners curve instead of meeting at right angles, and the fringe no longer repeats every tile.
+- A more natural countryside: grass drifts between lush green and sun-dried yellow in broad patches, flowers grow in drifts on the brighter ground instead of an even sprinkle, and grass tiles are mirrored at random so their flowers no longer line up in rows. Every wild tree, bush, flower and rock is mirrored at random and its shade and warmth vary a little, so forests no longer look cloned.
+
 ## [0.6.1] - 2026-11-03
 
 ### Added
 
 - Fortified towns: every campaign town now has a single wooden bridge through its fence, on a random side, and its other three gates are sealed shut. Foes can no longer cross the walls anywhere else, not even flying ones; they find their way around the fence to the bridge. Shades still drift over walls to reach the lights.
 - Town knights: four knights guard each town's bridge from the very first night. They cannot be hurt, and every swing cleaves through all foes in reach and knocks them back. Their blows match the strength of the foes around them, so the garrison can hold a whole night wave alone.
+- Dirt patches and lakeshores have natural edges: the border wobbles in and out along its length, inside corners curve instead of meeting at right angles, and the fringe no longer repeats every tile.
 - A more natural countryside: grass drifts between lush green and sun-dried yellow in broad patches, flowers grow in drifts on the brighter ground instead of an even sprinkle, and grass tiles are mirrored at random so their flowers no longer line up in rows. Every wild tree, bush, flower and rock is mirrored at random and its shade and warmth vary a little, so forests no longer look cloned.
 - Cleaner textures across the generated art: stone, bone, wood and sand show small chipped marks instead of salt-and-pepper speckle, and soft shading turns at an even checker instead of random pixels. The great mushroom's stem and the ancient gate's pillars are rounded, the gate shows brick courses, the shipwreck has a proper sail, and the frozen giant's ice has a sheen.
 - Talent badges are bevelled medallions with a lit rim and a dark face, so their symbols stand out.
