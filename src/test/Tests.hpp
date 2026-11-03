@@ -36,6 +36,7 @@ void testBurningFoes();
 void testWanderingFoes();
 void testNamedPacks();
 void testRunRules();
+void testContentLinks();
 void testShapeForms();
 void testChampionTraits();
 void testLootDrops();

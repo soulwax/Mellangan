@@ -70,6 +70,9 @@ Entity *Level::add(std::unique_ptr<Entity> e) {
 }
 
 void Level::flush() {
+  for (entt::entity id : dead)
+    if (Owned *o = reg.try_get<Owned>(id); o && reg.all_of<Is<Enemy>>(id))
+      graveyard.push_back(std::move(o->self));
   reg.destroy(dead.begin(), dead.end());
   dead.clear();
 

@@ -10,10 +10,14 @@ All notable changes to Mellangan are documented here. The format follows
 
 - Ground warnings under burrowers, hazards and other telegraphed attacks spin again; the ring's tick marks had stopped turning when the ring was redrawn as geometry.
 - The landmark pointer no longer reads an unset site when every landmark nearby has been visited.
+- Foes slain during a tick are no longer freed while the spatial grid still points at them, so area effects and searches run between ticks can no longer touch a dead foe's memory.
 
 ### Changed
 
 - The Windows build is warning-free at `/W4` and treats warnings as errors. Third-party headers are compiled quietly, and shadowed names, narrowing conversions, an uninitialised test value and a hidden virtual overload (`ExpansionEnemy::mend`, now `tend`) are cleaned up.
+- Content tables are checked against each other: every hero weapon, skill and favour, evolution pair, upgrade and recipe owner, area-weapon entry and ally recipe must name something that exists, and names must be unique. `--test` runs the check, and Debug builds refuse to start on a broken link. The skeleton and decoy allies dropped stale recipe labels that matched nothing.
+- The campaign save format moved to `CampaignSave.cpp` and the campaign session lifecycle to `GameCampaign.cpp`, out of the gameplay and main-loop files.
+- AddressSanitizer builds bypass the entity pool so every entity is tracked, and five tests that read entities after they were freed now check by id.
 - New CMake switches: `MELLANGAN_WERROR` (on by default with MSVC), `MELLANGAN_ANALYZE` for the MSVC static analyzer, and `MELLANGAN_ASAN` for AddressSanitizer, plus UBSan with GCC and Clang.
 
 ## [0.6.2] - 2026-11-03

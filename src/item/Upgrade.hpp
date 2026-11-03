@@ -2,6 +2,7 @@
 
 #include <array>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "Atlas.hpp"
@@ -46,3 +47,5 @@ public:
 protected:
   static int at(int lvl, int from) { return lvl >= from ? 1 : 0; }
 };
+
+std::span<const char *const[3]> evolutionTable();

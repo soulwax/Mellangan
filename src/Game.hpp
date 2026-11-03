@@ -25,6 +25,8 @@ inline std::string clockText(float t) {
   return fmt::format("{:02}:{:02}", int(t) / 60, int(t) % 60);
 }
 
+inline constexpr char CODE_CHARS[] = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
 class Game {
 public:
   SDL_Window *window = nullptr;

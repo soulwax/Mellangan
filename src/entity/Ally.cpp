@@ -22,13 +22,13 @@ const AllyDef ALLIES[] = {
      {0.95f, 0.85f, 0.6f, 1}, nullptr},
     {"ghoul", "Ghoul Pack", K::Skeleton, 60, 88, 0.8f, 8, 14, 1, false, false,
      {0.6f, 0.9f, 0.55f, 1}, nullptr},
-    {"skeleton", "Raise Dead", K::Skeleton, 30, 74, 0.9f, 8, 10, 1, false, false,
+    {"skeleton", nullptr, K::Skeleton, 30, 74, 0.9f, 8, 10, 1, false, false,
      {0.85f, 0.85f, 1, 1}, nullptr},
     {"drone", "Clockwork Drone", K::BogLantern, 30, 90, 0.8f, 90, 15, 0.8f, true, false,
      {1, 0.8f, 0.45f, 1}, &DRONE_BOLT},
     {"crew", "Powder Crew", K::Outlaw, 45, 70, 1.0f, 10, 12, 1, false, false,
      {0.9f, 0.75f, 0.6f, 1}, nullptr},
-    {"decoy", "Mirror Image", K::Knight, 60, 0, 0, 0, 4, 1, false, true,
+    {"decoy", nullptr, K::Knight, 60, 0, 0, 0, 4, 1, false, true,
      {0.6f, 0.8f, 1, 1}, nullptr},
     {"ghost", "Grave Dirt", K::Ghost, 30, 90, 0.7f, 8, 12, 1, true, false,
      {0.7f, 0.85f, 1, 1}, nullptr},
@@ -47,7 +47,7 @@ const AllyDef &allyDef(AllyKind kind) { return ALLIES[int(kind)]; }
 
 AllyKind allyFor(const char *recipe) {
   for (size_t i = 0; i < std::size(ALLIES); i++)
-    if (recipe && std::strcmp(ALLIES[i].recipe, recipe) == 0)
+    if (recipe && ALLIES[i].recipe && std::strcmp(ALLIES[i].recipe, recipe) == 0)
       return AllyKind(i);
   return AllyKind::Wolf;
 }

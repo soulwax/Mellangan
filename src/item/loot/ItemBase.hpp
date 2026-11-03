@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -26,3 +27,4 @@ extern const char *const TIER_NAMES[TIER_COUNT];
 
 const std::vector<ItemBase> &itemBases();
 int findBase(std::string_view key);
+std::span<const char *const> areaWeapons();

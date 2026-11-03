@@ -17,6 +17,7 @@
 #include "level/Flavour.hpp"
 #include "level/Noise.h"
 #include "level/WorldDebug.hpp"
+#include "meta/Content.hpp"
 #include "menu/DawnMenu.hpp"
 #include "menu/DeadMenu.hpp"
 #include "menu/LevelUpMenu.hpp"
@@ -46,6 +47,13 @@
 bool Game::init(SDL_Window *w, const std::string &root) {
   window = w;
   base = root;
+#ifndef NDEBUG
+  if (auto faults = contentFaults(); !faults.empty()) {
+    for (const std::string &f : faults)
+      spdlog::error("content: {}", f);
+    return false;
+  }
+#endif
   rng.state ^= SDL_GetPerformanceCounter() * 0x2545F4914F6CDD1Dull;
   if (!screen.load(base))
     return false;
@@ -267,8 +275,6 @@ void Game::devTick() {
 }
 
 namespace {
-const char CODE_CHARS[] = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
 uint32_t saltOf(const std::string &code) {
   uint32_t h = 2166136261u;
   for (char c : code)
@@ -488,117 +494,4 @@ void Game::render() {
                 4 * screen.u, screen.h - 46 * screen.u - 16 * size, size,
                 col::muted);
   }
-}
-
-void Game::beginCampaign() {
-  dawnRules = rules;
-  campaign = std::make_unique<Campaign>();
-  std::string text = saves.dir().empty() ? std::string() : saves.read("campaign.txt");
-  bool fresh = text.empty() || !Campaign::load(text, *campaign);
-  if (fresh) {
-    *campaign = Campaign{};
-    campaign->hero = start.hero >= 0 && start.hero < HERO_COUNT ? start.hero : codex.start;
-    campaign->hardcore = hardcoreNext;
-    for (int i = 0; i < 8; i++)
-      campaign->world += CODE_CHARS[rng.next() % (sizeof CODE_CHARS - 1)];
-  }
-  codex.start = campaign->hero;
-  worldMode = WorldMode::Custom, seedCode = campaign->world;
-  rules = campaign->rules();
-  loadBalance();
-  build();
-  campaign->enter(*level);
-  if (dev) {
-    for (int &m : level->player->materials)
-      m += start.mats;
-    level->player->gold += std::max(0, start.merchant);
-  }
-  for (int act = campaign->act + 1; dev && act <= std::min(start.act, ACT_COUNT); act++) {
-    double rx, ry;
-    if (!quests::road(act, rx, ry))
-      break;
-    campaign->act = act, campaign->quest = (act - 1) * QUESTS_PER_ACT;
-    campaign->settle(*level, rx, ry);
-    campaign->stage = QuestStage::Offered;
-    level->player->x = rx, level->player->y = ry + 20;
-  }
-  if (dev && start.quest >= 0 && start.quest < QUEST_COUNT) {
-    campaign->quest = start.quest, campaign->stage = QuestStage::Offered;
-    quests::accept(*level, *campaign);
-    Campaign::Town h = campaign->home();
-    if (QUESTS[start.quest].goal == Objective::Escort)
-      level->player->x = h.x + 20, level->player->y = std::floor(h.y / 16) * 16 + 7 * 16;
-    else if (campaign->qsite)
-      level->player->x = campaign->qx, level->player->y = campaign->qy + 90;
-  }
-  if (Structure mine; dev && start.delve &&
-                      world::nearestStructure(level->player->x, level->player->y, 60, mine,
-                                              [](const Structure *s, const void *) {
-                                                return s->kind == StructureKind::Mine;
-                                              }))
-    level->player->x = mine.centerX(), level->player->y = mine.centerY() + 24;
-  snapCamera();
-  setMenu(nullptr);
-  autosave = Campaign::AUTOSAVE;
-  saveCampaign();
-  spdlog::info("campaign: {} world {} as hero {}, day {}", fresh ? "new" : "loaded",
-               campaign->world, campaign->hero, campaign->day);
-  announce(fresh ? "ACT I  HEARTHWICK  THE BASTION HOLDS" : "HEARTHWICK STILL STANDS");
-}
-
-bool Game::campaignSaved() const {
-  if (saves.dir().empty())
-    return false;
-  Campaign probe;
-  return Campaign::load(saves.read("campaign.txt"), probe);
-}
-
-void Game::saveCampaign() {
-  if (!campaign || !level || level->player->dead())
-    return;
-  campaign->capture(*level);
-  if (!saves.dir().empty() && !bench.enabled)
-    saves.write("campaign.txt", campaign->save());
-}
-
-bool Game::forget() {
-  if (!campaign || !level)
-    return false;
-  Player &p = *level->player;
-  int cost = campaign->forgetCost();
-  if (p.gold < cost)
-    return false;
-  campaign->capture(*level);
-  int before = campaign->spent(), relics = 0;
-  std::vector<std::pair<std::string, int>> keep;
-  for (const auto &[name, lvl] : campaign->upgrades) {
-    Upgrade *u = p.upgrade(name);
-    if (u && u->rare)
-      keep.emplace_back(name, lvl), relics += lvl;
-    else if (u && u->evolved)
-      before++;
-  }
-  campaign->upgrades = keep, campaign->active.clear();
-  campaign->gold -= cost;
-  campaign->delve.abort(*level, *campaign);
-  build();
-  campaign->enter(*level);
-  campaign->capture(*level);
-  campaign->points += std::max(0, before - campaign->spent());
-  snapCamera();
-  setMenu(nullptr);
-  saveCampaign();
-  spdlog::info("campaign: forgot the path for {} gold, {} points to spend", cost,
-               campaign->points);
-  announce(fmt::format("YOUR PATH IS FORGOTTEN  {} SKILL POINTS", campaign->points));
-  return true;
-}
-
-void Game::endCampaign() {
-  if (!campaign)
-    return;
-  saveCampaign();
-  campaign->leave();
-  campaign.reset();
-  rules = dawnRules;
 }

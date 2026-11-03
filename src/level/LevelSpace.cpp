@@ -37,6 +37,7 @@ int Level::gather(double x, double y, float r, Enemy **out, int max) const {
 }
 
 void Level::buildGrid() {
+  graveyard.clear();
   xGrid = player->x - GRID * CELL * 0.5;
   yGrid = player->y - GRID * CELL * 0.5;
   std::fill(cellStart.begin(), cellStart.end(), 0);

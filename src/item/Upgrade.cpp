@@ -178,6 +178,8 @@ void frozen(Mob &p) { p.haste -= 0.25f, p.speed += 11; }
 void signet(Mob &p) { p.might += 0.5f, p.armor += 2; }
 } // namespace
 
+std::span<const char *const[3]> evolutionTable() { return EVOLUTIONS; }
+
 std::vector<std::unique_ptr<Upgrade>> Upgrade::all() {
   std::vector<std::unique_ptr<Upgrade>> u;
   u.push_back(std::make_unique<Staff>());

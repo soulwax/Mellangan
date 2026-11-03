@@ -170,7 +170,7 @@ void Screen::sprite(const Sprite &s, double x, double y, float xo, float yo,
       return;
   }
   float xp = float(x - xOffset - xo * xs), yp = float(y - yOffset - yo * ys);
-  vk2dRendererDrawTexture(atlas, xp, yp, xs, ys, rot, xo, yo, s.x, s.y, s.w, h);
+  vk2dRendererDrawTexture(atlas, xp, yp, xs, ys, rot, xo, yo, s.x, s.y, s.w, hh);
 }
 
 void Screen::center(const Sprite &s, double x, double y, float sc, float rot) {

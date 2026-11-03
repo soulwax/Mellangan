@@ -55,6 +55,7 @@ int runTests() {
   _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
   std::cout << "[TEST] Running memory leak & stability tests..." << std::endl;
+  testContentLinks();
   testPoolAllocAndFree();
   std::cout << "[TEST] Pool alloc/free & edge cases: PASS" << std::endl;
   testPoolConcurrency();

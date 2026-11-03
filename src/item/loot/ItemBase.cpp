@@ -95,6 +95,8 @@ std::vector<ItemBase> build() {
 
 } // namespace
 
+std::span<const char *const> areaWeapons() { return AREA_WEAPONS; }
+
 const std::vector<ItemBase> &itemBases() {
   static const std::vector<ItemBase> bases = build();
   return bases;

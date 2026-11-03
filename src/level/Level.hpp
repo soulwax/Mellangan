@@ -188,6 +188,7 @@ private:
   std::vector<Prop> props;
   std::vector<int> cellStart, cellFill, cellOf;
   std::vector<Enemy *> cells;
+  std::vector<std::unique_ptr<Entity>> graveyard;
   double xGrid = 0, yGrid = 0;
   float solids[SOLID_H * SOLID_W]{};
   uint8_t surfaces[SOLID_W * SOLID_H]{};
