@@ -6,6 +6,7 @@
 #include "campaign/Harvest.hpp"
 #include "campaign/Elder.hpp"
 #include "campaign/Quests.hpp"
+#include "campaign/Townsfolk.hpp"
 #include "level/Prop.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
@@ -232,6 +233,18 @@ void Hud::questLog() {
   Level &l = *game.level;
   Screen &s = game.screen;
   float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
+  l.each<Townsfolk>([&](Townsfolk &f) {
+    if (f.talk <= 0 || f.removed || !inView(f.x, f.y, -8))
+      return;
+    std::string_view text = f.spoken;
+    float a = std::min(1.0f, f.talk * 2) * std::min(1.0f, (Townsfolk::SAY - f.talk) * 4 + 0.2f);
+    float bx = std::floor((s.w - s.vw * k) / 2) + float(f.x - xView) * k,
+          by = std::floor((s.h - s.vh * k) / 2) + float(f.y - yView) * k - 22 * k;
+    float w = Screen::textWidth(text, small) + 8 * u, h = 16 * small + 4 * u;
+    s.rect(bx - w / 2, by - h, w, h, Color{0.95f, 0.92f, 0.85f, 0.9f * a});
+    s.rect(bx - u, by, 2 * u, 2 * u, Color{0.95f, 0.92f, 0.85f, 0.9f * a});
+    s.text(text, bx - w / 2 + 4 * u, by - h + 2 * u, small, Color{0.15f, 0.1f, 0.12f, a});
+  });
   std::vector<Campaign::Town> all = c->towns();
   for (size_t i = 0; i < all.size(); i++) {
     double gx = all[i].x, gy = std::floor(all[i].y / 16) * 16 + 5 * 16 + 34;
@@ -261,6 +274,13 @@ void Hud::questLog() {
       s.text(text, gx - w / 2 + 3 * u, gy - h + u, small,
              col::gold.alpha(0.75f + 0.25f * std::sin(time * 5)));
     }
+  }
+  if (const QuestDef *q = quests::current(*c);
+      q && q->goal == Objective::Fetch && c->stage == QuestStage::Ready) {
+    const Player &hero = *l.player;
+    float gx = std::floor((s.w - s.vw * k) / 2) + float(hero.x - xView) * k,
+          gy = std::floor((s.h - s.vh * k) / 2) + float(hero.y - yView) * k - 30 * k;
+    s.sprite(atlas::tile(90), gx - 4 * k, gy + std::sin(time * 3) * k, 0, 0, k * 0.5f, k * 0.5f);
   }
   double tx, ty;
   if (c->stage != QuestStage::Active || !quests::marker(*c, tx, ty) || inView(tx, ty, -8))

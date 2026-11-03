@@ -10,7 +10,13 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
-- Four new kinds of campaign quest:
+- Every campaign town shelters three refugees. By day they wander inside the fence; at night they huddle by the fire and shiver. Walk up to one and they speak a line about their act's troubles in a speech bubble.
+- The title screen shows a summary of the saved campaign under "K  CONTINUE THE CAMPAIGN": class, level, act and day, plus Hardcore and Nightmare when they apply.
+- In the campaign, the world map (Tab) marks your towns by name, with a dot on the current act's town. It also shows the current quest site or the road to the next town as a pulsing ring, your campfires, and the mines you have cleared. A Campaign legend lists the current quest.
+- Campaign quests now reward an item as well as gold. Ordinary quests give a magic item, act bosses a rare and the Cinder King a unique. Each act's elder favours a kind of gear: weapons in Hearthwick, off-hands in Saltmoor, armour in Frosthold, charms in Dunewatch and weapons again in Last Ember. The quest dialog names the reward before you accept.
+- Clearing an act now ends in a burst of gold rings and sparks.
+- Five new kinds of campaign quest:
+  - Fetch: in Act II's "The Sunken Reliquary", the reliquary lies sealed in the ruins while the Drowned Abbot keeps it. Slay him, take the reliquary and carry it home to the Abbess. Fall on the way and it slips back to the ruins.
   - Gather: in Act III's "Fuel the Beacons", bring Warden Kell twelve wood.
   - Escort: in Act V's "The Burning Road", Sister Imra carries the last lantern to a shrine. She walks only while you stay close, foes that reach her wear her down, and if she falls the quest must be taken again.
   - Purge: in Act II's "Cleanse the Nests", four spore nests take root in the ruins and keep breeding spore puffers until you destroy them.

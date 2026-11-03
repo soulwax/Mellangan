@@ -80,8 +80,8 @@ void QuestMenu::render(Screen &s) {
                                                  : quests::status(c);
   std::string action = c.stage == QuestStage::Done ? "Enter begin Nightmare: every foe stronger"
                        : !q                        ? "Esc close"
-                       : c.stage == QuestStage::Offered ? fmt::format("Enter accept   reward {} gold", q->gold)
-                       : c.stage == QuestStage::Ready   ? fmt::format("Enter claim {} gold", q->gold)
+                       : c.stage == QuestStage::Offered ? fmt::format("Enter accept   reward {}", quests::rewardText(c.quest))
+                       : c.stage == QuestStage::Ready   ? fmt::format("Enter claim {}", quests::rewardText(c.quest))
                                                    : "Esc close   the task is not done yet";
   s.text(title, x0 + 12 * u, y0 + 24 * u, u, col::gold.alpha(in));
   float y = y0 + 48 * u;

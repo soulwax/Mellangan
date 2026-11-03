@@ -164,10 +164,22 @@ void TitleMenu::render(Screen &s) {
                col::muted);
   if (std::fmod(t, 1.0f) < 0.65f)
     s.textCenter("PRESS ENTER", s.w / 2, s.h * 0.62f, u, col::white);
-  if (saved < 0)
+  if (saved < 0) {
     saved = game.campaignSaved();
+    if (saved && !game.saves.dir().empty()) {
+      Campaign probe;
+      Campaign::load(game.saves.read("campaign.txt"), probe);
+      summary = fmt::format("{}  level {}  act {}  day {}{}", HEROES[probe.hero % HERO_COUNT]->name,
+                            probe.lvl, ACTS[std::clamp(probe.act, 1, ACT_COUNT) - 1].numeral,
+                            probe.day, probe.hardcore ? "  HARDCORE" : "");
+      if (probe.nightmare)
+        summary += fmt::format("  NIGHTMARE {}", probe.nightmare);
+    }
+  }
   s.textCenter(saved ? "K  CONTINUE THE CAMPAIGN" : "K  BEGIN A CAMPAIGN", s.w / 2,
                s.h * 0.62f + 24 * u, small, col::gold.alpha(0.8f));
+  if (saved && !summary.empty())
+    s.textCenter(summary, s.w / 2, s.h * 0.62f + 40 * u, small, col::muted);
   s.textCenter("WASD/Arrows move   Tab map   C codex   Esc pause   M mute   F11 fullscreen",
                s.w / 2, s.h - 30 * small, small, col::muted);
   std::string_view version = "v" MELLANGAN_VERSION;

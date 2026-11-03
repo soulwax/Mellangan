@@ -7,16 +7,20 @@
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "item/craft/Recipes.hpp"
+#include "item/loot/Loot.hpp"
+#include "entity/pickup/ItemDrop.hpp"
 #include "campaign/Campaign.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Boss.hpp"
 #include "entity/enemy/Named.hpp"
 #include "entity/enemy/WildFoe.hpp"
+#include "campaign/Cache.hpp"
 #include "campaign/Pilgrim.hpp"
 #include "level/Level.hpp"
 #include "level/World.hpp"
 #include "level/biome/Biome.hpp"
 #include "particle/Shockwave.hpp"
+#include "particle/Spark.hpp"
 
 namespace {
 
@@ -109,10 +113,10 @@ const QuestDef QUESTS[QUEST_COUNT] = {
      "Put out twelve bog lanterns", "Darker water, and safer for it.", O::Hunt, 12, S::Count, -1,
      {K::BogLantern, K::MireLeech, NONE}, 300, 90},
     {"The Sunken Reliquary",
-     "Our reliquary sank with the old abbey. The Drowned Abbot guards it still. Bring back what "
-     "he keeps.",
-     "Recover the reliquary from the Drowned Abbot", "The reliquary is ours again. Bless you.",
-     O::Slay, 1, S::Ruin, 3, {NONE, NONE, NONE}, 400, 120},
+     "Our reliquary sank with the old abbey, and the Drowned Abbot seals it still. Break his "
+     "hold and bring it home. Do not fall on the way.",
+     "Recover the reliquary from the ruins", "The reliquary is ours again. Bless you.",
+     O::Fetch, 1, S::Ruin, 3, {NONE, NONE, NONE}, 400, 120},
     {"Cleanse the Nests",
      "Spore nests have taken root in the old ruins and breed puffers by the dozen. Burn out "
      "every nest.",
@@ -183,6 +187,25 @@ const QuestDef QUESTS[QUEST_COUNT] = {
 
 namespace quests {
 
+Rarity reward(int quest) {
+  if (quest == QUEST_COUNT - 1)
+    return Rarity::Unique;
+  return QUESTS[quest].goal == Objective::Boss ? Rarity::Rare : Rarity::Magic;
+}
+
+unsigned rewardSlots(int quest) {
+  constexpr unsigned SLOTS[ACT_COUNT] = {slot::Weapon, slot::Offhand, slot::Armour, slot::Charm,
+                                         slot::Weapon};
+  return SLOTS[quest / QUESTS_PER_ACT];
+}
+
+std::string rewardText(int quest) {
+  constexpr const char *SLOT_NAMES[ACT_COUNT] = {"weapon", "off-hand", "armour", "charm",
+                                                 "weapon"};
+  return fmt::format("{} gold and a {} {}", QUESTS[quest].gold, rarityName(reward(quest)),
+                     SLOT_NAMES[quest / QUESTS_PER_ACT]);
+}
+
 const QuestDef *current(const Campaign &c) {
   return c.quest >= 0 && c.quest < QUEST_COUNT ? &QUESTS[c.quest] : nullptr;
 }
@@ -212,7 +235,7 @@ void begin(Level &level, Campaign &c) {
     c.slainSeen = slainOf(level, *q);
   c.foe = entt::null;
   c.nests.clear(), c.holding = false, c.holdTick = 0, c.waveTime = 0;
-  c.pilgrim = entt::null;
+  c.pilgrim = entt::null, c.cache = entt::null, c.guarded = false;
 }
 
 void accept(Level &level, Campaign &c) {
@@ -247,12 +270,28 @@ void turnIn(Level &level, Campaign &c) {
   }
   p.gold += q->gold;
   p.gainXp(float(q->xp));
+  int ilvl = std::clamp(std::max(p.lvl, level.monsterLevel(c.qx, c.qy)) + 2, 1, 99);
+  Item prize = rollItem(ilvl, p.bonus.magicFind, false, rng, reward(c.quest), rewardSlots(c.quest));
+  for (int i = 0; i < 64 && !(prize.def().slots & rewardSlots(c.quest)); i++)
+    prize = rollItem(ilvl, p.bonus.magicFind, false, rng, reward(c.quest), rewardSlots(c.quest));
+  if (int(p.bag.size()) < Player::BAG)
+    p.bag.push_back(prize);
+  else
+    level.add<ItemDrop>(p.x, p.y, Drop{DropKind::Item, 1, prize}, p.x + 14, p.y + 8);
+  spdlog::info("quest: {} rewards {} [{}] ilvl {}", q->title, prize.name(),
+               rarityName(prize.rarity), prize.ilvl);
   level.game.announce(fmt::format("{} DONE  +{} GOLD", q->title, q->gold));
+  level.game.announce(fmt::format("REWARD  {}", prize.name()));
   Sound::levelUp.play(0.6f, 0);
   c.quest++, c.progress = 0, c.qsite = false;
   if (c.quest % QUESTS_PER_ACT != 0)
     return void(c.stage = QuestStage::Offered);
   level.game.announce(fmt::format("ACT {} CLEARED", act(c).numeral));
+  level.game.celebrate();
+  for (int i = 0; i < 3; i++)
+    level.add<Shockwave>(p.x, p.bodyY(), 6 + i * 4, 70 + i * 40, 0.6f + i * 0.2f, col::gold);
+  Spark::burst(level, p.x, p.bodyY() - 10, col::gold, 40, 160, true);
+  Sound::chest.play(0.8f, 0, 0.7f);
   if (c.quest >= QUEST_COUNT) {
     c.stage = QuestStage::Done;
     return level.game.announce("THE DARK IS BROKEN");
@@ -341,6 +380,31 @@ void tick(Level &level, Campaign &c) {
     }
     break;
   }
+  case Objective::Fetch: {
+    Cache *box = c.cache == entt::null ? nullptr : level.get<Cache>(c.cache);
+    double xd = p.x - c.qx, yd = p.y - c.qy;
+    if (c.cache == entt::null && !p.dead() && xd * xd + yd * yd < ARRIVE * ARRIVE) {
+      c.cache = level.add<Cache>(c.qx, c.qy)->id;
+      if (!c.guarded && q->named >= 0)
+        if (Enemy *g = named::raise(level, q->named, c.qx, c.qy - 50))
+          c.foe = g->id, c.guarded = true;
+      level.game.announce("A SEALED RELIQUARY  BREAK ITS KEEPER");
+      break;
+    }
+    if (!box)
+      break;
+    bool keeper = c.foe != entt::null && level.reg.valid(c.foe);
+    if (box->sealed && !keeper) {
+      box->sealed = false, c.foe = entt::null;
+      level.add<Shockwave>(box->x, box->y - 6, 4, 34, 0.5f, Color{1, 0.85f, 0.45f, 1}, false);
+      level.game.announce("THE SEAL BREAKS");
+    }
+    if (!box->sealed && std::hypot(p.x - box->x, p.y - box->y) < Cache::REACH + p.radius) {
+      box->remove(), c.cache = entt::null, c.progress = q->count;
+      Sound::chest.play(0.6f, 0, 0.9f);
+    }
+    break;
+  }
   case Objective::Gather:
     c.progress = std::min(q->count, p.materials[q->material]);
     break;
@@ -390,7 +454,9 @@ void tick(Level &level, Campaign &c) {
   }
   if (c.progress >= q->count) {
     c.progress = q->count, c.stage = QuestStage::Ready;
-    level.game.announce(fmt::format("{} COMPLETE  RETURN TO {}", q->title, act(c).elder));
+    level.game.announce(q->goal == Objective::Fetch
+                            ? fmt::format("CARRY IT HOME TO {}", act(c).elder)
+                            : fmt::format("{} COMPLETE  RETURN TO {}", q->title, act(c).elder));
     Sound::chest.play(0.5f, 0, 0.9f);
   }
 }

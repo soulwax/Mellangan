@@ -9,6 +9,7 @@
 #include "campaign/Harvest.hpp"
 #include "campaign/Elder.hpp"
 #include "campaign/Stash.hpp"
+#include "campaign/Townsfolk.hpp"
 #include "campaign/Waypoint.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
@@ -379,6 +380,11 @@ void Campaign::raise(Level &level) {
 void Campaign::post(Level &level, const Town &t) {
   waypoints.push_back(level.add<Waypoint>(t.x, t.y - 6)->id);
   chests.push_back(level.add<Stash>(t.x + 40, t.y)->id);
+  constexpr int FOLK[3] = {85, 88, 98};
+  int town = int(waypoints.size()) - 1;
+  for (int i = 0; i < 3; i++)
+    level.add<Townsfolk>(t.x - 30 + i * 30, t.y + 30 + (i % 2) * 12, t.x, t.y,
+                         FOLK[(i + town) % 3], town, i);
 }
 
 void Campaign::staff(Level &level) {
@@ -409,6 +415,11 @@ void Campaign::awaken(Level &level) {
 
 void Campaign::fall(Level &level) {
   delve.abort(level, *this);
+  if (const QuestDef *q = quests::current(*this);
+      q && q->goal == Objective::Fetch && stage == QuestStage::Ready) {
+    stage = QuestStage::Active, progress = 0, cache = entt::null;
+    level.game.announce("THE RELIQUARY SLIPS AWAY  IT WAITS IN THE RUINS");
+  }
   Player &p = *level.player;
   int lost = p.gold / 10;
   p.gold -= lost;

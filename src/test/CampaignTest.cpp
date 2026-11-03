@@ -9,6 +9,7 @@
 #include "Game.hpp"
 #include "campaign/Campaign.hpp"
 #include "campaign/Stash.hpp"
+#include "campaign/Townsfolk.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
 #include "entity/Workbench.hpp"
@@ -93,6 +94,23 @@ void testCampaign() {
   assert(!world::propAt(cx + 1, cy, prop));
   assert(level.rules.threat(first.xTown, first.yTown) < 1 &&
          level.rules.threat(first.xTown + 1600, first.yTown) > 150);
+  std::vector<Townsfolk *> folk;
+  level.each<Townsfolk>([&](Townsfolk &f) { folk.push_back(&f); });
+  assert(folk.size() == 3 && folk[0]->line() && *folk[0]->line());
+  p.x = folk[0]->x + 10, p.y = folk[0]->y;
+  level.tick();
+  int talking = 0;
+  for (Townsfolk *f : folk)
+    talking += f->talk > 0;
+  assert(folk[0]->talk > 0 && talking == 1 && *folk[0]->spoken);
+  p.x = first.xTown + 600, p.y = first.yTown;
+  level.night.dawn = false;
+  for (int i = 0; i < 60 * 12; i++)
+    level.tick();
+  for (Townsfolk *f : folk)
+    assert(std::hypot(f->x - first.xTown, f->y - (first.yTown + 32)) < 45);
+  level.night.dawn = true;
+  p.x = first.xTown, p.y = first.yTown + 2;
   Merchant *trader = level.get<Merchant>(level.vendor.merchant);
   assert(trader && level.get<Workbench>(level.vendor.bench) && level.vendor.restocks == 1);
   assert(level.rules.safeAt(trader->x, trader->y) && level.rules.dayRate > 0);

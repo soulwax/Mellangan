@@ -37,7 +37,8 @@ struct Campaign {
   bool qsite = false;
   entt::entity foe = entt::null, elder = entt::null;
   std::vector<entt::entity> nests;
-  entt::entity pilgrim = entt::null;
+  entt::entity pilgrim = entt::null, cache = entt::null;
+  bool guarded = false;
   double journey = 0;
   bool holding = false;
   float holdTick = 0, waveTime = 0;

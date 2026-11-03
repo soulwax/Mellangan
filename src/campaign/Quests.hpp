@@ -3,12 +3,13 @@
 #include <string>
 
 #include "entity/enemy/Enemy.hpp"
+#include "item/loot/Item.hpp"
 #include "level/Structure.hpp"
 
 class Level;
 struct Campaign;
 
-enum class Objective { Kindle, Slay, Hunt, Boss, Purge, Defend, Gather, Escort };
+enum class Objective { Kindle, Slay, Hunt, Boss, Purge, Defend, Gather, Escort, Fetch };
 enum class QuestStage { Offered, Active, Ready, Done, Road };
 
 struct QuestDef {
@@ -43,6 +44,9 @@ void turnIn(Level &level, Campaign &c);
 void tick(Level &level, Campaign &c);
 void begin(Level &level, Campaign &c);
 bool road(int act, double &x, double &y);
+Rarity reward(int quest);
+unsigned rewardSlots(int quest);
+std::string rewardText(int quest);
 std::string status(const Campaign &c);
 bool marker(const Campaign &c, double &x, double &y);
 

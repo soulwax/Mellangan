@@ -9,6 +9,7 @@
 
 #include "Game.hpp"
 #include "campaign/Campaign.hpp"
+#include "campaign/Cache.hpp"
 #include "campaign/Elder.hpp"
 #include "campaign/Pilgrim.hpp"
 #include "campaign/Quests.hpp"
@@ -118,7 +119,29 @@ void testQuests() {
         level.night.lit += q.count;
       else if (q.goal == Objective::Hunt)
         level.slain[int(q.prey[0])] += q.count;
-      else if (q.goal == Objective::Gather) {
+      else if (q.goal == Objective::Fetch) {
+        go(level, c);
+        level.tick();
+        Cache *box = level.get<Cache>(c.cache);
+        assert(box && box->sealed && c.foe != entt::null && c.guarded);
+        p.x = box->x, p.y = box->y;
+        quests::tick(level, c);
+        assert(c.stage == QuestStage::Active && box->sealed);
+        if (Enemy *keeper = level.get<Enemy>(c.foe))
+          keeper->hurt(1e15f, 1, 0, 0);
+        for (int i = 0; i < 4; i++)
+          level.tick(), quests::tick(level, c);
+        assert(c.stage == QuestStage::Ready && !level.get<Cache>(c.cache));
+        c.fall(level);
+        assert(c.stage == QuestStage::Active && c.progress == 0);
+        p.x = c.qx + 100, p.y = c.qy;
+        quests::tick(level, c);
+        level.tick();
+        quests::tick(level, c);
+        box = level.get<Cache>(c.cache);
+        assert(box && !box->sealed);
+        p.x = box->x, p.y = box->y;
+      } else if (q.goal == Objective::Gather) {
         p.materials[q.material] = 0;
         quests::tick(level, c);
         assert(c.stage == QuestStage::Active && c.progress == 0);
@@ -194,7 +217,15 @@ void testQuests() {
       }
       quests::tick(level, c);
       assert(c.stage == QuestStage::Ready);
+      int index = c.quest;
+      size_t bag = p.bag.size();
       quests::turnIn(level, c);
+      assert(p.bag.size() == bag + 1);
+      Rarity want = quests::reward(index);
+      const Item &prize = p.bag.back();
+      assert(int(prize.rarity) >= int(want == Rarity::Unique ? Rarity::Rare : want));
+      assert(prize.def().slots & quests::rewardSlots(index));
+      p.bag.clear();
       if (q.goal == Objective::Gather)
         assert(p.materials[q.material] == 2);
     }

@@ -161,7 +161,7 @@ Item rollItem(int ilvl, float magicFind, bool night, Rng &rng, Rarity floor, uns
   Rarity r = rollRarity(item.ilvl, magicFind, own);
   if (int(r) < int(floor))
     r = floor;
-  if (r == Rarity::Unique && makeUnique(item, item.ilvl, own))
+  if (r == Rarity::Unique && makeUnique(item, item.ilvl, own, prefer ? item.base : -1))
     return item;
   affixItem(item, r, night, own);
   return item;

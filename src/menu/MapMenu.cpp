@@ -1,6 +1,8 @@
 #include "menu/MapMenu.hpp"
 
 #include "Game.hpp"
+#include "campaign/Campaign.hpp"
+#include "campaign/Quests.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "level/Level.hpp"
@@ -8,6 +10,7 @@
 
 namespace {
 constexpr float ZOOM[3] = {2.5f, 5, 10};
+constexpr Color FIRE{1, 0.55f, 0.2f, 1}, MINED{0.65f, 0.6f, 0.55f, 1}, QUEST{1, 0.55f, 0.3f, 1};
 } // namespace
 
 void MapMenu::tick() {
@@ -27,6 +30,79 @@ void MapMenu::tick() {
   double speed = 60 * DT / ZOOM[zoom];
   xPan += (in.right.down - in.left.down) * speed;
   yPan += (in.down.down - in.up.down) * speed;
+}
+
+bool MapMenu::project(const ChartView &v, double wx, double wy, float &sx, float &sy) const {
+  sx = v.x + v.w / 2 + float((wx / (16.0 * Chart::CELL) - v.cx) * v.cell);
+  sy = v.y + v.h / 2 + float((wy / (16.0 * Chart::CELL) - v.cy) * v.cell);
+  return sx > v.x + 2 && sy > v.y + 2 && sx < v.x + v.w - 2 && sy < v.y + v.h - 2;
+}
+
+void MapMenu::campaign(Screen &s, const ChartView &v) const {
+  Campaign *c = game.campaign.get();
+  if (!c)
+    return;
+  float u = s.u, small = std::max(1.0f, u - 1), sx, sy;
+  float pulse = 0.6f + 0.4f * std::sin(t * 4);
+  for (const auto &[k, e] : c->edits.changes) {
+    int tx = int(int32_t(k >> 32)), ty = int(int32_t(k & 0xFFFFFFFFu));
+    if (!e.placed || e.piece != Piece::Campfire || c->founding(tx, ty) ||
+        !project(v, tx * 16 + 8.0, ty * 16 + 16.0, sx, sy))
+      continue;
+    s.rect(sx - 1.5f * u, sy - 1.5f * u, 3 * u, 3 * u, FIRE.alpha(0.9f));
+  }
+  for (const auto &[rx, ry] : c->delves)
+    if (project(v, (rx * 20 + 10) * 16.0, (ry * 20 + 10) * 16.0, sx, sy)) {
+      s.line(sx - 3 * u, sy - 3 * u, sx + 3 * u, sy + 3 * u, u, MINED);
+      s.line(sx - 3 * u, sy + 3 * u, sx + 3 * u, sy - 3 * u, u, MINED);
+    }
+  std::vector<Campaign::Town> towns = c->towns();
+  for (size_t i = 0; i < towns.size(); i++) {
+    if (!project(v, towns[i].x, towns[i].y, sx, sy))
+      continue;
+    bool home = int(i) + 1 == std::clamp(c->act, 1, int(towns.size()));
+    float r = (home ? 5 : 4) * u;
+    s.line(sx, sy - r, sx + r, sy, u, col::gold), s.line(sx + r, sy, sx, sy + r, u, col::gold);
+    s.line(sx, sy + r, sx - r, sy, u, col::gold), s.line(sx - r, sy, sx, sy - r, u, col::gold);
+    if (home)
+      s.rect(sx - u, sy - u, 2 * u, 2 * u, col::gold);
+    std::string name = ACTS[i].town;
+    s.text(name, sx - Screen::textWidth(name, small) / 2, sy + r + 2 * u, small,
+           col::gold.alpha(0.9f));
+  }
+  double qx, qy;
+  if (quests::marker(*c, qx, qy) && c->stage != QuestStage::Offered &&
+      c->stage != QuestStage::Ready && project(v, qx, qy, sx, sy)) {
+    s.ring(sx, sy, 5 * u + 2 * u * pulse, QUEST.alpha(0.5f + 0.5f * pulse));
+    s.ring(sx, sy, 2 * u, QUEST);
+    std::string label = c->stage == QuestStage::Road ? quests::act(*c).town : "QUEST";
+    s.text(label, sx + 8 * u, sy - 6 * small, small, QUEST);
+  }
+}
+
+float MapMenu::legend(Screen &s, float x, float y) const {
+  if (!game.campaign)
+    return y;
+  float u = s.u, small = std::max(1.0f, u - 1), row = 18 * small;
+  s.text("CAMPAIGN", x, y, small, col::white);
+  y += row * 1.5f;
+  float mx = x + 4 * small, my = y + 8 * small, r = 4 * small;
+  s.line(mx, my - r, mx + r, my, 1, col::gold), s.line(mx + r, my, mx, my + r, 1, col::gold);
+  s.line(mx, my + r, mx - r, my, 1, col::gold), s.line(mx - r, my, mx, my - r, 1, col::gold);
+  s.text("towns and waypoints", x + 12 * small, y, small, col::white);
+  y += row;
+  s.ring(mx, y + 8 * small, 4 * small, QUEST);
+  s.text(Screen::fit(quests::status(*game.campaign), s.w - x - 20 * small, small), x + 12 * small,
+         y, small, QUEST);
+  y += row;
+  s.rect(mx - 1.5f * small, y + 6.5f * small, 3 * small, 3 * small, FIRE);
+  s.text("your campfires", x + 12 * small, y, small, col::white);
+  y += row;
+  s.line(mx - 3 * small, y + 5 * small, mx + 3 * small, y + 11 * small, 1, MINED);
+  s.line(mx - 3 * small, y + 11 * small, mx + 3 * small, y + 5 * small, 1, MINED);
+  s.text(fmt::format("cleared mines  {}", game.campaign->delves.size()), x + 12 * small, y,
+         small, col::white);
+  return y + row * 2;
 }
 
 void MapMenu::render(Screen &s) {
@@ -50,8 +126,9 @@ void MapMenu::render(Screen &s) {
          small, col::muted);
   Chart::border(s, v, u);
   c.draw(s, l, v, t);
+  campaign(s, v);
 
-  float x = v.x + v.w + 2 * pad, y = top, row = 18 * small;
+  float x = v.x + v.w + 2 * pad, y = this->legend(s, x, top), row = 18 * small;
   s.text("BOUNTIES", x, y, small, col::white);
   y += row * 1.5f;
   for (const Bounty &b : l.bounties) {

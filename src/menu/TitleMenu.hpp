@@ -20,6 +20,7 @@ private:
     SDL_FRect panel, chips[4], seed, diff, rows[6];
   };
   int pick = -1, saved = -1;
+  std::string summary;
 
   Layout layout() const;
   void choose(int mode);
