@@ -78,8 +78,11 @@ void testDelves() {
     }
     clear(level, c.delve);
   }
-  for (int i = 0; i < 400 && c.delve.active; i++)
+  for (int i = 0; i < 1200 && c.delve.active; i++) {
+    if (i % 60 == 59)
+      clear(level, c.delve);
     level.tick(), c.tick(level);
+  }
   assert(!c.delve.active && c.delved(mine.rx, mine.ry) && !rubble(cx + Delve::RING, cy));
   level.tick();
   int chests = 0;

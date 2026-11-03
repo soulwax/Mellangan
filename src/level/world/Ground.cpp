@@ -41,8 +41,10 @@ Sprite groundTile(int x, int y) {
     if (int snow = sides(x, y, winterAt); snow != 15)
       return atlas::snowRim(RIM[snow]);
   const Biome *d = blendedBiome(x, y);
-  int r = hash2(x, y) % 100;
-  return d->grass(r < d->flowers ? 2 : r < d->flowers + d->tufts ? 1 : 0);
+  float n = groundShade(x, y);
+  int r = hash2(x, y) % 100, flowers = int(d->flowers * (0.15f + 2.2f * n * n)),
+      tufts = int(d->tufts * (0.5f + n));
+  return d->grass(r < flowers ? 2 : r < flowers + tufts ? 1 : 0);
 }
 
 float groundShade(int x, int y) {

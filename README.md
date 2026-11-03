@@ -150,7 +150,8 @@ is remembered between sessions.
 ### Campaign
 
 Press K on the title screen to start a campaign. One hero lives in one world across sessions,
-starting in Hearthwick, a barricaded town with a waypoint, a stash, a merchant and Elder Maren.
+starting in Hearthwick, a bastion its people refuse to let be overrun: its fence is sealed but for
+one bridge, held by knights, and inside are a waypoint, a stash, a merchant and Elder Maren.
 Days and nights repeat, and foes grow stronger the further you roam from town.
 
 - **Acts.** Five acts, each with four quests and an act boss. Clearing an act opens the road to the

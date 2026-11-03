@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from sprite_kit import Canvas, _hash
+from sprite_kit import Canvas, _hash, refine
 from make_sprites import (APPLE, BARK, BONE, DARK, FROST, GOLD, MOSS, OLIVE, OUTLINE_DARK, PALE, STONE, TAN,
                           boulder, dotted_bush, stump, tuft)
 
@@ -423,19 +423,19 @@ def render(atlas, name, fn, kind):
     if kind == "tall":
         c = Canvas(16, 32)
         fn(c)
-        return c.image()
+        return refine(c.image())
     if kind == "wide":
         paint, k, w = fn
         c = Canvas(16 * w, 32)
         paint(c)
-        return c.image().crop((16 * k, 0, 16 * k + 16, 32))
+        return refine(c.image()).crop((16 * k, 0, 16 * k + 16, 32))
     if kind == "ground":
         img = town(atlas, 25).copy()
         fn(img)
         return img
     c = Canvas(16, 16)
     fn(c)
-    return c.image(name not in BARE)
+    return refine(c.image(name not in BARE))
 
 
 def add_frontier(atlas):

@@ -3,9 +3,14 @@
 #include "level/LightField.hpp"
 
 void Prop::render(Screen &s) {
+  bool tinted = tone != 1 || warm != 0;
+  if (tinted)
+    s.color({tone * (1 + warm), tone, tone * (1 - warm), 1});
   for (int i = 0; i < count; i++)
     s.sprite(parts[i].sprite, xp + std::clamp(-parts[i].yo / 16, 0, 2) * sway,
-             yp + parts[i].yo, 8, 16);
+             yp + parts[i].yo, 8, 16, flip ? -1.0f : 1.0f, 1);
+  if (tinted)
+    s.color(col::white);
 }
 
 float Prop::occlusion(float &width) const {

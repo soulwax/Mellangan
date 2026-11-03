@@ -7,6 +7,7 @@
 #include "campaign/Elder.hpp"
 #include "campaign/Quests.hpp"
 #include "campaign/Townsfolk.hpp"
+#include "campaign/Sentry.hpp"
 #include "level/Prop.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
@@ -244,6 +245,14 @@ void Hud::questLog() {
   Level &l = *game.level;
   Screen &s = game.screen;
   float k = s.scale, u = s.u, small = std::max(1.0f, u - 1);
+  if (!l.night.dawn) {
+    int fell = 0;
+    l.each<Sentry>([&](Sentry &k) { fell += k.kills; });
+    Campaign::Town near = c->nearest(l.player->x, l.player->y);
+    if (fell > 0 && std::hypot(near.x - l.player->x, near.y - l.player->y) < 320)
+      s.textCenter(fmt::format("THE BRIDGE HOLDS  {} FALLEN", fell), s.w / 2, 70 * u, small,
+                   Color{0.85f, 0.88f, 0.95f, 0.85f});
+  }
   l.each<Townsfolk>([&](Townsfolk &f) {
     if (f.talk <= 0 || f.removed || !inView(f.x, f.y, -8))
       return;

@@ -316,7 +316,8 @@ void tick(Level &level, Campaign &c) {
     if (!p.dead() && xd * xd + yd * yd < SETTLE * SETTLE) {
       c.settle(level, rx, ry);
       c.stage = QuestStage::Offered;
-      level.game.announce(fmt::format("ACT {}  {}", act(c).numeral, act(c).town));
+      level.game.announce(fmt::format("ACT {}  {}  A BASTION STILL STANDING", act(c).numeral,
+                                      act(c).town));
     }
     return;
   }

@@ -29,6 +29,8 @@ struct Campaign {
                          SHADE_GAP = 18;
   static constexpr int MAX_SHADES = 3, MAX_DISCOUNT = 5;
   static constexpr float LOST_GAP = 90, HOME = 120;
+  static constexpr int HOUND_AFTER = 3, HONOUR_GOLD = 1;
+  static constexpr float HONOUR_XP = 0.3f;
 
   std::string world;
   int hero = 0, lvl = 1, gold = 0, day = 1, points = 0, act = 1;
@@ -57,6 +59,8 @@ struct Campaign {
   std::vector<Town> outposts;
   std::vector<std::pair<int, int>> delves;
   std::vector<int> towers;
+  bool hound = false, houndDown = false;
+  entt::entity companion = entt::null;
   Delve delve;
   Edits edits;
   std::vector<entt::entity> waypoints, chests;
@@ -108,4 +112,6 @@ private:
   void smoulder(Level &level);
   void lure(Level &level);
   void stray(Level &level);
+  void heel(Level &level);
+  void honour(Level &level);
 };

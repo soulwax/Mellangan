@@ -12,7 +12,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_layout import ARSENAL, BANDS, extend, place_cell, validate
-from sprite_kit import Canvas
+from sprite_kit import Canvas, refine
 
 BAND = next(b for b in BANDS if b.name == "arsenal")
 
@@ -1118,13 +1118,28 @@ SKILLS = (time_warp, mana_surge, arcane_missiles, singularity, arrow_storm,
           perfect_parry, earthen_wall, overclock, foresight, cannonade)
 
 
-BADGE = ((44, 36, 56), (72, 60, 88), (108, 94, 128))
+BADGE = ((56, 44, 70), (100, 84, 120), (150, 130, 170))
+FACE, RECESS = (40, 32, 52), (28, 22, 38)
+
+
+def medallion(c):
+    for y in range(16):
+        for x in range(16):
+            nx, ny = (x + 0.5 - 8) / 7, (y + 0.5 - 8) / 7
+            d = nx * nx + ny * ny
+            if d > 1:
+                continue
+            lit = -(nx * -0.6 + ny * -0.8) / max(d ** 0.5, 1e-6)
+            if d > 0.62:
+                c.put(x, y, BADGE[2] if lit > 0.25 else BADGE[0] if lit < -0.25 else BADGE[1])
+            else:
+                c.put(x, y, RECESS if d > 0.38 and lit > 0.35 else FACE)
 
 
 def badge(glyph):
     def paint():
         c = Canvas()
-        c.ellipse(8, 8, 7, 7, BADGE)
+        medallion(c)
         glyph(c)
         return c.image()
     paint.__name__ = glyph.__name__
@@ -1570,6 +1585,7 @@ def add_arsenal(atlas):
     atlas = extend(atlas)
     errors = []
     for index, art in icons():
+        art = refine(art)
         errors += art_errors(art, f"arsenal {index}")
         place_cell(atlas, BAND, index, art)
     if errors:

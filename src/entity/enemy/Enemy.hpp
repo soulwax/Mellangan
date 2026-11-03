@@ -118,11 +118,12 @@ public:
   GoalQueue goals;
   float goalTime = 0, cooldown = 0, frenzy = 0, age = 0;
   double xMark = 0, yMark = 0, xWant = 0, yWant = 0, xPush = 0, yPush = 0,
-         side = 1;
+         side = 1, xOld = NAN, yOld = NAN;
   entt::entity leader = entt::null;
   uint32_t seed;
   bool aware = true, wantsFire = false, wantsLeader = false, faltered = false,
-       alarmed = false, buried = false, gilded = false, boss = false, pounced = false;
+       alarmed = false, buried = false, gilded = false, boss = false, pounced = false,
+       garrison = false;
 
   static constexpr float WIND = 0.6f;
 

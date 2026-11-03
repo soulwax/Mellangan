@@ -1,6 +1,8 @@
 #include "level/FloorPainter.hpp"
 
 #include "level/Sky.hpp"
+#include "Math.hpp"
+#include "level/Noise.h"
 #include "level/World.hpp"
 
 namespace {
@@ -42,14 +44,17 @@ FloorPainter::FloorPainter(Screen &s, const Sky &sky)
       flooded(sky.flood() > 0) {}
 
 void FloorPainter::tint(Color t, float shade, float n, float alpha) {
-  s.color({shade * t.r, shade * 0.97f * t.g, (shade * 0.93f + 0.04f * (1 - n)) * t.b,
-           alpha});
+  float d = (dry - 0.5f) * 2;
+  s.color({shade * t.r * (1 + 0.14f * d), shade * 0.97f * t.g * (1 - 0.04f * d),
+           (shade * 0.93f + 0.04f * (1 - n)) * t.b * (1 - 0.2f * d), alpha});
 }
 
 void FloorPainter::tile(int x, int y) {
   float n = world::groundShade(x, y),
         shade = (0.8f + 0.2f * n) * (0.94f + 0.08f * world::heightAt(x, y));
   int own = int(world::biomeAt(x, y));
+  dry = BIOMES[own]->winter() ? 0.5f
+                              : noise_unit(noise_fbm(x * 0.065f + 7.3f, y * 0.065f + 1.9f, 2, 707) * 1.6f);
   Structure st;
   bool wet = world::isWater(x, y);
   if (wet || world::structureAt(x, y, st) || world::isDirt(x, y) ||
@@ -83,10 +88,12 @@ void FloorPainter::blend(int x, int y, int own, float shade, float n) {
     int k = order[i], id = int(blend.biome[k]);
     cumulative += blend.weight[k];
     tint(BIOMES[id]->tint, shade, n, i == 0 ? 1 : blend.weight[k] / cumulative);
-    Sprite ground = blend.count == 1 && id == own
-                        ? world::groundTile(x, y)
-                        : BIOMES[id]->transitionGround(transitionKind(id, variant));
-    s.sprite(ground, x * 16, y * 16, 0, 0);
+    bool fill = blend.count != 1 || id != own;
+    Sprite ground = fill ? BIOMES[id]->transitionGround(transitionKind(id, variant))
+                         : world::groundTile(x, y);
+    for (int k = 0; !fill && k < 3; k++)
+      fill = ground.x == BIOMES[id]->grass(k).x && ground.y == BIOMES[id]->grass(k).y;
+    s.sprite(ground, x * 16 + 8, y * 16, 8, 0, fill && hash2(x, y) >> 20 & 1 ? -1.0f : 1.0f, 1);
   }
 }
 

@@ -18,6 +18,9 @@ struct RunRules {
   std::vector<SafeZone> safe;
   float (*threat)(double x, double y) = nullptr;
   bool (*warded)(double x, double y) = nullptr;
+  void (*route)(double x, double y, double px, double py, float speed, double &xw,
+                double &yw) = nullptr;
+  void (*wall)(double ox, double oy, double &x, double &y) = nullptr;
 
   bool safeAt(double x, double y) const {
     for (const SafeZone &z : safe) {

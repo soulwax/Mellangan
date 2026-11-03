@@ -9,6 +9,7 @@
 #include "Game.hpp"
 #include "campaign/Campaign.hpp"
 #include "campaign/Townsfolk.hpp"
+#include "entity/Ally.hpp"
 #include "entity/Player.hpp"
 #include "item/loot/Loot.hpp"
 #include "item/loot/Vendor.hpp"
@@ -82,12 +83,46 @@ void testRescue() {
   assert(after == mats + 3);
   assert(level.vendor.price(ware) < full && level.vendor.discount == 0.05f);
 
+  assert(!c.hound);
+  c.rescued = 2;
+  c.lostTime = 0;
+  c.tick(level);
+  level.tick();
+  Townsfolk *third = straying(level);
+  assert(third);
+  p.x = third->x + 10, p.y = third->y;
+  level.tick();
+  third->x = c.xTown + 40, third->y = c.yTown;
+  p.x = third->x + 10, p.y = third->y;
+  c.tick(level);
+  assert(c.rescued == 3 && c.hound && !c.houndDown);
+  level.tick();
+  Ally *dog = level.get<Ally>(c.companion);
+  assert(dog && dog->hp > dog->def.hp && dog->damage == 6 + 2.0f * p.lvl);
+  dog->x = p.x + 600;
+  c.tick(level);
+  assert(std::hypot(dog->x - p.x, dog->y - p.y) < 40);
+  dog->retire();
+  level.tick();
+  c.tick(level);
+  assert(c.houndDown && c.companion == entt::null);
+  for (int i = 0; i < 30; i++)
+    level.tick(), c.tick(level);
+  assert(!level.get<Ally>(c.companion));
+  level.night.dawn = false;
+  c.tick(level);
+  level.night.dawn = true;
+  c.tick(level);
+  assert(!c.houndDown);
+  level.tick();
+  assert(level.get<Ally>(c.companion));
+
   c.rescued = 9;
   c.tick(level);
   assert(level.vendor.discount == 0.25f);
   c.capture(level);
   Campaign back;
-  assert(Campaign::load(c.save(), back) && back.rescued == 9);
+  assert(Campaign::load(c.save(), back) && back.rescued == 9 && back.hound);
 
   c.lostTime = 0;
   c.tick(level);
@@ -101,8 +136,9 @@ void testRescue() {
   level.tick();
   assert(!level.get<Townsfolk>(id));
   c.leave();
-  std::cout << "[TEST] Rescue: a lost refugee appears outside town, follows when called, waits "
+  std::cout << "[TEST] Rescue: a lost sanctuary seeker appears outside town, follows when called, waits "
                "when left behind, joins a town for materials and a merchant discount capped at "
-               "25%, survives a save, and can be lost to the dark: PASS"
+               "25%, three rescues earn a hound that falls back home and returns at dawn, all of it "
+               "survives a save, and a sanctuary seeker can be lost to the dark: PASS"
             << std::endl;
 }

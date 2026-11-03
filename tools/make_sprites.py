@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from sprite_kit import Canvas, angle
+from sprite_kit import Canvas, angle, refine
 
 CELL, KIT_Y, COLS = 18, 480, 24
 
@@ -605,7 +605,7 @@ BARE = {"sand tuft", "frost tuft", "ash tuft", "bog tuft", "bloom tuft"}
 def paint(fn, h, outline=True):
     c = Canvas(16, h)
     fn(c)
-    return c.image(outline)
+    return refine(c.image(outline))
 
 
 def cell_pos(index):

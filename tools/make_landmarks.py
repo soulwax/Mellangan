@@ -24,7 +24,7 @@ from pathlib import Path
 from PIL import Image
 
 from make_grounds import CELL
-from sprite_kit import Canvas, _hash
+from sprite_kit import Canvas, _hash, refine
 
 BAND_Y = 1236
 W, H = 48, 64
@@ -149,8 +149,8 @@ def mushroom():
         for y in range(22, 40):
             c.px.pop((x, y), None)
     c.ellipse(24, 23, 21, 4, ((170, 150, 130), (200, 184, 160), (226, 214, 196)))
-    c.rect(18, 26, 30, 60, STEM)
-    c.material([(x, y) for x in range(19, 30) for y in range(28, 60)], STEM[0], STEM[2], 43, 0.2)
+    c.column(18, 26, 30, 60, STEM)
+    c.material([(x, y) for x in range(19, 30) for y in range(30, 58)], STEM[0], STEM[2], 43, 0.1)
     for x, y, r in ((14, 12, 3), (28, 8, 2), (36, 15, 3), (22, 17, 2), (8, 19, 2)):
         c.ellipse(x, y, r, r - 0.4, ((226, 220, 210), (246, 242, 236), (255, 255, 255)))
     return c.image()
@@ -167,10 +167,12 @@ def wreck():
     c.material(hull, PLANK[0], PLANK[2], 49, 0.15)
     c.line(20, 33, 26, 6, PLANK[0], 2)
     c.line(26, 6, 33, 14, PLANK[1])
-    for y in range(10, 28):
-        for x in range(27, 27 + max(0, (y - 10) // 2 + 4)):
-            if _hash(x, y, 53) > 0.15:
-                c.put(x, y, SAIL[1] if x % 3 else SAIL[0])
+    for y in range(9, 28):
+        right = 27 + (y - 9) * 11 // 19
+        for x in range(27, right + 1):
+            c.put(x, y, SAIL[2] if x == 27 else SAIL[0] if x == right or y == 27 else SAIL[1])
+    c.line(28, 16, 31, 18, SAIL[0])
+    c.line(28, 22, 34, 25, SAIL[0])
     c.put(12, 45, (240, 200, 80))
     c.put(13, 45, (255, 230, 120))
     return c.image()
@@ -179,8 +181,11 @@ def wreck():
 def gate():
     c = Canvas(W, H)
     c.ellipse(24, 61, 22, 3, ROCK, dither=0.3, seed=59)
-    c.rect(4, 18, 12, 60, STONE)
-    c.rect(36, 18, 44, 60, STONE)
+    c.column(4, 18, 12, 60, STONE)
+    c.column(36, 18, 44, 60, STONE)
+    for y in range(24, 60, 6):
+        for x0 in (4, 36):
+            c.line(x0, y, x0 + 8, y, STONE[0])
     for x in range(2, 47):
         top = 10 + int(((x - 24) / 22) ** 2 * 8)
         for y in range(top, top + 7):
@@ -216,7 +221,9 @@ def frozen():
     figure = ((24, 18, 4, 4), (24, 31, 6, 8), (17, 30, 2, 6), (31, 30, 2, 6), (21, 46, 2, 7), (27, 46, 2, 7))
     for cx, cy, rx, ry in figure:
         c.ellipse(cx, cy, rx, ry, ((70, 96, 130), (96, 124, 160), (120, 150, 186)))
-    for x, y in ((11, 14), (12, 15), (36, 40), (35, 41), (14, 50)):
+    for x0, y0, n in ((11, 22, 8), (14, 22, 4), (33, 54, 9), (36, 54, 4)):
+        c.line(x0, y0, x0 + n // 2, y0 - n, ICE[2])
+    for x, y in ((11, 13), (12, 13), (11, 14)):
         c.put(x, y, (255, 255, 255))
     return c.image()
 
@@ -234,7 +241,7 @@ def add_landmarks(atlas):
     out = Image.new("RGBA", (atlas.width, max(atlas.height, BAND_Y + rows * CELL)), (0, 0, 0, 0))
     out.paste(atlas.crop((0, 0, atlas.width, min(atlas.height, BAND_Y))), (0, 0))
     for landmark, paint in enumerate(PAINTERS):
-        art = paint()
+        art = refine(paint())
         for row in range(4):
             for col in range(3):
                 out.paste(art.crop((col * 16, row * 16, col * 16 + 16, row * 16 + 16)), slot(landmark, row, col))

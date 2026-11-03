@@ -192,6 +192,8 @@ void Enemy::move() {
     double fx = x - p.x, fy = y - p.y, fd = std::max(1.0, std::sqrt(fx * fx + fy * fy));
     xWant = fx / fd * type.speed, yWant = fy / fd * type.speed;
   }
+  if (level->rules.route)
+    level->rules.route(x, y, p.x, p.y, type.speed, xWant, yWant);
   spdMul *= traits.speed();
   if (!type.floats && level->surfaceAt(x, y) == 1)
     spdMul *= is(EnemyKind::MireLeech) ? 1.2f : 0.5f;
@@ -252,6 +254,9 @@ void Enemy::settle() {
   x += xPush, y += yPush;
   if (!type.floats)
     level->collide(x, y, radius);
+  if (level->rules.wall && !is(EnemyKind::Shade))
+    level->rules.wall(xOld, yOld, x, y);
+  xOld = x, yOld = y;
 }
 
 void Enemy::tick() {
@@ -344,6 +349,8 @@ void Enemy::renderLight(Screen &s) {
 void Enemy::renderShadow(Screen &s) { drawShadow(s, xp, yp, type.floats); }
 
 Sprite Enemy::sprite() const {
+  if (type.art == atlas::beast && !type.floats && status.moving && std::sin(animT * 7) > 0)
+    return atlas::beast(type.tile + atlas::bs::Step);
   return type.art ? type.art(type.tile) : atlas::tile(type.tile);
 }
 
@@ -386,6 +393,8 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
                  Upgrade *src, bool periodic) {
   if (removed)
     return;
+  if (src)
+    garrison = false;
   double dd = std::sqrt(xd * xd + yd * yd);
   if (dd > 1e-5)
     xd /= dd, yd /= dd;

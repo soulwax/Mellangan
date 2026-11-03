@@ -15,6 +15,8 @@ public:
   float shadow = 0, solid = 0, lightSize = 80;
   Color light{0, 0, 0, 0};
   int lightYo = -10, sway = 0;
+  float tone = 1, warm = 0;
+  bool flip = false;
   const char *kind = nullptr;
   bool wisp = true;
 

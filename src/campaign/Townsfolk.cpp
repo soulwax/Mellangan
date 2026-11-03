@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "Game.hpp"
+#include "campaign/Bastion.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "particle/Spark.hpp"
@@ -11,16 +12,16 @@
 namespace {
 
 const char *const LINES[5][4] = {
-    {"They took the mill first. Then the well.", "Keep the fire high tonight, please.",
-     "I heard wolves inside the walls last night.", "My boy went for wood. He'll be back soon."},
-    {"The lanterns sing in the marsh. Don't listen.", "Salt keeps the drowned out. Mostly.",
-     "The abbey bells still ring, under the water.", "Spores in the bread again."},
-    {"The cold is coming from the barrows, not the sky.", "Warden Kell hasn't slept in days.",
-     "Something old hunts by the standing stones.", "Keep your hands near the fire."},
-    {"The caravan is our only water.", "The sky splits over the steppe every night.",
-     "Glass sings in the wind out there.", "Hyenas laugh just like people."},
-    {"This is where the dark began.", "The ash never stops falling.",
-     "Keeper Ash says the last lantern will hold.", "If the fire goes out here, it goes out everywhere."},
+    {"They took the mill. They will not take Hearthwick.", "Keep the fire high. We hold till dawn.",
+     "The knights haven't slept. Neither have we.", "Every hand on the wall tonight."},
+    {"The marsh can howl all it likes. Saltmoor stands.", "Salt on the threshold, steel at the bridge.",
+     "We rebuilt that wall three times. We'll do it again.", "The drowned won't have this town."},
+    {"Let the barrows freeze. Frosthold doesn't break.", "Warden Kell says no one sleeps until it's done.",
+     "We keep the beacons lit, whatever it costs.", "Cold hands still hold a spear."},
+    {"Dunewatch has outlasted worse storms than this.", "Every drop of water, we share. Every wall, we hold.",
+     "Let them laugh out there. We're still here.", "The caravan comes back. It always does."},
+    {"This is where the dark began. It ends here too.", "The ash falls. The fire doesn't.",
+     "Keeper Ash says the last lantern will hold. So will we.", "If this fire goes out, none do. So it won't."},
 };
 
 } // namespace
@@ -32,9 +33,9 @@ void Townsfolk::onAdded() {
 
 const char *Townsfolk::line() const {
   if (mode == Mode::Lost)
-    return "Please! I can't find the way back!";
+    return "Please! Is the bastion still standing?";
   if (mode == Mode::Following)
-    return "Stay close, I'm right behind you.";
+    return "Take me to the walls. I'll help hold them.";
   return LINES[town % 5][(voice + said) % 4];
 }
 
@@ -52,14 +53,14 @@ void Townsfolk::trail() {
   });
   if (hp <= 0) {
     Spark::burst(*level, x, y - 8, col::white, 12, 60, true);
-    level->game.announce("A REFUGEE IS LOST TO THE DARK");
+    level->game.announce("A SANCTUARY SEEKER IS LOST TO THE DARK");
     return remove();
   }
   double xd = p.x - x, yd = p.y - y, d = std::hypot(xd, yd);
   if (mode == Mode::Lost) {
     if (d < CALL && !p.dead()) {
       mode = Mode::Following, talk = SAY, hush = SAY + 6, spoken = line();
-      level->game.announce("A REFUGEE FOLLOWS YOU  BRING THEM TO A TOWN");
+      level->game.announce("A SANCTUARY SEEKER FOLLOWS YOU  BRING THEM TO A BASTION");
     }
     return;
   }
@@ -70,9 +71,12 @@ void Townsfolk::trail() {
   facing = xd < 0 ? -1.0f : 1.0f;
   tx = p.x, ty = p.y;
   if (d > 20) {
-    double v = std::min(TRAIL * 1.0, p.speed * 1.05);
-    x += xd / d * v * DT, y += yd / d * v * DT;
+    double v = std::min(TRAIL * 1.0, p.speed * 1.05), mx = xd / d * v, my = yd / d * v;
+    bastion::route(x, y, p.x, p.y, float(v), mx, my);
+    double ox = x, oy = y;
+    x += mx * DT, y += my * DT;
     level->collide(x, y, 4);
+    bastion::wall(ox, oy, x, y);
   }
 }
 

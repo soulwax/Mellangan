@@ -82,8 +82,15 @@ void Level::scatter(Screen &s) {
           for (int i = 0; i < p.count; i++)
             p.parts[i].sprite = BIOMES[BIOME_SNOW]->frost(p.parts[i].sprite);
         Structure site;
-        if (p.count >= 2 && !world::structureAt(x, y, site))
+        bool wild = !world::structureAt(x, y, site);
+        if (p.count >= 2 && wild)
           p.sway = sky.sway(p.x, p.y, time);
+        if (p.kind && wild) {
+          uint32_t h = hash2(x * 7 + 3, y * 13 + 5);
+          p.flip = h & 1;
+          p.tone = 0.86f + float(h >> 8 & 255) / 255 * 0.2f;
+          p.warm = (float(h >> 16 & 255) / 255 - 0.5f) * 0.14f;
+        }
         props.push_back(p);
         if (p.solid > 0)
           solids[(y - solidY) * SOLID_W + x - solidX] = p.solid;

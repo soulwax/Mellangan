@@ -13,6 +13,7 @@ private:
   Screen &s;
   const Sky &sky;
   bool snowing, flooded;
+  float dry = 0.5f;
 
   void tint(Color t, float shade, float n, float alpha = 1);
   void blend(int x, int y, int own, float shade, float n);

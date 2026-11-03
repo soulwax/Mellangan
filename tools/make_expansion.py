@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_layout import BANDS, extend, place_cell, validate
 from make_sprites import CHAR, LEAF, PALE, STONE, add_sprites
-from sprite_kit import Canvas, OUTLINE as KIT_OUTLINE, _hash, mix
+from sprite_kit import Canvas, OUTLINE as KIT_OUTLINE, _hash, materials, mix, refine, render
 
 
 ACTORS = BANDS[6]
@@ -713,17 +713,27 @@ def points(rows, x=0, y=0):
 
 
 def mire_leech():
-    c = Canvas()
-    body = points(("..#####...", ".########.", "##########",
-                   ".########.", "..######.."), 3, 6)
-    c.contour(body, OUTLINE)
-    c.paint(body, LEECH[1])
-    c.shadow({p for p in body if p[1] >= 9 or p[0] >= 10}, LEECH[0])
-    c.highlight({(5, 7), (6, 7), (7, 7), (8, 8)}, LEECH[2])
-    c.material(body, LEECH[0], LEECH[2], 101, 0.12)
-    c.cluster(4, 8, ("#",), (242, 214, 130))
-    c.cluster(11, 8, ("#",), (242, 214, 130))
-    return c.image(False)
+    rows = (
+        "................",
+        "................",
+        "................",
+        "................",
+        ".....mmmmm......",
+        "....mllllmm.....",
+        "...mlmdmdmmm....",
+        "..mlm.....dmm...",
+        ".mlYm......dmm..",
+        "TRmmd.......dmm.",
+        "RRmd.........mmd",
+        "Tppd.........ppd",
+        "................",
+        "................",
+        "................",
+        "................",
+    )
+    body = {"d": LEECH[0], "m": LEECH[1], "l": LEECH[2]}
+    flat = {"p": (226, 170, 170), "Y": (242, 214, 130), "R": (170, 30, 50), "T": (246, 238, 214)}
+    return render(rows, [(fam, body) for fam in materials(body)], flat).image(True)
 
 
 def ricochet_sling():
@@ -746,18 +756,18 @@ def ricochet_sling():
 def add_expansion(atlas):
     out = extend(atlas)
     for i in range(10):
-        place_cell(out, ACTORS, i, monster(i))
+        place_cell(out, ACTORS, i, refine(monster(i)))
     for i in range(4):
-        place_cell(out, ACTORS, 10 + i, hero(i))
+        place_cell(out, ACTORS, 10 + i, refine(hero(i)))
     for i in range(8):
-        place_cell(out, ACTORS, 14 + i, weapon(i))
-        place_cell(out, ACTORS, 22 + i, relic(i))
+        place_cell(out, ACTORS, 14 + i, refine(weapon(i)))
+        place_cell(out, ACTORS, 22 + i, refine(relic(i)))
     for i in range(4):
-        place_cell(out, ACTORS, 30 + i, shrine_symbol(i))
+        place_cell(out, ACTORS, 30 + i, refine(shrine_symbol(i)))
     for biome in range(10):
         for variant in range(3):
-            place_cell(out, BANDS[7], biome * 3 + variant, biome_prop(biome, variant))
-        place_cell(out, BANDS[7], 30 + biome, biome_marker(biome))
+            place_cell(out, BANDS[7], biome * 3 + variant, refine(biome_prop(biome, variant)))
+        place_cell(out, BANDS[7], 30 + biome, refine(biome_marker(biome)))
         for cell in range(12):
             art = ground_fill(biome, cell) if cell < 3 else ground_edge(out, biome, cell)
             place_cell(out, BANDS[8], biome * 12 + cell, art)

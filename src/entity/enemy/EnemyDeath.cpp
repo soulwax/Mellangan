@@ -168,12 +168,14 @@ void Enemy::die() {
     up->holder = nullptr, level->retired.push_back(std::move(up));
   upgrades.clear();
   remove();
-  level->kills++;
-  level->slain[kind()]++;
-  level->streak++, level->streakTime = 2.5f;
-  level->bestStreak = std::max(level->bestStreak, level->streak);
-  level->game.codex.slain[kind()]++;
-  if (Player *p = level->player; p->hero) {
+  if (!garrison) {
+    level->kills++;
+    level->slain[kind()]++;
+    level->streak++, level->streakTime = 2.5f;
+    level->bestStreak = std::max(level->bestStreak, level->streak);
+    level->game.codex.slain[kind()]++;
+  }
+  if (Player *p = level->player; p->hero && !garrison) {
     p->hero->slay(*p, *this);
     for (auto &up : p->upgrades)
       if (up->level > 0)
@@ -194,14 +196,14 @@ void Enemy::die() {
   for (const Gild &g : level->gilds)
     if (g.until > level->time && (x - g.x) * (x - g.x) + (y - g.y) * (y - g.y) < g.r * g.r)
       gems = 2;
-  for (int i = 0; i < gems; i++)
+  for (int i = 0; i < gems && !garrison; i++)
     Gem::drop(*level, x + i * 6, y - 3,
               type.xp * (elite ? ELITE_XP : 1) * level->xpMul *
                   (1 + std::min(level->streak, 100) * 0.005f) *
                   (1 + killer.bonus.scavenge / 100));
-  if (elite && rng.chance(0.25f))
+  if (elite && !garrison && rng.chance(0.25f))
     level->add<Potion>(x + 6, y);
-  if (level->rules.loot)
+  if (level->rules.loot && !garrison)
     for (int i = 0; i <= (title && killer.bonus.extraLoot > 0); i++)
       ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this), leanOf(*this));
   if (pack)

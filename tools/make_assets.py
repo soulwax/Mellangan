@@ -2,6 +2,7 @@
 
 Usage: uv run --with pillow tools/make_assets.py "<path to Kenney Game Assets All-in-1>"
 Verify: uv run --with pillow==13.0.0 tools/make_assets.py --verify "<path>"
+Replay: uv run --with pillow tools/make_assets.py --from-atlas   (reuses the Kenney + FX base of res/atlas.png)
 The layout here must stay in sync with src/Atlas.hpp.
 """
 import io
@@ -39,11 +40,11 @@ PIPELINE = (
     ("sprite kit", (432, 552), add_sprites),
     ("grounds", (432, 624), add_grounds),
     ("frontier", (432, 624), add_frontier),
-    ("expansion", (432, 1380), add_expansion),
-    ("dirt rims", (432, 1380), add_rims),
-    ("arsenal", (432, 1380), add_arsenal),
-    ("landmarks", (432, 1380), add_landmarks),
-    ("cliffs", (432, 1380), add_cliffs),
+    ("expansion", (432, 1488), add_expansion),
+    ("dirt rims", (432, 1488), add_rims),
+    ("arsenal", (432, 1488), add_arsenal),
+    ("landmarks", (432, 1488), add_landmarks),
+    ("cliffs", (432, 1488), add_cliffs),
     ("bestiary", (432, 1488), add_bestiary),
 )
 
@@ -212,6 +213,17 @@ def digits():
     return im
 
 
+def replay(atlas):
+    for name, size, step in PIPELINE:
+        atlas = step(atlas)
+        if atlas.size != size:
+            raise RuntimeError(f"{name} produced {atlas.width}x{atlas.height}, expected {size[0]}x{size[1]}")
+    errors = validate(atlas)
+    if errors:
+        raise RuntimeError("invalid atlas layout:\n" + "\n".join(errors))
+    return atlas
+
+
 def build(source):
     atlas = Image.new("RGBA", (ATLAS_W, ATLAS_H), (0, 0, 0, 0))
     for i, name in enumerate(SHEETS):
@@ -241,15 +253,7 @@ def build(source):
     ]
     for im, pos in fx:
         atlas.paste(im, pos)
-
-    for name, size, step in PIPELINE:
-        atlas = step(atlas)
-        if atlas.size != size:
-            raise RuntimeError(f"{name} produced {atlas.width}x{atlas.height}, expected {size[0]}x{size[1]}")
-    errors = validate(atlas)
-    if errors:
-        raise RuntimeError("invalid atlas layout:\n" + "\n".join(errors))
-    return atlas
+    return replay(atlas)
 
 
 def encode(atlas):
@@ -259,6 +263,13 @@ def encode(atlas):
 
 
 def main():
+    root = Path(__file__).resolve().parent.parent
+    if sys.argv[1:] == ["--from-atlas"]:
+        out = root / "res" / "atlas.png"
+        base = Image.open(out).convert("RGBA").crop((0, 0, ATLAS_W, ATLAS_H))
+        out.write_bytes(encode(replay(base)))
+        print(f"replayed {out}")
+        return
     verify = "--verify" in sys.argv[1:]
     args = [arg for arg in sys.argv[1:] if arg != "--verify"]
     if len(args) != 1:

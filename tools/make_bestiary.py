@@ -1,7 +1,8 @@
 """Paints the bestiary band into res/atlas.png: the foes added after the expansion, one 16 x 16 cell each.
 
 Band at y=1380, 24 columns by 6 rows (144 cells). Cell i is atlas::beast(i); the order below is the
-`atlas::bs` order in src/Atlas.hpp. Sprites are drawn as character maps: each letter is a palette entry,
+`atlas::bs` order in src/Atlas.hpp. Cell STEP + i is its step frame: feet left of centre lifted a row, or a
+legless body squashed by a pixel. Sprites are drawn as character maps: each letter is a palette entry,
 '.' is empty, and the Canvas adds the 1px Kenney outline.
 
      0  Thornling      a walking bramble knot with red eyes
@@ -62,10 +63,12 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from make_grounds import CELL
-from sprite_kit import Canvas
+from sprite_kit import OUTLINE, materials, render
 
 BAND_Y = 1380
 ROWS = 6
+STEP = 72
+FRAME = 0
 
 LEAF = {"g": (40, 92, 50), "G": (70, 140, 66), "L": (122, 190, 88)}
 BARK = {"b": (78, 52, 40), "B": (114, 78, 54), "W": (156, 110, 76)}
@@ -108,7 +111,7 @@ CBAT = {"s": (50, 30, 40), "S": (100, 70, 80)}
 ROCK = {"v": (80, 76, 72), "I": (140, 134, 126), "i": (180, 174, 166)}
 ORE = {"v": (90, 60, 40), "I": (150, 110, 70), "n": (230, 170, 60)}
 KOBOLD = {"k": (150, 70, 40), "K": (110, 90, 60), "y": (220, 190, 60)}
-SHADE = {"f": (22, 14, 34), "u": (60, 40, 92), "n": (110, 84, 150)}
+SHADE = {"f": (22, 14, 34), "u": (78, 54, 120), "n": (128, 100, 172)}
 NEST = {"d": (70, 34, 60), "m": (128, 70, 104), "l": (186, 120, 150), "g": (190, 240, 120)}
 EXTRA = {
     "t": (210, 190, 120),
@@ -119,20 +122,43 @@ EXTRA = {
     "F": (232, 214, 160),
     "X": (200, 206, 214),
     "Q": (255, 250, 220),
+    "@": OUTLINE,
 }
 
 
+def runs(row):
+    return sum(1 for x, k in enumerate(row) if k != "." and (x == 0 or row[x - 1] == "."))
+
+
+def step(rows):
+    grid = [list(r) for r in rows]
+    filled = [y for y, r in enumerate(grid) if any(k != "." for k in r)]
+    if not filled:
+        return rows
+    top, bot = filled[0], filled[-1]
+    if runs(grid[bot]) >= 2:
+        xs = [x for x, k in enumerate(grid[bot]) if k != "."]
+        mid = (xs[0] + xs[-1]) / 2
+        for x in range(len(grid[bot])):
+            if x < mid and grid[bot][x] != ".":
+                grid[bot - 1][x], grid[bot][x] = grid[bot][x], "."
+    else:
+        for y in range(bot - 1, top, -1):
+            grid[y] = list(grid[y - 1])
+        grid[top] = ["."] * len(grid[top])
+    return ["".join(r) for r in grid]
+
+
 def draw(rows, *palettes):
+    if FRAME:
+        rows = step(rows)
     pal = {}
     for p in palettes + (EXTRA,):
         pal.update(p)
     assert len(rows) == 16 and all(len(r) == 16 for r in rows), rows
-    c = Canvas()
-    for y, row in enumerate(rows):
-        for x, k in enumerate(row):
-            if k != ".":
-                c.put(x, y, pal[k])
-    return c.image(True)
+    used = {k for row in rows for k in row} - {"."}
+    families = [(fam, p) for p in palettes for fam in materials({k: p[k] for k in p if k in used})]
+    return render(rows, families, pal).image(True)
 
 
 def thornling():
@@ -161,18 +187,18 @@ def boar():
         "................",
         "................",
         "................",
-        "................",
-        "......hhhhh.....",
-        "....hhHHHHHhh...",
-        "...hHHJJJHHHHh..",
-        "..hHHJJHHHHHHHh.",
-        ".ThEHHHHHHHHHHh.",
-        "TThHHHHHHHHHHhh.",
-        ".hhHHHHHHHHHHh..",
-        "..hhHHHHHHHHh...",
-        "...hh.hh.hh.hh..",
-        "...hh.hh.hh.hh..",
-        "...bb.bb.bb.bb..",
+        ".......b.b.b....",
+        "......bhbhbhbh..",
+        "...hh@HJJJHHHHh.",
+        "...hH@JJHHHHHHHh",
+        "..hJJ@HHHHHHHHHh",
+        ".hJEJ@HHHHHHHHHh",
+        "hHHHH@HHHHHHHHhh",
+        "@HHHh@HHHHHHHHhh",
+        ".TTh@hHHHHHHHhh.",
+        "..T..hhhhhhhhh..",
+        ".....hh.hh.hh.hh",
+        ".....bb.bb.bb.bb",
         "................",
     ), HIDE, BARK)
 
@@ -267,15 +293,15 @@ def moth():
         "................",
         "....F......F....",
         ".....F....F.....",
-        "..mm..F..F..mm..",
-        ".mMMm.OOO.mMMm..",
-        "mMNMMmOQOmMMNMm.",
-        "mMMNMmOQOmMNMMm.",
-        ".mMMMmOOOmMMMm..",
-        "..mMm.OOO.mMm...",
-        "...mMmOOOmMm....",
-        "....mm.O.mm.....",
-        ".......O........",
+        ".mmmm.F..F.mmmm.",
+        "mMMMMm.OO.mMMMMm",
+        "mMN@MmOQQOmM@NMm",
+        "mMNNMmOQQOmMNNMm",
+        ".mMMMmOOOOmMMMm.",
+        "..mMMmOOOOmMMm..",
+        "..mMm.mOOm.mMm..",
+        "...mm..OO..mm...",
+        "................",
         "................",
         "................",
         "................",
@@ -285,20 +311,20 @@ def moth():
 def cutthroat():
     return draw((
         "................",
-        "................",
         "......sss.......",
-        ".....sSSSs......",
-        "....sSUUUSs.....",
-        "....sSERESs.....",
-        "....sSSSSSs.....",
-        ".....sSSSs..X...",
-        "....sSSSSSsXX...",
-        "...sSUSSSSSX....",
-        "...sSSSSSSsh....",
-        "...sSSUSSSs.....",
+        ".....sUUUs......",
+        "....sUUSSSs.....",
+        "....sSsJJsSs....",
+        "....sSEJJEsS....",
+        "....sSRRRRsS....",
+        ".....sRRRRs..X..",
+        "....sSSRSSSsXX..",
+        "...sUSSSSSSJX...",
+        "...sSSbbbbbJ....",
         "...sSSSSSSs.....",
+        "...sUSSsSSSs....",
         "....sSs.sSs.....",
-        "....bb...bb.....",
+        "....hh...hh.....",
         "................",
     ), DUSK, BARK, HIDE)
 
@@ -351,16 +377,16 @@ def snapjaw():
         "................",
         "................",
         "................",
-        "................",
-        "..TT............",
-        ".oVVoo..........",
-        "oVEVVVoooooo....",
-        "oVVVVVVVVVVVoo..",
-        ".TTVPVVVPVVVVVo.",
-        "..oVVVVVVVVVVVVo",
-        "...oVVVVVVVVVVo.",
-        "...oo.oo..oo.oo.",
-        "...oo.oo..oo.oo.",
+        "...oVo..........",
+        "..oVEVo.o.o.o...",
+        "oVVVVVVoVoVoVo..",
+        "VVVVVVVVVVVVVVo.",
+        ".T.T.oVVVVVVVVVo",
+        ".....oVVVVVVVVVo",
+        "PPPPPPPPPPPPPVo.",
+        ".oPPPoPPPPPPoo..",
+        "..oV..oV...oV...",
+        ".oo..oo...oo....",
         "................",
         "................",
     ), TOAD)
@@ -413,18 +439,18 @@ def spore_puffer():
         "................",
         "................",
         "................",
-        "................",
-        ".......i........",
-        ".....vvvvv..i...",
-        "....vIIiIIv.....",
-        "...vIiIIIIIv....",
-        "..ivIIEIIEIv....",
-        "...vIIIIIIIv.i..",
-        "...vIiIIIiIv....",
-        "....vIIIIIv.....",
-        ".....vvvvv......",
-        "......b.b.......",
-        ".....bb.bb......",
+        "......i..i......",
+        "...i..vvvv...i..",
+        "....vvIIIIvv....",
+        "...vIiiIIIIIv...",
+        "..vIiiIIIIIIIv..",
+        "..vIiIIIIIIIIv..",
+        "..vIIEIIIIEIIv..",
+        "..vIIEIIIIEIIv..",
+        "..vvIIIIIIIIvv..",
+        "...vvIIvvIIvv...",
+        "....vvvvvvvv....",
+        ".....bb..bb.....",
         "................",
     ), SPORE, BARK)
 
@@ -600,20 +626,20 @@ def barrow_archer():
 def sand_wyrm():
     return draw((
         "................",
-        ".....dddddd.....",
         "....dSSSSSSd....",
-        "...dSTTTTTTSd...",
-        "...dTEEEEEETd...",
-        "...dTEEEEEETd...",
-        "...dSTTTTTTSd...",
+        "...dTmTmTmTSd...",
+        "..dST@@@@@@TSd..",
+        "..dSm@@RR@@mSd..",
+        "..dST@@@@@@TSd..",
+        "...dSTmTmTmSd...",
         "....dSSSSSSd....",
-        "....dSsSSsSd....",
+        "....dSsSSSsd....",
         "....dSSSSSSd....",
-        "...dSSsSSsSSd...",
+        "...dSsSSSSsSd...",
         "...dSSSSSSSSd...",
-        ".ddSSsSSSSsSSdd.",
-        "..mmmSSSSSSmmm..",
-        ".mmmmmmmmmmmmmm.",
+        "..dSSsSSSSSsSd..",
+        ".mmdSSSSSSSSdmm.",
+        "mmmmmmmmmmmmmmmm",
         "................",
     ), WYRM)
 
@@ -778,19 +804,19 @@ def magma_slug():
         "................",
         "................",
         "................",
+        "..O..O..........",
+        "..k..k..........",
+        "..kkkk..........",
+        ".kkKkkkkkk......",
+        ".kKkkfkkkkkkk...",
+        "kkkkfkkkfkkkkkk.",
+        "kkfkkkkfkkkfkkkk",
+        "kkkkkkkkkkkkkkkk",
+        ".yyffffffffffff.",
         "................",
-        "..O.O...........",
-        "..k.k...........",
-        ".kkkkkkk........",
-        "kkfkkkfkkkk.....",
-        "kfkkfkkkfkkkk...",
-        "kkkfkkkfkkkkkkk.",
-        ".kkkkfkkkkfkkkkk",
-        "..fffffffffffff.",
         "................",
         "................",
-        "................",
-    ), SLUG)
+    ), SLUG, {"K": (110, 80, 72), "y": (255, 220, 90)})
 
 
 def ash_wraith():
@@ -989,15 +1015,15 @@ def rock_crawler():
         "................",
         "................",
         "................",
-        "................",
-        ".....vvvvv......",
-        "...vvIIIIIvv....",
-        "..vIIIiIIIIIv...",
-        ".vIIiIIIIiIIIv..",
-        "vIIIIIOIOIIIIIv.",
-        "v.vIIIIIIIIIv.v.",
-        ".v.v.v...v.v.v..",
-        "v.v.........v.v.",
+        "......vvvv......",
+        "....vvIiiIvv....",
+        "...vIiiIIIIIv...",
+        "..vIiIIIIvIIIv..",
+        "..vIIIvIIIIIIv..",
+        ".vvIIIIIIIIIvvv.",
+        "vI.vvOvvOvvvv.Iv",
+        "v.v.v.....v.v..v",
+        "..v..v...v..v...",
         "................",
         "................",
     ), ROCK)
@@ -1007,19 +1033,19 @@ def kobold_miner():
     return draw((
         "................",
         "................",
-        "................",
-        "......O.........",
-        ".....yyy........",
-        "....yyyyy.......",
-        "....kEkEk..b....",
-        "....kkkkkk.Xb...",
-        "...KkKKKk..b....",
-        "..k.KKKK.kb.....",
-        "....KKKK........",
-        "....k..k........",
-        "...kk..kk.......",
-        "................",
-        "................",
+        ".......O........",
+        "......yyy.......",
+        ".....yyyyy......",
+        "....yyyyyyy.....",
+        "....kkkkkkk.....",
+        "....kEkkEkkk.b..",
+        "...kkkkkkkk..Xb.",
+        ".....kkkk...bX..",
+        "....KKKKKk.b....",
+        "...kKyKKKkb.....",
+        "....KKKKK.......",
+        "....kk.kk.......",
+        "...kkk.kkk......",
         "................",
     ), KOBOLD, BARK)
 
@@ -1093,16 +1119,16 @@ def nest():
         "................",
         "................",
         "................",
-        "......mmmm......",
-        "....mmllmmmm....",
-        "...mlldmgmmmm...",
-        "..mlmmmmmmdmmm..",
-        "..mmgmmmlmmmgm..",
-        ".mmmmdmmmmmmmmm.",
-        ".mmlmmmmgmmdmmm.",
-        "mmmmmmmmmmmmmmmd",
-        "dmmmdmmmmmdmmmdd",
-        ".ddddddddddddd..",
+        "......dmmd......",
+        "....dmmllmmd....",
+        "...dmlg@mmmmd...",
+        "..dmlmmmmmg@md..",
+        "..dmmmmlmmmmmd..",
+        ".dmg@mmmmmmmmmd.",
+        ".dmmmmmmg@mmmmd.",
+        "dmmmmmmmmmmmmmmd",
+        "dddmmmdddmmmdddd",
+        ".dddddddddddddd.",
         "................",
         "................",
     ), NEST)
@@ -1124,8 +1150,12 @@ def slot(i):
 def add_bestiary(atlas):
     out = Image.new("RGBA", (atlas.width, max(atlas.height, BAND_Y + ROWS * CELL)), (0, 0, 0, 0))
     out.paste(atlas.crop((0, 0, atlas.width, min(atlas.height, BAND_Y))), (0, 0))
+    global FRAME
     for i, paint in enumerate(PAINTERS):
         out.paste(paint(), slot(i))
+        FRAME = 1
+        out.paste(paint(), slot(STEP + i))
+        FRAME = 0
     return out
 
 

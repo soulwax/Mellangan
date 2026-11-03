@@ -9,6 +9,7 @@
 
 #include "Game.hpp"
 #include "campaign/Campaign.hpp"
+#include "campaign/Bastion.hpp"
 #include "campaign/Cache.hpp"
 #include "campaign/Elder.hpp"
 #include "campaign/Pilgrim.hpp"
@@ -234,7 +235,9 @@ void testQuests() {
   assert(quests::status(c) == "The dark is broken");
   c.capture(level);
   for (size_t i = 0; i < c.towns().size(); i++) {
-    int tx = int(std::floor(c.towns()[i].x / 16)) - 1, ty = int(std::floor(c.towns()[i].y / 16)) - 7;
+    int cx = int(std::floor(c.towns()[i].x / 16)), cy = int(std::floor(c.towns()[i].y / 16));
+    bool north = bastion::gateOf(cx, cy) == bastion::North;
+    int tx = cx - 1, ty = north ? cy + 7 : cy - 7;
     constexpr Piece HEDGES[] = {Piece::Thorns, Piece::Reeds, Piece::Ice, Piece::Cactus, Piece::Embers};
     assert(c.edits.at(tx, ty) && c.edits.at(tx, ty)->piece == HEDGES[i]);
   }

@@ -42,12 +42,12 @@ void Night::cycle() {
     if (level.time < dayEnds)
       return;
     dawn = false, nightStart = level.time, nights++;
-    level.game.announce("NIGHT FALLS");
+    level.game.announce(level.rules.town ? "NIGHT FALLS  HOLD THE BRIDGE" : "NIGHT FALLS");
     return;
   }
   if (level.time >= dawnAt())
     dawn = true, dayEnds = level.time + level.rules.dayLength,
-    level.game.announce("DAWN BREAKS");
+    level.game.announce(level.rules.town ? "DAWN  THE BASTION STILL STANDS" : "DAWN BREAKS");
 }
 
 bool Night::isLit(const Structure &s) const {

@@ -211,7 +211,7 @@ constexpr int Thornling = 0, Boar = 1, GoblinArcher = 2, GoblinShaman = 3, Sapli
               TotemShaman = 28, WarTotem = 29, MagmaSlug = 30, AshWraith = 31, CaveHorror = 32,
               StarSpawn = 33, FlameCultist = 34, HollowSentinel = 35, EmberDrake = 36,
               NightStalker = 37, GraveRobber = 38, CaveBat = 39, RockCrawler = 40, OreGolem = 41,
-              KoboldMiner = 42, Hide = 43, Bone = 44, Shade = 45, Nest = 46;
+              KoboldMiner = 42, Hide = 43, Bone = 44, Shade = 45, Nest = 46, Step = 72;
 } // namespace bs
 constexpr Sprite biomeGround(int set, int cell) {
   return {float(((set % 2) * 12 + cell) * 18 + 1),

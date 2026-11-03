@@ -6,11 +6,14 @@
 #include <sstream>
 
 #include "Game.hpp"
+#include "campaign/Bastion.hpp"
 #include "campaign/Harvest.hpp"
+#include "campaign/Sentry.hpp"
 #include "campaign/Elder.hpp"
 #include "campaign/Stash.hpp"
 #include "campaign/Townsfolk.hpp"
 #include "campaign/Watchtower.hpp"
+#include "entity/Ally.hpp"
 #include "campaign/Waypoint.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
@@ -23,6 +26,7 @@
 #include "level/World.hpp"
 #include "particle/Shockwave.hpp"
 #include "particle/Drift.hpp"
+#include "particle/Spark.hpp"
 #include "level/Prop.hpp"
 
 namespace {
@@ -49,7 +53,7 @@ float areaThreat(double x, double y) {
   return float(std::sqrt(xd * xd + yd * yd) / 8) * threatScale + (threatScale - 1) * 300;
 }
 
-constexpr int TOWN_W = 6, TOWN_H = 5;
+constexpr int TOWN_W = bastion::W, TOWN_H = bastion::H;
 
 struct Spot {
   int dx, dy;
@@ -101,21 +105,37 @@ Piece dress(Piece piece, int town) {
 }
 
 template <class F> void townLayout(int cx, int cy, F &&fn) {
-  fn(cx - TOWN_W, cy - TOWN_H, Piece::CornerNW), fn(cx + TOWN_W, cy - TOWN_H, Piece::CornerNE);
-  fn(cx - TOWN_W, cy + TOWN_H, Piece::CornerSW), fn(cx + TOWN_W, cy + TOWN_H, Piece::CornerSE);
+  int open = bastion::gateOf(cx, cy);
+  auto lane = [&](int dx, int dy) {
+    switch (open) {
+    case bastion::North:
+      return dy <= -TOWN_H && std::abs(dx) <= bastion::GAP;
+    case bastion::South:
+      return dy >= TOWN_H && std::abs(dx) <= bastion::GAP;
+    case bastion::West:
+      return dx <= -TOWN_W && std::abs(dy) <= bastion::GAP;
+    default:
+      return dx >= TOWN_W && std::abs(dy) <= bastion::GAP;
+    }
+  };
+  auto put = [&](int dx, int dy, Piece p) { fn(cx + dx, cy + dy, lane(dx, dy) ? Piece::Count : p); };
+  put(-TOWN_W, -TOWN_H, Piece::CornerNW), put(TOWN_W, -TOWN_H, Piece::CornerNE);
+  put(-TOWN_W, TOWN_H, Piece::CornerSW), put(TOWN_W, TOWN_H, Piece::CornerSE);
   for (int d = 2; d < TOWN_W; d++) {
     Piece west = d == 2 ? Piece::EndEast : Piece::Rail, east = d == 2 ? Piece::EndWest : Piece::Rail;
-    fn(cx - d, cy - TOWN_H, west), fn(cx - d, cy + TOWN_H, west);
-    fn(cx + d, cy - TOWN_H, east), fn(cx + d, cy + TOWN_H, east);
+    put(-d, -TOWN_H, west), put(-d, TOWN_H, west);
+    put(d, -TOWN_H, east), put(d, TOWN_H, east);
   }
   for (int d = 2; d < TOWN_H; d++)
     for (int s : {-1, 1})
-      fn(cx - TOWN_W, cy + s * d, Piece::Post), fn(cx + TOWN_W, cy + s * d, Piece::PostEast);
+      put(-TOWN_W, s * d, Piece::Post), put(TOWN_W, s * d, Piece::PostEast);
   for (const Spot &s : BARRICADE)
-    fn(cx + s.dx, cy + s.dy, s.piece);
+    put(s.dx, s.dy, s.piece);
+  put(0, -TOWN_H, Piece::Logs), put(0, TOWN_H, Piece::Crates);
+  put(-TOWN_W, 0, Piece::Sacks), put(TOWN_W, 0, Piece::Logs);
   for (int sx : {-4, 4})
     for (int sy : {-3, 3})
-      fn(cx + sx, cy + sy, Piece::Torch);
+      put(sx, sy, Piece::Torch);
 }
 
 std::string_view rest(std::string_view line, int words) {
@@ -142,7 +162,8 @@ std::string Campaign::save() const {
                      int(founded));
   for (const Town &t : outposts)
     out += fmt::format("outpost {:.1f} {:.1f}\n", t.x, t.y);
-  out += fmt::format("mode {} {}\nrescued {}\n", int(hardcore), nightmare, rescued);
+  out += fmt::format("mode {} {}\nrescued {}\nhound {} {}\n", int(hardcore), nightmare,
+                     rescued, int(hound), int(houndDown));
   for (const auto &[dx, dy] : delves)
     out += fmt::format("delved {} {}\n", dx, dy);
   for (int t : towers)
@@ -203,6 +224,8 @@ bool Campaign::load(std::string_view text, Campaign &out) {
       words >> out.hardcore >> out.nightmare;
     else if (key == "rescued")
       words >> out.rescued;
+    else if (key == "hound")
+      words >> out.hound >> out.houndDown;
     else if (key == "tower") {
       int t = -1;
       words >> t;
@@ -245,6 +268,7 @@ RunRules Campaign::rules() const {
   r.loot = true, r.bosses = false, r.town = true, r.omen = -1, r.dayRate = DAY_RATE;
   r.safe.push_back({xTown, yTown, SAFE});
   r.threat = areaThreat, r.warded = torchlit;
+  r.route = bastion::route, r.wall = bastion::wall;
   return r;
 }
 
@@ -273,6 +297,7 @@ void Campaign::enter(Level &level) {
     found(level);
   Delve::unseal(edits);
   delve = Delve{};
+  companion = entt::null;
   barricade();
   threatScale = 1 + nightmare;
   townX = xTown, townY = yTown;
@@ -335,9 +360,17 @@ void Campaign::travel(Level &level, int town) {
 
 void Campaign::barricade() {
   std::vector<Town> all = towns();
-  for (size_t i = 0; i < all.size(); i++)
-    townLayout(int(std::floor(all[i].x / 16)), int(std::floor(all[i].y / 16)),
-               [&](int tx, int ty, Piece piece) { edits.place(tx, ty, dress(piece, int(i))); });
+  bastion::clear();
+  for (size_t i = 0; i < all.size(); i++) {
+    int cx = int(std::floor(all[i].x / 16)), cy = int(std::floor(all[i].y / 16));
+    townLayout(cx, cy, [&](int tx, int ty, Piece piece) {
+      if (piece == Piece::Count)
+        edits.harvest(tx, ty);
+      else
+        edits.place(tx, ty, dress(piece, int(i)));
+    });
+    bastion::raise(cx, cy);
+  }
 }
 
 bool Campaign::founding(int tx, int ty) const {
@@ -389,6 +422,13 @@ void Campaign::raise(Level &level) {
 }
 
 void Campaign::post(Level &level, const Town &t) {
+  bastion::Gate g = bastion::gate(int(std::floor(t.x / 16)), int(std::floor(t.y / 16)));
+  level.add<Bridge>(g.x, g.y, g.nx != 0);
+  for (int k = 0; k < Sentry::PER_TOWN; k++) {
+    double side = (k % 2 ? 1 : -1) * (k < 2 ? 14 : 34), out = k < 2 ? 26 : 12;
+    level.add<Sentry>(g.x + g.nx * out - g.ny * side, g.y + g.ny * out + g.nx * side,
+                      k % 2 ? 97 : 96);
+  }
   waypoints.push_back(level.add<Waypoint>(t.x, t.y - 6)->id);
   chests.push_back(level.add<Stash>(t.x + 40, t.y)->id);
   constexpr int FOLK[3] = {85, 88, 98};
@@ -551,8 +591,12 @@ void Campaign::stray(Level &level) {
         }
         level.vendor.discount = discount();
         level.add<Shockwave>(f.x, f.y - 6, 4, 40, 0.5f, col::gold, false);
-        level.game.announce(fmt::format("A REFUGEE IS SAFE  {} RESCUED  THE MERCHANT IS {}% KINDER",
+        level.game.announce(fmt::format("A SANCTUARY SEEKER JOINS THE BASTION  {} SHELTERED  THE MERCHANT IS {}% KINDER",
                                         rescued, int(discount() * 100 + 0.5f)));
+        if (rescued >= HOUND_AFTER && !hound) {
+          hound = true;
+          level.game.announce("A GRATEFUL HUNTER GIVES YOU HIS HOUND");
+        }
         level.game.saveCampaign();
         return;
       }
@@ -576,19 +620,65 @@ void Campaign::stray(Level &level) {
   }
 }
 
+void Campaign::heel(Level &level) {
+  if (!hound)
+    return;
+  Player &p = *level.player;
+  if (companion != entt::null && !level.reg.valid(companion)) {
+    companion = entt::null, houndDown = true;
+    level.game.announce("YOUR HOUND LIMPS HOME  IT RETURNS AT DAWN");
+  }
+  if (houndDown || p.dead())
+    return;
+  float bite = 6 + 2.0f * p.lvl;
+  if (Ally *dog = level.get<Ally>(companion)) {
+    dog->damage = bite;
+    if (std::hypot(dog->x - p.x, dog->y - p.y) > 260) {
+      Spark::burst(level, dog->x, dog->y - 6, Color{0.6f, 0.55f, 0.5f, 1}, 6, 40, true);
+      dog->x = p.x - p.facing * 16, dog->y = p.y + 6;
+      level.collide(dog->x, dog->y, dog->radius);
+      Spark::burst(level, dog->x, dog->y - 6, Color{0.6f, 0.55f, 0.5f, 1}, 6, 40, true);
+    }
+    return;
+  }
+  if (companion != entt::null)
+    return;
+  Ally *dog = summon(level, AllyKind::Wolf, p.x + 14, p.y + 4, bite, 1e9f);
+  dog->hp = dog->maxHp = dog->def.hp * (2 + 0.15f * p.lvl);
+  companion = dog->id;
+}
+
+void Campaign::honour(Level &level) {
+  int fell = 0;
+  level.each<Sentry>([&](Sentry &s) { fell += s.kills, s.kills = 0; });
+  if (fell <= 0)
+    return;
+  Player &p = *level.player;
+  int gold = fell * HONOUR_GOLD;
+  p.gold += gold;
+  p.gainXp(fell * HONOUR_XP);
+  level.game.announce(fmt::format("THE BASTION HELD  {} FELL AT THE BRIDGE  +{} GOLD", fell, gold));
+}
+
 void Campaign::tick(Level &level) {
+  bool day = level.night.dawn;
+  if (day && !wasDay) {
+    regrow(level.night.nights);
+    if (hound && houndDown)
+      houndDown = false, level.game.announce("YOUR HOUND IS BACK AT YOUR SIDE");
+    honour(level);
+  }
+  wasDay = day;
   smoulder(level);
   lure(level);
   stray(level);
-  bool day = level.night.dawn;
-  if (day && !wasDay)
-    regrow(level.night.nights);
-  wasDay = day;
+  heel(level);
   quests::tick(level, *this);
   delve.tick(level, *this);
 }
 
 void Campaign::leave() {
+  bastion::clear();
   if (world::edits == &edits)
     world::edits = nullptr;
 }

@@ -543,7 +543,7 @@ void Game::beginCampaign() {
   saveCampaign();
   spdlog::info("campaign: {} world {} as hero {}, day {}", fresh ? "new" : "loaded",
                campaign->world, campaign->hero, campaign->day);
-  announce(fresh ? "ACT I  HEARTHWICK" : "BACK IN HEARTHWICK");
+  announce(fresh ? "ACT I  HEARTHWICK  THE BASTION HOLDS" : "HEARTHWICK STILL STANDS");
 }
 
 bool Game::campaignSaved() const {
