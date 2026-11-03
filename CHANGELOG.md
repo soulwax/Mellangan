@@ -6,7 +6,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.6.0] - 2026-11-02
+## [0.6.1] - 2026-11-03
 
 ### Added
 
@@ -15,13 +15,18 @@ All notable changes to Mellangan are documented here. The format follows
 - A more natural countryside: grass drifts between lush green and sun-dried yellow in broad patches, flowers grow in drifts on the brighter ground instead of an even sprinkle, and grass tiles are mirrored at random so their flowers no longer line up in rows. Every wild tree, bush, flower and rock is mirrored at random and its shade and warmth vary a little, so forests no longer look cloned.
 - Cleaner textures across the generated art: stone, bone, wood and sand show small chipped marks instead of salt-and-pepper speckle, and soft shading turns at an even checker instead of random pixels. The great mushroom's stem and the ancient gate's pillars are rounded, the gate shows brick courses, the shipwreck has a proper sail, and the frozen giant's ice has a sheen.
 - Talent badges are bevelled medallions with a lit rim and a dark face, so their symbols stand out.
-- The mire leech is a segmented, arching leech with a toothed red mouth instead of a small lozenge.
-- Foes take steps: every walking foe from the later acts alternates its idle pose with a step frame (a lifted foot, or a squash for the legless) in time with its sway.
-- Every generated sprite (trees, plants, rocks, frontier props and creatures, landmarks, the expansion heroes and foes, weapon and relic icons) gets the same Kenney-style finish: colours hue-shifted toward violet in the shadows and warm in the lights, and a lit top edge.
 - The moth wisp has clean wings with eyespots, and the shade is easier to see at night.
 - Sharper foe sprites: every bestiary foe is shaded through hue-shifted colour ramps that match the Kenney art, with a rim light and a base shadow. Nine foes are repainted: the cutthroat shows a face and a red mask, the snapjaw has jaws, teeth and back scutes, the boar a bristled back and a separate head, the sand wyrm a toothed maw, and the spore puffer, magma slug, rock crawler, kobold miner and nest have clearer shapes.
 - The bastion's honour: foes slain by the knights drop no gems or loot and don't count toward your kills. At night a counter above the town tallies the fallen at the bridge, and at dawn the town pays you for it: "THE BASTION HELD  N FELL AT THE BRIDGE", 1 gold and a little experience per foe.
 - The campaign's towns now read as bastions their people refuse to let fall. The townsfolk speak defiantly, and nightfall and dawn are announced as "HOLD THE BRIDGE" and "THE BASTION STILL STANDS".
+
+
+## [0.6.0] - 2026-11-02
+
+
+- The mire leech is a segmented, arching leech with a toothed red mouth instead of a small lozenge.
+- Foes take steps: every walking foe from the later acts alternates its idle pose with a step frame (a lifted foot, or a squash for the legless) in time with its sway.
+- Every generated sprite (trees, plants, rocks, frontier props and creatures, landmarks, the expansion heroes and foes, weapon and relic icons) gets the same Kenney-style finish: colours hue-shifted toward violet in the shadows and warm in the lights, and a lit top edge.
 - The townsfolk you find and bring home are now called sanctuary seekers.
 - A hound of your own: after you rescue three sanctuary seekers, a grateful hunter gives you his hound. It follows you through the campaign, bites harder and has more health as you level, and bounds back to your side when left behind. If it falls, it limps home and is back at dawn.
 - Watchtowers: press B while talking to an act's elder to raise a stone watchtower in that town for 300 gold, 12 stone and 8 wood. It shoots arrows at any foe that comes near, growing stronger with your level, and stands for good.
