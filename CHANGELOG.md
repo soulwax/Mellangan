@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-11-03
+
 ### Fixed
 
 - Ground warnings under burrowers, hazards and other telegraphed attacks spin again; the ring's tick marks had stopped turning when the ring was redrawn as geometry.
