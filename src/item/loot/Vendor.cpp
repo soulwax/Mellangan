@@ -73,11 +73,12 @@ void Vendor::restock(int level, Rng &rng) {
 }
 
 int Vendor::price(const Ware &w) const {
+  float cut = 1 - discount;
   if (w.kind == WareKind::Draught)
-    return int(MARKUP * (6 + 2 * ilvl));
+    return std::max(1, int(MARKUP * (6 + 2 * ilvl) * cut));
   if (w.kind == WareKind::Gamble)
-    return int(MARKUP * GAMBLE * w.item.value());
-  return int(markup() * w.item.value());
+    return std::max(1, int(MARKUP * GAMBLE * w.item.value() * cut));
+  return std::max(1, int(markup() * w.item.value() * cut));
 }
 
 bool Vendor::buy(Player &p, size_t i, Rng &rng) {

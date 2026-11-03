@@ -508,9 +508,11 @@ void Game::beginCampaign() {
   loadBalance();
   build();
   campaign->enter(*level);
-  if (dev)
+  if (dev) {
     for (int &m : level->player->materials)
       m += start.mats;
+    level->player->gold += std::max(0, start.merchant);
+  }
   for (int act = campaign->act + 1; dev && act <= std::min(start.act, ACT_COUNT); act++) {
     double rx, ry;
     if (!quests::road(act, rx, ry))

@@ -27,11 +27,13 @@ struct Campaign {
   static constexpr int VERSION = 1, STASH = 32;
   static constexpr float SAFE = 150, AUTOSAVE = 60, NIGHT = 180, DAY = 240, DAY_RATE = 0.35f,
                          SHADE_GAP = 18;
-  static constexpr int MAX_SHADES = 3;
+  static constexpr int MAX_SHADES = 3, MAX_DISCOUNT = 5;
+  static constexpr float LOST_GAP = 90, HOME = 120;
 
   std::string world;
   int hero = 0, lvl = 1, gold = 0, day = 1, points = 0, act = 1;
-  int quest = 0, progress = 0, litSeen = 0, slainSeen = 0;
+  int quest = 0, progress = 0, litSeen = 0, slainSeen = 0, rescued = 0;
+  float lostTime = 40;
   QuestStage stage = QuestStage::Offered;
   double qx = 0, qy = 0;
   bool qsite = false;
@@ -54,6 +56,7 @@ struct Campaign {
   int nightmare = 0;
   std::vector<Town> outposts;
   std::vector<std::pair<int, int>> delves;
+  std::vector<int> towers;
   Delve delve;
   Edits edits;
   std::vector<entt::entity> waypoints, chests;
@@ -87,6 +90,10 @@ struct Campaign {
   void awaken(Level &level);
   int spent() const;
   int forgetCost() const;
+  static constexpr int TOWER_GOLD = 300, TOWER_STONE = 12, TOWER_WOOD = 8;
+  bool fortified(int town) const;
+  std::string fortify(Level &level);
+  float discount() const { return 0.05f * std::min(rescued, MAX_DISCOUNT); }
   void settle(Level &level, double x, double y);
   void travel(Level &level, int town);
   void leave();
@@ -100,4 +107,5 @@ private:
   void post(Level &level, const Town &t);
   void smoulder(Level &level);
   void lure(Level &level);
+  void stray(Level &level);
 };

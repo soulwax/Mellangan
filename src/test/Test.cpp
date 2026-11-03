@@ -76,6 +76,8 @@ int runTests() {
   testDelves();
   testShades();
   testForget();
+  testRescue();
+  testWatchtower();
   testInventory();
   testEquipStats();
   testAllies();

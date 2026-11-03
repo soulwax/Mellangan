@@ -2,7 +2,10 @@
 
 #include <cmath>
 
+#include "Game.hpp"
 #include "entity/Player.hpp"
+#include "entity/enemy/Enemy.hpp"
+#include "particle/Spark.hpp"
 #include "level/Level.hpp"
 
 namespace {
@@ -27,11 +30,58 @@ void Townsfolk::onAdded() {
   tx = x, ty = y;
 }
 
-const char *Townsfolk::line() const { return LINES[town % 5][(voice + said) % 4]; }
+const char *Townsfolk::line() const {
+  if (mode == Mode::Lost)
+    return "Please! I can't find the way back!";
+  if (mode == Mode::Following)
+    return "Stay close, I'm right behind you.";
+  return LINES[town % 5][(voice + said) % 4];
+}
+
+void Townsfolk::settle(double cx, double cy, int t) {
+  mode = Mode::Home, home = {cx, cy}, town = t, wander = 0, hp = HP;
+}
+
+void Townsfolk::trail() {
+  Player &p = *level->player;
+  level->enemiesNear(x, y, 24, [&](Enemy &e) {
+    if (e.buried || e.removed || std::hypot(e.x - x, e.y - y) > e.type.radius + 6)
+      return;
+    if (float bite = e.type.damage * e.damageMul * DT * 1.5f; bite > 0)
+      hp -= bite, flash = 0.15f;
+  });
+  if (hp <= 0) {
+    Spark::burst(*level, x, y - 8, col::white, 12, 60, true);
+    level->game.announce("A REFUGEE IS LOST TO THE DARK");
+    return remove();
+  }
+  double xd = p.x - x, yd = p.y - y, d = std::hypot(xd, yd);
+  if (mode == Mode::Lost) {
+    if (d < CALL && !p.dead()) {
+      mode = Mode::Following, talk = SAY, hush = SAY + 6, spoken = line();
+      level->game.announce("A REFUGEE FOLLOWS YOU  BRING THEM TO A TOWN");
+    }
+    return;
+  }
+  if (d > LEASH || p.dead()) {
+    mode = Mode::Lost;
+    return;
+  }
+  facing = xd < 0 ? -1.0f : 1.0f;
+  tx = p.x, ty = p.y;
+  if (d > 20) {
+    double v = std::min(TRAIL * 1.0, p.speed * 1.05);
+    x += xd / d * v * DT, y += yd / d * v * DT;
+    level->collide(x, y, 4);
+  }
+}
 
 void Townsfolk::tick() {
   t += DT;
   talk = std::max(0.0f, talk - DT), hush = std::max(0.0f, hush - DT);
+  flash = std::max(0.0f, flash - DT);
+  if (mode != Mode::Home)
+    return trail();
   bool night = !level->night.dawn;
   if ((wander -= DT) <= 0) {
     wander = 3 + 3 * float(std::fmod(t * 7.3 + voice, 1.0));
@@ -66,7 +116,14 @@ void Townsfolk::render(Screen &s) {
   bool night = !level->night.dawn;
   float shiver = night ? std::sin(t * 30 + voice) * 0.5f : 0;
   float bob = std::hypot(tx - x, ty - y) > 2 ? std::abs(std::sin(t * 8 + voice)) : 0;
+  s.color(flash > 0 ? Color{1, 0.5f, 0.5f, 1} : col::white);
   s.sprite(atlas::tile(tile), xp + shiver, yp - bob, 8, 16, facing, 1);
+  s.color(col::white);
+  if (mode == Mode::Home)
+    return;
+  float k = std::clamp(hp / HP, 0.0f, 1.0f);
+  s.rect(xp - 7, yp - 20, 14, 2, Color{0.1f, 0.05f, 0.08f, 0.8f});
+  s.rect(xp - 7, yp - 20, 14 * k, 2, Color{0.5f, 0.9f, 0.5f, 0.9f});
 }
 
 void Townsfolk::renderShadow(Screen &s) {

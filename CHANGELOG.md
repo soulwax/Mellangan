@@ -10,6 +10,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
+- Watchtowers: press B while talking to an act's elder to raise a stone watchtower in that town for 300 gold, 12 stone and 8 wood. It shoots arrows at any foe that comes near, growing stronger with your level, and stands for good.
+- Lost refugees: by day in the campaign, someone cries for help out in the wilds, and an arrow points the way. Walk up and they follow you; leave them too far behind and they stop and wait. Foes can hurt them on the way. Bring them inside any town and they join its refugees, thank you with three materials and make the merchant 5% cheaper, up to a quarter off. Hearthwick grows with each rescue.
 - Every campaign town shelters three refugees. By day they wander inside the fence; at night they huddle by the fire and shiver. Walk up to one and they speak a line about their act's troubles in a speech bubble.
 - The title screen shows a summary of the saved campaign under "K  CONTINUE THE CAMPAIGN": class, level, act and day, plus Hardcore and Nightmare when they apply.
 - In the campaign, the world map (Tab) marks your towns by name, with a dot on the current act's town. It also shows the current quest site or the road to the next town as a pulsing ring, your campfires, and the mines you have cleared. A Campaign legend lists the current quest.
@@ -150,6 +152,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Changed
 
+- Off-screen pointer labels at the same screen edge now stack instead of drawing over each other.
 - Evolved weapons now survive saving and reloading a campaign; before, they were lost on every reload.
 - Wall weapons (Ember Wall, Runic Wall, Bramble Wall and the rest) now raise a thick, glowing band with two rows of flickering tongues instead of a thin dotted line.
 - The Fleet Heart, Ember Heart and Bog Heart icons are drawn as clear hearts, with speed lines, a flame and a drip.

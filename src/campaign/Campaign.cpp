@@ -10,6 +10,7 @@
 #include "campaign/Elder.hpp"
 #include "campaign/Stash.hpp"
 #include "campaign/Townsfolk.hpp"
+#include "campaign/Watchtower.hpp"
 #include "campaign/Waypoint.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Player.hpp"
@@ -22,6 +23,7 @@
 #include "level/World.hpp"
 #include "particle/Shockwave.hpp"
 #include "particle/Drift.hpp"
+#include "level/Prop.hpp"
 
 namespace {
 
@@ -140,9 +142,11 @@ std::string Campaign::save() const {
                      int(founded));
   for (const Town &t : outposts)
     out += fmt::format("outpost {:.1f} {:.1f}\n", t.x, t.y);
-  out += fmt::format("mode {} {}\n", int(hardcore), nightmare);
+  out += fmt::format("mode {} {}\nrescued {}\n", int(hardcore), nightmare, rescued);
   for (const auto &[dx, dy] : delves)
     out += fmt::format("delved {} {}\n", dx, dy);
+  for (int t : towers)
+    out += fmt::format("tower {}\n", t);
   out += "mats";
   for (int m : materials)
     out += fmt::format(" {}", m);
@@ -197,6 +201,13 @@ bool Campaign::load(std::string_view text, Campaign &out) {
       words >> out.xTown >> out.yTown >> out.founded;
     else if (key == "mode")
       words >> out.hardcore >> out.nightmare;
+    else if (key == "rescued")
+      words >> out.rescued;
+    else if (key == "tower") {
+      int t = -1;
+      words >> t;
+      out.towers.push_back(t);
+    }
     else if (key == "delved") {
       std::pair<int, int> d{};
       words >> d.first >> d.second;
@@ -382,8 +393,10 @@ void Campaign::post(Level &level, const Town &t) {
   chests.push_back(level.add<Stash>(t.x + 40, t.y)->id);
   constexpr int FOLK[3] = {85, 88, 98};
   int town = int(waypoints.size()) - 1;
-  for (int i = 0; i < 3; i++)
-    level.add<Townsfolk>(t.x - 30 + i * 30, t.y + 30 + (i % 2) * 12, t.x, t.y,
+  if (fortified(town))
+    level.add<Watchtower>(t.x + 72, t.y - 8);
+  for (int i = 0; i < 3 + (town == 0 ? std::min(rescued, 4) : 0); i++)
+    level.add<Townsfolk>(t.x - 30 + (i % 3) * 30, t.y + 30 + (i % 2) * 12 - (i / 3) * 40, t.x, t.y,
                          FOLK[(i + town) % 3], town, i);
 }
 
@@ -403,6 +416,28 @@ int Campaign::spent() const {
 }
 
 int Campaign::forgetCost() const { return 25 * lvl; }
+
+bool Campaign::fortified(int town) const {
+  return std::find(towers.begin(), towers.end(), town) != towers.end();
+}
+
+std::string Campaign::fortify(Level &level) {
+  int town = std::clamp(act, 1, int(towns().size())) - 1;
+  if (fortified(town))
+    return "this town already has its watchtower";
+  Player &p = *level.player;
+  int &stone = p.materials[int(Mat::Stone)], &wood = p.materials[int(Mat::Wood)];
+  if (p.gold < TOWER_GOLD || stone < TOWER_STONE || wood < TOWER_WOOD)
+    return fmt::format("a watchtower needs {} gold, {} stone and {} wood", TOWER_GOLD,
+                       TOWER_STONE, TOWER_WOOD);
+  p.gold -= TOWER_GOLD, stone -= TOWER_STONE, wood -= TOWER_WOOD;
+  towers.push_back(town);
+  Town t = towns()[size_t(town)];
+  level.add<Watchtower>(t.x + 72, t.y - 8);
+  level.add<Shockwave>(t.x + 72, t.y - 8, 6, 60, 0.6f, col::gold);
+  level.game.announce(fmt::format("A WATCHTOWER RISES OVER {}", ACTS[town].town));
+  return {};
+}
 
 void Campaign::awaken(Level &level) {
   nightmare++, act = 1, quest = 0, progress = 0, qsite = false;
@@ -495,9 +530,56 @@ void Campaign::lure(Level &level) {
   }
 }
 
+void Campaign::stray(Level &level) {
+  level.vendor.discount = discount();
+  Player &p = *level.player;
+  std::vector<Town> all = towns();
+  bool lost = false;
+  level.each<Townsfolk>([&](Townsfolk &f) {
+    if (f.mode == Townsfolk::Mode::Home)
+      return;
+    lost = true;
+    if (f.mode != Townsfolk::Mode::Following)
+      return;
+    for (size_t i = 0; i < all.size(); i++)
+      if (std::hypot(f.x - all[i].x, f.y - all[i].y) < HOME) {
+        f.settle(all[i].x, all[i].y, int(i));
+        rescued++;
+        for (int k = 0; k < 3; k++) {
+          Mat m = Mat(rng.irange(0, int(Mat::Bone)));
+          p.materials[int(m)]++;
+        }
+        level.vendor.discount = discount();
+        level.add<Shockwave>(f.x, f.y - 6, 4, 40, 0.5f, col::gold, false);
+        level.game.announce(fmt::format("A REFUGEE IS SAFE  {} RESCUED  THE MERCHANT IS {}% KINDER",
+                                        rescued, int(discount() * 100 + 0.5f)));
+        level.game.saveCampaign();
+        return;
+      }
+  });
+  if (lost || !level.night.dawn || delve.active || (lostTime -= DT) > 0)
+    return;
+  lostTime = LOST_GAP;
+  for (int i = 0; i < 24; i++) {
+    double a = rng.range(0, TAU), r = rng.range(420, 700);
+    double lx = p.x + std::cos(a) * r, ly = p.y + std::sin(a) * r;
+    int tx = int(std::floor(lx / 16)), ty = int(std::floor(ly / 16));
+    Prop prop;
+    if (world::isWater(tx, ty) || level.rules.safeAt(lx, ly) || world::propAt(tx, ty, prop))
+      continue;
+    constexpr int FOLK[3] = {85, 88, 98};
+    auto *f = level.add<Townsfolk>(lx, ly, lx, ly, FOLK[rng.irange(0, 2)], std::max(0, act - 1),
+                                   rng.irange(0, 3));
+    f->mode = Townsfolk::Mode::Lost;
+    level.game.announce("SOMEONE CRIES FOR HELP OUT THERE");
+    return;
+  }
+}
+
 void Campaign::tick(Level &level) {
   smoulder(level);
   lure(level);
+  stray(level);
   bool day = level.night.dawn;
   if (day && !wasDay)
     regrow(level.night.nights);

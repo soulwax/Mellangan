@@ -2,6 +2,9 @@
 
 #include <deque>
 #include <string>
+#include <vector>
+
+#include <SDL3/SDL.h>
 
 #include "gfx/Screen.hpp"
 
@@ -25,6 +28,7 @@ private:
 
   Game &game;
   std::deque<std::string> banners;
+  std::vector<SDL_FRect> tags;
   float time = 0;
   int xView = 0, yView = 0;
 

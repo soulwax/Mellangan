@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "gfx/Screen.hpp"
 #include "menu/Menu.hpp"
 
@@ -10,4 +12,7 @@ public:
   void render(Screen &s) override;
   bool showHud() const override { return false; }
   float pauseEffect() const override { return 0.6f; }
+
+private:
+  std::string told;
 };

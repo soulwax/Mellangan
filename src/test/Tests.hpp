@@ -49,6 +49,8 @@ void testQuests();
 void testDelves();
 void testShades();
 void testForget();
+void testRescue();
+void testWatchtower();
 void testInventory();
 void testNewTraits();
 void testPoolAllocAndFree();

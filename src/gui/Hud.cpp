@@ -83,9 +83,20 @@ void Hud::diamond(const Pin &pin, Color c) {
 void Hud::tag(const std::string &text, const Pin &pin, float back, Color c) {
   Screen &s = game.screen;
   float u = s.u, small = std::max(1.0f, u - 1);
-  float half = Screen::textWidth(text, small) * 0.5f + 4 * u;
-  s.textCenter(text, clampf(pin.x - pin.nx * back * u, half, s.w - half),
-               pin.y - pin.ny * back * u - 8 * small, small, c);
+  float half = Screen::textWidth(text, small) * 0.5f + 4 * u, h = 16 * small + 2 * u;
+  float x = clampf(pin.x - pin.nx * back * u, half, s.w - half),
+        y = pin.y - pin.ny * back * u - 8 * small;
+  float step = pin.y > s.h * 0.5f ? -h : h;
+  for (int tries = 0; tries < 8; tries++) {
+    bool clear = true;
+    for (const SDL_FRect &r : tags)
+      clear &= x + half <= r.x || x - half >= r.x + r.w || y + h <= r.y || y >= r.y + r.h;
+    if (clear)
+      break;
+    y += step;
+  }
+  tags.push_back({x - half, y, 2 * half, h});
+  s.textCenter(text, x, y, small, c);
 }
 
 void Hud::landmarks() {
@@ -282,6 +293,22 @@ void Hud::questLog() {
           gy = std::floor((s.h - s.vh * k) / 2) + float(hero.y - yView) * k - 30 * k;
     s.sprite(atlas::tile(90), gx - 4 * k, gy + std::sin(time * 3) * k, 0, 0, k * 0.5f, k * 0.5f);
   }
+  l.each<Townsfolk>([&](Townsfolk &f) {
+    if (f.mode != Townsfolk::Mode::Lost)
+      return;
+    Pin pin;
+    if (inView(f.x, f.y, -8)) {
+      float gx = std::floor((s.w - s.vw * k) / 2) + float(f.x - xView) * k,
+            gy = std::floor((s.h - s.vh * k) / 2) + float(f.y - yView) * k - 26 * k;
+      s.textCenter("HELP!", gx, gy - 8 * small, small,
+                   Color{1, 0.9f, 0.6f, 0.6f + 0.4f * std::sin(time * 6)});
+    } else if (edge(f.x, f.y, pin)) {
+      Color tone{1, 0.9f, 0.6f, 0.8f};
+      arrow(pin, 7, 4, tone);
+      Player &hero = *l.player;
+      tag(fmt::format("HELP {:.0f}", std::hypot(f.x - hero.x, f.y - hero.y) / 16), pin, 18, tone);
+    }
+  });
   double tx, ty;
   if (c->stage != QuestStage::Active || !quests::marker(*c, tx, ty) || inView(tx, ty, -8))
     return;
@@ -543,6 +570,7 @@ void Hud::bannerBox() {
 }
 
 void Hud::draw() {
+  tags.clear();
   float u = game.screen.u, top = 6 * u + 5 * u;
   if (!game.menu)
     lootLabels();
