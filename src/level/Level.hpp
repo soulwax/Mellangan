@@ -147,6 +147,9 @@ public:
   }
 
   void tick();
+  void remember();
+  void blend(float a, const Screen &s);
+  void unblend();
   void render(Screen &s);
   void renderLight(Screen &s);
   void collide(double &x, double &y, float radius) const;
@@ -189,6 +192,7 @@ private:
   std::vector<int> cellStart, cellFill, cellOf;
   std::vector<Enemy *> cells;
   std::vector<std::unique_ptr<Entity>> graveyard;
+  std::vector<SpriteObject *> blended;
   double xGrid = 0, yGrid = 0;
   float solids[SOLID_H * SOLID_W]{};
   uint8_t surfaces[SOLID_W * SOLID_H]{};

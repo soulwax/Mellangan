@@ -10,6 +10,7 @@ class SpriteObject {
 public:
   double x = 0, y = 0, z = 0;
   double xa = 0, ya = 0, za = 0;
+  double xLast = NAN, yLast = 0, zLast = 0;
   int xp = 0, yp = 0;
   Sprite sprite{};
   bool removed = false;
@@ -47,7 +48,24 @@ public:
   virtual bool cosmeticParticle() const { return false; }
   void remove() { removed = true; }
 
+  void remember() { xLast = x, yLast = y, zLast = z; }
+  bool blend(float a) {
+    double xd = x - xLast, yd = y - yLast;
+    if (blended || !(xd * xd + yd * yd < 48 * 48))
+      return false;
+    xNow = x, yNow = y, zNow = z, blended = true;
+    x = xLast + xd * a, y = yLast + yd * a, z = zLast + (z - zLast) * a;
+    return true;
+  }
+  void unblend() {
+    if (blended)
+      x = xNow, y = yNow, z = zNow, blended = false;
+  }
+
 private:
+  double xNow = 0, yNow = 0, zNow = 0;
+  bool blended = false;
+
   void place(double height) {
     xp = int(std::floor(x)), yp = int(std::floor(y - height));
   }

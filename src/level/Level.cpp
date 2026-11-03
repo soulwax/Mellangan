@@ -92,7 +92,37 @@ void Level::flush() {
   each<Ally>([&](Ally &a) { allies.push_back(&a); });
 }
 
+void Level::remember() {
+  for (auto [id, o] : reg.view<Owned>(entt::exclude<Is<Enemy>>).each())
+    o.self->remember();
+  for (auto &p : particles)
+    p->remember();
+}
+
+void Level::blend(float a, const Screen &s) {
+  if (a >= 1)
+    return;
+  auto near = [&](SpriteObject *o) {
+    if (s.visible(o->x, o->y, 160) && o->blend(a))
+      blended.push_back(o);
+  };
+  for (auto [id, o] : reg.view<Owned>(entt::exclude<Is<Enemy>>).each())
+    near(o.self.get());
+  for (auto &p : particles)
+    near(p.get());
+  double r = std::hypot(s.vw * 0.5, s.vh * 0.5) + 160;
+  enemiesNear(s.xOffset + s.vw * 0.5, s.yOffset + s.vh * 0.5, float(r),
+              [&](Enemy &e) { near(&e); });
+}
+
+void Level::unblend() {
+  for (SpriteObject *o : blended)
+    o->unblend();
+  blended.clear();
+}
+
 void Level::tick() {
+  remember();
   time += DT, ticks++;
   prof_begin(PROF_HOUSEKEEP);
   if (!player->dead() && (!night.dawn || !rules.endsAtDawn))

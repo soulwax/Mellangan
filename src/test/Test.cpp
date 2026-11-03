@@ -54,8 +54,10 @@ int runTests() {
   _set_error_mode(_OUT_TO_STDERR);
   _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
+  rng.state = 0x9E3779B97F4A7C15ull;
   std::cout << "[TEST] Running memory leak & stability tests..." << std::endl;
   testContentLinks();
+  testBlend();
   testPoolAllocAndFree();
   std::cout << "[TEST] Pool alloc/free & edge cases: PASS" << std::endl;
   testPoolConcurrency();

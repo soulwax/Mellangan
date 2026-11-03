@@ -90,6 +90,8 @@ private:
   std::string chartPath;
   Camera camera;
   int xView = 0, yView = 0;
+  float alpha = 1;
+  bool stepped = false;
 
   void tick();
   void devTick();

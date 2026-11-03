@@ -94,6 +94,7 @@ void Enemy::next(const Sense &s) {
 }
 
 void Enemy::think() {
+  remember();
   if (!plan)
     return void(xWant = yWant = 0);
   Sense s = sense();

@@ -116,6 +116,7 @@ void Game::run() {
     for (; acc >= DT; acc -= DT)
       tick(), ticks++;
     uint64_t ticked = SDL_GetPerformanceCounter();
+    alpha = fps > 70 ? float(acc / DT) : 1;
     render();
     uint64_t done = SDL_GetPerformanceCounter();
     double freq = double(SDL_GetPerformanceFrequency());
@@ -140,6 +141,8 @@ void Game::run() {
 }
 
 void Game::tick() {
+  stepped = false;
+  camera.remember();
   input.tick();
   time += DT;
   Sound::tick();
@@ -214,7 +217,7 @@ void Game::tick() {
       harvest::strike(*level, *campaign);
       gatherTime = GATHER_REPEAT;
     }
-    level->tick();
+    level->tick(), stepped = true;
     if (campaign)
       campaign->tick(*level);
     if (campaign && (autosave -= DT) <= 0)
@@ -463,7 +466,8 @@ void Game::onDawn() {
 void Game::render() {
   Player &p = *level->player;
   screen.fit(window);
-  camera.aim(screen);
+  camera.aim(screen, alpha);
+  level->blend(stepped ? alpha : 1, screen);
 
   float d = level->night.daylight(), g = campaign ? campaign->delve.gloom : 0;
   const Color &air = level->air;
@@ -494,4 +498,5 @@ void Game::render() {
                 4 * screen.u, screen.h - 46 * screen.u - 16 * size, size,
                 col::muted);
   }
+  level->unblend();
 }
