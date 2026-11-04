@@ -26,6 +26,8 @@ All notable changes to Mellangan are documented here. The format follows
   - status effects keep a bitmask of what is running, so the common foe with no effects skips its effect scan every tick;
   - the crowd grid is built in one pass over the foes instead of two;
   - the draw queue takes on-screen foes from the crowd grid instead of testing every foe in the world.
+- Gear stats (`ItemStats`, 48 values) live outside the creature and are allocated only for creatures that wear gear, so a foe shrinks from 1,000 to 832 bytes. Reads go through `bonus()`, which returns a shared all-zero block for foes without gear, and writes through `kit()`.
+- `--bench` opts its process out of Windows power throttling, so a bench run in an unfocused window is no longer slowed to efficiency clocks.
 
 ### Fixed
 

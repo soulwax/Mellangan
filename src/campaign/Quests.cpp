@@ -271,9 +271,9 @@ void turnIn(Level &level, Campaign &c) {
   p.gold += q->gold;
   p.gainXp(float(q->xp));
   int ilvl = std::clamp(std::max(p.lvl, level.monsterLevel(c.qx, c.qy)) + 2, 1, 99);
-  Item prize = rollItem(ilvl, p.bonus.magicFind, false, rng, reward(c.quest), rewardSlots(c.quest));
+  Item prize = rollItem(ilvl, p.bonus().magicFind, false, rng, reward(c.quest), rewardSlots(c.quest));
   for (int i = 0; i < 64 && !(prize.def().slots & rewardSlots(c.quest)); i++)
-    prize = rollItem(ilvl, p.bonus.magicFind, false, rng, reward(c.quest), rewardSlots(c.quest));
+    prize = rollItem(ilvl, p.bonus().magicFind, false, rng, reward(c.quest), rewardSlots(c.quest));
   if (int(p.bag.size()) < Player::BAG)
     p.bag.push_back(prize);
   else

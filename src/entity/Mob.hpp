@@ -21,13 +21,14 @@ public:
         regen = 0, luck = 0, arcs = 1, parry = 0, heroTimer = 0, skillTime = 0, knifeCooldown = 0;
   int heroCount = 0, sure = 0;
   std::vector<std::unique_ptr<Upgrade>> upgrades;
-  ItemStats bonus;
 
   Mob();
   ~Mob() override;
   void tickKit();
   Upgrade *grant(const char *name, int levels);
   Upgrade *upgrade(std::string_view name) const;
+  const ItemStats &bonus() const { return gear ? *gear : NONE; }
+  ItemStats &kit();
 
   virtual bool hostile() const { return false; }
   virtual void split() {}
@@ -57,4 +58,8 @@ protected:
   void drawBody(Screen &s, int px, int py, Sprite body, bool floats, float move,
                 Color tint, float flashAmount, Color flashColor) const;
   void drawShadow(Screen &s, int px, int py, bool floats) const;
+
+private:
+  static const ItemStats NONE;
+  std::unique_ptr<ItemStats> gear;
 };

@@ -158,9 +158,9 @@ void testTalents() {
     rank(s, "Glass Cannon", 2);
     assert(near(s.p.might, might + 0.24f) && near(s.p.maxHp, maxHp - 12));
     rank(s, "Volley Master", 5);
-    assert(near(s.p.bonus.shots, 2));
+    assert(near(s.p.bonus().shots, 2));
     rank(s, "Hunter's Instinct", 1);
-    assert(near(s.p.bonus.eliteDamage, 6) && near(s.p.bonus.bossDamage, 6));
+    assert(near(s.p.bonus().eliteDamage, 6) && near(s.p.bonus().bossDamage, 6));
 
     might = s.p.might;
     Upgrade *momentum = rank(s, "Momentum", 5);

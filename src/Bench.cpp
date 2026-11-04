@@ -4,6 +4,10 @@
 
 #include <algorithm>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "Game.hpp"
 #include "Prof.h"
 #include "entity/Player.hpp"
@@ -19,9 +23,23 @@ constexpr int STEPS = int(sizeof COUNTS / sizeof *COUNTS);
 constexpr double WARMUP = 1, MEASURE = 3;
 constexpr int GATE_COUNT = 10000;
 constexpr double GATE_FPS = 55, GATE_P99 = 16.7;
+
+bool unthrottle() {
+#ifdef _WIN32
+  PROCESS_POWER_THROTTLING_STATE s{PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+                                   PROCESS_POWER_THROTTLING_EXECUTION_SPEED |
+                                       PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION,
+                                   0};
+  return SetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling, &s, sizeof s) != 0;
+#else
+  return false;
+#endif
+}
 } // namespace
 
 void Bench::start(Game &g) {
+  if (unthrottle())
+    spdlog::info("bench: power throttling off");
   step = 0;
   enter(g);
 }

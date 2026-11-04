@@ -207,7 +207,7 @@ void Level::climate() {
   xpMul = f.xp * (o ? o->xp : 1) * game.balance.xp;
   eliteMul = o ? o->elite : 1;
   kindleRate = (o ? o->kindle : 1) * (player->hero ? player->hero->devotion() : 1) *
-               (1 + player->bonus.kindling / 100);
+               (1 + player->bonus().kindling / 100);
   if (streak > 0 && (streakTime -= DT) <= 0)
     streak = 0;
   if (player->dead())

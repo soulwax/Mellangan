@@ -176,14 +176,14 @@ RecipeWeapon::RecipeWeapon(const Recipe &r)
 int RecipeWeapon::count() const {
   if (FormBehavior::of(r.form).area())
     return r.count;
-  return r.count + at(level, 3) + at(level, 5) + evolved + int(holder ? holder->bonus.shots : 0);
+  return r.count + at(level, 3) + at(level, 5) + evolved + int(holder ? holder->bonus().shots : 0);
 }
 
 float RecipeWeapon::reach() const {
   if (!FormBehavior::of(r.form).area())
     return r.reach;
   return r.reach * (1 + 0.3f * (at(level, 3) + at(level, 5)) + 0.25f * evolved) *
-         (1 + (holder ? holder->bonus.area : 0) / 100);
+         (1 + (holder ? holder->bonus().area : 0) / 100);
 }
 
 float RecipeWeapon::damage(const Mob &p) const {

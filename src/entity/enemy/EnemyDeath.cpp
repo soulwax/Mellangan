@@ -183,10 +183,10 @@ void Enemy::die() {
   }
   Sound::kill.play(0.35f, 0.12f);
   Player &killer = *level->player;
-  if (killer.bonus.bloodthirst > 0 && !killer.dead())
-    killer.hp = std::min(killer.maxHp, killer.hp + killer.bonus.bloodthirst);
+  if (killer.bonus().bloodthirst > 0 && !killer.dead())
+    killer.hp = std::min(killer.maxHp, killer.hp + killer.bonus().bloodthirst);
   if (float burn = status.power(StatusKind::Burn);
-      burn > 0 && killer.bonus.pyro > 0 && rng.chance(killer.bonus.pyro / 100)) {
+      burn > 0 && killer.bonus().pyro > 0 && rng.chance(killer.bonus().pyro / 100)) {
     for (Enemy *o : level->nearest(x, y, 60, 4))
       if (o != this)
         o->afflict(StatusKind::Burn, 2, burn);
@@ -200,11 +200,11 @@ void Enemy::die() {
     Gem::drop(*level, x + i * 6, y - 3,
               type.xp * (elite ? ELITE_XP : 1) * level->xpMul *
                   (1 + std::min(level->streak, 100) * 0.005f) *
-                  (1 + killer.bonus.scavenge / 100));
+                  (1 + killer.bonus().scavenge / 100));
   if (elite && !garrison && rng.chance(0.25f))
     level->add<Potion>(x + 6, y);
   if (level->rules.loot && !garrison)
-    for (int i = 0, n = title && killer.bonus.extraLoot > 0; i <= n; i++)
+    for (int i = 0, n = title && killer.bonus().extraLoot > 0; i <= n; i++)
       ItemDrop::spill(*level, x, y, lootSource(*this), monsterLevel(*this), leanOf(*this));
   if (pack)
     named::fall(*this);

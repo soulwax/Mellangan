@@ -125,7 +125,7 @@ void Player::renderLight(Screen &s) {
     return s.glow(xp, yb, 200, {0.25f, 0.05f, 0.05f, 1});
   float f = flicker(level->time, 0),
         reach = (1 + 0.08f * std::min(level->night.lit, 8)) *
-                (1 - 0.45f * std::min(1.0f, dim)) * (1 + bonus.light / 100);
+                (1 - 0.45f * std::min(1.0f, dim)) * (1 + bonus().light / 100);
   int xt = xp + int(facing * 6), yt = yp - 13;
   Color warm{0.34f * f, 0.27f * f * f, 0.17f * f * f, 1},
       core{0.22f * f, 0.16f * f * f, 0.08f * f, 1};
@@ -144,21 +144,21 @@ void Player::hurt(float damage, bool periodic) {
       foe->strike(std::max(damage, 12.0f) * 2 * might, foe->x - x, foe->y - y, 160);
     return Spark::burst(*level, x, bodyY(), col::gold, 10, 80, true);
   }
-  if (!periodic && bonus.block > 0 && rng.chance(bonus.block / 100)) {
+  if (!periodic && bonus().block > 0 && rng.chance(bonus().block / 100)) {
     invuln = std::max(invuln, 0.25f);
     return Spark::burst(*level, x, bodyY(), col::white, 6, 50, true);
   }
   if (!periodic)
     damage = traits.incoming(*this, damage * status.incoming() *
                                         level->game.balance.damageTaken *
-                                        (1 + bonus.hunted / 100));
+                                        (1 + bonus().hunted / 100));
   if (hero && (damage = hero->guard(*this, damage)) <= 0)
     return;
   for (auto &up : upgrades)
     if (up->level > 0 && (damage = up->guard(*this, damage)) <= 0)
       return;
-  if (!periodic && bonus.thickSkin > 0 && skinTime <= 0)
-    damage *= 1 - std::min(bonus.thickSkin, 90.0f) / 100, skinTime = 8;
+  if (!periodic && bonus().thickSkin > 0 && skinTime <= 0)
+    damage *= 1 - std::min(bonus().thickSkin, 90.0f) / 100, skinTime = 8;
   damage = std::max(periodic ? 0.1f : 1.0f, damage - armor);
   if (float soak = std::min(guard, damage); soak > 0)
     guard -= soak, damage -= soak;
@@ -168,14 +168,14 @@ void Player::hurt(float damage, bool periodic) {
   if (!periodic)
     retaliate();
   if (!periodic)
-    invuln = level->game.balance.invuln + bonus.grace, level->game.hitStop(0.05f);
+    invuln = level->game.balance.invuln + bonus().grace, level->game.hitStop(0.05f);
   level->game.onPlayerHurt();
   Sound::hurt.play(0.7f);
   TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);
   Spark::burst(*level, x, bodyY(), col::red, 6, 60, false);
   if (hp > 0)
     return;
-  if (bonus.lastLight > 0 && lastLit != level->night.nights) {
+  if (bonus().lastLight > 0 && lastLit != level->night.nights) {
     lastLit = level->night.nights, hp = 1;
     shield(3);
     level->add<Shockwave>(x, bodyY(), 4, 60, 0.5f, Color{1, 0.9f, 0.6f, 1});
@@ -222,28 +222,28 @@ void Player::rise() {
 }
 
 void Player::retaliate() {
-  if (bonus.vengeance > 0) {
+  if (bonus().vengeance > 0) {
     level->foes(*this, x, y, 90, [&](Mob &e) {
       double xd = e.x - x, yd = e.y - y;
       if (xd * xd + yd * yd < 70 * 70)
-        e.strike(bonus.vengeance * might, xd, yd, 120);
+        e.strike(bonus().vengeance * might, xd, yd, 120);
     });
     level->add<Shockwave>(x, bodyY(), 4, 70, 0.3f, Color{1, 0.35f, 0.3f, 0.8f});
   }
-  if (bonus.afterimage > 0)
-    summon(*level, AllyKind::Decoy, x, y, 0, bonus.afterimage);
+  if (bonus().afterimage > 0)
+    summon(*level, AllyKind::Decoy, x, y, 0, bonus().afterimage);
 }
 
 void Player::mend(float amount) {
   float over = hp + amount - maxHp;
-  if (over > 0 && bonus.overflow > 0)
-    guard = std::min(maxHp * 0.3f, guard + over * bonus.overflow / 100);
-  if (bonus.sanctified > 0 && amount >= 2 && sanctifyTime <= 0) {
+  if (over > 0 && bonus().overflow > 0)
+    guard = std::min(maxHp * 0.3f, guard + over * bonus().overflow / 100);
+  if (bonus().sanctified > 0 && amount >= 2 && sanctifyTime <= 0) {
     sanctifyTime = 0.5f;
     level->foes(*this, x, y, 80, [&](Mob &e) {
       double xd = e.x - x, yd = e.y - y;
       if (xd * xd + yd * yd < 60 * 60)
-        e.afflict(StatusKind::Burn, 2, bonus.sanctified * might);
+        e.afflict(StatusKind::Burn, 2, bonus().sanctified * might);
     });
     level->add<Shockwave>(x, bodyY(), 4, 60, 0.3f, Color{1, 0.9f, 0.6f, 0.7f}, false);
   }
@@ -254,9 +254,9 @@ void Player::mend(float amount) {
 void Player::gainXp(float amount) {
   if (hero)
     amount *= hero->wisdom();
-  amount *= 1 + bonus.wisdom / 100;
-  if (bonus.nightOwl > 0 && level)
-    amount *= 1 + bonus.nightOwl / 100 * level->night.lit;
+  amount *= 1 + bonus().wisdom / 100;
+  if (bonus().nightOwl > 0 && level)
+    amount *= 1 + bonus().nightOwl / 100 * level->night.lit;
   exp += amount;
   while (exp >= expNext) {
     exp -= expNext;

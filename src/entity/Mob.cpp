@@ -41,6 +41,14 @@ void Mob::drawShadow(Screen &s, int px, int py, bool floats) const {
 Mob::Mob() = default;
 Mob::~Mob() = default;
 
+const ItemStats Mob::NONE{};
+
+ItemStats &Mob::kit() {
+  if (!gear)
+    gear = std::make_unique<ItemStats>();
+  return *gear;
+}
+
 void Mob::tickKit() {
   for (auto &up : upgrades) {
     up->holder = this;

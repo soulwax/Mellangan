@@ -94,7 +94,7 @@ void fall(Enemy &leader) {
     return;
   Player &p = *level.player;
   int mlvl = std::clamp(level.monsterLevel(leader.x, leader.y) + 4, 1, 99);
-  Item rare = rollItem(mlvl, p.bonus.magicFind, !level.night.dawn, rng, Rarity::Rare);
+  Item rare = rollItem(mlvl, p.bonus().magicFind, !level.night.dawn, rng, Rarity::Rare);
   double a = rng.range(0, TAU);
   level.add<ItemDrop>(leader.x, leader.y, Drop{DropKind::Item, 1, rare},
                       leader.x + std::cos(a) * 20, leader.y + std::sin(a) * 14);

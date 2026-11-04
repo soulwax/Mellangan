@@ -250,10 +250,10 @@ void testEquipStats() {
   p.status.apply(StatusKind::Burn, 2, 0.4f);
   assert(p.status.power(StatusKind::Burn) < 0.21f);
   float hp = p.hp;
-  p.invuln = 0, p.bonus.block = 100;
+  p.invuln = 0, p.kit().block = 100;
   p.hurt(10);
   assert(p.hp == hp);
-  p.bonus.block = 0;
+  p.kit().block = 0;
   assert(p.unequip(GearCharm));
   assert(std::abs(p.might - might) < 1e-3f && std::abs(p.maxHp - maxHp) < 1e-3f);
   assert(std::abs(p.speed - speed) < 1e-3f && p.armor == armor);
@@ -276,7 +276,7 @@ void testEquipStats() {
   assert(granted);
 
   p.bag = {ring({{Stat::Thorns, 5.0f}})};
-  assert(p.equip(0) && p.bonus.thorns == 5);
+  assert(p.equip(0) && p.bonus().thorns == 5);
   p.maxHp = p.hp = 1e6f;
   auto made = Enemy::create(EnemyKind::Rat, 4, 1);
   Enemy *e = made.get();

@@ -293,8 +293,8 @@ void Enemy::tick() {
     p.hurt(type.damage * damageMul * status.outgoing() * contactBonus(p));
     if (lands)
       traits.landed(*this, std::max(before - p.hp, maxHp * 0.1f)), bit(p);
-    if (lands && p.bonus.thorns > 0)
-      hurt(p.bonus.thorns, x - p.x, y - p.y, 20, nullptr, true);
+    if (lands && p.bonus().thorns > 0)
+      hurt(p.bonus().thorns, x - p.x, y - p.y, 20, nullptr, true);
   }
 }
 
@@ -358,7 +358,7 @@ Sprite Enemy::sprite() const {
 void Enemy::temper(StatusKind kind, float &duration, float &power) const {
   if (!level)
     return;
-  const ItemStats &b = level->player->bonus;
+  const ItemStats &b = level->player->bonus();
   duration *= 1 + b.weave / 100;
   if (kind == StatusKind::Burn)
     power *= 1 + b.ember / 100;
@@ -369,7 +369,7 @@ void Enemy::temper(StatusKind kind, float &duration, float &power) const {
 
 void Enemy::onHit(float damage, Upgrade *src) {
   Player &p = *level->player;
-  const ItemStats &b = p.bonus;
+  const ItemStats &b = p.bonus();
   if (b.burn > 0 && rng.chance(b.burn / 100))
     afflict(StatusKind::Burn, 2, damage * 0.2f, src);
   if (b.chill > 0 && rng.chance(b.chill / 100))
@@ -416,17 +416,17 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   if (!periodic && !crit && p.sure > 0)
     crit = true, p.sure--;
   if (crit)
-    damage *= (p.hero ? p.hero->edge() : 1.8f) * (1 + p.bonus.critDamage / 100), p.crits++;
-  if (ours && p.bonus.coldBlood > 0 && status.power(StatusKind::Chill) > 0)
-    damage *= 1 + p.bonus.coldBlood / 100;
-  if (ours && p.bonus.prophecy > 0 && status.power(StatusKind::Marked) > 0)
-    damage *= 1 + p.bonus.prophecy / 100;
+    damage *= (p.hero ? p.hero->edge() : 1.8f) * (1 + p.bonus().critDamage / 100), p.crits++;
+  if (ours && p.bonus().coldBlood > 0 && status.power(StatusKind::Chill) > 0)
+    damage *= 1 + p.bonus().coldBlood / 100;
+  if (ours && p.bonus().prophecy > 0 && status.power(StatusKind::Marked) > 0)
+    damage *= 1 + p.bonus().prophecy / 100;
   if (ours)
-    force *= 1 + p.bonus.juggernaut / 100;
+    force *= 1 + p.bonus().juggernaut / 100;
   if (src && !src->hostile())
-    damage *= 1 + ((boss || def ? level->player->bonus.bossDamage : 0) +
-                   (elite || title ? level->player->bonus.eliteDamage : 0) +
-                   (level->night.dawn ? 0 : level->player->bonus.nightDamage)) /
+    damage *= 1 + ((boss || def ? level->player->bonus().bossDamage : 0) +
+                   (elite || title ? level->player->bonus().eliteDamage : 0) +
+                   (level->night.dawn ? 0 : level->player->bonus().nightDamage)) /
                       100;
   if (src) {
     src->dealt += std::min(damage, std::max(hp, 0.0f));
@@ -446,8 +446,8 @@ void Enemy::hurt(float damage, double xd, double yd, float force,
   ya += yd * f;
   if (src && !src->hostile() && !periodic)
     onHit(damage, src);
-  if (ours && !periodic && p.bonus.staticBuild > 0 &&
-      ++p.hits >= 12 - int(p.bonus.staticBuild)) {
+  if (ours && !periodic && p.bonus().staticBuild > 0 &&
+      ++p.hits >= 12 - int(p.bonus().staticBuild)) {
     p.hits = 0;
     ability::chain(p, 3, 200, 10);
   }

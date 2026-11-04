@@ -46,7 +46,7 @@ void landHit(unsigned p, Mob &e, double xd, double yd, float dmg, float knock,
   if (p & pay::Mark)
     e.afflict(StatusKind::Marked, 2.5f, 0.15f, source);
   if (p & pay::Stagger)
-    e.afflict(StatusKind::Chill, 0.5f * (1 + (w ? w->bonus.juggernaut / 100 : 0)), 0.65f, source),
+    e.afflict(StatusKind::Chill, 0.5f * (1 + (w ? w->bonus().juggernaut / 100 : 0)), 0.65f, source),
         knock += knock > 0 ? 120 : 0;
   if (p & pay::Bleed)
     e.afflict(StatusKind::Bleed, 3.0f, dmg * 0.15f, source);
@@ -149,7 +149,7 @@ void RecipeShot::tick() {
     return remove();
   }
   form().trail(*this);
-  form().tick(*this, p, (child ? r.speed * 1.3f : r.speed) * (1 + p.bonus.shotSpeed / 100));
+  form().tick(*this, p, (child ? r.speed * 1.3f : r.speed) * (1 + p.bonus().shotSpeed / 100));
 }
 
 void RecipeShot::render(Screen &s) { form().render(*this, s); }

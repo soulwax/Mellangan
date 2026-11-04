@@ -177,7 +177,7 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
            c.alpha(lit || level.visited(k) ? 1 : 0.55f));
   }
   const Player &hero = *level.player;
-  if (hero.bonus.starChart > 0) {
+  if (hero.bonus().starChart > 0) {
     int rx = world::regionOf(int(std::floor(hero.x / 16))),
         ry = world::regionOf(int(std::floor(hero.y / 16)));
     chartStars(rx, ry);

@@ -8,7 +8,7 @@ namespace {
 constexpr float BASE_SPEED = 74, BASE_MAGNET = 28;
 
 void apply(Mob &m, Stat stat, float v) {
-  ItemStats &b = m.bonus;
+  ItemStats &b = m.kit();
   switch (stat) {
   case Stat::Damage:
     m.might += v / 100;
@@ -113,7 +113,7 @@ void curse(Mob &m, int which, float sign) {
   case 1:
     return apply(m, Stat::Speed, -5 * sign);
   case 2:
-    m.bonus.hunted += 5 * sign;
+    m.kit().hunted += 5 * sign;
     return;
   case 3:
     return apply(m, Stat::Regen, -1 * sign);

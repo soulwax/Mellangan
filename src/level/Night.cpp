@@ -89,7 +89,7 @@ void Night::tick() {
   }
   if ((scan -= DT) <= 0)
     scan = 0.5f,
-    hasBeacon = world::nearestStructure(p.x, p.y, 7 + int(p.bonus.lantern), beacon, cold, this);
+    hasBeacon = world::nearestStructure(p.x, p.y, 7 + int(p.bonus().lantern), beacon, cold, this);
   if (level.rules.endsAtDawn && !dawn && level.time >= dawnAt())
     dawn = true, level.game.onDawn();
 }

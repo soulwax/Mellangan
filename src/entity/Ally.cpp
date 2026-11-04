@@ -192,7 +192,7 @@ void Ally::renderShadow(Screen &s) { drawShadow(s, xp, yp, def.flies); }
 
 Ally *summon(Level &level, AllyKind kind, double x, double y, float damage, float life,
              unsigned payload, Upgrade *source) {
-  Ally *a = level.add<Ally>(kind, x, y, damage, life * (1 + level.player->bonus.spare / 100),
+  Ally *a = level.add<Ally>(kind, x, y, damage, life * (1 + level.player->bonus().spare / 100),
                             payload);
   a->source = source;
   a->slot = nextSlot++;

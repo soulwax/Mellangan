@@ -75,7 +75,7 @@ void WorldRelic::levelUp(Mob &p) {
   Upgrade::levelUp(p);
   const CharmDef &d = CHARMS[int(kind)];
   if (d.stat && !sealed)
-    p.bonus.*d.stat += d.amount, sealed = true;
+    p.kit().*d.stat += d.amount, sealed = true;
   Player *pl = p.asPlayer();
   if (kind == Charm::Dawnstone && pl && !given)
     p.level->rules.nightLength -= 30, given = true;
@@ -86,11 +86,11 @@ void WorldRelic::levelUp(Mob &p) {
 void WorldRelic::forget(Mob &p) {
   const CharmDef &d = CHARMS[int(kind)];
   if (d.stat && sealed)
-    p.bonus.*d.stat -= d.amount, sealed = false;
+    p.kit().*d.stat -= d.amount, sealed = false;
   if (held)
     p.*held -= applied, applied = 0;
   if (lent)
-    p.bonus.*lent -= loaned, loaned = 0;
+    p.kit().*lent -= loaned, loaned = 0;
   p.might -= 0.03f * crowns, crowns = 0;
   p.status.immune &= ~(1u << int(StatusKind::Poison));
   if (Mob *wolf = p.level->mob(pet))
@@ -107,7 +107,7 @@ void WorldRelic::hold(Mob &p, float Mob::*stat, float want) {
 
 void WorldRelic::lend(Mob &p, float S::*stat, float want) {
   lent = stat;
-  p.bonus.*stat += want - loaned;
+  p.kit().*stat += want - loaned;
   loaned = want;
 }
 

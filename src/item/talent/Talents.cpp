@@ -83,13 +83,13 @@ void Talent::levelUp(Mob &p) {
   Upgrade::levelUp(p);
   const TalentDef &d = TALENTS[int(kind)];
   if (d.stat)
-    p.bonus.*d.stat += d.rank;
+    p.kit().*d.stat += d.rank;
   if (d.stat2)
-    p.bonus.*d.stat2 += d.rank2;
+    p.kit().*d.stat2 += d.rank2;
   if (kind == TalentKind::GlassCannon)
     p.might += 0.12f, p.maxHp -= 6, p.hp = std::min(p.hp, p.maxHp);
   if (kind == TalentKind::VolleyMaster && (level == 3 || level == 5))
-    p.bonus.shots += 1;
+    p.kit().shots += 1;
 }
 
 void Talent::hold(Mob &p, float Mob::*stat, float want) {
