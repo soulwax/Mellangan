@@ -21,6 +21,12 @@ All notable changes to Mellangan are documented here. The format follows
 - The Windows application manifest is embedded as a CMake source instead of a raw `/MANIFESTINPUT` link flag, so Ninja and clang-cl builds link too; the embedded manifest is byte-identical.
 - stb's headers are included as system headers, so Apple's `sprintf` deprecation inside `stb_image_write.h` no longer fails `-Werror` builds on macOS.
 
+- Big crowds cost about a fifth less CPU. At 10,000 foes, Release ticks in 2.5 ms instead of 3.1 and renders in 2.6 ms instead of 3.6, and the frame p99 drops from 11.0 to 7.4 ms:
+  - foes come from the entity pool again: they had outgrown its 512-byte limit, so every foe had become a separate heap allocation. The pool now serves objects up to 1,520 bytes, and the build fails if any foe class outgrows it;
+  - status effects keep a bitmask of what is running, so the common foe with no effects skips its effect scan every tick;
+  - the crowd grid is built in one pass over the foes instead of two;
+  - the draw queue takes on-screen foes from the crowd grid instead of testing every foe in the world.
+
 ### Fixed
 
 - Loading a world chart with no recorded structures no longer copies into a null pointer, which is undefined behaviour even for zero bytes.

@@ -119,7 +119,11 @@ public:
     auto v = reg.view<Is<T>>();
     return v.empty() ? nullptr : v.template get<Is<T>>(*v.begin()).self;
   }
-  template <class F> void enemiesNear(double x, double y, float r, F &&f);
+  template <class F> void enemiesNear(double x, double y, float r, F &&f) {
+    enemiesIn(x - r, y - r, x + r, y + r, f);
+  }
+  template <class F> void enemiesIn(double x0, double y0, double x1, double y1, F &&f);
+  void arrive(Enemy *e) { loose.push_back(e); }
   int gather(double x, double y, float r, Enemy **out, int max) const;
   std::vector<Enemy *> nearest(double x, double y, float range, int n);
   Mob *playerIn(double x, double y, float r);
@@ -189,8 +193,9 @@ private:
   std::vector<Enemy *> thinkers;
   std::vector<uint64_t> keys, keysTmp;
   std::vector<Prop> props;
-  std::vector<int> cellStart, cellFill, cellOf;
-  std::vector<Enemy *> cells;
+  std::vector<int> cellStart, cellFill;
+  std::vector<std::pair<int, Enemy *>> binned;
+  std::vector<Enemy *> cells, loose;
   std::vector<std::unique_ptr<Entity>> graveyard;
   std::vector<SpriteObject *> blended;
   double xGrid = 0, yGrid = 0;
@@ -210,6 +215,7 @@ private:
   void ambience();
   void buildGrid();
   void renderFloor(Screen &s);
+  void queueVisible(const Screen &s);
   void queue(SpriteObject *e);
   int cell(double v, double origin) const {
     return std::clamp(int(std::floor((v - origin) / CELL)), 0, GRID - 1);
@@ -218,11 +224,12 @@ private:
   mutable std::mutex addMutex;
 };
 
-template <class F> void Level::enemiesNear(double x, double y, float r, F &&f) {
-  int x0 = cell(x - r, xGrid), x1 = cell(x + r, xGrid);
-  int y0 = cell(y - r, yGrid), y1 = cell(y + r, yGrid);
-  for (int yc = y0; yc <= y1; yc++)
-    for (int xc = x0; xc <= x1; xc++)
+template <class F>
+void Level::enemiesIn(double x0, double y0, double x1, double y1, F &&f) {
+  int cx0 = cell(x0, xGrid), cx1 = cell(x1, xGrid);
+  int cy0 = cell(y0, yGrid), cy1 = cell(y1, yGrid);
+  for (int yc = cy0; yc <= cy1; yc++)
+    for (int xc = cx0; xc <= cx1; xc++)
       for (int c = yc * GRID + xc, i = cellStart[c]; i < cellStart[c + 1]; i++)
         if (!cells[i]->removed)
           f(*cells[i]);

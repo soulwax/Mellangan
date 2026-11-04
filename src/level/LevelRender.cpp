@@ -106,9 +106,7 @@ void Level::render(Screen &s) {
   prof_end(PROF_FLOOR);
   prof_begin(PROF_SORT);
   drawn.clear(), keys.clear();
-  for (auto [id, o] : reg.view<Owned>().each())
-    if (!o.self->removed && s.visible(o.self->x, o.self->y, 48))
-      queue(o.self.get());
+  queueVisible(s);
   for (auto &p : particles)
     if (!p->removed && showParticle(*p, game.reducedParticles) &&
         s.visible(p->x, p->y, 48))
@@ -179,6 +177,22 @@ void Level::reflect(Screen &s) {
     shown += crowd;
   }
   s.color(col::white);
+}
+
+void Level::queueVisible(const Screen &s) {
+  constexpr float MARGIN = 48, SLACK = 64;
+  for (auto [id, o] : reg.view<Owned>(entt::exclude<Is<Enemy>>).each())
+    if (!o.self->removed && s.visible(o.self->x, o.self->y, MARGIN))
+      queue(o.self.get());
+  auto look = [&](Enemy &e) {
+    if (!e.removed && s.visible(e.x, e.y, MARGIN))
+      queue(&e);
+  };
+  float pad = MARGIN + SLACK;
+  enemiesIn(s.xOffset - pad, s.yOffset - pad, s.xOffset + s.vw + pad,
+            s.yOffset + s.vh + pad, look);
+  for (Enemy *e : loose)
+    look(*e);
 }
 
 void Level::queue(SpriteObject *e) {

@@ -2,6 +2,10 @@
 
 #include <stddef.h>
 
+#define POOL_GRAIN_SHIFT 4
+#define POOL_CLASSES 96
+#define POOL_MAX ((POOL_CLASSES - 1) << POOL_GRAIN_SHIFT)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

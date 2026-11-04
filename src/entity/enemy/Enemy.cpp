@@ -177,7 +177,7 @@ void Enemy::act() {
   Sound::orb.play(0.3f);
 }
 
-void Enemy::onAdded() { level->tag(this); }
+void Enemy::onAdded() { level->tag(this), level->arrive(this); }
 
 void Enemy::move() {
   if (!plan)

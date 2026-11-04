@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <cstdint>
 
@@ -17,7 +18,7 @@ struct StatusEffect {
 class Status {
 public:
   std::array<StatusEffect, int(StatusKind::Count)> effects{};
-  uint32_t immune = 0;
+  uint32_t immune = 0, live = 0;
   bool moving = false;
   std::array<float, int(StatusKind::Count)> resist{};
 
@@ -39,6 +40,7 @@ public:
       e.source = source;
     }
     e.time = std::max(e.time, std::min(duration, 60.0f));
+    live |= 1u << i;
     return true;
   }
 
@@ -70,13 +72,16 @@ public:
   float incoming() const { return 1 + power(StatusKind::Marked); }
   float outgoing() const { return 1 - power(StatusKind::Weaken); }
   bool afraid() const { return power(StatusKind::Fear) > 0; }
-  void clear() { effects = {}; }
+  void clear() { effects = {}, live = 0; }
 
   template <class F> void tick(float dt, F &&damage) {
-    for (int i = 0; i < int(StatusKind::Count); i++) {
+    for (uint32_t bits = live; bits; bits &= bits - 1) {
+      int i = std::countr_zero(bits);
       auto &e = effects[i];
-      if (e.time <= 0)
+      if (e.time <= 0) {
+        live &= ~(1u << i);
         continue;
+      }
       float step = std::min(dt, e.time);
       e.time = std::max(0.0f, e.time - dt);
       if (ticks(i)) {
@@ -96,7 +101,7 @@ public:
           }
       }
       if (e.time <= 0)
-        e = {};
+        e = {}, live &= ~(1u << i);
     }
   }
 };

@@ -14,8 +14,6 @@ static pthread_mutex_t poolLock = PTHREAD_MUTEX_INITIALIZER;
 #define POOL_UNLOCK() pthread_mutex_unlock(&poolLock)
 #endif
 
-#define GRAIN_SHIFT 4
-#define CLASSES 32
 #define SLAB (64 * 1024)
 #ifdef __SANITIZE_ADDRESS__
 #define DIRECT 1
@@ -31,17 +29,17 @@ typedef struct Slab {
   struct Slab *next;
 } Slab;
 
-static Node *freeList[CLASSES];
+static Node *freeList[POOL_CLASSES];
 static Slab *slabs;
 
 static size_t classOf(size_t size) {
   if (size == 0)
     size = 1;
-  return (size + (1 << GRAIN_SHIFT) - 1) >> GRAIN_SHIFT;
+  return (size + (1 << POOL_GRAIN_SHIFT) - 1) >> POOL_GRAIN_SHIFT;
 }
 
 static void refill(size_t c) {
-  size_t size = c << GRAIN_SHIFT;
+  size_t size = c << POOL_GRAIN_SHIFT;
   Slab *s = (Slab *)malloc(sizeof(Slab) + SLAB);
   if (!s)
     abort();
@@ -57,7 +55,7 @@ static void refill(size_t c) {
 
 void *pool_alloc(size_t size) {
   size_t c = classOf(size);
-  if (c >= CLASSES || DIRECT) {
+  if (c >= POOL_CLASSES || DIRECT) {
     void *p = malloc(size);
     if (!p)
       abort();
@@ -76,7 +74,7 @@ void pool_free(void *p, size_t size) {
   if (!p)
     return;
   size_t c = classOf(size);
-  if (c >= CLASSES || DIRECT) {
+  if (c >= POOL_CLASSES || DIRECT) {
     free(p);
     return;
   }
@@ -94,7 +92,7 @@ void pool_shutdown(void) {
     slabs = slabs->next;
     free(s);
   }
-  for (size_t c = 0; c < CLASSES; c++)
+  for (size_t c = 0; c < POOL_CLASSES; c++)
     freeList[c] = NULL;
   POOL_UNLOCK();
 }

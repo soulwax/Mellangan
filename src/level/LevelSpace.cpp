@@ -41,23 +41,20 @@ void Level::buildGrid() {
   xGrid = player->x - GRID * CELL * 0.5;
   yGrid = player->y - GRID * CELL * 0.5;
   std::fill(cellStart.begin(), cellStart.end(), 0);
-  cellOf.clear();
+  binned.clear(), loose.clear();
   each<Enemy>([&](Enemy &e) {
     if (e.buried)
-      return;
+      return loose.push_back(&e);
     int c = cell(e.y, yGrid) * GRID + cell(e.x, xGrid);
-    cellOf.push_back(c);
+    binned.push_back({c, &e});
     cellStart[c + 1]++;
   });
   for (int i = 1; i <= GRID * GRID; i++)
     cellStart[i] += cellStart[i - 1];
   std::copy(cellStart.begin(), cellStart.end() - 1, cellFill.begin());
   cells.resize(cellStart.back());
-  size_t k = 0;
-  each<Enemy>([&](Enemy &e) {
-    if (!e.buried)
-      cells[cellFill[cellOf[k++]]++] = &e;
-  });
+  for (auto [c, e] : binned)
+    cells[cellFill[c]++] = e;
 }
 
 Mob *Level::playerIn(double x, double y, float r) {
