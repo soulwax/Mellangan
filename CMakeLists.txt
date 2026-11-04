@@ -73,7 +73,7 @@ set_source_files_properties(${C_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 if (WIN32)
     configure_file(res/Mellangan.rc.in ${CMAKE_CURRENT_BINARY_DIR}/generated/Mellangan.rc @ONLY)
-    list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/generated/Mellangan.rc)
+    list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/generated/Mellangan.rc res/Mellangan.manifest)
 endif ()
 
 if (APPLE)
@@ -133,8 +133,7 @@ if (MSVC)
     target_compile_definitions(Mellangan PRIVATE _CRT_SECURE_NO_WARNINGS)
     target_link_options(Mellangan PRIVATE /OPT:REF /OPT:ICF
             $<$<CONFIG:Debug>:/DEBUG>
-            $<$<NOT:$<CONFIG:Debug>>:/SUBSYSTEM:WINDOWS>
-            "/MANIFESTINPUT:${CMAKE_CURRENT_SOURCE_DIR}/res/Mellangan.manifest")
+            $<$<NOT:$<CONFIG:Debug>>:/SUBSYSTEM:WINDOWS>)
 else ()
     target_compile_options(Mellangan PRIVATE -Wall -Wextra -Wno-missing-field-initializers $<$<BOOL:${MELLANGAN_WERROR}>:-Werror>)
 endif ()

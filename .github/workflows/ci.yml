@@ -70,6 +70,54 @@ jobs:
           path: build/bin/Debug/mellangan.log
           if-no-files-found: ignore
 
+  macos:
+    name: macOS Apple Silicon (-Werror, ASan + UBSan, tests)
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Submodules
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive --depth 1 extern/Vulkan2D extern/spdlog extern/entt extern/stb
+
+      - name: Cache build-deps
+        uses: actions/cache@v4
+        with:
+          path: build-deps
+          key: macos-build-deps-${{ hashFiles('setup-macos.sh') }}
+
+      - name: Toolchain
+        run: ./setup-macos.sh
+
+      - name: Configure
+        run: >
+          cmake -S . -B build-macos -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_OSX_ARCHITECTURES=arm64
+          -DMELLANGAN_WERROR=ON -DMELLANGAN_ASAN=ON
+
+      - name: Build
+        run: cmake --build build-macos --target Mellangan
+
+      - name: Test
+        env:
+          ASAN_OPTIONS: detect_leaks=0
+          UBSAN_OPTIONS: print_stacktrace=1
+        run: |
+          set -o pipefail
+          build-macos/bin/Mellangan.app/Contents/MacOS/Mellangan --test 2>&1 | tee test.log
+          ! grep -q "runtime error" test.log
+
+      - name: Upload test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-log
+          path: |
+            test.log
+            ~/Library/Application Support/soulwax/Mellangan/mellangan.log
+          if-no-files-found: ignore
+
   linux:
     name: Linux Clang (-Werror, ASan + UBSan, tests)
     runs-on: ubuntu-24.04
@@ -122,13 +170,18 @@ jobs:
       - name: Test
         env:
           ASAN_OPTIONS: detect_leaks=0:abort_on_error=1
-          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
-        run: ./build/bin/MellanganApp --test
+          UBSAN_OPTIONS: print_stacktrace=1
+        run: |
+          set -o pipefail
+          ./build/bin/MellanganApp --test 2>&1 | tee test.log
+          ! grep -q "runtime error" test.log
 
       - name: Upload test log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: linux-log
-          path: build/bin/mellangan.log
+          path: |
+            test.log
+            build/bin/mellangan.log
           if-no-files-found: ignore

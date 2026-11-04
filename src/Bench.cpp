@@ -2,6 +2,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
+
 #include "Game.hpp"
 #include "Prof.h"
 #include "entity/Player.hpp"
@@ -34,6 +36,7 @@ void Bench::enter(Game &g) {
     l.add(std::move(e));
   }
   frames = ticks = 0, clock = tickSec = renderSec = 0;
+  costs.clear();
 }
 
 void Bench::load(Game &g) {
@@ -59,12 +62,15 @@ void Bench::frame(Game &g, double dt, int t, double tk, double rd) {
     return;
   }
   frames++, ticks += t, tickSec += tk, renderSec += rd;
+  costs.push_back((tk + rd) * 1000);
   if (clock < WARMUP + MEASURE || frames < 5)
     return;
+  std::sort(costs.begin(), costs.end());
   spdlog::info("bench {:>7} enemies: {:6.1f} fps, tick {:7.2f} ms, render "
-               "{:7.2f} ms, {} entities",
+               "{:7.2f} ms, frame p99 {:7.2f} ms, worst {:7.2f} ms, {} entities",
                COUNTS[step], frames / (clock - WARMUP),
                tickSec * 1000 / std::max(ticks, 1), renderSec * 1000 / frames,
+               costs[costs.size() * 99 / 100], costs.back(),
                g.level->reg.view<Owned>().size());
   std::string split;
   for (int i = 0; i < PROF_COUNT; i++)

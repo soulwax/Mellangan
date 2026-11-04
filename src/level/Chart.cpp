@@ -231,7 +231,8 @@ void Chart::load(const std::string &path) {
       pages[keyOf(px, py)] = std::move(p);
     }
     sites.resize(head[2]);
-    std::memcpy(sites.data(), at, head[2] * sizeof(Structure));
+    if (head[2])
+      std::memcpy(sites.data(), at, head[2] * sizeof(Structure));
     if (head[0] != DISTANCE_MAGIC) {
       size_t count = 0;
       for (const Structure &old : sites) {

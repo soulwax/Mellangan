@@ -9,12 +9,18 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - Smooth motion on high-refresh displays: the world still steps 60 times a second, but every sprite, light and the camera are drawn eased between the last two steps, so 120 and 144 Hz screens no longer show bunched, uneven movement. Anything that jumps more than three tiles in one step, such as a blink or a respawn, snaps instead of sliding. At 60 frames a second or less nothing is blended, so 60 Hz screens gain no delay and no cost.
-- Continuous integration on GitHub Actions: every push to `main` and every pull request builds with MSVC at `/W4 /WX` (Debug and Release) and with Clang at `-Werror` under AddressSanitizer and UBSan, and runs `--test` on both.
+- Continuous integration on GitHub Actions: every push to `main` and every pull request builds with MSVC at `/W4 /WX` (Debug and Release) and with Clang at `-Werror` under AddressSanitizer and UBSan on Linux and on Apple Silicon macOS, and runs `--test` on all three.
+- `--bench` reports the 99th-percentile and worst frame cost next to the averages, so hitches show up instead of hiding in the mean.
 
 ### Changed
 
 - `--test` is fully repeatable: it seeds its random numbers, and crowd pushing alternates by entity id instead of memory address. A rare bastion-defence test failure came from those two sources.
 - `--test`, `--biome-map`, `--loot-sim` and `--vendor-sim` run before the window and renderer start, so they work on machines without a GPU.
+- The Windows application manifest is embedded as a CMake source instead of a raw `/MANIFESTINPUT` link flag, so Ninja and clang-cl builds link too; the embedded manifest is byte-identical.
+
+### Fixed
+
+- Loading a world chart with no recorded structures no longer copies into a null pointer, which is undefined behaviour even for zero bytes.
 
 ## [0.6.3] - 2026-11-03
 

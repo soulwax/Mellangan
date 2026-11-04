@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 class Game;
 
 class Bench {
@@ -12,6 +14,7 @@ public:
 private:
   int step = -1, frames = 0, ticks = 0, loads = 0;
   double clock = 0, tickSec = 0, renderSec = 0;
+  std::vector<double> costs;
 
   void enter(Game &g);
   void load(Game &g);
