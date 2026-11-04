@@ -11,6 +11,8 @@ All notable changes to Mellangan are documented here. The format follows
 - Smooth motion on high-refresh displays: the world still steps 60 times a second, but every sprite, light and the camera are drawn eased between the last two steps, so 120 and 144 Hz screens no longer show bunched, uneven movement. Anything that jumps more than three tiles in one step, such as a blink or a respawn, snaps instead of sliding. At 60 frames a second or less nothing is blended, so 60 Hz screens gain no delay and no cost.
 - Continuous integration on GitHub Actions: every push to `main` and every pull request builds with MSVC at `/W4 /WX` (Debug and Release) and with Clang at `-Werror` under AddressSanitizer and UBSan on Linux and on Apple Silicon macOS, and runs `--test` on all three.
 - `--bench` reports the 99th-percentile and worst frame cost next to the averages, so hitches show up instead of hiding in the mean.
+- A frame-time graph under the F3 counter: the last 120 frames as bars, tick time in blue under render time, gold above half a frame and red above a full 60 Hz frame, with a line at 16.7 ms and the worst frame in view.
+- `--bench-gate` runs the bench up to 10,000 enemies and exits with code 2 unless that row holds 55 fps with a frame p99 under 16.7 ms. `dist.ps1` runs it on the Release build before packaging and restores VERSION and CHANGELOG.md if it fails; `-SkipBench` packages without it.
 
 ### Changed
 

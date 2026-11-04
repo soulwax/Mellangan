@@ -7,11 +7,15 @@
 .DESCRIPTION
     1. Bumps VERSION (MAJOR.MINOR.PATCH) and moves the CHANGELOG.md "Unreleased" notes under the new version.
     2. Configures and builds the Release configuration.
-    3. Stages the executable and the runtime resources, then archives them.
-    If the build fails, VERSION and CHANGELOG.md are restored.
+    3. Runs --bench-gate on the Release build: 10,000 enemies must hold 55 fps with a frame p99 under 16.7 ms.
+    4. Stages the executable and the runtime resources, then archives them.
+    If the build or the bench gate fails, VERSION and CHANGELOG.md are restored.
 
 .PARAMETER Bump
     patch (default), minor, major, or none to rebuild the current version without touching the changelog.
+
+.PARAMETER SkipBench
+    Packages without running the bench gate (it needs a window and a GPU).
 
 .EXAMPLE
     ./dist.ps1 -Bump minor
@@ -19,7 +23,8 @@
 [CmdletBinding()]
 param(
     [ValidateSet('major', 'minor', 'patch', 'none')]
-    [string]$Bump = 'patch'
+    [string]$Bump = 'patch',
+    [switch]$SkipBench
 )
 
 $ErrorActionPreference = 'Stop'
@@ -69,11 +74,20 @@ try {
     }
     Invoke-Checked 'configure' { cmake -S . -B build -DCMAKE_BUILD_TYPE=Release }
     Invoke-Checked 'build' { cmake --build build --config Release --parallel }
+    if (-not $SkipBench) {
+        $app = @('build/bin/Release/MellanganApp.exe', 'build/bin/Release/Mellangan', 'build/bin/Mellangan.app/Contents/MacOS/Mellangan',
+                 'build/bin/Mellangan') | Where-Object { Test-Path $_ } | Select-Object -First 1
+        if (-not $app) { throw 'bench gate: Release executable not found' }
+        $run = Start-Process -FilePath $app -ArgumentList '--bench-gate' -Wait -PassThru
+        $log = Join-Path (Split-Path $app) 'mellangan.log'
+        if (Test-Path $log) { Select-String -Path $log -Pattern 'bench' | ForEach-Object { Write-Host $_.Line } }
+        if ($run.ExitCode) { throw "bench gate failed (exit $($run.ExitCode)); see $log, or pass -SkipBench" }
+    }
 } catch {
     if ($Bump -ne 'none') {
         Set-Content VERSION $versionText -NoNewline
         Set-Content CHANGELOG.md $changelogText -NoNewline
-        Write-Warning 'Build failed; VERSION and CHANGELOG.md restored.'
+        Write-Warning 'Build or bench gate failed; VERSION and CHANGELOG.md restored.'
     }
     throw
 }

@@ -17,6 +17,8 @@ const int COUNTS[] = {100,    1000,   10000,  50000,  100000,
                       200000, 300000, 500000, 1000000};
 constexpr int STEPS = int(sizeof COUNTS / sizeof *COUNTS);
 constexpr double WARMUP = 1, MEASURE = 3;
+constexpr int GATE_COUNT = 10000;
+constexpr double GATE_FPS = 55, GATE_P99 = 16.7;
 } // namespace
 
 void Bench::start(Game &g) {
@@ -66,11 +68,11 @@ void Bench::frame(Game &g, double dt, int t, double tk, double rd) {
   if (clock < WARMUP + MEASURE || frames < 5)
     return;
   std::sort(costs.begin(), costs.end());
+  double rate = frames / (clock - WARMUP), p99 = costs[costs.size() * 99 / 100];
   spdlog::info("bench {:>7} enemies: {:6.1f} fps, tick {:7.2f} ms, render "
                "{:7.2f} ms, frame p99 {:7.2f} ms, worst {:7.2f} ms, {} entities",
-               COUNTS[step], frames / (clock - WARMUP),
-               tickSec * 1000 / std::max(ticks, 1), renderSec * 1000 / frames,
-               costs[costs.size() * 99 / 100], costs.back(),
+               COUNTS[step], rate, tickSec * 1000 / std::max(ticks, 1),
+               renderSec * 1000 / frames, p99, costs.back(),
                g.level->reg.view<Owned>().size());
   std::string split;
   for (int i = 0; i < PROF_COUNT; i++)
@@ -78,8 +80,15 @@ void Bench::frame(Game &g, double dt, int t, double tk, double rd) {
         fmt::format("  {} {:.2f}", prof_name(i), prof_take(i) * 1000 / frames);
   spdlog::info("       ms/frame:{}  ({} particles, {} debris, {} sparks)",
                split, g.level->particles.size(), int(Debris::alive), int(Spark::alive));
-               if (++step < STEPS)
-                 return enter(g);
-               step = -1;
-               g.running = false;
+  if (gate && COUNTS[step] == GATE_COUNT) {
+    failed = rate < GATE_FPS || p99 > GATE_P99;
+    spdlog::log(failed ? spdlog::level::err : spdlog::level::info,
+                "bench gate {}: {} enemies need {:.0f} fps and frame p99 under "
+                "{:.1f} ms",
+                failed ? "FAILED" : "passed", GATE_COUNT, GATE_FPS, GATE_P99);
+  }
+  if (!(gate && COUNTS[step] >= GATE_COUNT) && ++step < STEPS)
+    return enter(g);
+  step = -1;
+  g.running = false;
 }

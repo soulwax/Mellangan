@@ -123,6 +123,9 @@ void Game::run() {
     cpuTime += double(done - work) / freq;
     bench.frame(*this, dt, ticks, double(ticked - work) / freq,
                 double(done - ticked) / freq);
+    tickMs[graphAt] = float((ticked - work) * 1000 / freq);
+    renderMs[graphAt] = float((done - ticked) * 1000 / freq);
+    graphAt = (graphAt + 1) % GRAPH;
     vk2dRendererPresent();
 
     frames++, perfFrames++;
@@ -497,6 +500,24 @@ void Game::render() {
                             level->reg.view<Owned>().size()),
                 4 * screen.u, screen.h - 46 * screen.u - 16 * size, size,
                 col::muted);
+    frameGraph(4 * screen.u, screen.h - 50 * screen.u - 16 * size);
   }
   level->unblend();
+}
+
+void Game::frameGraph(float x, float y) {
+  float u = screen.u, scale = 24 * u / 16.7f, worst = 0;
+  screen.rect(x, y - 36 * u, GRAPH * u, 36 * u, {0, 0, 0, 0.45f});
+  for (int i = 0; i < GRAPH; i++) {
+    int at = (graphAt + i) % GRAPH;
+    float tk = tickMs[at], rd = renderMs[at], hi = std::min(tk + rd, 36 * u / scale);
+    worst = std::max(worst, tk + rd);
+    Color top = tk + rd > 16.7f ? col::red : tk + rd > 8.3f ? col::gold : col::muted;
+    screen.rect(x + i * u, y - hi * scale, u, std::max(0.0f, hi - tk) * scale, top);
+    screen.rect(x + i * u, y - std::min(tk, hi) * scale, u, std::min(tk, hi) * scale, col::xp);
+  }
+  screen.rect(x, y - 24 * u, GRAPH * u, std::max(1.0f, u * 0.5f), {1, 1, 1, 0.5f});
+  float size = std::max(1.0f, u - 1);
+  screen.text(fmt::format("cpu worst {:.1f} ms", worst), x + GRAPH * u + 4 * u,
+              y - 8 * size, size, col::muted);
 }

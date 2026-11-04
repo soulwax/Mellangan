@@ -92,6 +92,9 @@ private:
   int xView = 0, yView = 0;
   float alpha = 1;
   bool stepped = false;
+  static constexpr int GRAPH = 120;
+  float tickMs[GRAPH] = {}, renderMs[GRAPH] = {};
+  int graphAt = 0;
 
   void tick();
   void devTick();
@@ -100,5 +103,6 @@ private:
   void saveWorld() const;
   void remember(bool dawn);
   void render();
+  void frameGraph(float x, float y);
   friend void captureScreenshotSuite(SDL_Window *window, const std::string &base);
 };

@@ -141,7 +141,7 @@ and fire pools leave a short burn when enemies move away. Afflictions clear on d
 | C (title, pause) | Codex |
 | Esc / P | Pause |
 | F11 | Fullscreen |
-| F3 | FPS counter |
+| F3 | FPS counter and frame-time graph |
 | V | Toggle full or reduced cosmetic particles (also available while paused) |
 | I | Inventory; beside a merchant, workbench, stash, elder or waypoint it opens theirs instead |
 | Alt (hold) | Show the names of items on the ground |
@@ -174,7 +174,7 @@ Days and nights repeat, and foes grow stronger the further you roam from town.
   waypoint or your nearest campfire for a tenth of your gold; Hardcore heroes get one life.
 - **Nightmare.** After the last act, the acts begin again with every foe stronger.
 
-Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits when it is done).
+Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits when it is done). `--bench-gate` stops after 10,000 and exits with code 2 unless that row holds 55 fps with a frame p99 under 16.7 ms; `dist.ps1` runs it before packaging (`-SkipBench` to skip).
 
 ## Layout
 

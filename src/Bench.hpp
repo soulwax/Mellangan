@@ -6,7 +6,7 @@ class Game;
 
 class Bench {
 public:
-  bool enabled = false;
+  bool enabled = false, gate = false, failed = false;
 
   void start(Game &g);
   void frame(Game &g, double dt, int ticks, double tickSec, double renderSec);

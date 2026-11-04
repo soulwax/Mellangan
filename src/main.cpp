@@ -157,7 +157,8 @@ int main(int argc, char **argv) {
     Game game;
     for (int i = 1; i < argc; i++) {
       game.dev |= std::string_view(argv[i]) == "--dev";
-      game.bench.enabled |= std::string_view(argv[i]) == "--bench";
+      game.bench.gate |= std::string_view(argv[i]) == "--bench-gate";
+      game.bench.enabled |= std::string_view(argv[i]) == "--bench" || game.bench.gate;
       game.rules.loot |= std::string_view(argv[i]) == "--loot";
       game.wantsCampaign |= std::string_view(argv[i]) == "--campaign";
     }
@@ -167,6 +168,7 @@ int main(int argc, char **argv) {
     if (game.init(window, base)) {
       spdlog::info("Mellangan ready");
       game.run();
+      code = game.bench.failed ? 2 : 0;
     } else {
       code = 1;
     }
