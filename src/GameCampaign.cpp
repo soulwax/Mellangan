@@ -5,6 +5,8 @@
 #include <cmath>
 
 #include "campaign/Campaign.hpp"
+#include "campaign/Delve.hpp"
+#include "campaign/Harvest.hpp"
 #include "campaign/Quests.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
@@ -123,4 +125,44 @@ void Game::endCampaign() {
   campaign->leave();
   campaign.reset();
   rules = dawnRules;
+}
+
+void Game::place() {
+  int tx, ty, piece = campaign->building;
+  harvest::aim(*level->player, tx, ty);
+  std::string why = harvest::blocked(*level, *campaign, piece, tx, ty);
+  if (why.empty() && harvest::build(*level, *campaign, piece, tx, ty)) {
+    if (!harvest::affordable(*level->player, piece))
+      campaign->building = -1;
+    saveCampaign();
+  } else {
+    announce(why);
+  }
+}
+
+void Game::gather() {
+  if (Structure mine; input.gather.clicked && !campaign->delve.active &&
+                      Delve::entrance(*level, *campaign, mine))
+    campaign->delve.start(*level, *campaign, mine);
+  else if (input.gather.clicked || (input.gather.down && (gatherTime -= DT) <= 0)) {
+    harvest::strike(*level, *campaign);
+    gatherTime = GATHER_REPEAT;
+  }
+}
+
+void Game::keep() {
+  campaign->tick(*level);
+  if ((autosave -= DT) <= 0)
+    autosave = Campaign::AUTOSAVE, saveCampaign();
+}
+
+void Game::bankLevels() {
+  Player &p = *level->player;
+  if (p.pendingLevels <= p.pendingTreasures)
+    return;
+  int gained = p.pendingLevels - p.pendingTreasures;
+  campaign->points += gained, p.pendingLevels = p.pendingTreasures;
+  celebrate();
+  announce(fmt::format("LEVEL {}  +{} SKILL POINT{}  K TO SPEND", p.lvl, gained,
+                       gained == 1 ? "" : "S"));
 }

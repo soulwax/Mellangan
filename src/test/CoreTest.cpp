@@ -105,13 +105,16 @@ void testStatuses() {
     });
   assert(std::abs(total - 16) < 0.001f);
   assert(s.power(StatusKind::Poison) == 0);
-  assert(s.effects[int(StatusKind::Poison)].source == nullptr);
+  assert(s.effect(StatusKind::Poison).source == nullptr);
   assert(s.apply(StatusKind::Burn, 2, 2, &weak));
   assert(s.apply(StatusKind::Burn, 1, 8, &strong));
-  assert(s.effects[int(StatusKind::Burn)].source == &strong);
+  assert(s.effect(StatusKind::Burn).source == &strong);
   s.clear();
   assert(s.apply(StatusKind::Chill, 1, 10));
   assert(std::abs(s.movement() - 0.35f) < 0.001f);
+  s.end(StatusKind::Chill);
+  assert(s.movement() == 1 && s.effect(StatusKind::Chill).time == 0);
+  assert(s.apply(StatusKind::Chill, 1, 10) && s.power(StatusKind::Chill) > 0);
   s.immune = 1u << int(StatusKind::Burn);
   assert(!s.apply(StatusKind::Burn, 2, 5));
   assert(!s.apply(StatusKind::Poison, -1, 5));
@@ -126,8 +129,8 @@ void testStatuses() {
   assert(std::abs(total - 2) < 0.001f);
   s.apply(StatusKind::Poison, 2, 8, &strong);
   s.tick(0.5f, [](float, Upgrade *) { return false; });
-  for (const auto &effect : s.effects)
-    assert(effect.time == 0 && effect.source == nullptr);
+  for (int i = 0; i < int(StatusKind::Count); i++)
+    assert(s.effect(StatusKind(i)).time == 0 && s.effect(StatusKind(i)).source == nullptr);
 }
 
 void testStatusDamage() {

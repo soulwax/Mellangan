@@ -27,6 +27,10 @@ All notable changes to Mellangan are documented here. The format follows
   - the crowd grid is built in one pass over the foes instead of two;
   - the draw queue takes on-screen foes from the crowd grid instead of testing every foe in the world.
 - Gear stats (`ItemStats`, 48 values) live outside the creature and are allocated only for creatures that wear gear, so a foe shrinks from 1,000 to 832 bytes. Reads go through `bonus()`, which returns a shared all-zero block for foes without gear, and writes through `kit()`.
+- A creature's status effects are private to `Status`: code reads them with `effect(kind)` and cuts one short with `end(kind)`, so the bitmask of running effects is always exact. `power()` checks that bit first, so a foe with no effects no longer reads its effect slots for its speed, damage and fear each tick.
+- `Enemy::die` (124 lines) reads as a list of steps: retire, `tally`, `onKill`, `spoils`, `bossFalls`, `championFalls`, then `gilt` or `remains`. The chains of enemy kinds that picked a corpse style and blood colour are now two `switch` tables, `remainsOf` and `redBlooded`. Random draws happen in the same order, so runs replay exactly as before.
+- `Game::tick` (109 lines) is split into `hotkeys`, `route` (which key opens which menu, with `nearby` choosing the shop, stash or bench you stand at) and `play`. The campaign's building, gathering, autosave and skill-point steps moved to `GameCampaign.cpp` as `place`, `gather`, `keep` and `bankLevels`.
+- The content check at startup also validates unique items, so a unique naming a missing item base or upgrade is reported instead of silently never dropping.
 - `--bench` opts its process out of Windows power throttling, so a bench run in an unfocused window is no longer slowed to efficiency clocks.
 
 ### Fixed

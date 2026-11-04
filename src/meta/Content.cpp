@@ -9,6 +9,7 @@
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
 #include "item/loot/ItemBase.hpp"
+#include "item/loot/Unique.hpp"
 #include "item/weapon/Recipe.hpp"
 #include "level/Structure.hpp"
 #include "level/biome/Biome.hpp"
@@ -66,6 +67,13 @@ std::vector<std::string> contentFaults() {
   }
   for (const char *a : areaWeapons())
     upgrade(a, "area weapon list");
+  for (int i = 0; i < UNIQUE_COUNT; i++) {
+    const UniqueDef &u = UNIQUES[i];
+    std::string from = fmt::format("unique \"{}\"", u.name);
+    if (!u.base || !bases.count(u.base))
+      fault(fmt::format("{} names unknown item base \"{}\"", from, u.base ? u.base : ""));
+    upgrade(u.grants, from);
+  }
   for (int i = 0; i < int(AllyKind::Count); i++) {
     const AllyDef &a = allyDef(AllyKind(i));
     if (a.recipe && !recipes.count(a.recipe) && !upgrades.count(a.recipe))

@@ -143,8 +143,8 @@ void ExpansionEnemy::tend() {
     double dx = e.x - x, dy = e.y - y;
     if (e.removed || &e == this || dx * dx + dy * dy > 70 * 70)
       continue;
-    e.status.effects[int(StatusKind::Burn)] = {};
-    e.status.effects[int(StatusKind::Poison)] = {};
+    e.status.end(StatusKind::Burn);
+    e.status.end(StatusKind::Poison);
     e.hp = std::min(e.maxHp, e.hp + 3.0f);
   }
   flash = 0.15f;

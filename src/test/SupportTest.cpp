@@ -202,7 +202,7 @@ void testTalents() {
 
     rank(s, "Spellweave", 5);
     a->afflict(StatusKind::Burn, 2, 1);
-    assert(near(a->status.effects[int(StatusKind::Burn)].time, 3));
+    assert(near(a->status.effect(StatusKind::Burn).time, 3));
 
     rank(s, "Vengeance", 2);
     rank(s, "Thick Skin", 5);

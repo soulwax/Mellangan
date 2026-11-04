@@ -17,8 +17,7 @@ struct StatusEffect {
 
 class Status {
 public:
-  std::array<StatusEffect, int(StatusKind::Count)> effects{};
-  uint32_t immune = 0, live = 0;
+  uint32_t immune = 0;
   bool moving = false;
   std::array<float, int(StatusKind::Count)> resist{};
 
@@ -45,9 +44,14 @@ public:
   }
 
   float power(StatusKind kind) const {
+    if (!(live >> int(kind) & 1))
+      return 0;
     const auto &e = effects[int(kind)];
     return e.time > 0 ? e.power : 0;
   }
+
+  const StatusEffect &effect(StatusKind kind) const { return effects[int(kind)]; }
+  void end(StatusKind kind) { effects[int(kind)] = {}, live &= ~(1u << int(kind)); }
 
   static float cap(StatusKind kind) {
     switch (kind) {
@@ -104,4 +108,8 @@ public:
         e = {}, live &= ~(1u << i);
     }
   }
+
+private:
+  std::array<StatusEffect, int(StatusKind::Count)> effects{};
+  uint32_t live = 0;
 };

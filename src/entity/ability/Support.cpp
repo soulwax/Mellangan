@@ -53,7 +53,7 @@ void warcry(Mob &caster, float radius, float seconds) {
 void bandage(Mob &caster, float amount) {
   caster.mend(amount);
   for (StatusKind k : {StatusKind::Burn, StatusKind::Poison, StatusKind::Chill})
-    caster.status.effects[int(k)] = {};
+    caster.status.end(k);
   flourish::scatter(*caster.level, caster.x, caster.bodyY(), atlas::pt::HolyGlint,
                     Color{0.5f, 1, 0.6f, 1}, 10, 40, -50);
   Spark::burst(*caster.level, caster.x, caster.bodyY(), Color{0.5f, 1, 0.6f, 1}, 8,

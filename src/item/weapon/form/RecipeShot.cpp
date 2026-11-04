@@ -36,7 +36,7 @@ void RecipeShot::hit(Mob &e, double xd, double yd, float dmg, float knock) {
 void landHit(unsigned p, Mob &e, double xd, double yd, float dmg, float knock,
              Upgrade *source, Mob *w) {
   if ((p & pay::Shatter) && e.status.power(StatusKind::Chill) > 0)
-    dmg *= 1.5f, e.status.effects[int(StatusKind::Chill)] = {};
+    dmg *= 1.5f, e.status.end(StatusKind::Chill);
   if (p & pay::Burn)
     e.afflict(StatusKind::Burn, 2.0f, dmg * 0.25f, source);
   if (p & pay::Chill)

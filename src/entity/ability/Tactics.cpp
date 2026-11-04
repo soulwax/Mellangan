@@ -107,7 +107,7 @@ void shatter(Mob &caster, float radius, float damage) {
   Level &level = *caster.level;
   within(caster, radius, [&](Mob &foe, double xd, double yd) {
     if (foe.status.power(StatusKind::Chill) > 0) {
-      foe.status.effects[int(StatusKind::Chill)] = {};
+      foe.status.end(StatusKind::Chill);
       foe.strike(damage * 2 * caster.power(), xd, yd, 120);
       flourish::scatter(level, foe.x, foe.bodyY(), atlas::pt::IceShard, FROST, 4, 50, -30);
     } else {

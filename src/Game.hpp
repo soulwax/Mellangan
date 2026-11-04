@@ -98,6 +98,14 @@ private:
 
   void tick();
   void devTick();
+  void hotkeys();
+  bool route();
+  std::unique_ptr<Menu> nearby();
+  void play();
+  void place();
+  void gather();
+  void keep();
+  void bankLevels();
   void build();
   void loadWorld();
   void saveWorld() const;

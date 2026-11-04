@@ -481,7 +481,7 @@ void Hud::statuses(float top) {
   float u = s.u, small = std::max(1.0f, u - 1), sx = 4 * u, sy = top + 54 * u;
   for (int i = 0; i < int(StatusKind::Count); i++) {
     StatusKind kind = StatusKind(i);
-    const StatusEffect &effect = p.status.effects[i];
+    const StatusEffect &effect = p.status.effect(kind);
     if (effect.time <= 0)
       continue;
     std::string label = fmt::format("{} {:.1f}s", statusName(kind), effect.time);

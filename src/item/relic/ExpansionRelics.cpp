@@ -66,9 +66,9 @@ void ExpansionRelic::tick(Mob &p) {
       night.beacon = shrine, night.hasBeacon = true;
   } else if (kind == 5 && cd <= 0) {
     cd = 3;
-    p.status.effects[int(StatusKind::Burn)] = {};
-    p.status.effects[int(StatusKind::Chill)] = {};
-    p.status.effects[int(StatusKind::Poison)] = {};
+    p.status.end(StatusKind::Burn);
+    p.status.end(StatusKind::Chill);
+    p.status.end(StatusKind::Poison);
     Climate c = world::climateAt(int(std::floor(p.x / 16)), int(std::floor(p.y / 16)));
     int status = c.temp < -0.12f ? int(StatusKind::Chill) :
                  c.moist > 0.12f ? int(StatusKind::Poison) : int(StatusKind::Burn);

@@ -148,8 +148,8 @@ void touch(Level &level, const EventDef &def, bool first) {
     p.felledBy = def.name;
   }
   if (def.cleanse) {
-    p.status.effects[int(S::Burn)] = {};
-    p.status.effects[int(S::Poison)] = {};
+    p.status.end(S::Burn);
+    p.status.end(S::Poison);
   }
   if (def.heal > 0)
     p.heal(def.heal);

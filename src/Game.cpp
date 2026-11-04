@@ -151,97 +151,16 @@ void Game::tick() {
   Sound::tick();
   if (level)
     Sound::ambience(level->sky.rainfall(), level->sky.gale());
-  if (input.fps.clicked)
-    showFps = !showFps;
-  if (input.mute.clicked && !(menu && menu->typing()))
-    Sound::toggleMute();
-  if (input.particles.clicked && !(menu && menu->typing()))
-    setReducedParticles(!reducedParticles);
-  if (input.fullscreen.clicked)
-    SDL_SetWindowFullscreen(
-        window, !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN));
+  hotkeys();
   if (dev)
     devTick();
-
-  if (menu) {
+  if (menu)
     menu->tick();
-  } else if (campaign && campaign->building >= 0 &&
-             (input.escape.clicked || input.build.clicked)) {
-    campaign->building = -1;
-    Sound::select.play(0.4f, 0);
-  } else if (input.escape.clicked || input.pause.clicked) {
-    Sound::select.play(0.5f, 0);
-    setMenu(std::make_unique<PauseMenu>(*this));
-  } else if (campaign && input.build.clicked) {
-    Sound::select.play(0.5f, 0);
-    setMenu(std::make_unique<BuildMenu>(*this));
-  } else if (campaign && input.campaign.clicked) {
-    Sound::select.play(0.5f, 0);
-    setMenu(std::make_unique<TreeMenu>(*this));
-  } else if (input.map.clicked) {
-    Sound::select.play(0.5f, 0);
-    setMenu(std::make_unique<MapMenu>(*this));
-  } else if (input.inventory.clicked) {
-    Sound::select.play(0.5f, 0);
-    if (Elder::near(*level))
-      setMenu(std::make_unique<QuestMenu>(*this));
-    else if (Waypoint::near(*level) && campaign->towns().size() > 1)
-      setMenu(std::make_unique<TravelMenu>(*this));
-    else if (Merchant::near(*level))
-      setMenu(std::make_unique<VendorMenu>(*this));
-    else if (Stash::near(*level))
-      setMenu(std::make_unique<StashMenu>(*this));
-    else if (Workbench::near(*level) || (campaign && harvest::benchNear(*level, *campaign)))
-      setMenu(std::make_unique<CraftMenu>(*this));
+  else if (!route()) {
+    if (freeze > 0)
+      freeze -= DT;
     else
-      setMenu(std::make_unique<InventoryMenu>(*this));
-  } else if (freeze > 0) {
-    freeze -= DT;
-  } else {
-    if (campaign && campaign->building >= 0 && input.confirm.clicked) {
-      int tx, ty, piece = campaign->building;
-      harvest::aim(*level->player, tx, ty);
-      std::string why = harvest::blocked(*level, *campaign, piece, tx, ty);
-      if (why.empty() && harvest::build(*level, *campaign, piece, tx, ty)) {
-        if (!harvest::affordable(*level->player, piece))
-          campaign->building = -1;
-        saveCampaign();
-      } else {
-        announce(why);
-      }
-    } else if (input.confirm.clicked) {
-      level->player->cast();
-    }
-    if (Structure mine; campaign && input.gather.clicked && !campaign->delve.active &&
-                        Delve::entrance(*level, *campaign, mine))
-      campaign->delve.start(*level, *campaign, mine);
-    else if (campaign && (input.gather.clicked ||
-                          (input.gather.down && (gatherTime -= DT) <= 0))) {
-      harvest::strike(*level, *campaign);
-      gatherTime = GATHER_REPEAT;
-    }
-    level->tick(), stepped = true;
-    if (campaign)
-      campaign->tick(*level);
-    if (campaign && (autosave -= DT) <= 0)
-      autosave = Campaign::AUTOSAVE, saveCampaign();
-    if (dev && start.stripsLevels())
-      level->player->pendingLevels = level->player->pendingTreasures = 0;
-    if (Player &p = *level->player; campaign && p.pendingLevels > p.pendingTreasures) {
-      int gained = p.pendingLevels - p.pendingTreasures;
-      campaign->points += gained, p.pendingLevels = p.pendingTreasures;
-      celebrate();
-      announce(fmt::format("LEVEL {}  +{} SKILL POINT{}  K TO SPEND", p.lvl, gained,
-                           gained == 1 ? "" : "S"));
-    }
-    if (!menuChanged && level->night.offering)
-      setMenu(std::make_unique<ShrineMenu>(*this));
-    else if (!menuChanged && level->player->pendingLevels > 0) {
-      if (levelBeat < 0)
-        levelBeat = 0.3f, celebrate();
-      else if ((levelBeat -= DT) <= 0)
-        levelBeat = -1, setMenu(LevelUpMenu::open(*this));
-    }
+      play();
   }
   if (menuChanged)
     menu = std::move(nextMenu), menuChanged = false;
@@ -251,6 +170,96 @@ void Game::tick() {
   if (!menu && best > 0 && !beatBest && level->time > best)
     beatBest = true, announce("NEW BEST");
   hud.tick(!menu);
+}
+
+void Game::hotkeys() {
+  bool typing = menu && menu->typing();
+  if (input.fps.clicked)
+    showFps = !showFps;
+  if (input.mute.clicked && !typing)
+    Sound::toggleMute();
+  if (input.particles.clicked && !typing)
+    setReducedParticles(!reducedParticles);
+  if (input.fullscreen.clicked)
+    SDL_SetWindowFullscreen(window, !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN));
+}
+
+bool Game::route() {
+  if (campaign && campaign->building >= 0 && (input.escape.clicked || input.build.clicked)) {
+    campaign->building = -1;
+    Sound::select.play(0.4f, 0);
+    return true;
+  }
+  enum class To { Pause, Build, Tree, Map, Nearby } to;
+  if (input.escape.clicked || input.pause.clicked)
+    to = To::Pause;
+  else if (campaign && input.build.clicked)
+    to = To::Build;
+  else if (campaign && input.campaign.clicked)
+    to = To::Tree;
+  else if (input.map.clicked)
+    to = To::Map;
+  else if (input.inventory.clicked)
+    to = To::Nearby;
+  else
+    return false;
+  Sound::select.play(0.5f, 0);
+  switch (to) {
+  case To::Pause:
+    setMenu(std::make_unique<PauseMenu>(*this));
+    break;
+  case To::Build:
+    setMenu(std::make_unique<BuildMenu>(*this));
+    break;
+  case To::Tree:
+    setMenu(std::make_unique<TreeMenu>(*this));
+    break;
+  case To::Map:
+    setMenu(std::make_unique<MapMenu>(*this));
+    break;
+  case To::Nearby:
+    setMenu(nearby());
+    break;
+  }
+  return true;
+}
+
+std::unique_ptr<Menu> Game::nearby() {
+  if (Elder::near(*level))
+    return std::make_unique<QuestMenu>(*this);
+  if (Waypoint::near(*level) && campaign->towns().size() > 1)
+    return std::make_unique<TravelMenu>(*this);
+  if (Merchant::near(*level))
+    return std::make_unique<VendorMenu>(*this);
+  if (Stash::near(*level))
+    return std::make_unique<StashMenu>(*this);
+  if (Workbench::near(*level) || (campaign && harvest::benchNear(*level, *campaign)))
+    return std::make_unique<CraftMenu>(*this);
+  return std::make_unique<InventoryMenu>(*this);
+}
+
+void Game::play() {
+  if (campaign && campaign->building >= 0 && input.confirm.clicked)
+    place();
+  else if (input.confirm.clicked)
+    level->player->cast();
+  if (campaign)
+    gather();
+  level->tick(), stepped = true;
+  if (campaign)
+    keep();
+  if (dev && start.stripsLevels())
+    level->player->pendingLevels = level->player->pendingTreasures = 0;
+  if (campaign)
+    bankLevels();
+  if (!menuChanged && level->night.offering)
+    setMenu(std::make_unique<ShrineMenu>(*this));
+  else if (!menuChanged && level->player->pendingLevels > 0) {
+    if (levelBeat < 0)
+      levelBeat = 0.3f, celebrate();
+    else if ((levelBeat -= DT) <= 0)
+      levelBeat = -1, setMenu(LevelUpMenu::open(*this));
+  }
 }
 
 void Game::devTick() {
