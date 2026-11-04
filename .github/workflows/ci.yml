@@ -97,7 +97,7 @@ jobs:
           -DMELLANGAN_WERROR=ON -DMELLANGAN_ASAN=ON
 
       - name: Build
-        run: cmake --build build-macos --target Mellangan
+        run: cmake --build build-macos --target Mellangan -- -k 0
 
       - name: Test
         env:
@@ -165,7 +165,7 @@ jobs:
           -DMELLANGAN_WERROR=ON -DMELLANGAN_ASAN=ON
 
       - name: Build
-        run: cmake --build build --target Mellangan
+        run: cmake --build build --target Mellangan -- -k 0
 
       - name: Test
         env:

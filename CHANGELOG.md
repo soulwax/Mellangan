@@ -17,6 +17,7 @@ All notable changes to Mellangan are documented here. The format follows
 - `--test` is fully repeatable: it seeds its random numbers, and crowd pushing alternates by entity id instead of memory address. A rare bastion-defence test failure came from those two sources.
 - `--test`, `--biome-map`, `--loot-sim` and `--vendor-sim` run before the window and renderer start, so they work on machines without a GPU.
 - The Windows application manifest is embedded as a CMake source instead of a raw `/MANIFESTINPUT` link flag, so Ninja and clang-cl builds link too; the embedded manifest is byte-identical.
+- stb's headers are included as system headers, so Apple's `sprintf` deprecation inside `stb_image_write.h` no longer fails `-Werror` builds on macOS.
 
 ### Fixed
 

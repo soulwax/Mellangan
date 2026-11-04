@@ -64,7 +64,7 @@ add_subdirectory(extern/spdlog)
 add_subdirectory(extern/entt)
 
 add_library(stb_vorbis STATIC extern/stb/stb_vorbis.c)
-target_include_directories(stb_vorbis PUBLIC extern/stb)
+target_include_directories(stb_vorbis SYSTEM PUBLIC extern/stb)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.hpp src/*.c src/*.h)
 file(GLOB_RECURSE C_SOURCES CONFIGURE_DEPENDS src/*.c)
