@@ -230,7 +230,7 @@ void Enemy::push() {
     return;
   double xd = level->player->x - x, yd = level->player->y - y;
   if (xd * xd + yd * yd > 260 * 260 &&
-      ((uintptr_t(this) >> 5) + level->ticks) & 1)
+      (entt::to_integral(id) + level->ticks) & 1)
     return;
   Enemy *nearby[24];
   for (int i = 0, count = level->gather(x, y, radius + 16, nearby, 24);

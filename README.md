@@ -36,6 +36,8 @@ cmake --build build --config Release
 Shaders in `res/shaders` are compiled to SPIR-V at build time with the SDK's `slangc`, so Vulkan2D's
 runtime Slang compiler is disabled and never built. The executable lands next to a copy of `res/`.
 
+CI (`.github/workflows/ci.yml`) builds every push to `main` and every pull request on Windows (MSVC, warnings as errors, Debug and Release) and Linux (Clang, warnings as errors, ASan and UBSan), and runs `--test` on both without a GPU.
+
 Checking switches, each a CMake option:
 
 - `MELLANGAN_WERROR` treats warnings in `src/` as errors. It is on by default with MSVC and off elsewhere.

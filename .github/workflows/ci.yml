@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VULKAN_VERSION: 1.4.363.0
+  SDL_VIDEODRIVER: dummy
+  SDL_AUDIODRIVER: dummy
+
+jobs:
+  windows:
+    name: Windows MSVC (/W4 /WX, Debug + Release, tests)
+    runs-on: windows-2025
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Submodules
+        shell: bash
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive --depth 1 extern/Vulkan2D extern/spdlog extern/entt extern/stb
+
+      - name: Cache Vulkan SDK
+        id: vulkan-cache
+        uses: actions/cache@v4
+        with:
+          path: C:\VulkanSDK\${{ env.VULKAN_VERSION }}
+          key: vulkan-sdk-windows-${{ env.VULKAN_VERSION }}
+
+      - name: Install Vulkan SDK
+        if: steps.vulkan-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $v = $env:VULKAN_VERSION
+          Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/$v/windows/vulkansdk-windows-X64-$v.exe" -OutFile vulkansdk.exe
+          Start-Process -FilePath .\vulkansdk.exe -Wait -ArgumentList '--root', "C:\VulkanSDK\$v", '--accept-licenses', '--default-answer', '--confirm-command', 'install'
+
+      - name: Point at Vulkan SDK
+        shell: pwsh
+        run: |
+          "VULKAN_SDK=C:\VulkanSDK\$env:VULKAN_VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "C:\VulkanSDK\$env:VULKAN_VERSION\Bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Configure
+        run: cmake -S . -B build -DMELLANGAN_WERROR=ON
+
+      - name: Build Debug
+        run: cmake --build build --config Debug --target Mellangan --parallel
+
+      - name: Test
+        run: build\bin\Debug\MellanganApp.exe --test
+
+      - name: Build Release
+        run: cmake --build build --config Release --target Mellangan --parallel
+
+      - name: Upload test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-log
+          path: build/bin/Debug/mellangan.log
+          if-no-files-found: ignore
+
+  linux:
+    name: Linux Clang (-Werror, ASan + UBSan, tests)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Submodules
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --recursive --depth 1 extern/Vulkan2D extern/spdlog extern/entt extern/stb
+
+      - name: Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang ninja-build pkg-config libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
+            libxi-dev libxss-dev libxtst-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev \
+            libasound2-dev libpulse-dev libpipewire-0.3-dev libdbus-1-dev libudev-dev libvulkan-dev
+
+      - name: Cache Vulkan SDK
+        id: vulkan-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/vulkansdk/${{ env.VULKAN_VERSION }}
+          key: vulkan-sdk-linux-${{ env.VULKAN_VERSION }}
+
+      - name: Install Vulkan SDK
+        if: steps.vulkan-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/vulkansdk
+          curl -sSfL "https://sdk.lunarg.com/sdk/download/$VULKAN_VERSION/linux/vulkansdk-linux-x86_64-$VULKAN_VERSION.tar.xz" \
+            | tar -xJ -C ~/vulkansdk
+
+      - name: Point at Vulkan SDK
+        run: |
+          sdk=~/vulkansdk/$VULKAN_VERSION/x86_64
+          echo "VULKAN_SDK=$sdk" >> "$GITHUB_ENV"
+          echo "$sdk/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$sdk/lib" >> "$GITHUB_ENV"
+
+      - name: Configure
+        run: >
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          -DMELLANGAN_WERROR=ON -DMELLANGAN_ASAN=ON
+
+      - name: Build
+        run: cmake --build build --target Mellangan
+
+      - name: Test
+        env:
+          ASAN_OPTIONS: detect_leaks=0:abort_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ./build/bin/MellanganApp --test
+
+      - name: Upload test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-log
+          path: build/bin/mellangan.log
+          if-no-files-found: ignore

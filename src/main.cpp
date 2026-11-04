@@ -99,6 +99,18 @@ int main(int argc, char **argv) {
   installCrashHandler();
   spdlog::info("Mellangan v{}", MELLANGAN_VERSION);
 
+  for (int i = 1; i < argc; i++)
+    if (std::string_view(argv[i]) == "--test")
+      return runTests();
+    else if (std::string_view(argv[i]) == "--biome-map" && i + 1 < argc)
+      return mapBiomes(argv[i + 1]);
+    else if (std::string_view(argv[i]) == "--loot-sim" && i + 1 < argc)
+      return lootSim(std::atoi(argv[i + 1]), i + 2 < argc ? std::atoi(argv[i + 2]) : 20);
+    else if (std::string_view(argv[i]) == "--vendor-sim")
+      return vendorSim(i + 1 < argc ? std::atoi(argv[i + 1]) : 30,
+                       i + 2 < argc ? std::atoi(argv[i + 2]) : 0, true),
+             0;
+
   SDL_WindowFlags flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
 #ifdef __APPLE__
   flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
@@ -139,18 +151,6 @@ int main(int argc, char **argv) {
   };
   if (int view = launchView(window, base, argc, argv); view >= 0)
     return view ? view : finish(0);
-
-  for (int i = 1; i < argc; i++)
-    if (std::string_view(argv[i]) == "--test")
-      return runTests();
-    else if (std::string_view(argv[i]) == "--biome-map" && i + 1 < argc)
-      return mapBiomes(argv[i + 1]);
-    else if (std::string_view(argv[i]) == "--loot-sim" && i + 1 < argc)
-      return lootSim(std::atoi(argv[i + 1]), i + 2 < argc ? std::atoi(argv[i + 2]) : 20);
-    else if (std::string_view(argv[i]) == "--vendor-sim")
-      return vendorSim(i + 1 < argc ? std::atoi(argv[i + 1]) : 30,
-                       i + 2 < argc ? std::atoi(argv[i + 2]) : 0, true),
-             0;
 
   int code = 0;
   {

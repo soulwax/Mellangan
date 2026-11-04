@@ -9,10 +9,12 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - Smooth motion on high-refresh displays: the world still steps 60 times a second, but every sprite, light and the camera are drawn eased between the last two steps, so 120 and 144 Hz screens no longer show bunched, uneven movement. Anything that jumps more than three tiles in one step, such as a blink or a respawn, snaps instead of sliding. At 60 frames a second or less nothing is blended, so 60 Hz screens gain no delay and no cost.
+- Continuous integration on GitHub Actions: every push to `main` and every pull request builds with MSVC at `/W4 /WX` (Debug and Release) and with Clang at `-Werror` under AddressSanitizer and UBSan, and runs `--test` on both.
 
 ### Changed
 
-- `--test` seeds its random numbers, so a run is repeatable; a rare bastion-defence failure depended on where the generator happened to sit in memory.
+- `--test` is fully repeatable: it seeds its random numbers, and crowd pushing alternates by entity id instead of memory address. A rare bastion-defence test failure came from those two sources.
+- `--test`, `--biome-map`, `--loot-sim` and `--vendor-sim` run before the window and renderer start, so they work on machines without a GPU.
 
 ## [0.6.3] - 2026-11-03
 
