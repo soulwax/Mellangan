@@ -279,8 +279,7 @@ void Spawner::wave(int index, int count) {
     break;
   }
   default:
-    around(common[common.size() - 1 - rng.irange(0, std::min(2, int(common.size()) - 1))],
-           count, r, 0, TAU);
+    around(common.back(), count, r, 0, TAU);
   }
   level.game.announce(WAVE_DEFS[index].call);
   Sound::horde.play(0.7f, 0);

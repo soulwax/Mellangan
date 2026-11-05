@@ -172,6 +172,9 @@ void testBastion() {
   level.each<Sentry>([&](Sentry &s) { held += s.kills; });
   int left = 0;
   level.each<Enemy>([&](Enemy &e) { left += std::hypot(e.x - hx, e.y - hy) < 260; });
+  if (breached || held - before < 90 || left > 3)
+    spdlog::error("bastion waves: {} breached, {} held, {} left near town", breached,
+                  held - before, left);
   assert(breached == 0 && held - before >= 90 && left <= 3);
   int gems = 0;
   for (auto [id, o] : level.reg.view<Owned>().each())

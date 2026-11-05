@@ -10,6 +10,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 - CI packages its Windows Release build and keeps it as the `Mellangan-windows` artifact. `ci-artifact.ps1 [ref]` downloads the package for a commit whose CI run passed, so a release can ship the clean-checkout build instead of a local one. Packaging moved from `dist.ps1` to `package.ps1`, which both use.
 
+### Fixed
+
+- The minute horde is the strongest unlocked kind again. Drawing it from the top three (0.6.4) let the bastion siege test land on a different foe on Linux and macOS, where it failed; the bastion test now logs its breach, kill and straggler counts when it fails.
+
 ## [0.6.4] - 2026-11-05
 
 ### Added
