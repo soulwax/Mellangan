@@ -81,7 +81,7 @@ void Game::saveCampaign() {
   if (!campaign || !level || level->player->dead())
     return;
   campaign->capture(*level);
-  if (!saves.dir().empty() && !bench.enabled)
+  if (writes())
     saves.write("campaign.txt", campaign->save());
 }
 

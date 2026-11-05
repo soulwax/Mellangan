@@ -129,6 +129,7 @@ public:
 
   Enemy(const EnemyType &type, float hpMul, float damageMul);
   static const EnemyType &typeOf(EnemyKind kind);
+  static const char *nameOf(EnemyKind kind);
   static std::unique_ptr<Enemy> create(EnemyKind kind, float hpMul,
                                        float damageMul);
 

@@ -48,7 +48,7 @@ public:
   Hud hud{*this};
   Codex codex;
   float best = 0;
-  bool beatBest = false, wantsCampaign = false, hardcoreNext = false;
+  bool beatBest = false, wantsCampaign = false, hardcoreNext = false, readOnly = false;
   std::unique_ptr<Campaign> campaign;
 
   bool init(SDL_Window *window, const std::string &base);
@@ -98,6 +98,7 @@ private:
 
   void tick();
   void devTick();
+  bool writes() const { return !saves.dir().empty() && !bench.enabled && !readOnly; }
   void hotkeys();
   bool route();
   std::unique_ptr<Menu> nearby();

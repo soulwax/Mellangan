@@ -86,9 +86,9 @@ void Game::shutdown() {
   saveCampaign();
   if (campaign)
     campaign->leave();
-  if (level && !bench.enabled)
+  if (level && writes())
     level->chart.save(chartPath);
-  if (!saves.dir().empty() && !bench.enabled)
+  if (writes())
     codex.save(saves.dir() + "codex.txt");
   level.reset();
   screen.unload();
@@ -305,7 +305,7 @@ std::string Game::worldName() const {
 }
 
 void Game::build() {
-  if (level && !bench.enabled)
+  if (level && writes())
     level->chart.save(chartPath);
   std::string code = worldMode == WorldMode::Classic ? "" : seedCode;
   noise_reseed(saltOf(code));
@@ -386,7 +386,7 @@ void Game::loadBalance() {
 
 void Game::setDifficulty(Difficulty d) {
   difficulty = d;
-  if (!saves.dir().empty() && !bench.enabled) {
+  if (writes()) {
     std::string name = difficultyName(d);
     saves.write("difficulty.txt", name);
   }
@@ -407,13 +407,14 @@ void Game::remember(bool dawn) {
   codex.runs++, codex.dawns += dawn;
   codex.bestTime = std::max(codex.bestTime, level->time);
   codex.bestStreak = std::max(codex.bestStreak, level->bestStreak);
-  if (!saves.dir().empty())
-    codex.save(saves.dir() + "codex.txt");
+  if (!writes())
+    return;
+  codex.save(saves.dir() + "codex.txt");
   saves.record(worldName(), level->time, dawn);
 }
 
 void Game::saveWorld() const {
-  if (saves.dir().empty() || bench.enabled)
+  if (!writes())
     return;
   saves.saveWorld(worldMode, seedCode);
 }
@@ -431,7 +432,7 @@ void Game::announce(std::string text) {
 
 void Game::setReducedParticles(bool reduced) {
   reducedParticles = reduced;
-  if (!saves.dir().empty() && !bench.enabled) {
+  if (writes()) {
     const char *value = reduced ? "1\n" : "0\n";
     saves.write("visual.txt", std::string_view(value, 2));
   }
@@ -440,7 +441,7 @@ void Game::setReducedParticles(bool reduced) {
 void Game::onPlayerDied() {
   if (campaign && campaign->hardcore) {
     spdlog::info("campaign: hardcore hero fell on day {}, the save is gone", level->night.nights);
-    if (!saves.dir().empty() && !bench.enabled)
+    if (writes())
       SDL_RemovePath((saves.dir() + "campaign.txt").c_str());
     campaign->leave();
     campaign.reset();

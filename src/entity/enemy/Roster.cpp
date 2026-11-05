@@ -208,9 +208,9 @@ std::unique_ptr<Enemy> Enemy::create(EnemyKind kind, float hpMul,
   return e;
 }
 
-const char *Enemy::name() const {
-  if (title)
-    return title;
+const char *Enemy::name() const { return title ? title : nameOf(EnemyKind(kind())); }
+
+const char *Enemy::nameOf(EnemyKind kind) {
   static const char *const NAMES[] = {
       "a bat",          "a rat",           "a slime",
       "a scorpion",     "a spider",        "a ghost",
@@ -235,7 +235,7 @@ const char *Enemy::name() const {
       "an ore golem", "a kobold miner", "a shade", "a nest"
   };
   static_assert(std::size(NAMES) == int(EnemyKind::Count));
-  return NAMES[&type - TYPES];
+  return NAMES[int(kind)];
 }
 
 int Enemy::kind() const { return int(&type - TYPES); }

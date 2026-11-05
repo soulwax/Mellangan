@@ -67,67 +67,34 @@ void HeroCard::render(Screen &s) {
   layout(s, true);
 }
 
-float HeroCard::layout(Screen &s, bool draw) const {
-  float y = top;
+float HeroCard::banner(Screen &s, bool draw) const {
   float big = std::min(2 * u, std::floor((w - 46 * u) / Screen::textWidth(h.name, 1)));
   float band = 8 * big + 12 * u;
   if (draw) {
-    s.rect(x, y, w, band, tint.alpha(0.12f * in));
+    s.rect(x, top, w, band, tint.alpha(0.12f * in));
     for (int k = 0; k < 6; k++)
-      heroSigil(s, pick, x + w - 18 * u - k * 34 * u, y + band / 2, 11 * u,
+      heroSigil(s, pick, x + w - 18 * u - k * 34 * u, top + band / 2, 11 * u,
                 tint.alpha(0.07f * in), t);
-    heroSigil(s, pick, x + 21 * u, y + band / 2, 14 * u,
+    heroSigil(s, pick, x + 21 * u, top + band / 2, 14 * u,
               (open ? tint : col::muted * 0.6f).alpha(in), t);
-    s.text(h.name, x + 42 * u, y + band / 2 - 8 * big, big, tint.alpha(in));
-    s.rect(x, y + band, w, u, tint.alpha(0.7f * in));
+    s.text(h.name, x + 42 * u, top + band / 2 - 8 * big, big, tint.alpha(in));
+    s.rect(x, top + band, w, u, tint.alpha(0.7f * in));
   }
-  y += band + 8 * u;
+  return top + band + 8 * u;
+}
+
+float HeroCard::label(Screen &s, const char *text, float y, bool draw) const {
   float cx = x + pad, cw = w - 2 * pad;
-  Color prose = col::white.alpha(0.85f * in);
-  y = gui::wrapText(s, h.title, cx, y, cw, body, line, tint.alpha(0.75f * in), draw) +
-      6 * u;
-  if (!open) {
-    if (draw)
-      s.text("LOCKED", cx, y, body, col::red.alpha(in));
-    y += line + 4 * u;
-    y = gui::wrapText(s, fmt::format("Unlock: {}", h.need), cx, y, cw, body, line,
-                      prose, draw);
-    return y + pad - top;
-  }
-  auto label = [&](const char *text) {
-    if (draw) {
-      s.text(text, cx, y, small, tint.alpha(0.85f * in));
-      s.rect(cx + Screen::textWidth(text, small) + 6 * u, y + 8 * small,
-             cw - Screen::textWidth(text, small) - 6 * u, 1,
-             tint.alpha(0.25f * in));
-    }
-    y += 12 * u;
-  };
-
-  label("WEAPON");
   if (draw) {
-    if (const Upgrade *up = named(h.weapon))
-      s.sprite(up->icon, cx, y - u, 0, 0, u, u);
-    s.text(h.weapon, cx + gut, y, body, col::white.alpha(in));
+    s.text(text, cx, y, small, tint.alpha(0.85f * in));
+    s.rect(cx + Screen::textWidth(text, small) + 6 * u, y + 8 * small,
+           cw - Screen::textWidth(text, small) - 6 * u, 1, tint.alpha(0.25f * in));
   }
-  y += line + 6 * u;
-  label("TRAIT");
-  if (draw)
-    heroSigil(s, pick, cx + 8 * u, y + 7 * u, 7 * u, tint.alpha(in), t);
-  y = gui::wrapText(s, h.trait, cx + gut, y, cw - gut, body, line, prose, draw) + 6 * u;
+  return y + 12 * u;
+}
 
-  label("SKILL");
-  float key = Screen::textWidth("SPACE", small) + 8 * u;
-  if (draw) {
-    s.rect(cx + cw - key, y - u, key, 14 * u, tint.alpha(0.15f * in));
-    s.frame(cx + cw - key, y - u, key, 14 * u, 1, tint.alpha(0.7f * in));
-    s.text("SPACE", cx + cw - key + 4 * u, y + u, small, tint.alpha(in));
-    s.text(h.skill, cx, y, body, tint.alpha(in));
-  }
-  y += line + 2 * u;
-  y = gui::wrapText(s, h.skillDesc, cx, y, cw, body, line, prose, draw) + 6 * u;
-
-  label("ARSENAL");
+float HeroCard::arsenal(Screen &s, float y, bool draw) const {
+  float cx = x + pad, cw = w - 2 * pad;
   float colW = (cw - 6 * u) / 2, step = dense ? 18 * u : 12 * u, iconScale = 0.75f * u;
   int n = 0;
   for (auto &up : game.level->player->upgrades) {
@@ -143,10 +110,11 @@ float HeroCard::layout(Screen &s, bool draw) const {
     }
     n++;
   }
-  y += ((n + (dense ? 7 : 1)) / (dense ? 8 : 2)) * step + 6 * u;
+  return y + ((n + (dense ? 7 : 1)) / (dense ? 8 : 2)) * step + 6 * u;
+}
 
-  label("NATURE");
-  float chipX = cx;
+float HeroCard::nature(Screen &s, float y, bool draw) const {
+  float cx = x + pad, cw = w - 2 * pad, chipX = cx;
   for (const Chip &k : chips(h)) {
     float kw = Screen::textWidth(k.text, small) + 10 * u;
     if (chipX + kw > cx + cw)
@@ -167,6 +135,48 @@ float HeroCard::layout(Screen &s, bool draw) const {
       if (const Upgrade *up = named(h.affinity[k]))
         s.sprite(up->icon, fx + k * 20 * u, y, 0, 0, u, u);
   }
-  y += 18 * u;
+  return y + 18 * u;
+}
+
+float HeroCard::layout(Screen &s, bool draw) const {
+  float y = banner(s, draw);
+  float cx = x + pad, cw = w - 2 * pad;
+  Color prose = col::white.alpha(0.85f * in);
+  y = gui::wrapText(s, h.title, cx, y, cw, body, line, tint.alpha(0.75f * in), draw) +
+      6 * u;
+  if (!open) {
+    if (draw)
+      s.text("LOCKED", cx, y, body, col::red.alpha(in));
+    y += line + 4 * u;
+    y = gui::wrapText(s, fmt::format("Unlock: {}", h.need), cx, y, cw, body, line,
+                      prose, draw);
+    return y + pad - top;
+  }
+
+  y = label(s, "WEAPON", y, draw);
+  if (draw) {
+    if (const Upgrade *up = named(h.weapon))
+      s.sprite(up->icon, cx, y - u, 0, 0, u, u);
+    s.text(h.weapon, cx + gut, y, body, col::white.alpha(in));
+  }
+  y += line + 6 * u;
+  y = label(s, "TRAIT", y, draw);
+  if (draw)
+    heroSigil(s, pick, cx + 8 * u, y + 7 * u, 7 * u, tint.alpha(in), t);
+  y = gui::wrapText(s, h.trait, cx + gut, y, cw - gut, body, line, prose, draw) + 6 * u;
+
+  y = label(s, "SKILL", y, draw);
+  float key = Screen::textWidth("SPACE", small) + 8 * u;
+  if (draw) {
+    s.rect(cx + cw - key, y - u, key, 14 * u, tint.alpha(0.15f * in));
+    s.frame(cx + cw - key, y - u, key, 14 * u, 1, tint.alpha(0.7f * in));
+    s.text("SPACE", cx + cw - key + 4 * u, y + u, small, tint.alpha(in));
+    s.text(h.skill, cx, y, body, tint.alpha(in));
+  }
+  y += line + 2 * u;
+  y = gui::wrapText(s, h.skillDesc, cx, y, cw, body, line, prose, draw) + 6 * u;
+
+  y = arsenal(s, label(s, "ARSENAL", y, draw), draw);
+  y = nature(s, label(s, "NATURE", y, draw), draw);
   return y + pad - top;
 }

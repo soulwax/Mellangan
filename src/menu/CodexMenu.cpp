@@ -1,7 +1,12 @@
 #include "menu/CodexMenu.hpp"
 
+#include <cctype>
+#include <string>
+#include <string_view>
+
 #include "Game.hpp"
 #include "audio/Sound.hpp"
+#include "entity/enemy/Enemy.hpp"
 #include "entity/Player.hpp"
 #include "gui/Widget.hpp"
 #include "item/Upgrade.hpp"
@@ -25,28 +30,93 @@ bool inside(const SDL_FRect &r, const Input &in) {
 }
 
 
-const char *const FOES[Codex::KINDS] = {
-    "BAT",        "RAT",        "SLIME",      "SCORPION",
-    "SPIDER",     "GHOST",      "CULTIST",    "DEMON",
-    "KNIGHT",     "CYCLOPS",    "WOLF",       "ALPHA WOLF",
-    "BURROWER",   "NECROMANCER","SKELETON",   "TREASURE THIEF",
-    "MIRE LEECH","BOG LANTERN","GLASS MANTIS","DUST VULTURE","FROST WISP",
-    "ICEBACK","SPORELING","MYCELIAL BRUTE","EMBER IMP","CINDER GOLEM",
-    "MIMIC", "OUTLAW", "BERSERKER", "PIT FIGHTER", "DESERTER",
-    "THORNLING", "WILD BOAR", "GOBLIN ARCHER", "GOBLIN SHAMAN",
-    "SAPLING", "TREANT", "MOTH WISP", "CUTTHROAT",
-    "BOG TOAD", "DROWNED", "SNAPJAW", "STRANGLER VINE",
-    "AMBER BEETLE", "SPORE PUFFER", "SUNKEN PRIEST",
-    "YETI", "ICE WRAITH", "BARROW WIGHT", "CRYSTAL GOLEM",
-    "CRYSTAL SHARD", "MOON HOUND", "LYNX", "BARROW ARCHER",
-    "SAND WYRM", "HYENA", "SALT GOLEM", "GLASS SPITTER",
-    "STORM KITE", "DUNE RAIDER", "TOTEM SHAMAN", "WAR TOTEM",
-    "MAGMA SLUG", "ASH WRAITH", "CAVE HORROR", "STAR SPAWN",
-    "STARLET", "FLAME CULTIST", "HOLLOW SENTINEL", "EMBER DRAKE",
-    "NIGHT STALKER", "GRAVE ROBBER", "CAVE BAT", "ROCK CRAWLER",
-    "ORE GOLEM", "KOBOLD MINER", "SHADE", "NEST"
+struct Grid {
+  float u, small, pad, row, top, start, colW, footer;
 };
+
+std::string foeTitle(int kind) {
+  std::string_view n = Enemy::nameOf(EnemyKind(kind));
+  for (std::string_view article : {"a ", "an ", "the "})
+    if (n.starts_with(article)) {
+      n.remove_prefix(article.size());
+      break;
+    }
+  std::string out(n);
+  for (char &c : out)
+    c = char(std::toupper(static_cast<unsigned char>(c)));
+  return out;
+}
+
+void heading(Screen &s, const Grid &g, float x, const char *name, int have, int of) {
+  s.text(fmt::format("{} {}/{}", name, have, of), x, g.top, g.small,
+         have == of ? col::gold : col::white);
+}
+
+void regions(Screen &s, const Grid &g, const Codex &c, float x, int page) {
+  heading(s, g, x, "REGIONS", c.count(c.biomes), BIOME_COUNT);
+  float y = g.start;
+  for (int b = page * LIST_ROWS; b < std::min(int(BIOME_COUNT), (page + 1) * LIST_ROWS);
+       b++, y += g.row) {
+    bool known = c.biomes >> b & 1;
+    if (known)
+      s.rect(x, y + 4 * g.small, 8 * g.small, 8 * g.small, Chart::tone(BiomeId(b)));
+    s.text(Screen::fit(known ? Chart::title(BiomeId(b)) : "? ? ?", g.colW - 20 * g.small, g.small),
+           x + 12 * g.small, y, g.small, known ? col::white : col::muted * 0.6f);
+  }
+}
+
+void relics(Screen &s, const Grid &g, const Codex &c, float x, int page,
+            const std::vector<std::unique_ptr<Upgrade>> &upgrades) {
+  int total = 0, found = 0;
+  for (auto &up : upgrades)
+    if (up->rare)
+      found += c.relics >> total++ & 1;
+  heading(s, g, x, "RELICS", found, total);
+  float y = g.start, step = std::min(g.row * 1.6f, (g.footer - g.start) / RELIC_ROWS);
+  int i = 0;
+  for (auto &up : upgrades) {
+    if (!up->rare)
+      continue;
+    int index = i++;
+    if (index < page * RELIC_ROWS || index >= (page + 1) * RELIC_ROWS)
+      continue;
+    bool known = c.relics >> index & 1;
+    s.color(col::white.alpha(known ? 1 : 0.15f));
+    s.sprite(up->icon, x, y - 2 * g.small, 0, 0, g.small, g.small);
+    s.color(col::white);
+    s.text(Screen::fit(known ? up->name : "? ? ?", g.colW - 28 * g.small, g.small),
+           x + 20 * g.small, y, g.small, known ? col::gold : col::muted * 0.6f);
+    y += step;
+  }
+}
+
+template <class Name>
+void tally(Screen &s, const Grid &g, float x, const char *title, const int *counts, int n,
+           int first, int last, Name &&name) {
+  int seen = 0;
+  for (int k = 0; k < n; k++)
+    seen += counts[k] > 0;
+  heading(s, g, x, title, seen, n);
+  float y = g.start;
+  for (int k = first; k < std::min(n, last); k++, y += g.row) {
+    bool known = counts[k] > 0;
+    std::string count = known ? std::to_string(counts[k]) : "";
+    float width = Screen::textWidth(count, g.small);
+    s.text(Screen::fit(known ? name(k) : std::string("? ? ?"), g.colW - 16 * g.small - width,
+                       g.small),
+           x, y, g.small, known ? col::white : col::muted * 0.6f);
+    if (known)
+      s.text(count, x + g.colW - 8 * g.small - width, y, g.small, col::muted);
+  }
+}
 } // namespace
+
+CodexMenu::CodexMenu(Game &game, bool fromPause) : Menu(game), fromPause(fromPause) {
+  if (!game.level || !game.level->player)
+    catalogue = Upgrade::all();
+}
+
+CodexMenu::~CodexMenu() = default;
 
 void CodexMenu::turn(int direction) {
   page = (page + direction + PAGE_COUNT) % PAGE_COUNT;
@@ -79,102 +149,40 @@ void CodexMenu::tick() {
 
 void CodexMenu::render(Screen &s) {
   const Codex &c = game.codex;
-  float u = s.u, small = std::max(1.0f, u - 1), pad = 14 * u, row = 18 * small;
+  Grid g;
+  g.u = s.u, g.small = std::max(1.0f, g.u - 1), g.pad = 14 * g.u;
   s.rect(0, 0, s.w, s.h, {0.02f, 0.02f, 0.05f, 0.92f});
-  s.text("CODEX", pad, pad, 2 * u, col::gold);
+  s.text("CODEX", g.pad, g.pad, 2 * g.u, col::gold);
   s.text(Screen::fit(fmt::format("{} runs   {} dawn{}   best {}   best streak {}   {} slain",
-                     c.runs, c.dawns, c.dawns == 1 ? "" : "s",
-                     clockText(c.bestTime), c.bestStreak, c.kills()), s.w - 2 * pad, small),
-         pad, pad + 36 * u, small, col::muted);
+                                 c.runs, c.dawns, c.dawns == 1 ? "" : "s",
+                                 clockText(c.bestTime), c.bestStreak, c.kills()),
+                     s.w - 2 * g.pad, g.small),
+         g.pad, g.pad + 36 * g.u, g.small, col::muted);
+  g.top = g.pad + 62 * g.u, g.colW = (s.w - 2 * g.pad) / 4;
+  g.start = g.top + 18 * g.small, g.footer = s.h - g.pad - 24 * g.small;
+  g.row = std::min(18 * g.small, (g.footer - g.start) / LIST_ROWS);
 
-  float top = pad + 62 * u, colW = (s.w - 2 * pad) / 4;
-  float start = top + 18 * small, footer = s.h - pad - 24 * small;
-  row = std::min(row, (footer - start) / LIST_ROWS);
-  auto header = [&](float x, const char *name, int have, int of) {
-    s.text(fmt::format("{} {}/{}", name, have, of), x, top, small,
-           have == of ? col::gold : col::white);
-  };
-
-  float x = pad, y = start;
-  header(x, "REGIONS", c.count(c.biomes), BIOME_COUNT);
-  for (int b = page * LIST_ROWS; b < std::min(int(BIOME_COUNT), (page + 1) * LIST_ROWS); b++, y += row) {
-    bool known = c.biomes >> b & 1;
-    if (known)
-      s.rect(x, y + 4 * small, 8 * small, 8 * small, Chart::tone(BiomeId(b)));
-    s.text(Screen::fit(known ? Chart::title(BiomeId(b)) : "? ? ?", colW - 20 * small, small), x + 12 * small, y, small,
-           known ? col::white : col::muted * 0.6f);
-  }
-
-  x += colW, y = start;
-  int relics = 0, found = 0;
-  auto fallback = game.level && game.level->player ? std::vector<std::unique_ptr<Upgrade>>{} : Upgrade::all();
-  auto &upgrades = fallback.empty() ? game.level->player->upgrades : fallback;
-  for (auto &up : upgrades)
-    if (up->rare)
-      found += c.relics >> relics++ & 1;
-  header(x, "RELICS", found, relics);
-  int i = 0;
-  float relicRow = std::min(row * 1.6f, (footer - start) / RELIC_ROWS);
-  for (auto &up : upgrades) {
-    if (!up->rare)
-      continue;
-    int index = i++;
-    if (index < page * RELIC_ROWS || index >= (page + 1) * RELIC_ROWS)
-      continue;
-    bool known = c.relics >> index & 1;
-    s.color(col::white.alpha(known ? 1 : 0.15f));
-    s.sprite(up->icon, x, y - 2 * small, 0, 0, small, small);
-    s.color(col::white);
-    s.text(Screen::fit(known ? up->name : "? ? ?", colW - 28 * small, small), x + 20 * small, y, small,
-           known ? col::gold : col::muted * 0.6f);
-    y += relicRow;
-  }
-
-  x += colW, y = start;
-  int seen = 0;
-  for (int k : c.slain)
-    seen += k > 0;
-  header(x, "BESTIARY", seen, Codex::KINDS);
-  for (int k = page * LIST_ROWS; k < std::min(Codex::KINDS, (page + 1) * LIST_ROWS); k++, y += row) {
-    bool known = c.slain[k] > 0;
-    std::string n = known ? std::to_string(c.slain[k]) : "";
-    float countWidth = Screen::textWidth(n, small);
-    s.text(Screen::fit(known ? FOES[k] : "? ? ?", colW - 16 * small - countWidth, small), x, y, small,
-           known ? col::white : col::muted * 0.6f);
-    if (known) {
-      s.text(n, x + colW - 8 * small - countWidth, y, small,
-             col::muted);
-    }
-  }
-
-  x += colW, y = start;
-  int visited = 0;
-  for (int k : c.entered)
-    visited += k > 0;
-  header(x, "PLACES", visited, Codex::SITES);
+  float x = g.pad;
+  regions(s, g, c, x, page);
+  relics(s, g, c, x += g.colW, page,
+         catalogue.empty() ? game.level->player->upgrades : catalogue);
+  tally(s, g, x += g.colW, "BESTIARY", c.slain, Codex::KINDS, page * LIST_ROWS,
+        (page + 1) * LIST_ROWS, foeTitle);
   int siteRows = (Codex::SITES + PAGE_COUNT - 1) / PAGE_COUNT;
-  for (int k = page * siteRows; k < std::min(Codex::SITES, (page + 1) * siteRows); k++, y += row) {
-    bool known = c.entered[k] > 0;
-    std::string n = known ? std::to_string(c.entered[k]) : "";
-    float countWidth = Screen::textWidth(n, small);
-    const char *name = STRUCTURES[k].name ? STRUCTURES[k].name : "UNKNOWN SITE";
-    s.text(Screen::fit(known ? name : "? ? ?", colW - 16 * small - countWidth, small), x, y, small,
-           known ? col::white : col::muted * 0.6f);
-    if (known) {
-      s.text(n, x + colW - 8 * small - countWidth, y, small,
-             col::muted);
-    }
-  }
+  tally(s, g, x += g.colW, "PLACES", c.entered, Codex::SITES, page * siteRows,
+        (page + 1) * siteRows, [](int k) {
+          return std::string(STRUCTURES[k].name ? STRUCTURES[k].name : "UNKNOWN SITE");
+        });
 
-  s.text("C / Esc back", pad, s.h - pad - 16 * small, small, col::muted);
+  s.text("C / Esc back", g.pad, s.h - g.pad - 16 * g.small, g.small, col::muted);
   s.textCenter(fmt::format("PAGE {} / {}", page + 1, PAGE_COUNT), s.w * 0.5f,
-               s.h - pad - 16 * small, small, col::white);
+               s.h - g.pad - 16 * g.small, g.small, col::white);
   for (int direction : {-1, 1}) {
     SDL_FRect button = pageButton(s, direction);
     bool hover = inside(button, game.input);
     gui::TextButton(button, hover ? col::muted * 0.3f : col::panel,
-                    hover ? col::gold : col::muted, small,
-                    direction < 0 ? "<" : ">", button.y + 7 * small,
-                    small, col::gold).render(s);
+                    hover ? col::gold : col::muted, g.small,
+                    direction < 0 ? "<" : ">", button.y + 7 * g.small,
+                    g.small, col::gold).render(s);
   }
 }

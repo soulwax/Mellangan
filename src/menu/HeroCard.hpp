@@ -20,5 +20,9 @@ private:
   Color tint;
 
   const Upgrade *named(const char *name) const;
+  float banner(Screen &s, bool draw) const;
+  float label(Screen &s, const char *text, float y, bool draw) const;
+  float arsenal(Screen &s, float y, bool draw) const;
+  float nature(Screen &s, float y, bool draw) const;
   float layout(Screen &s, bool draw) const;
 };

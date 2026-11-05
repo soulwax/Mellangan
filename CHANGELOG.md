@@ -30,11 +30,17 @@ All notable changes to Mellangan are documented here. The format follows
 - A creature's status effects are private to `Status`: code reads them with `effect(kind)` and cuts one short with `end(kind)`, so the bitmask of running effects is always exact. `power()` checks that bit first, so a foe with no effects no longer reads its effect slots for its speed, damage and fear each tick.
 - `Enemy::die` (124 lines) reads as a list of steps: retire, `tally`, `onKill`, `spoils`, `bossFalls`, `championFalls`, then `gilt` or `remains`. The chains of enemy kinds that picked a corpse style and blood colour are now two `switch` tables, `remainsOf` and `redBlooded`. Random draws happen in the same order, so runs replay exactly as before.
 - `Game::tick` (109 lines) is split into `hotkeys`, `route` (which key opens which menu, with `nearby` choosing the shop, stash or bench you stand at) and `play`. The campaign's building, gathering, autosave and skill-point steps moved to `GameCampaign.cpp` as `place`, `gather`, `keep` and `bankLevels`.
+- `HeroCard::layout` draws its banner, arsenal grid and nature chips through their own functions. `main` is split into headless tools, window and renderer setup, and the game, and a view that fails now shuts the renderer down before exiting.
+- The codex menu takes enemy names from the roster table (`Enemy::nameOf`) instead of keeping its own copy of all 78. The bestiary and places columns share one function, and opening the codex from the title screen builds the upgrade list once instead of on every frame.
+- `Hud.cpp` is split three ways: screen panels stay in `Hud.cpp`, markers pinned to the world move to `HudWorld.cpp`, and campaign overlays move to `HudCampaign.cpp`. One `gui()` projection replaces eleven copies of the world-to-screen arithmetic, and one `plate()` replaces three copies of the label panel.
+- `Campaign.cpp` is split in two: town founding, layout and fortification move to `CampaignTowns.cpp`, and the night and threat logic stays behind.
 - The content check at startup also validates unique items, so a unique naming a missing item base or upgrade is reported instead of silently never dropping.
 - `--bench` opts its process out of Windows power throttling, so a bench run in an unfocused window is no longer slowed to efficiency clocks.
 
 ### Fixed
 
+- `--capture-screenshots` no longer writes to the player's save folder. It used to overwrite the codex, the world choice and a chart file on every run; now it reads the profile and every write is skipped. All save writes go through one `Game::writes()` check.
+- With no save folder (as in `--test`), saves are no longer written next to the working directory. Tests had been rewriting the repository's tracked `worlds.txt`, and could delete chart files there.
 - Loading a world chart with no recorded structures no longer copies into a null pointer, which is undefined behaviour even for zero bytes.
 
 ## [0.6.3] - 2026-11-03

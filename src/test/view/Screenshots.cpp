@@ -31,7 +31,7 @@
 
 void captureScreenshotSuite(SDL_Window *window, const std::string &base) {
   Game game;
-  game.window = window;
+  game.window = window, game.readOnly = true;
   if (!game.init(window, base))
     return;
 

@@ -2,6 +2,7 @@
 
 #include <deque>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <SDL3/SDL.h>
@@ -52,6 +53,8 @@ private:
   void bannerBox();
   bool edge(double wx, double wy, Pin &pin) const;
   bool inView(double wx, double wy, float margin) const;
+  SDL_FPoint gui(double wx, double wy) const;
+  void plate(double wx, double wy, std::string_view text, Color ink);
   void arrow(const Pin &pin, float length, float wing, Color c);
   void diamond(const Pin &pin, Color c);
   void tag(const std::string &text, const Pin &pin, float back, Color c);

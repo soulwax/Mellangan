@@ -21,11 +21,12 @@ std::string Saves::slurp(const std::string &file) {
 }
 
 std::string Saves::read(const std::string &name) const {
-  return slurp(path + name);
+  return path.empty() ? std::string() : slurp(path + name);
 }
 
 void Saves::write(const std::string &name, std::string_view data) const {
-  SDL_SaveFile((path + name).c_str(), data.data(), data.size());
+  if (!path.empty())
+    SDL_SaveFile((path + name).c_str(), data.data(), data.size());
 }
 
 void Saves::loadWorld(WorldMode &mode, std::string &code) {
@@ -71,7 +72,8 @@ void Saves::record(const std::string &code, float time, bool dawn) {
     }
   history.insert(history.begin(), w);
   while (int(history.size()) > HISTORY) {
-    SDL_RemovePath((path + "chart-" + history.back().code + ".bin").c_str());
+    if (!path.empty())
+      SDL_RemovePath((path + "chart-" + history.back().code + ".bin").c_str());
     history.pop_back();
   }
   std::string out;
