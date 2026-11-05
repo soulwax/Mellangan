@@ -62,6 +62,21 @@ jobs:
       - name: Build Release
         run: cmake --build build --config Release --target Mellangan --parallel
 
+      - name: Package
+        id: package
+        shell: pwsh
+        run: |
+          $archive = ./package.ps1 | Select-Object -Last 1
+          "archive=$archive" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mellangan-windows
+          path: ${{ steps.package.outputs.archive }}
+          compression-level: 0
+          if-no-files-found: error
+
       - name: Upload test log
         if: failure()
         uses: actions/upload-artifact@v4

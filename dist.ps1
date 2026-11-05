@@ -8,7 +8,7 @@
     1. Bumps VERSION (MAJOR.MINOR.PATCH) and moves the CHANGELOG.md "Unreleased" notes under the new version.
     2. Configures and builds the Release configuration.
     3. Runs --bench-gate on the Release build: 10,000 enemies must hold 55 fps with a frame p99 under 16.7 ms.
-    4. Stages the executable and the runtime resources, then archives them.
+    4. Stages the executable and the runtime resources, then archives them (package.ps1).
     If the build or the bench gate fails, VERSION and CHANGELOG.md are restored.
 
 .PARAMETER Bump
@@ -93,34 +93,4 @@ try {
 }
 
 # --- package -----------------------------------------------------------------------------------------------------
-$platform = if ($IsWindows) { 'windows' } elseif ($IsMacOS) { 'macos' } else { 'linux' }
-$name = "Mellangan-$version-$platform"
-$stage = Join-Path dist $name
-$file = if ($IsWindows) { "$name.7z" } else { "$name.tar.gz" }
-$archive = Join-Path dist $file
-Remove-Item $stage, $archive -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -ItemType Directory "$stage/res/shaders" -Force | Out-Null
-
-$exe = if ($IsWindows) { if (Test-Path "build/bin/Release/MellanganApp.exe") { 'MellanganApp.exe' } else { 'Mellangan.exe' } } else { 'Mellangan' }
-$bin = if (Test-Path "build/bin/Release/$exe") { 'build/bin/Release' } elseif (Test-Path "build/app/Release/$exe") { 'build/app/Release' } elseif (Test-Path "build/Release/$exe") { 'build/Release' } else { 'build' }
-$targetName = if ($IsWindows) { 'Mellangan.exe' } else { 'Mellangan' }
-Copy-Item "$bin/$exe" (Join-Path $stage $targetName)
-Copy-Item CHANGELOG.md $stage
-Copy-Item res/atlas.png, res/particles.png, res/weather.png, res/font.png, res/balance.ini, res/CREDITS.md "$stage/res"
-Copy-Item "$bin/res/shaders/*.spv" "$stage/res/shaders"
-Copy-Item res/sfx, res/music "$stage/res" -Recurse
-
-Push-Location dist
-try {
-    if ($IsWindows) {
-        $7z = (Get-Command 7z -ErrorAction SilentlyContinue).Source
-        if (-not $7z) { $7z = "$env:ProgramFiles\7-Zip\7z.exe" }
-        if (-not (Test-Path $7z)) { throw '7-Zip not found: install it or put 7z on PATH' }
-        Invoke-Checked '7z' { & $7z a -t7z -mx=9 $file $name | Out-Null }
-    } else {
-        Invoke-Checked 'tar' { tar -czf $file $name }
-    }
-} finally { Pop-Location }
-
-$size = (Get-Item $archive).Length / 1MB
-Write-Host ("{0} ({1:N1} MB)" -f (Resolve-Path $archive), $size) -ForegroundColor Green
+& (Join-Path $PSScriptRoot package.ps1) -Version $version | Out-Null

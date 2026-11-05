@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- CI packages its Windows Release build and keeps it as the `Mellangan-windows` artifact. `ci-artifact.ps1 [ref]` downloads the package for a commit whose CI run passed, so a release can ship the clean-checkout build instead of a local one. Packaging moved from `dist.ps1` to `package.ps1`, which both use.
+
 ## [0.6.4] - 2026-11-05
 
 ### Added
