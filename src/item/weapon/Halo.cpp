@@ -1,5 +1,6 @@
 #include "item/weapon/Halo.hpp"
 
+#include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "entity/effect/HaloField.hpp"
 #include "level/Level.hpp"
@@ -25,10 +26,14 @@ void Halo::tick(Mob &p) {
   float r = range(),
         dmg =
             (5.0f + 2 * (at(level, 2) + at(level, 3) + at(level, 5))) * p.might * power;
+  bool scorched = false;
   p.level->foes(p, p.x, p.y, r + 24, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
     float rr = r + e.radius;
     if (xd * xd + yd * yd < rr * rr)
-      e.strike(dmg, e.x - p.x, e.y - p.y, 25, this);
+      e.strike(dmg, e.x - p.x, e.y - p.y, 25, this), scorched = true;
   });
+  hum ^= scorched;
+  if (scorched && hum)
+    Sound::orb.play(0.1f, 0.08f, 0.75f);
 }

@@ -219,21 +219,27 @@ void Hud::vitals() {
          hy - 5 * small, small, col::white);
 }
 
+SDL_FRect Hud::bannerRect() const {
+  const Screen &s = game.screen;
+  float u = s.u, pw = Screen::textWidth(banner, u) + 14 * u;
+  return {std::floor(s.w / 2 - pw / 2), s.h * 0.22f - 2 * u, pw, 22 * u};
+}
+
 void Hud::bannerBox() {
   Screen &s = game.screen;
   float u = s.u;
   float a = std::min({1.0f, bannerTime * 2, (3 - bannerTime) * 4});
-  float size = u, y = s.h * 0.22f;
-  float pw = Screen::textWidth(banner, size) + 14 * u, ph = 16 * size + 6 * u;
-  float px = std::floor(s.w / 2 - pw / 2), py = y - 2 * u;
-  s.rect(px, py, pw, ph, col::panel.alpha(0.72f * a));
-  s.rect(px, py, pw, u, col::gold.alpha(0.55f * a));
-  s.rect(px, py + ph - u, pw, u, col::gold.alpha(0.55f * a));
-  s.textCenter(banner, s.w / 2, y, size, col::gold.alpha(a));
+  SDL_FRect r = bannerRect();
+  s.rect(r.x, r.y, r.w, r.h, col::panel.alpha(0.72f * a));
+  s.rect(r.x, r.y, r.w, u, col::gold.alpha(0.55f * a));
+  s.rect(r.x, r.y + r.h - u, r.w, u, col::gold.alpha(0.55f * a));
+  s.textCenter(banner, s.w / 2, r.y + 2 * u, u, col::gold.alpha(a));
 }
 
 void Hud::draw() {
   tags.clear();
+  if (bannerTime > 0 && !game.menu)
+    tags.push_back(bannerRect());
   float u = game.screen.u, top = 6 * u + 5 * u;
   if (!game.menu)
     lootLabels();

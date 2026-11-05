@@ -13,4 +13,5 @@ public:
 
 private:
   float timer = 0;
+  bool hum = false;
 };

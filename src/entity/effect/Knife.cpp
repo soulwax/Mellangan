@@ -1,5 +1,6 @@
 #include "entity/effect/Knife.hpp"
 
+#include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "item/weapon/Knives.hpp"
 #include "item/Upgrade.hpp"
@@ -21,6 +22,8 @@ void Knife::tick() {
     e.strike(dmg, e.x - owner.x, e.y - owner.y, 70, source);
     e.knifeCooldown = 0.45f;
     Spark::burst(*level, x, y, col::white, 2, 50, false);
+    if (knives.ring <= 0)
+      knives.ring = 0.3f, Sound::slash.play(0.12f, 0.1f, 1.6f);
   });
 }
 

@@ -62,8 +62,9 @@ void ClassMenu::tick() {
     return choose(pick - 1);
   if (in.right.clicked)
     return choose(pick + 1);
-  if (in.confirm.clicked && t > 0.2f)
-    return begin();
+  queued |= in.confirm.clicked;
+  if (queued && t > 0.2f)
+    return queued = false, begin();
   SDL_FPoint m{in.mouseX, in.mouseY};
   for (int i = 0; i < HERO_COUNT; i++) {
     SDL_FRect r = slot(i);

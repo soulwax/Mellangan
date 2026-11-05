@@ -31,4 +31,5 @@ void SoulSiphon::tick(Mob &p) {
                        Color{1, 0.55f, 0.62f, 0.95f}, rng.range(0.5f, 0.7f));
   }
   p.hp = std::min(p.maxHp, p.hp + float(targets.size()));
+  Sound::orb.play(0.25f, 0.06f, 0.6f);
 }

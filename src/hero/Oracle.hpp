@@ -6,5 +6,5 @@ class Oracle : public ExpansionHero {
 public:
   Oracle();
   void cast(Mob &p) const override;
-  float wisdom() const override { return 1.15f; }
+  void slay(Mob &p, Enemy &e) const override;
 };

@@ -4,7 +4,7 @@
 
 class Knives : public Upgrade {
 public:
-  float angle = 0;
+  float angle = 0, ring = 0;
 
   Knives();
   int count() const { return 2 + at(level, 2) + at(level, 3) + at(level, 4); }

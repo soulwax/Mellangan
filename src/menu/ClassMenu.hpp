@@ -19,6 +19,7 @@ public:
 private:
   int pick = 0;
   float since = 0;
+  bool queued = false;
   float grow[HERO_COUNT]{};
 
   struct Pose {

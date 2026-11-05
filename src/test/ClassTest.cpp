@@ -208,6 +208,32 @@ void testClassKits() {
   }
   {
     Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    Enemy *foes[2];
+    for (int i = 0; i < 2; i++) {
+      auto made = Enemy::create(EnemyKind::Knight, 400, 1);
+      foes[i] = made.get();
+      made->x = p.x + 80 + i * 30, made->y = p.y, made->aware = false, made->plan = nullptr;
+      level.add(std::move(made));
+    }
+    level.tick();
+    level.tick();
+    const Hero *oracle = nullptr;
+    for (const Hero *h : HEROES)
+      if (std::strcmp(h->name, "ORACLE") == 0)
+        oracle = h;
+    assert(oracle && oracle->wisdom() == 1);
+    for (int i = 0; i < 11; i++)
+      oracle->slay(p, *foes[0]);
+    assert(foes[1]->status.power(StatusKind::Marked) == 0);
+    oracle->slay(p, *foes[0]);
+    assert(foes[1]->status.power(StatusKind::Marked) > 0);
+    game.level.reset();
+  }
+  {
+    Game game;
     game.codex.start = 0;
     game.level = std::make_unique<Level>(game);
     Level &level = *game.level;

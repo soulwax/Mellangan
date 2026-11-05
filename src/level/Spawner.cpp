@@ -84,8 +84,9 @@ EnemyKind Spawner::pick(const Roster &r, double x, double y) const {
       local[m++] = k;
   if (m && rng.chance(b.localChance))
     return local[rng.irange(0, m - 1)];
-  return n > 2 && rng.chance(b.strongChance) ? r.common[n - 1 - rng.irange(0, 1)]
-                                             : r.common[rng.irange(0, n - 1)];
+  return n > 2 && rng.chance(b.strongChance)
+             ? r.common[n - 1 - rng.irange(0, std::max(2, n / 3) - 1)]
+             : r.common[rng.irange(0, n - 1)];
 }
 
 void Spawner::trickle(float t) {
@@ -278,7 +279,8 @@ void Spawner::wave(int index, int count) {
     break;
   }
   default:
-    around(common.back(), count, r, 0, TAU);
+    around(common[common.size() - 1 - rng.irange(0, std::min(2, int(common.size()) - 1))],
+           count, r, 0, TAU);
   }
   level.game.announce(WAVE_DEFS[index].call);
   Sound::horde.play(0.7f, 0);

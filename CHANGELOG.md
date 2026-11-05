@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-11-05
+
 ### Added
 
 - Smooth motion on high-refresh displays: the world still steps 60 times a second, but every sprite, light and the camera are drawn eased between the last two steps, so 120 and 144 Hz screens no longer show bunched, uneven movement. Anything that jumps more than three tiles in one step, such as a blink or a respawn, snaps instead of sliding. At 60 frames a second or less nothing is blended, so 60 Hz screens gain no delay and no cost.
@@ -36,12 +38,17 @@ All notable changes to Mellangan are documented here. The format follows
 - `Campaign.cpp` is split in two: town founding, layout and fortification move to `CampaignTowns.cpp`, and the night and threat logic stays behind.
 - The content check at startup also validates unique items, so a unique naming a missing item base or upgrade is reported instead of silently never dropping.
 - `--bench` opts its process out of Windows power throttling, so a bench run in an unfocused window is no longer slowed to efficiency clocks.
+- The Oracle has a trait of her own instead of a copy of the Mage's +15% experience: every 12th kill marks the foes within 4 tiles of the fallen one for 4 s (+25% direct damage).
+- Late runs mix their foes more. A generic "strong" spawn now comes from the strongest third of the unlocked roster instead of only the top two kinds, and the minute horde picks one of the three strongest kinds instead of always the strongest.
+- Warding Halo, Orbiting Knives, Soul Siphon and Static Field make a sound. Each one is quiet and only plays when the weapon hits: Halo on every other pulse, and Knives at most about three times a second however many foes they cut.
 
 ### Fixed
 
 - `--capture-screenshots` no longer writes to the player's save folder. It used to overwrite the codex, the world choice and a chart file on every run; now it reads the profile and every write is skipped. All save writes go through one `Game::writes()` check.
 - With no save folder (as in `--test`), saves are no longer written next to the working directory. Tests had been rewriting the repository's tracked `worlds.txt`, and could delete chart files there.
 - Loading a world chart with no recorded structures no longer copies into a null pointer, which is undefined behaviour even for zero bytes.
+- Compass tags (SHRINE, MERCHANT, landmarks, champions) no longer hide under the region banner; they step below it while it shows.
+- The class picker no longer drops an Enter pressed in its first 0.2 s, which a hitch on opening could stretch to most of a second. The press is kept and starts the run once the picker is ready.
 
 ## [0.6.3] - 2026-11-03
 

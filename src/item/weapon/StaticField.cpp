@@ -37,6 +37,8 @@ void StaticField::tick(Mob &p) {
                                              {e.x, e.bodyY()}},
                         0.16f, STATIC);
   });
+  if (arcs)
+    Sound::thunder.play(0.1f, 0.1f, 1.8f);
   p.level->add<Shockwave>(p.x, p.bodyY(), r * 0.8f, r, 0.3f,
                           STATIC.alpha(0.35f), false);
   Spark::burst(*p.level, p.x, p.bodyY(), STATIC, 4, r * 1.2f, true);

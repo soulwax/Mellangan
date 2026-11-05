@@ -50,6 +50,7 @@ private:
   void bossBar();
   void heartbeat();
   void vitals();
+  SDL_FRect bannerRect() const;
   void bannerBox();
   bool edge(double wx, double wy, Pin &pin) const;
   bool inView(double wx, double wy, float margin) const;
