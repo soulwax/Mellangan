@@ -9,6 +9,9 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - CI packages its Windows Release build and keeps it as the `Mellangan-windows` artifact. `ci-artifact.ps1 [ref]` downloads the package for a commit whose CI run passed, so a release can ship the clean-checkout build instead of a local one. Packaging moved from `dist.ps1` to `package.ps1`, which both use.
+- Crash reports on Windows: an unhandled exception or `abort` logs the exception code, the version, the world and hero, and a stack as module offsets to `mellangan.log`, and writes a `crash.dmp` minidump beside it. Until now a Windows crash left nothing behind. Linux and macOS crash lines also name the version, world and hero.
+- When the executable's folder is read-only (for example under Program Files), the log is written to the save folder instead of nowhere, and the first log line says where it is.
+- Saves survive a crash or power cut mid-write. Every save file (codex, campaign, world charts, world history, settings) is written to a temporary file and renamed into place, and the previous version is kept beside it as `.bak`. A save that is empty, missing or damaged loads from its backup instead, with a warning in the log, and deleting a save (hardcore death, an old world's chart) removes its backup too, so nothing comes back.
 
 ### Fixed
 

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #include "entity/enemy/Enemy.hpp"
 #include "level/Structure.hpp"
@@ -17,6 +18,7 @@ struct Codex {
 
   int kills() const;
   int count(uint32_t mask) const;
+  bool parse(std::string_view text);
   void load(const std::string &path);
   void save(const std::string &path) const;
 };

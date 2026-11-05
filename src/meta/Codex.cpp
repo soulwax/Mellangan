@@ -1,6 +1,7 @@
 #include "meta/Codex.hpp"
 
-#include <SDL3/SDL.h>
+#include "meta/Saves.hpp"
+
 #include <spdlog/fmt/fmt.h>
 
 #include <bit>
@@ -16,18 +17,13 @@ int Codex::kills() const {
 
 int Codex::count(uint32_t mask) const { return std::popcount(mask); }
 
-void Codex::load(const std::string &path) {
-  size_t size = 0;
-  char *data = static_cast<char *>(SDL_LoadFile(path.c_str(), &size));
-  if (!data)
-    return;
-  std::string s(data, size);
-  SDL_free(data);
+bool Codex::parse(std::string_view text) {
+  std::string s(text);
   const char *at = s.c_str();
   int used = 0;
-  if (std::sscanf(at, "%u %u %d %d %d %d %f%n", &biomes, &relics, &runs,
-                  &dawns, &bestStreak, &start, &bestTime, &used) < 7)
-    return;
+  if (std::sscanf(at, "%u %u %d %d %d %d %f%n", &biomes, &relics, &runs, &dawns,
+                  &bestStreak, &start, &bestTime, &used) < 7)
+    return false;
   at += used;
   auto row = [&](int *out, int n) {
     if (*at == '\n')
@@ -42,6 +38,16 @@ void Codex::load(const std::string &path) {
   row(slain, KINDS);
   row(entered, SITES);
   std::sscanf(at, "%d", &shrines);
+  return true;
+}
+
+void Codex::load(const std::string &path) {
+  Codex probe;
+  std::string s = Saves::recall(path, [](std::string_view t) {
+    return !t.empty() && t.back() == '\n' && Codex().parse(t);
+  });
+  if (probe.parse(s))
+    parse(s);
 }
 
 void Codex::save(const std::string &path) const {
@@ -53,5 +59,5 @@ void Codex::save(const std::string &path) const {
   for (int k : entered)
     out += fmt::format("{} ", k);
   out += fmt::format("\n{}\n", shrines);
-  SDL_SaveFile(path.c_str(), out.data(), out.size());
+  Saves::store(path, out);
 }

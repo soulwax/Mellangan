@@ -26,6 +26,9 @@ public:
   void saveWorld(WorldMode mode, const std::string &code) const;
   void record(const std::string &code, float time, bool dawn);
   static std::string slurp(const std::string &file);
+  static std::string recall(const std::string &file, bool (*valid)(std::string_view) = nullptr);
+  static bool store(const std::string &file, std::string_view data);
+  static void erase(const std::string &file);
 
 private:
   std::string path;

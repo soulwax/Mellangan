@@ -17,14 +17,22 @@
 #include "item/loot/Vendor.hpp"
 #include "other/Ouroboros.hpp"
 
-static void initLogging(const std::string &base) {
+static std::string initLogging(const std::string &base) {
   std::vector<spdlog::sink_ptr> sinks{
       std::make_shared<spdlog::sinks::stdout_color_sink_mt>()};
-  try {
-    sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-        base + "mellangan.log", true));
-  } catch (const spdlog::spdlog_ex &) {
+  std::string dir;
+  char *pref = SDL_GetPrefPath("soulwax", "Mellangan");
+  for (std::string at : {base, std::string(pref ? pref : "")}) {
+    if (at.empty() || !dir.empty())
+      continue;
+    try {
+      sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+          at + "mellangan.log", true));
+      dir = at;
+    } catch (const spdlog::spdlog_ex &) {
+    }
   }
+  SDL_free(pref);
   auto log =
       std::make_shared<spdlog::logger>("mellangan", sinks.begin(), sinks.end());
   log->set_pattern("[%H:%M:%S.%e] [%^%l%$] %v");
@@ -33,6 +41,7 @@ static void initLogging(const std::string &base) {
   log->set_level(spdlog::level::debug);
 #endif
   spdlog::set_default_logger(log);
+  return dir;
 }
 
 static void consultOuroboros() {
@@ -166,9 +175,10 @@ int main(int argc, char **argv) {
   if (char *pref = SDL_GetPrefPath("soulwax", "Mellangan"))
     logDir = pref, SDL_free(pref);
 #endif
-  initLogging(logDir);
-  installCrashHandler();
-  spdlog::info("Mellangan v{}", MELLANGAN_VERSION);
+  std::string logged = initLogging(logDir);
+  installCrashHandler(logged);
+  spdlog::info("Mellangan v{}{}", MELLANGAN_VERSION,
+               logged.empty() ? ", no log file" : ", log in " + logged + "mellangan.log");
   if (int code = runHeadless(argc, argv); code >= 0)
     return code;
 

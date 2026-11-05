@@ -72,7 +72,7 @@ cmake --build build
 ```
 
 Single-config generators default to a Release build. Players need a Vulkan driver (Mesa or the GPU vendor's).
-Crashes log a backtrace to `mellangan.log` next to the executable.
+Crashes log the version, the world and hero, and a backtrace to `mellangan.log` next to the executable, or in the save folder when the executable's folder is read-only. On Windows a `crash.dmp` minidump is written beside the log; open it in Visual Studio or WinDbg with the build's PDB.
 
 ### macOS (Apple Silicon)
 

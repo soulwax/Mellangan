@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstdio>
 
+#include "Crash.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Workbench.hpp"
@@ -59,11 +60,9 @@ bool Game::init(SDL_Window *w, const std::string &root) {
     return false;
   saves.open();
   if (!saves.dir().empty() && !bench.enabled) {
-    size_t size = 0;
-    char *setting = static_cast<char *>(SDL_LoadFile((saves.dir() + "visual.txt").c_str(), &size));
-    if (setting && size > 0)
+    std::string setting = saves.read("visual.txt");
+    if (!setting.empty())
       reducedParticles = setting[0] == '1';
-    SDL_free(setting);
     difficulty = difficultyFrom(saves.read("difficulty.txt"));
   }
   loadWorld();
@@ -357,6 +356,8 @@ void Game::newGame(bool reroll) {
     if (w.code == worldName())
       best = w.best;
   spdlog::info("New run in world {}", worldName());
+  crashContext(fmt::format("world {}, {}", worldName(),
+                           level->player->hero ? level->player->hero->name : "no hero"));
 }
 
 void Game::hitStop(float seconds) {
@@ -442,7 +443,7 @@ void Game::onPlayerDied() {
   if (campaign && campaign->hardcore) {
     spdlog::info("campaign: hardcore hero fell on day {}, the save is gone", level->night.nights);
     if (writes())
-      SDL_RemovePath((saves.dir() + "campaign.txt").c_str());
+      Saves::erase(saves.dir() + "campaign.txt");
     campaign->leave();
     campaign.reset();
     rules = dawnRules;

@@ -57,6 +57,7 @@ int runTests() {
   rng.state = 0x9E3779B97F4A7C15ull;
   std::cout << "[TEST] Running memory leak & stability tests..." << std::endl;
   testContentLinks();
+  testSaves();
   testBlend();
   testPoolAllocAndFree();
   std::cout << "[TEST] Pool alloc/free & edge cases: PASS" << std::endl;

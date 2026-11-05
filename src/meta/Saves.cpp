@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <spdlog/fmt/fmt.h>
+#include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <cctype>
@@ -20,13 +21,41 @@ std::string Saves::slurp(const std::string &file) {
   return s;
 }
 
+std::string Saves::recall(const std::string &file, bool (*valid)(std::string_view)) {
+  std::string s = slurp(file);
+  if (!s.empty() && (!valid || valid(s)))
+    return s;
+  std::string b = slurp(file + ".bak");
+  if (b.empty() || (valid && !valid(b)))
+    return s;
+  spdlog::warn("save: {} is {}, using its backup", file, s.empty() ? "empty or missing" : "damaged");
+  return b;
+}
+
+bool Saves::store(const std::string &file, std::string_view data) {
+  std::string tmp = file + ".tmp";
+  if (!SDL_SaveFile(tmp.c_str(), data.data(), data.size()))
+    return spdlog::error("save: cannot write {}: {}", tmp, SDL_GetError()), false;
+  SDL_PathInfo info;
+  if (SDL_GetPathInfo(file.c_str(), &info) && info.size > 0)
+    SDL_RenamePath(file.c_str(), (file + ".bak").c_str());
+  if (SDL_RenamePath(tmp.c_str(), file.c_str()))
+    return true;
+  return spdlog::error("save: cannot replace {}: {}", file, SDL_GetError()), false;
+}
+
+void Saves::erase(const std::string &file) {
+  for (const char *end : {"", ".bak", ".tmp"})
+    SDL_RemovePath((file + end).c_str());
+}
+
 std::string Saves::read(const std::string &name) const {
-  return path.empty() ? std::string() : slurp(path + name);
+  return path.empty() ? std::string() : recall(path + name);
 }
 
 void Saves::write(const std::string &name, std::string_view data) const {
   if (!path.empty())
-    SDL_SaveFile((path + name).c_str(), data.data(), data.size());
+    store(path + name, data);
 }
 
 void Saves::loadWorld(WorldMode &mode, std::string &code) {
@@ -73,7 +102,7 @@ void Saves::record(const std::string &code, float time, bool dawn) {
   history.insert(history.begin(), w);
   while (int(history.size()) > HISTORY) {
     if (!path.empty())
-      SDL_RemovePath((path + "chart-" + history.back().code + ".bin").c_str());
+      erase(path + "chart-" + history.back().code + ".bin");
     history.pop_back();
   }
   std::string out;

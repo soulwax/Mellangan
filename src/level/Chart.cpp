@@ -6,6 +6,7 @@
 #include "gfx/Screen.hpp"
 #include "level/Level.hpp"
 #include "level/World.hpp"
+#include "meta/Saves.hpp"
 
 namespace {
 
@@ -201,50 +202,53 @@ constexpr uint32_t MAGIC = 0x3343414Du;
 constexpr uint32_t SCALED_MAGIC = 0x3443414Du;
 constexpr uint32_t DISTANCE_MAGIC = 0x3543414Du;
 constexpr size_t PAGE_BYTES = 8 + Chart::PAGE * Chart::PAGE;
+
+bool fits(std::string_view s) {
+  uint32_t head[3] = {};
+  if (s.size() < sizeof head)
+    return false;
+  std::memcpy(head, s.data(), sizeof head);
+  return (head[0] == MAGIC || head[0] == SCALED_MAGIC || head[0] == DISTANCE_MAGIC) &&
+         s.size() == sizeof head + size_t(head[1]) * PAGE_BYTES + size_t(head[2]) * sizeof(Structure);
+}
 } // namespace
 
 void Chart::load(const std::string &path) {
-  size_t size = 0;
-  uint8_t *data =
-      path.empty() ? nullptr
-                   : static_cast<uint8_t *>(SDL_LoadFile(path.c_str(), &size));
-  if (!data)
+  if (path.empty())
     return;
-  uint32_t head[3] = {};
-  if (size >= sizeof head)
-    std::memcpy(head, data, sizeof head);
-  size_t want =
-      sizeof head + head[1] * PAGE_BYTES + head[2] * sizeof(Structure);
-  if ((head[0] == MAGIC || head[0] == SCALED_MAGIC || head[0] == DISTANCE_MAGIC) && size == want) {
-    const uint8_t *at = data + sizeof head;
-    for (uint32_t i = 0; i < head[1]; i++, at += PAGE_BYTES) {
-      int32_t px, py;
-      std::memcpy(&px, at, 4), std::memcpy(&py, at + 4, 4);
-      auto p = std::make_unique<Page>();
-      for (int k = 0; k < PAGE * PAGE; k++) {
-        p->cell[k] = at[8 + k] <= BIOME_COUNT ? at[8 + k] : 0;
-        if (p->cell[k] && head[0] != DISTANCE_MAGIC)
-          p->cell[k] = uint8_t(world::biomeAt(
-              (px * PAGE + k % PAGE) * CELL + CELL / 2,
-              (py * PAGE + k / PAGE) * CELL + CELL / 2) + 1);
-      }
-      pages[keyOf(px, py)] = std::move(p);
+  std::string file = Saves::recall(path, fits);
+  if (!fits(file))
+    return;
+  const uint8_t *data = reinterpret_cast<const uint8_t *>(file.data());
+  uint32_t head[3];
+  std::memcpy(head, data, sizeof head);
+  const uint8_t *at = data + sizeof head;
+  for (uint32_t i = 0; i < head[1]; i++, at += PAGE_BYTES) {
+    int32_t px, py;
+    std::memcpy(&px, at, 4), std::memcpy(&py, at + 4, 4);
+    auto p = std::make_unique<Page>();
+    for (int k = 0; k < PAGE * PAGE; k++) {
+      p->cell[k] = at[8 + k] <= BIOME_COUNT ? at[8 + k] : 0;
+      if (p->cell[k] && head[0] != DISTANCE_MAGIC)
+        p->cell[k] = uint8_t(world::biomeAt(
+            (px * PAGE + k % PAGE) * CELL + CELL / 2,
+            (py * PAGE + k / PAGE) * CELL + CELL / 2) + 1);
     }
-    sites.resize(head[2]);
-    if (head[2])
-      std::memcpy(sites.data(), at, head[2] * sizeof(Structure));
-    if (head[0] != DISTANCE_MAGIC) {
-      size_t count = 0;
-      for (const Structure &old : sites) {
-        Structure current;
-        if (world::structureIn(old.rx, old.ry, current))
-          sites[count++] = current;
-      }
-      sites.resize(count);
-    }
-    lastKey = ~0ull;
+    pages[keyOf(px, py)] = std::move(p);
   }
-  SDL_free(data);
+  sites.resize(head[2]);
+  if (head[2])
+    std::memcpy(sites.data(), at, head[2] * sizeof(Structure));
+  if (head[0] != DISTANCE_MAGIC) {
+    size_t count = 0;
+    for (const Structure &old : sites) {
+      Structure current;
+      if (world::structureIn(old.rx, old.ry, current))
+        sites[count++] = current;
+    }
+    sites.resize(count);
+  }
+  lastKey = ~0ull;
 }
 
 void Chart::save(const std::string &path) const {
@@ -264,9 +268,7 @@ void Chart::save(const std::string &path) const {
   }
   if (!sites.empty())
     std::memcpy(at, sites.data(), sites.size() * sizeof(Structure));
-  std::string tmp = path + ".tmp";
-  if (SDL_SaveFile(tmp.c_str(), out.data(), out.size()))
-    SDL_RenamePath(tmp.c_str(), path.c_str());
+  Saves::store(path, std::string_view(reinterpret_cast<const char *>(out.data()), out.size()));
 }
 
 void Chart::unveil(double x, double y, int radius) {
