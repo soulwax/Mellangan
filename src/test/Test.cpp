@@ -66,6 +66,7 @@ int runTests() {
   testWorkers();
   testGamepad();
   testRebind();
+  testPadRebind();
   testPalette();
   testAdvice();
   testHints();

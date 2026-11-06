@@ -26,11 +26,59 @@ const Input::Binding Input::BINDINGS[] = {
     {"PARTICLES", "V", &Input::particles, SDL_SCANCODE_V}};
 static_assert(sizeof Input::BINDINGS / sizeof *Input::BINDINGS == Input::BINDING_COUNT);
 
+const Input::PadBinding Input::PAD_BINDINGS[] = {
+    {"GATHER / RETRY", &Input::gather, &Input::restart, SDL_GAMEPAD_BUTTON_WEST, " E R "},
+    {"INVENTORY / CODEX", &Input::inventory, &Input::codex, SDL_GAMEPAD_BUTTON_NORTH, " I C "},
+    {"MAP / QUIT", &Input::map, &Input::quit, SDL_GAMEPAD_BUTTON_BACK, " Tab Q "},
+    {"SHOW LOOT", &Input::loot, nullptr, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, " Alt "},
+    {"SETTINGS", &Input::options, nullptr, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, " O "},
+    {"DROP ITEM", &Input::erase, nullptr, SDL_GAMEPAD_BUTTON_LEFT_STICK, " Backspace "},
+    {"SKILL TREE", &Input::campaign, nullptr, Input::LT, " K "},
+    {"BUILD", &Input::build, nullptr, Input::RT, " B "}};
+static_assert(sizeof Input::PAD_BINDINGS / sizeof *Input::PAD_BINDINGS == Input::PAD_COUNT);
+
+namespace {
+struct PadButton {
+  int id;
+  const char *name;
+};
+
+constexpr PadButton PAD_BUTTONS[] = {
+    {SDL_GAMEPAD_BUTTON_WEST, "X"},           {SDL_GAMEPAD_BUTTON_NORTH, "Y"},
+    {SDL_GAMEPAD_BUTTON_BACK, "Back"},        {SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, "LB"},
+    {SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, "RB"}, {SDL_GAMEPAD_BUTTON_LEFT_STICK, "L3"},
+    {SDL_GAMEPAD_BUTTON_RIGHT_STICK, "R3"},   {Input::LT, "LT"},
+    {Input::RT, "RT"},                        {SDL_GAMEPAD_BUTTON_MISC1, "Share"},
+    {SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1, "P1"}, {SDL_GAMEPAD_BUTTON_LEFT_PADDLE1, "P2"},
+    {SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2, "P3"}, {SDL_GAMEPAD_BUTTON_LEFT_PADDLE2, "P4"}};
+} // namespace
+
 Input::Input() { resetKeys(); }
 
 void Input::resetKeys() {
   for (int i = 0; i < BINDING_COUNT; i++)
     keymap[i] = BINDINGS[i].fallback;
+  for (int i = 0; i < PAD_COUNT; i++)
+    padmap[i] = PAD_BINDINGS[i].fallback;
+}
+
+const char *Input::padName(int button) {
+  for (const PadButton &b : PAD_BUTTONS)
+    if (b.id == button)
+      return b.name;
+  return nullptr;
+}
+
+bool Input::rebindPad(int b, int button) {
+  if (b < 0 || b >= PAD_COUNT || !padName(button))
+    return false;
+  for (int i = 0; i < PAD_COUNT; i++)
+    if (padmap[i] == button)
+      padmap[i] = padmap[b];
+  padmap[b] = button;
+  for (Key *k : keys())
+    k->release();
+  return true;
 }
 
 bool Input::rebind(int b, SDL_Scancode sc) {
@@ -59,6 +107,11 @@ std::string Input::saveKeys() const {
     std::replace(key.begin(), key.end(), ' ', '_');
     out += key + " " + std::to_string(int(keymap[i])) + "\n";
   }
+  for (int i = 0; i < PAD_COUNT; i++) {
+    std::string key = std::string("PAD ") + PAD_BINDINGS[i].name;
+    std::replace(key.begin(), key.end(), ' ', '_');
+    out += key + " " + std::to_string(padmap[i]) + "\n";
+  }
   return out;
 }
 
@@ -73,6 +126,13 @@ void Input::parseKeys(std::string_view text) {
         std::replace(name.begin(), name.end(), ' ', '_');
         if (name == key && sc > 0 && sc < SDL_SCANCODE_COUNT)
           rebind(i, SDL_Scancode(sc));
+      }
+    if (std::sscanf(at, "%31s %d", key, &sc) == 2)
+      for (int i = 0; i < PAD_COUNT; i++) {
+        std::string name = std::string("PAD ") + PAD_BINDINGS[i].name;
+        std::replace(name.begin(), name.end(), ' ', '_');
+        if (name == key)
+          rebindPad(i, sc);
       }
     const char *end = std::strchr(at, '\n');
     at = end ? end + 1 : at + std::strlen(at);
@@ -94,11 +154,7 @@ void Input::handle(const SDL_Event &e, float density) {
       listening = e.gbutton.down ? -1 : listening;
       break;
     }
-    Key *ks[3];
-    int n = bind(SDL_GamepadButton(e.gbutton.button), ks);
-    for (int i = 0; i < n; i++)
-      ks[i]->toggle(e.gbutton.down);
-    pad |= e.gbutton.down;
+    press(e.gbutton.button, e.gbutton.down);
     break;
   }
   case SDL_EVENT_GAMEPAD_AXIS_MOTION:
@@ -111,7 +167,7 @@ void Input::handle(const SDL_Event &e, float density) {
         int t = e.gaxis.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER ? 4 : 5;
         bool now = held[t] ? v > 0.25f : v > 0.5f;
         if (now != held[t])
-          held[t] = now, (t == 4 ? campaign : build).toggle(now), pad |= now;
+          held[t] = now, press(t == 4 ? LT : RT, now);
       }
       steer();
     }
@@ -119,6 +175,10 @@ void Input::handle(const SDL_Event &e, float density) {
   case SDL_EVENT_KEY_DOWN:
   case SDL_EVENT_KEY_UP:
     pad = false;
+    if (padListening >= 0) {
+      padListening = -1;
+      break;
+    }
     if (listening >= 0) {
       if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) {
         if (e.key.scancode != SDL_SCANCODE_ESCAPE)
@@ -180,9 +240,7 @@ std::string Input::prompt(std::string_view text) const {
   static constexpr std::string_view SWAP[][2] = {
       {"Enter", "A"},       {"Enter:", "A:"},      {"Esc", "B"},          {"SPACE", "A"},
       {"Space", "A"},       {"Tab", "Back"},       {"Arrows", "D-pad"},   {"WASD/Arrows", "Stick"},
-      {"Up/Down", "D-pad"}, {"Left/Right", "D-pad"}, {"Backspace", "L3"}, {"I", "Y"},
-      {"K", "LT"},          {"E", "X"},            {"R", "X"},            {"B", "RT"},
-      {"C", "Y"},           {"O", "RB"},           {"Q", "Back"},         {"P", "Start"}};
+      {"Up/Down", "D-pad"}, {"Left/Right", "D-pad"}, {"P", "Start"}};
   std::string out;
   for (size_t at = 0; at < text.size();) {
     size_t end = text.find(' ', at);
@@ -196,6 +254,10 @@ std::string Input::prompt(std::string_view text) const {
       for (const auto &s : SWAP)
         if (word == s[0])
           swap = s[1];
+      std::string spaced = " " + std::string(word) + " ";
+      for (int i = 0; i < PAD_COUNT; i++)
+        if (std::strstr(PAD_BINDINGS[i].words, spaced.c_str()))
+          swap = padName(padmap[i]);
     } else {
       for (int i = 0; i < BINDING_COUNT; i++)
         if (BINDINGS[i].word && word == BINDINGS[i].word && keymap[i] != BINDINGS[i].fallback)
@@ -224,26 +286,36 @@ void Input::steer() {
   }
 }
 
-int Input::bind(SDL_GamepadButton button, Key **out) {
+void Input::press(int button, bool pressed) {
+  if (padListening >= 0 && pressed) {
+    if (button != SDL_GAMEPAD_BUTTON_EAST)
+      rebindPad(padListening, button);
+    padListening = -1;
+    return;
+  }
+  Key *ks[3];
+  int n = bind(button, ks);
+  for (int i = 0; i < n; i++)
+    ks[i]->toggle(pressed);
+  pad |= pressed;
+}
+
+int Input::bind(int button, Key **out) {
+  for (int i = 0; i < PAD_COUNT; i++)
+    if (padmap[i] == button) {
+      out[0] = &(this->*PAD_BINDINGS[i].first);
+      if (!PAD_BINDINGS[i].second)
+        return 1;
+      out[1] = &(this->*PAD_BINDINGS[i].second);
+      return 2;
+    }
   switch (button) {
   case SDL_GAMEPAD_BUTTON_SOUTH:
     return out[0] = &confirm, 1;
   case SDL_GAMEPAD_BUTTON_EAST:
     return out[0] = &escape, 1;
-  case SDL_GAMEPAD_BUTTON_WEST:
-    return out[0] = &gather, out[1] = &restart, 2;
-  case SDL_GAMEPAD_BUTTON_NORTH:
-    return out[0] = &inventory, out[1] = &codex, 2;
   case SDL_GAMEPAD_BUTTON_START:
     return out[0] = &pause, 1;
-  case SDL_GAMEPAD_BUTTON_BACK:
-    return out[0] = &map, out[1] = &quit, 2;
-  case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
-    return out[0] = &loot, 1;
-  case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER:
-    return out[0] = &options, 1;
-  case SDL_GAMEPAD_BUTTON_LEFT_STICK:
-    return out[0] = &erase, 1;
   case SDL_GAMEPAD_BUTTON_DPAD_UP:
     return out[0] = &up, out[1] = &older, 2;
   case SDL_GAMEPAD_BUTTON_DPAD_DOWN:

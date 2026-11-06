@@ -42,6 +42,7 @@ void testNearestStructure();
 void testWorkers();
 void testGamepad();
 void testRebind();
+void testPadRebind();
 void testPalette();
 void testAdvice();
 void testHints();
