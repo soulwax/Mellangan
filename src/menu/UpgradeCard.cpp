@@ -1,5 +1,7 @@
 #include "menu/UpgradeCard.hpp"
 
+#include <spdlog/fmt/fmt.h>
+
 #include <cstring>
 #include <string>
 
@@ -135,6 +137,43 @@ std::string UpgradeCard::synergy(bool &ready) const {
   return "";
 }
 
+std::vector<std::string> UpgradeCard::numbers() const {
+  std::vector<std::string> out;
+  if (!up)
+    return out;
+  bool fresh = up->level == 0 && !evolving;
+  int next = evolving ? up->level : std::min(up->level + 1, Upgrade::MAX_LEVEL);
+  float power = evolving ? Upgrade::EVOLVED_POWER : up->power,
+        pace = evolving ? Upgrade::EVOLVED_PACE : up->pace;
+  Figures now = up->figures(up->level, up->evolved), then = up->figures(next, evolving || up->evolved);
+  auto show = [&](const Figure &st, float pw, float pc) {
+    auto seconds = [](float v) { return v < 1 ? fmt::format("{:.2f}s", v) : fmt::format("{:.1f}s", v); };
+    switch (st.kind) {
+    case Figure::Damage:
+      return fmt::format("{:.0f}", st.value * p.might * pw);
+    case Figure::Every:
+      return seconds(st.value * p.haste * pc);
+    case Figure::Lasts:
+      return seconds(st.value);
+    case Figure::Percent:
+      return fmt::format("{:.0f}%", st.value);
+    default:
+      return fmt::format("{:.0f}", st.value);
+    }
+  };
+  for (int i = 0; i < then.n; i++) {
+    std::string b = show(then.line[i], power, pace);
+    if (fresh) {
+      out.push_back(fmt::format("{} {}", then.line[i].name, b));
+      continue;
+    }
+    std::string a = show(now.line[i], up->power, up->pace);
+    if (a != b)
+      out.push_back(fmt::format("{} {} > {}", then.line[i].name, a, b));
+  }
+  return out;
+}
+
 void UpgradeCard::render(Screen &s, SDL_FRect r, float in, bool selected, float t) const {
   float u = s.u, small = std::max(1.0f, u - 1);
   float x = r.x, y = r.y, w = r.w, h = r.h;
@@ -162,16 +201,29 @@ void UpgradeCard::render(Screen &s, SDL_FRect r, float in, bool selected, float 
   std::string desc = evolving ? fmt::format("{} evolves: double damage, faster", up->name)
                      : up     ? up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)]
                               : "Restore 40 health";
-  s.text(name, tx, y + 5.0f * u, u, (selected ? col::white : tint).alpha(in));
-  s.text(desc, tx, y + 25.0f * u, small, (selected ? col::white * 0.9f : col::muted).alpha(in));
-  bool ready = false;
-  if (std::string pair = synergy(ready); !pair.empty() && h >= 44 * u)
-    s.text(pair, tx, y + 25.0f * u + 15 * small, small,
-           (ready ? col::gold : col::muted * 0.75f).alpha(in));
-
+  s.text(name, tx, y + 4.0f * u, u, (selected ? col::white : tint).alpha(in));
+  s.text(desc, tx, y + 20.0f * u, small, (selected ? col::white * 0.9f : col::muted).alpha(in));
   float kw = 18 * u, kh = 18 * u;
   float kx = x + w - kw - 8 * u, ky = y + (h - kh) * 0.5f;
+  float line = y + 20.0f * u + 15 * small;
+  if (line + 11 * small <= y + h) {
+    std::string row;
+    for (const std::string &n : numbers()) {
+      std::string wider = row.empty() ? n : row + "   " + n;
+      if (tx + Screen::textWidth(wider, small) > kx - 6 * u)
+        break;
+      row = std::move(wider);
+    }
+    if (!row.empty()) {
+      s.text(row, tx, line, small, (selected ? col::xp : col::xp * 0.8f).alpha(in));
+      line += 15 * small;
+    }
+  }
+  bool ready = false;
+  if (std::string pair = synergy(ready); !pair.empty() && line + 11 * small <= y + h)
+    s.text(pair, tx, line, small, (ready ? col::gold : col::muted * 0.75f).alpha(in));
+
   gui::KeyBadge({kx, ky, kw, kh}, std::to_string(index + 1), tint, u, small, in, selected)
       .render(s);
-  renderTag(s, kx - 8 * u, y + 5.0f * u, in);
+  renderTag(s, kx - 8 * u, y + 4.0f * u, in);
 }

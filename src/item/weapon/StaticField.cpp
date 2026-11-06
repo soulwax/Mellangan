@@ -11,6 +11,12 @@ namespace {
 constexpr Color STATIC{0.5f, 0.78f, 1, 1};
 }
 
+namespace {
+float damageAt(int l) { return 6.0f + 3 * (Upgrade::at(l, 2) + Upgrade::at(l, 5)); }
+float everyAt(int l) { return l >= 4 ? 0.8f : 1.1f; }
+float radiusAt(int l) { return 50.0f + 12 * (Upgrade::at(l, 3) + Upgrade::at(l, 5)); }
+} // namespace
+
 StaticField::StaticField()
     : Upgrade("Static Field", atlas::tile(atlas::t::StormStaff),
               {"A crackling field shocks foes close by", "+3 damage",
@@ -22,9 +28,8 @@ StaticField::StaticField()
 void StaticField::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 0.8f : 1.1f) * p.haste * pace;
-  float r = 50.0f + 12 * (at(level, 3) + at(level, 5)),
-        dmg = (6.0f + 3 * (at(level, 2) + at(level, 5))) * p.might * power * p.arcs;
+  cd = everyAt(level) * p.haste * pace;
+  float r = radiusAt(level), dmg = damageAt(level) * p.might * power * p.arcs;
   int arcs = 0;
   p.level->foes(p, p.x, p.y, r + 24, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
@@ -42,4 +47,8 @@ void StaticField::tick(Mob &p) {
   p.level->add<Shockwave>(p.x, p.bodyY(), r * 0.8f, r, 0.3f,
                           STATIC.alpha(0.35f), false);
   Spark::burst(*p.level, p.x, p.bodyY(), STATIC, 4, r * 1.2f, true);
+}
+
+Figures StaticField::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("radius", radiusAt(l));
 }

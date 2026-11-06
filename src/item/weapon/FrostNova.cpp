@@ -34,6 +34,12 @@ void bloom(Level &level, double x, double y, float r) {
 }
 } // namespace
 
+namespace {
+float damageAt(int l) { return 18.0f + 8 * (Upgrade::at(l, 2) + Upgrade::at(l, 5)); }
+float everyAt(int l) { return l >= 4 ? 2.6f : 3.4f; }
+float radiusAt(int l) { return 60.0f + 14 * (Upgrade::at(l, 3) + Upgrade::at(l, 5)); }
+} // namespace
+
 FrostNova::FrostNova()
     : Upgrade("Frost Nova", atlas::kit(atlas::kt::FrozenShrub),
               {"Frost blasts slow foes by 35% for 2s", "+8 damage", "Wider burst",
@@ -45,9 +51,8 @@ FrostNova::FrostNova()
 void FrostNova::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 2.6f : 3.4f) * p.haste * pace;
-  float r = 60.0f + 14 * (at(level, 3) + at(level, 5)),
-        dmg = (18.0f + 8 * (at(level, 2) + at(level, 5))) * p.might * power;
+  cd = everyAt(level) * p.haste * pace;
+  float r = radiusAt(level), dmg = damageAt(level) * p.might * power;
   p.level->foes(p, p.x, p.y, r + 24, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
     float rr = r + e.radius;
@@ -58,4 +63,8 @@ void FrostNova::tick(Mob &p) {
   });
   bloom(*p.level, p.x, p.bodyY(), r);
   Sound::cast.play(0.35f);
+}
+
+Figures FrostNova::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("radius", radiusAt(l));
 }

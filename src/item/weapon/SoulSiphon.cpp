@@ -6,6 +6,12 @@
 #include "particle/Spark.hpp"
 #include "level/Level.hpp"
 
+namespace {
+float damageAt(int l) { return 14.0f + 6 * Upgrade::at(l, 3); }
+float everyAt(int l) { return l >= 4 ? 2.2f : 3.0f; }
+int drainsAt(int l) { return 3 + Upgrade::at(l, 2) + Upgrade::at(l, 5); }
+} // namespace
+
 SoulSiphon::SoulSiphon()
     : Upgrade("Soul Siphon", atlas::tile(atlas::t::VialGreen),
               {"Drains the nearest foes to mend you", "Drains one more",
@@ -18,11 +24,11 @@ void SoulSiphon::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   auto targets = p.level->nearestFoes(p, p.x, p.y, 160,
-                                  3 + at(level, 2) + at(level, 5));
+                                  drainsAt(level));
   if (targets.empty())
     return void(cd = 0.3f);
-  cd = (level >= 4 ? 2.2f : 3.0f) * p.haste * pace;
-  float dmg = (14.0f + 6 * at(level, 3)) * p.might * power;
+  cd = everyAt(level) * p.haste * pace;
+  float dmg = damageAt(level) * p.might * power;
   for (Mob *e : targets) {
     e->strike(dmg, 0, 0, 0, this);
     Spark::burst(*p.level, e->x, e->bodyY(), {0.9f, 0.3f, 0.35f, 1}, 3, 30,
@@ -32,4 +38,8 @@ void SoulSiphon::tick(Mob &p) {
   }
   p.hp = std::min(p.maxHp, p.hp + float(targets.size()));
   Sound::orb.play(0.25f, 0.06f, 0.6f);
+}
+
+Figures SoulSiphon::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("drains", float(drainsAt(l)));
 }

@@ -7,9 +7,11 @@ public:
   float pulse = 0;
 
   Halo();
-  float range() const { return 30.0f + 7 * (level - 1); }
+  float range() const { return range(level); }
+  static float range(int lvl) { return 30.0f + 7 * (lvl - 1); }
   void levelUp(Mob &p) override;
   void tick(Mob &p) override;
+  Figures figures(int lvl, bool evolved) const override;
 
 private:
   float timer = 0;

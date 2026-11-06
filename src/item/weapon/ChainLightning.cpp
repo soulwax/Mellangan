@@ -10,6 +10,12 @@ namespace {
 constexpr Color STORM{0.55f, 0.75f, 1, 1};
 }
 
+namespace {
+float damageAt(int l) { return 26.0f + 8 * Upgrade::at(l, 5); }
+float everyAt(int l) { return l >= 4 ? 1.4f : 1.8f; }
+int foesAt(int l) { return 3 + Upgrade::at(l, 2) + Upgrade::at(l, 3) + Upgrade::at(l, 5); }
+} // namespace
+
 ChainLightning::ChainLightning()
     : Upgrade("Chain Lightning", atlas::kit(atlas::kt::Bluebells),
               {"Lightning leaps across three foes", "Leaps to one more",
@@ -22,11 +28,11 @@ void ChainLightning::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
   auto targets = p.level->nearestFoes(p, 
-      p.x, p.y, 260, 3 + at(level, 2) + at(level, 3) + at(level, 5));
+      p.x, p.y, 260, foesAt(level));
   if (targets.empty())
     return void(cd = 0.2f);
-  cd = (level >= 4 ? 1.4f : 1.8f) * p.haste * pace;
-  float dmg = (26.0f + 8 * at(level, 5)) * p.might * power * p.arcs;
+  cd = everyAt(level) * p.haste * pace;
+  float dmg = damageAt(level) * p.might * power * p.arcs;
   std::vector<ArcNode> chain{{p.x, p.bodyY()}};
   while (!targets.empty()) {
     auto next = std::min_element(targets.begin(), targets.end(),
@@ -51,4 +57,8 @@ void ChainLightning::tick(Mob &p) {
   }
   p.level->add<Arc>(std::move(chain), 0.24f, STORM);
   Sound::thunder.play(0.3f);
+}
+
+Figures ChainLightning::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("foes", float(foesAt(l)));
 }

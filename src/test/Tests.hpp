@@ -52,6 +52,7 @@ void testHeat();
 void testEndless();
 void testDaily();
 void testSynergy();
+void testFigures();
 void testBlend();
 void testShapeForms();
 void testChampionTraits();

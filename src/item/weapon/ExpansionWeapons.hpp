@@ -11,6 +11,7 @@ class ExpansionWeapon : public Upgrade {
 public:
   explicit ExpansionWeapon(int kind);
   void tick(Mob &p) override;
+  Figures figures(int lvl, bool evolved) const override;
   int kind;
   float cd = 0.4f;
 };

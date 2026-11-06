@@ -5,6 +5,12 @@
 #include "entity/projectile/Slash.hpp"
 #include "level/Level.hpp"
 
+namespace {
+float damageAt(int l) { return 12.0f + 5 * (Upgrade::at(l, 2) + Upgrade::at(l, 5)); }
+float everyAt(int l) { return l >= 4 ? 1.1f : 1.5f; }
+int cutsAt(int l) { return 3 + Upgrade::at(l, 3) + Upgrade::at(l, 5); }
+} // namespace
+
 Flurry::Flurry()
     : Upgrade("Flurry", atlas::tile(atlas::t::Dagger),
               {"Three quick cuts, side to side", "+5 damage", "Four cuts",
@@ -21,7 +27,11 @@ void Flurry::tick(Mob &p) {
   }
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 1.1f : 1.5f) * p.haste * pace;
-  pending = 3 + at(level, 3) + at(level, 5), gap = 0;
-  dmg = (12.0f + 5 * (at(level, 2) + at(level, 5))) * p.might * power;
+  cd = everyAt(level) * p.haste * pace;
+  pending = cutsAt(level), gap = 0;
+  dmg = damageAt(level) * p.might * power;
+}
+
+Figures Flurry::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("cuts", float(cutsAt(l)));
 }

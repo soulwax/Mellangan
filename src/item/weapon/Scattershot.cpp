@@ -6,6 +6,13 @@
 #include "level/Level.hpp"
 #include "particle/Drift.hpp"
 
+namespace {
+float damageAt(int l) { return 12.0f + 6 * Upgrade::at(l, 3); }
+float everyAt(int l) { return l >= 4 ? 1.5f : 2.0f; }
+int arrowsAt(int l) { return 6 + 2 * (Upgrade::at(l, 2) + Upgrade::at(l, 5)); }
+int pierceAt(int l) { return 2 + 2 * Upgrade::at(l, 5); }
+} // namespace
+
 Scattershot::Scattershot()
     : Upgrade("Scattershot", atlas::town(atlas::tt::Bow),
               {"Looses arrows in every direction", "+2 arrows", "+6 damage",
@@ -17,14 +24,14 @@ Scattershot::Scattershot()
 void Scattershot::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 1.5f : 2.0f) * p.haste * pace;
-  int n = 6 + 2 * (at(level, 2) + at(level, 5));
-  float dmg = (12.0f + 6 * at(level, 3)) * p.might * power;
+  cd = everyAt(level) * p.haste * pace;
+  int n = arrowsAt(level);
+  float dmg = damageAt(level) * p.might * power;
   for (int i = 0; i < n; i++) {
     double dir = TAU * i / n + p.level->time;
     p.level
         ->add<Arrow>(p.x, p.bodyY(), std::cos(dir) * 300, std::sin(dir) * 300,
-                     dmg, 2 + 2 * at(level, 5), ArrowStyle::Scatter)
+                     dmg, pierceAt(level), ArrowStyle::Scatter)
         ->source = this;
     if (i % 2 == 0 && Drift::room()) {
       Drift *d = p.level->add<Drift>(p.x, p.bodyY(), std::cos(dir) * 70,
@@ -35,4 +42,8 @@ void Scattershot::tick(Mob &p) {
     }
   }
   Sound::bow.play(0.3f);
+}
+
+Figures Scattershot::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("arrows", float(arrowsAt(l))).add("pierce", float(pierceAt(l)));
 }

@@ -11,6 +11,12 @@ namespace {
 constexpr Color HOLY{1, 0.88f, 0.5f, 1};
 }
 
+namespace {
+float damageAt(int l) { return 14.0f + 6 * (Upgrade::at(l, 2) + Upgrade::at(l, 5)); }
+float everyAt(int l) { return l >= 4 ? 2.4f : 3.2f; }
+float radiusAt(int l) { return 55.0f + 12 * (Upgrade::at(l, 3) + Upgrade::at(l, 5)); }
+} // namespace
+
 Radiance::Radiance()
     : Upgrade("Radiance", atlas::kit(atlas::kt::Daisies),
               {"A holy nova that mends you per foe", "+6 damage", "Wider nova",
@@ -22,9 +28,8 @@ Radiance::Radiance()
 void Radiance::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 2.4f : 3.2f) * p.haste * pace;
-  float r = 55.0f + 12 * (at(level, 3) + at(level, 5)),
-        dmg = (14.0f + 6 * (at(level, 2) + at(level, 5))) * p.might * power;
+  cd = everyAt(level) * p.haste * pace;
+  float r = radiusAt(level), dmg = damageAt(level) * p.might * power;
   int hit = 0;
   p.level->foes(p, p.x, p.y, r + 24, [&](Mob &e) {
     double xd = e.x - p.x, yd = e.bodyY() - p.bodyY();
@@ -41,4 +46,8 @@ void Radiance::tick(Mob &p) {
       ->spokes = 12;
   Spark::burst(*p.level, p.x, p.bodyY(), HOLY, 8, r * 1.6f, true);
   Sound::cast.play(0.3f);
+}
+
+Figures Radiance::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("radius", radiusAt(l));
 }

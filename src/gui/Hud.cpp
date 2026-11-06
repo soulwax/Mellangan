@@ -164,11 +164,11 @@ void Hud::bossBar() {
     return;
   Enemy &b = *top;
   const char *name = b.name();
-  float bw = 160 * u, bx = (s.w - bw) / 2, by = s.h - 22 * u;
+  float bw = 160 * u, bx = (s.w - bw) / 2, by = s.h - 12 * u;
   float k = clampf(b.hp / b.maxHp, 0, 1);
   s.textCenter(ids.size() > 1 ? fmt::format("{}  +{}", name, ids.size() - 1)
                               : std::string(name),
-               s.w / 2, by - 15 * small, small, Color{1, 0.45f, 0.45f, 1});
+               s.w / 2, by - 3 * u - 12 * small, small, Color{1, 0.45f, 0.45f, 1});
   s.rect(bx - u, by - u, bw + 2 * u, 6 * u, col::panel);
   s.rect(bx, by, bw * k, 4 * u, Color{0.85f, 0.12f, 0.18f, 1});
   s.rect(bx, by, bw * k, u, Color{1, 0.5f, 0.5f, 0.6f});

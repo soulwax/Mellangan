@@ -25,8 +25,10 @@ private:
   gui::ChoiceList selection;
 
   bool treasure = false;
+  int lines = 1;
   int evolveSlot = -1;
 
+  float cardHeight(const Screen &s) const;
   void apply(int i);
   void choose(int i);
 };

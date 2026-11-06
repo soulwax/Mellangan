@@ -21,3 +21,7 @@ void Knives::tick(Mob &) {
   angle += (level >= 5 ? 4.6f : 3.4f) * DT / pace;
   ring -= DT;
 }
+
+Figures Knives::figures(int l, bool) const {
+  return Figures().damage(damage(l)).add("knives", float(count(l)));
+}

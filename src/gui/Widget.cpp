@@ -64,12 +64,12 @@ KeyBadge::KeyBadge(SDL_FRect bounds, std::string label, Color accent, float unit
                  std::move(label), bounds.y + (bounds.h - 16 * textSize) * 0.5f,
                  textSize, (selected ? col::white : col::muted).alpha(opacity)) {}
 
-std::array<SDL_FRect, 4> ChoiceList::layout(const Screen &s, int count) {
+std::array<SDL_FRect, 4> ChoiceList::layout(const Screen &s, int count, float tall) {
   std::array<SDL_FRect, 4> result{};
   count = std::clamp(count, 0, int(result.size()));
   if (!count)
     return result;
-  float u = s.u, w = std::min(s.w * 0.90f, 440 * u), h = 46 * u, gap = 6 * u;
+  float u = s.u, w = std::min(s.w * 0.90f, 440 * u), h = tall > 0 ? tall : 46 * u, gap = 6 * u;
   float y = s.h * 0.5f - (count * h + (count - 1) * gap) * 0.5f + 10 * u;
   for (int i = 0; i < int(result.size()); i++)
     result[i] = {(s.w - w) * 0.5f, y + i * (h + gap), w, h};

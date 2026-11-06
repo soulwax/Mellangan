@@ -22,7 +22,7 @@ struct ChartView {
 class Chart {
 public:
   static constexpr int CELL = 4, PAGE = 32, SIGHT = 6;
-  static constexpr uint8_t NOW = 0x80, BIOME = 0x7F;
+  static constexpr uint8_t NOW = 0x80, WATER = 0x40, BIOME = 0x3F;
 
   int charted = 0, discovered = 0;
   int cells[BIOME_COUNT]{};

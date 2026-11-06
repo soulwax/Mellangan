@@ -18,6 +18,16 @@ const char *const TITLES[BIOME_COUNT] = {
     "SALT FLATS","FLOODPLAIN","MOONLIT GROVE","SUNKEN RUINS","EMBER FEN",
     "AMBER WOODS","STORM STEPPE","GLASS DESERT","HOLLOW CAVERNS","STARFALL BASIN"};
 
+static_assert(BIOME_COUNT < Chart::WATER);
+
+bool wet(int cx, int cy) {
+  int water = 0;
+  for (int y = 0; y < Chart::CELL; y++)
+    for (int x = 0; x < Chart::CELL; x++)
+      water += world::isWater(cx * Chart::CELL + x, cy * Chart::CELL + y);
+  return water * 2 >= Chart::CELL * Chart::CELL;
+}
+
 } // namespace
 
 const char *Chart::title(BiomeId b) { return TITLES[b]; }
@@ -76,7 +86,7 @@ void Chart::reveal(int cx, int cy) {
         continue;
       BiomeId b = c ? BiomeId((c & BIOME) - 1)
                     : world::biomeAt(x * CELL + CELL / 2, y * CELL + CELL / 2);
-      c = uint8_t((b + 1) | NOW), charted++, cells[b]++;
+      c = uint8_t((b + 1) | NOW | (wet(x, y) ? WATER : 0)), charted++, cells[b]++;
     }
 }
 
@@ -159,7 +169,11 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
         float xa = std::max(left, v.x),
               xb = std::min(left + float(cx - from) * v.cell, right);
         int cc = run / 2;
-        Color t = tone(BiomeId((cc & BIOME) - 1)) * (run & 1 ? 0.7f : 1.0f);
+        BiomeId b = BiomeId((cc & BIOME) - 1);
+        Color t = (cc & WATER ? BIOMES[b]->winter() ? Color{0.66f, 0.8f, 0.9f, 1}
+                                                    : Color{0.2f, 0.42f, 0.72f, 1}
+                              : tone(b)) *
+                  (run & 1 ? 0.7f : 1.0f);
         if (!(cc & NOW))
           t = {lerpf(t.r, 0.1f, 0.6f), lerpf(t.g, 0.1f, 0.6f),
                lerpf(t.b, 0.14f, 0.6f), 1};
@@ -228,7 +242,7 @@ void Chart::load(const std::string &path) {
     std::memcpy(&px, at, 4), std::memcpy(&py, at + 4, 4);
     auto p = std::make_unique<Page>();
     for (int k = 0; k < PAGE * PAGE; k++) {
-      p->cell[k] = at[8 + k] <= BIOME_COUNT ? at[8 + k] : 0;
+      p->cell[k] = (at[8 + k] & ~WATER) <= BIOME_COUNT ? at[8 + k] : 0;
       if (p->cell[k] && head[0] != DISTANCE_MAGIC)
         p->cell[k] = uint8_t(world::biomeAt(
             (px * PAGE + k % PAGE) * CELL + CELL / 2,
@@ -263,7 +277,7 @@ void Chart::save(const std::string &path) const {
     int32_t px = int32_t(key >> 32), py = int32_t(uint32_t(key));
     std::memcpy(at, &px, 4), std::memcpy(at + 4, &py, 4);
     for (int k = 0; k < PAGE * PAGE; k++)
-      at[8 + k] = p->cell[k] & BIOME;
+      at[8 + k] = p->cell[k] & (BIOME | WATER);
     at += PAGE_BYTES;
   }
   if (!sites.empty())

@@ -67,7 +67,7 @@ class ChoiceList {
 public:
   int selected;
   explicit ChoiceList(int selected = 0) : selected(selected) {}
-  static std::array<SDL_FRect, 4> layout(const Screen &s, int count);
+  static std::array<SDL_FRect, 4> layout(const Screen &s, int count, float tall = 0);
   static float entrance(float time, int index);
   ChoiceInput update(const Input &input, const std::array<SDL_FRect, 4> &bounds,
                      int count, bool ready);

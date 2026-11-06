@@ -5,6 +5,13 @@
 #include "entity/projectile/Arrow.hpp"
 #include "level/Level.hpp"
 
+namespace {
+float damageAt(int l) { return 13.0f + 6 * Upgrade::at(l, 2); }
+float everyAt(int l) { return l >= 4 ? 0.6f : 0.85f; }
+int arrowsAt(int l) { return 1 + Upgrade::at(l, 3) + Upgrade::at(l, 5); }
+int pierceAt(int l) { return 3 + 2 * Upgrade::at(l, 2) + 2 * Upgrade::at(l, 4); }
+} // namespace
+
 Bow::Bow()
     : Upgrade("Hunter's Bow", atlas::town(atlas::tt::Bow),
               {"Looses arrows where you walk", "+6 damage, more pierce",
@@ -15,10 +22,9 @@ Bow::Bow()
 void Bow::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 0.6f : 0.85f) * p.haste * pace;
-  int n = 1 + at(level, 3) + at(level, 5),
-      pierce = 3 + 2 * at(level, 2) + 2 * at(level, 4);
-  float dmg = (13.0f + 6 * at(level, 2)) * p.might * power;
+  cd = everyAt(level) * p.haste * pace;
+  int n = arrowsAt(level), pierce = pierceAt(level);
+  float dmg = damageAt(level) * p.might * power;
   double aim = std::atan2(p.yAim, p.xAim);
   for (int i = 0; i < n; i++) {
     double dir = aim + (i - (n - 1) * 0.5) * 0.14;
@@ -28,4 +34,8 @@ void Bow::tick(Mob &p) {
         ->source = this;
   }
   Sound::bow.play(0.35f);
+}
+
+Figures Bow::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("arrows", float(arrowsAt(l))).add("pierce", float(pierceAt(l)));
 }

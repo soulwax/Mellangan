@@ -176,27 +176,47 @@ RecipeWeapon::RecipeWeapon(const Recipe &r)
     desc[i] = text[i].c_str();
 }
 
-int RecipeWeapon::count() const {
+int RecipeWeapon::count(int lvl, bool ev) const {
   if (FormBehavior::of(r.form).area())
     return r.count;
-  return r.count + at(level, 3) + at(level, 5) + evolved + int(holder ? holder->bonus().shots : 0);
+  return r.count + at(lvl, 3) + at(lvl, 5) + ev;
+}
+
+float RecipeWeapon::reach(int lvl, bool ev) const {
+  if (!FormBehavior::of(r.form).area())
+    return r.reach;
+  return r.reach * (1 + 0.3f * (at(lvl, 3) + at(lvl, 5)) + 0.25f * ev);
+}
+
+float RecipeWeapon::damage(int lvl) const { return r.damage * (1 + 0.5f * (at(lvl, 2) + at(lvl, 5))); }
+
+float RecipeWeapon::every(int lvl) const { return r.cooldown * (lvl >= 4 ? 0.75f : 1); }
+
+int RecipeWeapon::count() const {
+  if (FormBehavior::of(r.form).area())
+    return count(level, evolved);
+  return count(level, evolved) + int(holder ? holder->bonus().shots : 0);
 }
 
 float RecipeWeapon::reach() const {
   if (!FormBehavior::of(r.form).area())
-    return r.reach;
-  return r.reach * (1 + 0.3f * (at(level, 3) + at(level, 5)) + 0.25f * evolved) *
-         (1 + (holder ? holder->bonus().area : 0) / 100);
+    return reach(level, evolved);
+  return reach(level, evolved) * (1 + (holder ? holder->bonus().area : 0) / 100);
 }
 
-float RecipeWeapon::damage(const Mob &p) const {
-  return r.damage * (1 + 0.5f * (at(level, 2) + at(level, 5))) * p.might * power;
+float RecipeWeapon::damage(const Mob &p) const { return damage(level) * p.might * power; }
+
+Figures RecipeWeapon::figures(int lvl, bool ev) const {
+  Figures s = Figures().damage(damage(lvl)).every(every(lvl));
+  if (FormBehavior::of(r.form).area())
+    return s.add("radius", reach(lvl, ev));
+  return s.add("count", float(count(lvl, ev)));
 }
 
 void RecipeWeapon::tick(Mob &p) {
   if ((cd -= DT) > 0 || p.dead())
     return;
-  cd = r.cooldown * (level >= 4 ? 0.75f : 1) * p.haste * pace;
+  cd = every(level) * p.haste * pace;
   fireRecipe(r, p, this, damage(p), reach(), count());
 }
 

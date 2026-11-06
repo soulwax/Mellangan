@@ -228,6 +228,50 @@ void testDaily() {
             << std::endl;
 }
 
+void testFigures() {
+  int weapons = 0;
+  std::string silent;
+  for (auto &u : Upgrade::all()) {
+    if (!u->weapon || u->rare || u->skill)
+      continue;
+    weapons++;
+    Figures one = u->figures(1, false);
+    assert(one.n >= 2);
+    for (int l = 1; l < Upgrade::MAX_LEVEL; l++) {
+      Figures a = u->figures(l, false), b = u->figures(l + 1, false);
+      assert(a.n == b.n);
+      bool moved = false;
+      for (int i = 0; i < a.n; i++)
+        moved |= std::strcmp(a.line[i].name, b.line[i].name) != 0 || a.line[i].value != b.line[i].value;
+      if (!moved)
+        silent += fmt::format(" {} L{}", u->name, l + 1);
+    }
+  }
+  if (!silent.empty())
+    std::cout << "[TEST] Levels that change no figure:" << silent << std::endl;
+  assert(silent.empty());
+  Rng kept = rng;
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Player &p = *game.level->player;
+  Upgrade *staff = p.upgrade("Arcane Staff");
+  assert(staff);
+  staff->level = 1;
+  p.might = 1.5f;
+  std::vector<std::string> up = UpgradeCard(staff, p, false, 0).numbers();
+  assert(!up.empty() && up[0] == "damage 15 > 27");
+  staff->level = 0;
+  assert(UpgradeCard(staff, p, false, 0).numbers()[0] == "damage 15");
+  staff->level = Upgrade::MAX_LEVEL;
+  assert(UpgradeCard(staff, p, true, 0).numbers()[0] == "damage 39 > 78");
+  game.level.reset();
+  rng = kept;
+  std::cout << "[TEST] Figures: all " << weapons
+            << " weapons report their numbers per level, every level changes at least one, and "
+               "cards show might-scaled before and after values, new picks and evolutions: PASS"
+            << std::endl;
+}
+
 void testSynergy() {
   Rng kept = rng;
   Game game;

@@ -7,6 +7,12 @@
 #include "entity/effect/IncenseCloud.hpp"
 #include "level/Level.hpp"
 
+namespace {
+float damageAt(int l) { return 8.0f + 4 * Upgrade::at(l, 2) + 6 * Upgrade::at(l, 4); }
+int cloudsAt(int l) { return 1 + Upgrade::at(l, 3) + 2 * Upgrade::at(l, 5); }
+float lastsAt(int l) { return 2.4f + 0.8f * Upgrade::at(l, 4); }
+} // namespace
+
 Censer::Censer()
     : Upgrade("Censer", atlas::frontier(atlas::fr::Censer),
               {"Releases searing holy incense clouds", "+4 damage per pulse",
@@ -20,9 +26,9 @@ void Censer::tick(Mob &p) {
   cd = 2.2f * p.haste * pace;
   Sound::orb.play(0.35f, 0.2f);
 
-  int count = 1 + at(level, 3) + 2 * at(level, 5);
-  float dmg = (8.0f + 4 * at(level, 2) + 6 * at(level, 4)) * p.might * power;
-  float duration = 2.4f + (at(level, 4) ? 0.8f : 0.0f);
+  int count = cloudsAt(level);
+  float dmg = damageAt(level) * p.might * power;
+  float duration = lastsAt(level);
   float rad = 26.0f;
 
   for (int i = 0; i < count; i++) {
@@ -38,3 +44,6 @@ void Censer::tick(Mob &p) {
   }
 }
 
+Figures Censer::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(2.2f).add("clouds", float(cloudsAt(l))).add("lasts", lastsAt(l), Figure::Lasts);
+}

@@ -61,6 +61,11 @@ public:
   int count() const;
   float reach() const;
   float damage(const Mob &p) const;
+  int count(int lvl, bool ev) const;
+  float reach(int lvl, bool ev) const;
+  float damage(int lvl) const;
+  float every(int lvl) const;
+  Figures figures(int lvl, bool evolved) const override;
 
   const Recipe &r;
   float cd = 0.5f;

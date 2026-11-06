@@ -7,6 +7,12 @@
 #include "entity/effect/GlaiveThrust.hpp"
 #include "level/Level.hpp"
 
+namespace {
+float damageAt(int l) { return 24.0f + 12 * Upgrade::at(l, 2) + 14 * Upgrade::at(l, 4); }
+float everyAt(int l) { return l >= 4 ? 1.1f : 1.45f; }
+float reachAt(int l) { return 48.0f * (1.0f + 0.25f * Upgrade::at(l, 3)); }
+} // namespace
+
 Glaive::Glaive()
     : Upgrade("Glaive", atlas::frontier(atlas::fr::Glaive),
               {"Thrusts a broad blade forward in a line", "+12 damage",
@@ -17,11 +23,11 @@ Glaive::Glaive()
 void Glaive::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 1.1f : 1.45f) * p.haste * pace;
+  cd = everyAt(level) * p.haste * pace;
   Sound::slash.play(0.45f, -0.05f);
 
-  float dmg = (24.0f + 12 * at(level, 2) + 14 * at(level, 4)) * p.might * power;
-  float reach = 48.0f * (1.0f + 0.25f * at(level, 3));
+  float dmg = damageAt(level) * p.might * power;
+  float reach = reachAt(level);
   float force = 140.0f * (1.0f + 0.25f * at(level, 3));
   bool doubleEnded = at(level, 5) > 0;
 
@@ -34,3 +40,6 @@ void Glaive::tick(Mob &p) {
       ->source = this;
 }
 
+Figures Glaive::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("reach", reachAt(l)).add("thrusts", 1.0f + Upgrade::at(l, 5));
+}

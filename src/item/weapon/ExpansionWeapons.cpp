@@ -73,6 +73,12 @@ const Def DEFS[Count] = {
 
 int clampKind(int kind) { return std::clamp(kind, 0, Count - 1); }
 
+float damageAt(const Def &d, int l) {
+  return d.damage + d.damage2 * Upgrade::at(l, 2) + d.damage5 * Upgrade::at(l, 5);
+}
+float everyAt(const Def &d, int l) { return d.cooldown * (l >= 4 ? 0.75f : 1); }
+float reachAt(const Def &d, int l) { return d.reachBase + d.reachStep * Upgrade::at(l, 3); }
+
 } // namespace
 
 ExpansionWeapon::ExpansionWeapon(int kind)
@@ -82,14 +88,18 @@ ExpansionWeapon::ExpansionWeapon(int kind)
   partner = DEFS[this->kind].partner, evolvedName = DEFS[this->kind].evolved;
 }
 
+Figures ExpansionWeapon::figures(int l, bool) const {
+  const Def &d = DEFS[kind];
+  return Figures().damage(damageAt(d, l)).every(everyAt(d, l)).add("reach", reachAt(d, l));
+}
+
 void ExpansionWeapon::tick(Mob &p) {
   if ((cd -= DT) > 0 || p.dead())
     return;
   const Def &d = DEFS[kind];
-  cd = d.cooldown * (level >= 4 ? 0.75f : 1) * p.haste * pace;
-  float dmg = (d.damage + d.damage2 * at(level, 2) + d.damage5 * at(level, 5)) *
-              p.might * power;
-  float reach = d.reachBase + d.reachStep * at(level, 3);
+  cd = everyAt(d, level) * p.haste * pace;
+  float dmg = damageAt(d, level) * p.might * power;
+  float reach = reachAt(d, level);
   auto targets = p.level->nearestFoes(p, p.x, p.y, 240, 4);
   double dx = p.xAim, dy = p.yAim;
   if (!targets.empty()) {

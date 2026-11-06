@@ -11,6 +11,7 @@
 
 #include "campaign/Campaign.hpp"
 #include "level/Chart.hpp"
+#include "level/World.hpp"
 #include "meta/Codex.hpp"
 #include "meta/Saves.hpp"
 #include "meta/Settings.hpp"
@@ -93,6 +94,28 @@ void testSaves() {
   Chart lost;
   lost.load(mf);
   assert(lost.at(0, 0) == 0);
+
+  int lx = 0, ly = 0;
+  for (int r = 0; r < 400 && !lx; r++)
+    for (int cx = -r; cx <= r && !lx; cx++)
+      for (int cy : {-r, r}) {
+        bool all = true;
+        for (int t = 0; t < Chart::CELL * Chart::CELL && all; t++)
+          all = world::isWater(cx * Chart::CELL + t % Chart::CELL, cy * Chart::CELL + t / Chart::CELL);
+        if (all) {
+          lx = cx, ly = cy;
+          break;
+        }
+      }
+  assert(lx || ly);
+  Chart wet;
+  wet.unveil((lx * Chart::CELL + 2) * 16.0, (ly * Chart::CELL + 2) * 16.0, 0);
+  assert(wet.at(lx, ly) & Chart::WATER);
+  wet.save(mf);
+  Chart dried;
+  dried.load(mf);
+  assert((dried.at(lx, ly) & Chart::WATER) && (dried.at(lx, ly) & Chart::BIOME) == (wet.at(lx, ly) & Chart::BIOME));
+  Saves::erase(mf);
 
   Settings set;
   set.parse("master 40\nflash 300\nbogus 5\nfullscreen 1\nshake -20\n");

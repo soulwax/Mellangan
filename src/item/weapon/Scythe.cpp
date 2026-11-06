@@ -5,6 +5,12 @@
 #include "entity/effect/Sweep.hpp"
 #include "level/Level.hpp"
 
+namespace {
+float damageAt(int l) { return 24.0f + 10 * (Upgrade::at(l, 2) + Upgrade::at(l, 4) + Upgrade::at(l, 5)); }
+float everyAt(int l) { return l >= 4 ? 2.0f : 2.8f; }
+float reachAt(int l) { return 28.0f + 8 * (Upgrade::at(l, 3) + Upgrade::at(l, 5)); }
+} // namespace
+
 Scythe::Scythe()
     : Upgrade("Reaper's Scythe", atlas::town(atlas::tt::Scythe),
               {"Sweeps a full circle around you", "+10 damage", "Longer reach",
@@ -14,11 +20,15 @@ Scythe::Scythe()
 void Scythe::tick(Mob &p) {
   if ((cd -= DT) > 0)
     return;
-  cd = (level >= 4 ? 2.0f : 2.8f) * p.haste * pace;
+  cd = everyAt(level) * p.haste * pace;
   p.level
       ->add<Sweep>(
-          p, 28.0f + 8 * (at(level, 3) + at(level, 5)),
-          (24.0f + 10 * (at(level, 2) + at(level, 4) + at(level, 5))) * p.might * power)
+          p, reachAt(level),
+          damageAt(level) * p.might * power)
       ->source = this;
   Sound::scythe.play(0.5f);
+}
+
+Figures Scythe::figures(int l, bool) const {
+  return Figures().damage(damageAt(l)).every(everyAt(l)).add("reach", reachAt(l));
 }
