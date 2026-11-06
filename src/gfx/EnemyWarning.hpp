@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Math.hpp"
+#include "gfx/Palette.hpp"
 #include "gfx/Screen.hpp"
 
 inline void enemyWarning(Screen &s, double x, double y, float radius,
                          float alpha, float phase) {
-  Color c{1, 0.18f, 0.12f, alpha};
+  Color c = palette::warning(alpha);
   s.color(c);
   s.ring(x, y, radius);
   s.color(col::white);

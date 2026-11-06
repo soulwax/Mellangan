@@ -1,4 +1,6 @@
 #include "item/loot/Item.hpp"
+
+#include "gfx/Palette.hpp"
 #include "item/loot/Unique.hpp"
 
 #include <spdlog/fmt/fmt.h>
@@ -177,6 +179,12 @@ std::string Item::name() const {
 }
 
 Color Item::color() const {
+  if (palette::safe) {
+    constexpr Color SAFE[] = {{1, 1, 1, 1},           {0.72f, 0.72f, 0.74f, 1},
+                              {0.34f, 0.71f, 0.91f, 1}, {0.94f, 0.89f, 0.26f, 1},
+                              {0.2f, 0.8f, 0.6f, 1},    {0.9f, 0.62f, 0, 1}};
+    return night() ? Color{0.75f, 0.35f, 0.7f, 1} : SAFE[int(rarity)];
+  }
   if (night())
     return {0.72f, 0.45f, 1, 1};
   switch (rarity) {

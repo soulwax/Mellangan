@@ -65,6 +65,8 @@ int runTests() {
   testPoolConcurrency();
   testWorkers();
   testGamepad();
+  testPalette();
+  testAdvice();
   std::cout << "[TEST] Pool multithreaded concurrency: PASS" << std::endl;
   testStatuses();
   testStatusDamage();

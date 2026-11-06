@@ -146,7 +146,7 @@ and fire pools leave a short burn when enemies move away. Afflictions clear on d
 | Left / Right (class screen) | Choose a class |
 | C (title, pause) | Codex |
 | Gamepad | Left stick or D-pad move (the stick also walks slower when pushed part way), A confirm and class skill, B back, Start pause, Back map (quit to title while paused), X gather or retry, Y inventory or codex, LB show loot, RB settings, LT skill tree or campaign, RT build, L3 drop an item. Hints name pad buttons while you play on the pad |
-| O (title, pause) | Settings: master, music, effects and ambience volume, screen shake, flashes, particles, damage numbers, fullscreen and vsync, kept in `settings.txt` in the save folder |
+| O (title, pause) | Settings: master, music, effects and ambience volume, screen shake, flashes, particles, damage numbers, a colourblind palette, fullscreen and vsync, kept in `settings.txt` in the save folder |
 | Esc / P | Pause |
 | F11 | Fullscreen |
 | F3 | FPS counter and frame-time graph |

@@ -26,6 +26,7 @@ const Row ROWS[] = {
     {"FLASHES", &Settings::flash, 25, 100, nullptr, nullptr},
     {"PARTICLES", &Settings::reduced, 1, 1, "FULL", "REDUCED"},
     {"DAMAGE NUMBERS", &Settings::numbers, 1, 1, "OFF", "ON"},
+    {"COLOURS", &Settings::colours, 1, 1, "STANDARD", "COLOURBLIND"},
     {"FULLSCREEN", &Settings::fullscreen, 1, 1, "OFF", "ON"},
     {"VSYNC", &Settings::vsync, 1, 1, "OFF", "ON"}};
 constexpr int ROW_COUNT = int(sizeof ROWS / sizeof *ROWS);

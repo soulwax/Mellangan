@@ -1,4 +1,6 @@
 #include "gui/Tooltip.hpp"
+
+#include "gfx/Palette.hpp"
 #include "item/loot/Unique.hpp"
 
 #include <spdlog/fmt/fmt.h>
@@ -16,8 +18,7 @@ namespace gui {
 
 namespace {
 
-constexpr Color AFFIX{0.55f, 0.65f, 1, 1}, BETTER{0.45f, 0.95f, 0.45f, 1},
-    WORSE{1, 0.4f, 0.35f, 1}, CURSE{1, 0.3f, 0.3f, 1};
+constexpr Color AFFIX{0.55f, 0.65f, 1, 1}, CURSE{1, 0.3f, 0.3f, 1};
 
 typedef std::vector<std::pair<std::string, Color>> Lines;
 
@@ -30,7 +31,7 @@ void compare(Lines &lines, const Item &item, const Item &worn) {
     if (!header)
       lines.push_back({"against what you wear:", col::muted}), header = true;
     lines.push_back({(delta > 0 ? "" : "lose ") + describe(Stat(s), std::abs(delta)),
-                     delta > 0 ? BETTER : WORSE});
+                     delta > 0 ? palette::better() : palette::worse()});
   }
 }
 
@@ -87,7 +88,7 @@ float materials(Screen &s, const int *owned, const int *cost, float x, float y, 
     if (cost && !cost[m])
       continue;
     std::string n = cost ? fmt::format("{}/{}", owned[m], cost[m]) : std::to_string(owned[m]);
-    Color ink = cost && owned[m] < cost[m] ? WORSE : MATERIALS[m].color;
+    Color ink = cost && owned[m] < cost[m] ? palette::worse() : MATERIALS[m].color;
     s.sprite(MATERIALS[m].icon, x, y - 6 * size, 0, 0, size, size);
     s.text(n, x + 17 * size, y, size, ink.alpha(alpha));
     x += 17 * size + Screen::textWidth(n, size) + 9 * size;

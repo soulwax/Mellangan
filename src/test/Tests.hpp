@@ -41,6 +41,8 @@ void testSaves();
 void testNearestStructure();
 void testWorkers();
 void testGamepad();
+void testPalette();
+void testAdvice();
 void testBlend();
 void testShapeForms();
 void testChampionTraits();

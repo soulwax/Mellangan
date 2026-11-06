@@ -1,5 +1,7 @@
 #include "entity/Player.hpp"
 
+#include "gfx/Palette.hpp"
+
 #include <cstring>
 #include <limits>
 
@@ -173,7 +175,7 @@ void Player::hurt(float damage, bool periodic) {
     invuln = level->game.balance.invuln + bonus().grace, level->game.hitStop(0.05f);
   level->game.onPlayerHurt();
   Sound::hurt.play(0.7f);
-  TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), col::red);
+  TextParticle::pop(*level, x, bodyY(), int(std::lround(damage)), palette::hurt());
   Spark::burst(*level, x, bodyY(), col::red, 6, 60, false);
   if (hp > 0)
     return;
@@ -250,7 +252,7 @@ void Player::mend(float amount) {
     level->add<Shockwave>(x, bodyY(), 4, 60, 0.3f, Color{1, 0.9f, 0.6f, 0.7f}, false);
   }
   hp = std::min(maxHp, hp + amount);
-  TextParticle::pop(*level, x, bodyY(), int(amount), col::heal);
+  TextParticle::pop(*level, x, bodyY(), int(amount), palette::heal());
 }
 
 void Player::gainXp(float amount) {

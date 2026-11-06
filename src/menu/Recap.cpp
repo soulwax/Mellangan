@@ -92,6 +92,34 @@ void corners(Screen &s, float x, float y, float w, float h, float tick, float u,
   }
 }
 
+struct Tip {
+  bool (*fits)(const Level &l);
+  const char *text;
+};
+
+int weapons(const Level &l, bool maxed) {
+  int n = 0;
+  for (auto &up : l.player->upgrades)
+    n += up->weapon && up->level > 0 && (!maxed || up->maxed());
+  return n;
+}
+
+const Tip TIPS[] = {
+    {[](const Level &l) { return l.time < 60; },
+     "Keep moving from the first second: foes close in on a hero who stands still"},
+    {[](const Level &l) { return !l.bossIds.empty(); },
+     "Bosses telegraph their heaviest blows: step out of the warning ring before it fills"},
+    {[](const Level &l) { return l.rules.endsAtDawn && l.night.lit == 0 && l.time > 180; },
+     "Kindle shrines: every shrine lit brings the dawn sooner"},
+    {[](const Level &l) { return weapons(l, false) >= 3 && weapons(l, true) == 0; },
+     "Raise one weapon to level 5 before spreading out: maxed weapons can evolve"},
+    {[](const Level &l) { return l.distanceRan < l.time * 25; },
+     "Keep moving: walking through the gaps keeps the crowd from closing the circle"},
+    {[](const Level &l) { return l.player->lvl * 30 < l.time; },
+     "Gather the gems: a wider magnet and more experience level you faster"},
+    {[](const Level &) { return true; },
+     "Pair a maxed weapon with its partner relic to evolve it"}};
+
 } // namespace
 
 RunStats computeRunStats(const Level &l) {
@@ -106,13 +134,10 @@ RunStats computeRunStats(const Level &l) {
   stats.className = h ? h->name : "Adventurer";
   stats.classColor = h ? h->tint : col::white;
 
-  if (l.omen >= 0 && l.omen < OMEN_COUNT) {
-    stats.difficulty = OMENS[l.omen].name;
-    stats.diffColor = OMENS[l.omen].tint;
-  } else {
-    stats.difficulty = "STANDARD";
-    stats.diffColor = {0.82f, 0.85f, 0.92f, 1.0f};
-  }
+  stats.difficulty = difficultyTitle(l.game.difficulty);
+  stats.diffColor = {0.82f, 0.85f, 0.92f, 1.0f};
+  if (l.omen >= 0 && l.omen < OMEN_COUNT)
+    stats.omen = OMENS[l.omen].name, stats.omenColor = OMENS[l.omen].tint;
 
   stats.timeText = clockText(l.time);
   stats.isRecord = l.time > l.game.best;
@@ -163,7 +188,11 @@ float renderEndStats(Screen &s, const Level &l, float y, float alpha) {
   field("TIME", stats.timeText, cx + cardW * 0.73f, bottom, 34,
         stats.isRecord ? col::gold : col::white);
 
-  return cy + cardH;
+  if (stats.omen.empty())
+    return cy + cardH;
+  s.textCenter("under the omen " + stats.omen, s.w / 2, cy + cardH + 5 * u, small,
+               stats.omenColor.alpha(0.85f * alpha));
+  return cy + cardH + 5 * u + 16 * small;
 }
 
 float recap(Screen &s, const Level &l, float y, float alpha) {
@@ -205,4 +234,11 @@ float recap(Screen &s, const Level &l, float y, float alpha) {
     y += row;
   }
   return y;
+}
+
+const char *advice(const Level &l) {
+  for (const Tip &tip : TIPS)
+    if (tip.fits(l))
+      return tip.text;
+  return "";
 }

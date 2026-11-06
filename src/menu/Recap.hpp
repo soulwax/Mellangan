@@ -11,8 +11,8 @@ struct RunStats {
   Color rankColor;
   std::string className;
   Color classColor;
-  std::string difficulty;
-  Color diffColor;
+  std::string difficulty, omen;
+  Color diffColor, omenColor;
   std::string distance;
   std::string totalDamage;
   std::string timeText;
@@ -25,3 +25,4 @@ struct RunStats {
 RunStats computeRunStats(const Level &l);
 float renderEndStats(Screen &s, const Level &l, float y, float alpha);
 float recap(Screen &s, const Level &l, float y, float alpha);
+const char *advice(const Level &l);
