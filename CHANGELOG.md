@@ -6,6 +6,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.5] - 2026-11-06
+
 ### Added
 
 - Level-up cards show exact numbers. A weapon you hold shows what the level changes, before and after ("damage 24 > 34   every 2.8s > 2.0s"); a new weapon shows its first-level numbers; an evolution shows its doubled damage and shorter interval. Damage includes your might, intervals your haste, so the numbers match what the weapon does. All 89 weapons report them, and every level changes at least one.
