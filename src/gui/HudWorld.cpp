@@ -1,6 +1,7 @@
 #include "gui/Hud.hpp"
 
 #include "Game.hpp"
+#include "gui/Lang.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Workbench.hpp"
 #include "campaign/Harvest.hpp"
@@ -160,7 +161,7 @@ void Hud::merchant() {
     Pin pin;
     if (tiles < 48 && edge(m->x, m->y - 10, pin)) {
       diamond(pin, c.alpha(0.7f));
-      tag(fmt::format("MERCHANT {:.0f}", tiles), pin, 16, c.alpha(0.7f));
+      tag(say(lang.merchantAt, tiles), pin, 16, c.alpha(0.7f));
     }
     return;
   }
@@ -169,9 +170,9 @@ void Hud::merchant() {
           close ? col::gold.alpha(0.75f + 0.25f * std::sin(time * 6)) : c.alpha(0.8f));
   };
   bool close = Merchant::near(l);
-  sign(*m, close ? game.input.prompt("I  TRADE") : "MERCHANT", close, 24);
+  sign(*m, close ? game.input.prompt(lang.trade) : lang.merchant, close, 24);
   if (Workbench *b = Workbench::near(l); b && !close)
-    sign(*b, game.input.prompt("I  CRAFT"), true, 18);
+    sign(*b, game.input.prompt(lang.craft), true, 18);
 }
 
 void Hud::compass() {
@@ -184,7 +185,7 @@ void Hud::compass() {
   arrow(pin, 8, 5, c);
   Player &p = *game.level->player;
   double xs = n.beacon.centerX() - p.x, ys = n.beacon.centerY() - p.y;
-  tag(fmt::format("SHRINE {:.0f}", std::sqrt(xs * xs + ys * ys) / 16), pin, 20, c);
+  tag(say(lang.shrineAt, std::sqrt(xs * xs + ys * ys) / 16), pin, 20, c);
 }
 
 void Hud::lootLabels() {

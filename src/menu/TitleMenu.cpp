@@ -3,6 +3,7 @@
 #include <cctype>
 
 #include "Game.hpp"
+#include "gui/Lang.hpp"
 #include "gui/Widget.hpp"
 #include "Version.hpp"
 #include "audio/Sound.hpp"
@@ -14,11 +15,9 @@
 #include "menu/Menu.hpp"
 
 namespace {
-const char *const MODES[4] = {"CLASSIC", "RANDOM", "DAILY", "CUSTOM"};
-const char *const BLURBS[4] = {"the same land every night",
-                               "a new land each run",
-                               "one land for everyone today",
-                               "type a code to share"};
+const char *Lang::*const MODES[4] = {&Lang::classic, &Lang::random, &Lang::daily, &Lang::custom};
+const char *Lang::*const BLURBS[4] = {&Lang::classicBlurb, &Lang::randomBlurb, &Lang::dailyBlurb,
+                                      &Lang::customBlurb};
 
 bool inside(const SDL_FRect &r, const Input &in) {
   SDL_FPoint m{in.mouseX, in.mouseY};
@@ -40,7 +39,7 @@ bool TitleMenu::typing() const {
 TitleMenu::Layout TitleMenu::layout() const {
   const Screen &s = game.screen;
   float u = s.u, small = std::max(1.0f, u - 1), pad = 8 * u;
-  float w = std::max(200 * u, Screen::textWidth("CLASSIC", small) * 4 + 52 * u);
+  float w = std::max(200 * u, Screen::textWidth(lang.classic, small) * 4 + 52 * u);
   Layout l{};
   float x = s.w - w - 16 * u, y = s.h * 0.12f + 100 * u, in = x + pad,
         iw = w - 2 * pad;
@@ -163,35 +162,31 @@ void TitleMenu::render(Screen &s) {
   s.rect(0, 0, s.w, s.h, {0.02f, 0.01f, 0.05f, 0.35f});
   s.textCenter("MELLANGAN", s.w / 2, y, 4 * u,
                col::gold.alpha(0.9f + 0.1f * std::sin(t * 2)));
-  s.textCenter("kindle the shrines, outlast the night", s.w / 2, y + 70 * u, u,
+  s.textCenter(lang.tagline, s.w / 2, y + 70 * u, u,
                col::muted);
   if (std::fmod(t, 1.0f) < 0.65f)
-    s.textCenter(game.input.pad ? "PRESS A" : "PRESS ENTER", s.w / 2, s.h * 0.62f, u, col::white);
+    s.textCenter(game.input.pad ? lang.pressA : lang.pressEnter, s.w / 2, s.h * 0.62f, u, col::white);
   if (saved < 0) {
     saved = game.campaignSaved();
     if (saved && !game.saves.dir().empty()) {
       Campaign probe;
       Campaign::load(game.saves.read("campaign.txt", Campaign::valid), probe);
-      summary = fmt::format("{}  level {}  act {}  day {}{}", HEROES[probe.hero % HERO_COUNT]->name,
-                            probe.lvl, ACTS[std::clamp(probe.act, 1, ACT_COUNT) - 1].numeral,
-                            probe.day, probe.hardcore ? "  HARDCORE" : "");
+      summary = say(lang.campaignSummary, HEROES[probe.hero % HERO_COUNT]->name, probe.lvl,
+                    ACTS[std::clamp(probe.act, 1, ACT_COUNT) - 1].numeral, probe.day);
+      if (probe.hardcore)
+        summary += lang.hardcore;
       if (probe.nightmare)
-        summary += fmt::format("  NIGHTMARE {}", probe.nightmare);
+        summary += say(lang.nightmare, probe.nightmare);
     }
   }
-  s.textCenter(fmt::format("{}  {} THE CAMPAIGN", game.input.pad ? "LT" : "K",
-                           saved ? "CONTINUE" : "BEGIN"),
+  s.textCenter(say(lang.campaignLine, game.input.pad ? "LT" : "K", saved ? lang.continueWord : lang.begin),
                s.w / 2,
                s.h * 0.62f + 24 * u, small, col::gold.alpha(0.8f));
   if (saved && !summary.empty())
     s.textCenter(summary, s.w / 2, s.h * 0.62f + 40 * u, small, col::muted);
   Layout l = layout();
   float room = l.panel.x - 16 * u;
-  s.textCenter(Screen::fit(game.input.pad
-                               ? "Stick/D-pad move   Back map   Y codex   RB settings   Start pause"
-                               : "WASD/Arrows move   Tab map   C codex   O settings   Esc pause   "
-                                 "M mute   F11 fullscreen",
-                           room, small),
+  s.textCenter(Screen::fit(game.input.pad ? lang.titlePadHint : lang.titleKeyHint, room, small),
                8 * u + room / 2, s.h - 30 * small, small, col::muted);
   std::string_view version = "v" MELLANGAN_VERSION;
   s.text(version, s.w - Screen::textWidth(version, small) - 6 * small,
@@ -200,7 +195,7 @@ void TitleMenu::render(Screen &s) {
   const SDL_FRect &p = l.panel;
   s.rect(p.x, p.y, p.w, p.h, {0.04f, 0.04f, 0.07f, 0.8f});
   s.bracket(p.x, p.y, p.w, p.h, u);
-  heading(s, l, p.y + 8 * u, "WORLD", game.input.prompt("Tab"));
+  heading(s, l, p.y + 8 * u, lang.worldHeading, game.input.prompt("Tab"));
   renderModes(s, l);
   renderSeed(s, l);
   renderDifficulty(s, l);
@@ -225,10 +220,10 @@ void TitleMenu::renderModes(Screen &s, const Layout &l) const {
     s.rect(c.x, c.y, c.w, c.h, on ? col::gold.alpha(0.9f) : col::panel);
     if (!on)
       s.frame(c.x, c.y, c.w, c.h, u, col::muted.alpha(0.3f));
-    s.textCenter(MODES[i], c.x + c.w / 2, c.y + (c.h - 16 * small) / 2, small,
+    s.textCenter(lang.*MODES[i], c.x + c.w / 2, c.y + (c.h - 16 * small) / 2, small,
                  on ? col::black : col::muted);
   }
-  s.text(BLURBS[mode], l.panel.x + 8 * u, l.chips[0].y + l.chips[0].h + 6 * u, small,
+  s.text(lang.*BLURBS[mode], l.panel.x + 8 * u, l.chips[0].y + l.chips[0].h + 6 * u, small,
          col::muted);
 }
 
@@ -249,9 +244,9 @@ void TitleMenu::renderSeed(Screen &s, const Layout &l) const {
     s.rect(tx + Screen::textWidth(code, small) + u, ty + 2 * u, small * 6,
            12 * small, col::gold);
   if (custom && game.seedCode.empty())
-    s.text("type a code", tx + 10 * small, ty, small, col::muted * 0.6f);
-  std::string hint = game.input.prompt(mode == int(WorldMode::Random) ? "R reroll"
-                                       : custom                         ? "Esc back"
+    s.text(lang.typeCode, tx + 10 * small, ty, small, col::muted * 0.6f);
+  std::string hint = game.input.prompt(mode == int(WorldMode::Random) ? lang.reroll
+                                       : custom                         ? lang.escBack
                                                                         : "");
   s.text(hint, f.x + f.w - Screen::textWidth(hint, small) - 6 * u, ty, small,
          col::muted * 0.7f);
@@ -263,7 +258,7 @@ void TitleMenu::renderDifficulty(Screen &s, const Layout &l) const {
   Difficulty tier = game.difficulty;
   bool nightmare = tier == Difficulty::Nightmare;
   Color heat = nightmare ? col::red : col::gold;
-  heading(s, l, d.y - 14 * u, "DIFFICULTY", game.input.prompt("Left/Right"));
+  heading(s, l, d.y - 14 * u, lang.difficultyHeading, game.input.prompt("Left/Right"));
   gui::Panel(d, {0.02f, 0.02f, 0.04f, 0.9f}, heat.alpha(0.5f), u).render(s);
   float dy = d.y + (d.h - 16 * small) / 2;
   s.text("<", d.x + 5 * u, dy, small, heat.alpha(0.8f));
@@ -279,7 +274,7 @@ void TitleMenu::renderHistory(Screen &s, const Layout &l) const {
   int n = std::min(int(game.saves.history.size()), 6);
   if (!n)
     return;
-  heading(s, l, l.rows[0].y - 16 * u, "PAST WORLDS", game.input.prompt("Up/Down"));
+  heading(s, l, l.rows[0].y - 16 * u, lang.pastWorlds, game.input.prompt("Up/Down"));
   for (int i = 0; i < n; i++) {
     const PastWorld &w = game.saves.history[i];
     const SDL_FRect &r = l.rows[i];

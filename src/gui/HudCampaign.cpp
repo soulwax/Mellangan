@@ -1,6 +1,7 @@
 #include "gui/Hud.hpp"
 
 #include "Game.hpp"
+#include "gui/Lang.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Workbench.hpp"
 #include "campaign/Harvest.hpp"
@@ -41,30 +42,29 @@ void Hud::handwork() {
     s.color(col::white);
     s.frame(gx, gy, 16 * k, 16 * k, u, tint);
     plate(tx * 16 + 8.0, ty * 16 - 18.0,
-          why.empty() ? game.input.prompt(fmt::format("{}  Enter build  Esc cancel", PIECES[c->building].name)) : why,
+          why.empty() ? game.input.prompt(say(lang.buildPrompt, PIECES[c->building].name)) : why,
           why.empty() ? col::gold : Color{1, 0.5f, 0.45f, 1});
     return;
   }
   if (c->delve.active) {
     std::string depth = c->delve.floor == 0
-                            ? fmt::format("THE CAVE-IN SETTLES  {} FOES", c->delve.inside(l))
-                        : fmt::format("DELVE  FLOOR {}/{}  {} FOES", c->delve.floor,
-                                      Delve::FLOORS, c->delve.inside(l));
+                            ? say(lang.caveIn, c->delve.inside(l))
+                            : say(lang.delveFloor, c->delve.floor, Delve::FLOORS, c->delve.inside(l));
     s.textCenter(depth, s.w / 2, 70 * u, small, Color{0.9f, 0.75f, 0.5f, 0.9f});
   } else if (Structure mine; Delve::entrance(l, *c, mine)) {
-    return plate(mine.centerX(), mine.centerY() - 26, game.input.prompt("E  DELVE INTO THE MINE"),
+    return plate(mine.centerX(), mine.centerY() - 26, game.input.prompt(lang.delveMine),
                  Color{0.9f, 0.75f, 0.5f, 1});
   }
   harvest::Target t;
   if (!harvest::target(l, *c, t))
     return;
   if (int cost = t.placed ? harvest::relight(c->edits.at(t.tx, t.ty)->piece) : -1; cost > 0)
-    return plate(t.x, t.y - 22, game.input.prompt(fmt::format("E  RELIGHT  {} wood", cost)), col::gold);
+    return plate(t.x, t.y - 22, game.input.prompt(say(lang.relight, cost)), col::gold);
   if (t.placed)
-    return plate(t.x, t.y - 22, game.input.prompt("E  TAKE DOWN"), col::muted);
+    return plate(t.x, t.y - 22, game.input.prompt(lang.takeDown), col::muted);
   auto it = c->chops.find(Edits::key(t.tx, t.ty));
   int hits = it == c->chops.end() ? 0 : it->second;
-  std::string text = game.input.prompt(fmt::format("E  {}", MATERIALS[int(t.yield->mat)].name));
+  std::string text = game.input.prompt(say(lang.gather, MATERIALS[int(t.yield->mat)].name));
   if (hits > 0)
     text += fmt::format("  {}/{}", hits, t.yield->hits);
   plate(t.x, t.y - 22, text, MATERIALS[int(t.yield->mat)].color);
@@ -82,7 +82,7 @@ void Hud::questLog() {
     l.each<Sentry>([&](Sentry &k) { fell += k.kills; });
     Campaign::Town near = c->nearest(l.player->x, l.player->y);
     if (fell > 0 && std::hypot(near.x - l.player->x, near.y - l.player->y) < 320)
-      s.textCenter(fmt::format("THE BRIDGE HOLDS  {} FALLEN", fell), s.w / 2, 70 * u, small,
+      s.textCenter(say(lang.bridgeHolds, fell), s.w / 2, 70 * u, small,
                    Color{0.85f, 0.88f, 0.95f, 0.85f});
   }
   l.each<Townsfolk>([&](Townsfolk &f) {
@@ -112,13 +112,13 @@ void Hud::questLog() {
   }
   std::string line = quests::status(*c);
   if (!line.empty())
-    s.text("QUEST  " + line, 8 * u, s.h - 74 * u, small,
+    s.text(say(lang.questLine, line), 8 * u, s.h - 74 * u, small,
            (c->stage == QuestStage::Ready ? col::gold : col::white).alpha(0.85f));
   if (Elder *e = l.get<Elder>(c->elder); e && inView(e->x, e->y, -8)) {
     bool near = Elder::near(l) != nullptr, news = c->stage == QuestStage::Offered ||
                                                   c->stage == QuestStage::Ready;
     if (near || news) {
-      plate(e->x, e->y - 22, near ? game.input.prompt("I  TALK") : "!",
+      plate(e->x, e->y - 22, near ? game.input.prompt(lang.talk) : "!",
             col::gold.alpha(0.75f + 0.25f * std::sin(time * 5)));
     }
   }
@@ -136,13 +136,13 @@ void Hud::questLog() {
     if (inView(f.x, f.y, -8)) {
       SDL_FPoint g = gui(f.x, f.y);
       float gx = g.x, gy = g.y - 26 * k;
-      s.textCenter("HELP!", gx, gy - 8 * small, small,
+      s.textCenter(lang.help, gx, gy - 8 * small, small,
                    Color{1, 0.9f, 0.6f, 0.6f + 0.4f * std::sin(time * 6)});
     } else if (edge(f.x, f.y, pin)) {
       Color tone{1, 0.9f, 0.6f, 0.8f};
       arrow(pin, 7, 4, tone);
       Player &hero = *l.player;
-      tag(fmt::format("HELP {:.0f}", std::hypot(f.x - hero.x, f.y - hero.y) / 16), pin, 18, tone);
+      tag(say(lang.helpAt, std::hypot(f.x - hero.x, f.y - hero.y) / 16), pin, 18, tone);
     }
   });
   double tx, ty;
@@ -155,5 +155,5 @@ void Hud::questLog() {
   arrow(pin, 8, 5, tone);
   Player &p = *l.player;
   double xs = tx - p.x, ys = ty - p.y;
-  tag(fmt::format("QUEST {:.0f}", std::sqrt(xs * xs + ys * ys) / 16), pin, 20, tone);
+  tag(say(lang.questAt, std::sqrt(xs * xs + ys * ys) / 16), pin, 20, tone);
 }

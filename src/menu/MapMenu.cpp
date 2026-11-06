@@ -1,5 +1,6 @@
 #include "menu/MapMenu.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "campaign/Campaign.hpp"
 #include "campaign/Quests.hpp"
@@ -75,7 +76,7 @@ void MapMenu::campaign(Screen &s, const ChartView &v) const {
       c->stage != QuestStage::Ready && project(v, qx, qy, sx, sy)) {
     s.ring(sx, sy, 5 * u + 2 * u * pulse, QUEST.alpha(0.5f + 0.5f * pulse));
     s.ring(sx, sy, 2 * u, QUEST);
-    std::string label = c->stage == QuestStage::Road ? quests::act(*c).town : "QUEST";
+    std::string label = c->stage == QuestStage::Road ? quests::act(*c).town : lang.questMark;
     s.text(label, sx + 8 * u, sy - 6 * small, small, QUEST);
   }
 }
@@ -84,23 +85,23 @@ float MapMenu::legend(Screen &s, float x, float y) const {
   if (!game.campaign)
     return y;
   float u = s.u, small = std::max(1.0f, u - 1), row = 18 * small;
-  s.text("CAMPAIGN", x, y, small, col::white);
+  s.text(lang.campaignHeading, x, y, small, col::white);
   y += row * 1.5f;
   float mx = x + 4 * small, my = y + 8 * small, r = 4 * small;
   s.line(mx, my - r, mx + r, my, 1, col::gold), s.line(mx + r, my, mx, my + r, 1, col::gold);
   s.line(mx, my + r, mx - r, my, 1, col::gold), s.line(mx - r, my, mx, my - r, 1, col::gold);
-  s.text("towns and waypoints", x + 12 * small, y, small, col::white);
+  s.text(lang.townsLegend, x + 12 * small, y, small, col::white);
   y += row;
   s.ring(mx, y + 8 * small, 4 * small, QUEST);
   s.text(Screen::fit(quests::status(*game.campaign), s.w - x - 20 * small, small), x + 12 * small,
          y, small, QUEST);
   y += row;
   s.rect(mx - 1.5f * small, y + 6.5f * small, 3 * small, 3 * small, FIRE);
-  s.text("your campfires", x + 12 * small, y, small, col::white);
+  s.text(lang.campfiresLegend, x + 12 * small, y, small, col::white);
   y += row;
   s.line(mx - 3 * small, y + 5 * small, mx + 3 * small, y + 11 * small, 1, MINED);
   s.line(mx - 3 * small, y + 11 * small, mx + 3 * small, y + 5 * small, 1, MINED);
-  s.text(fmt::format("cleared mines  {}", game.campaign->delves.size()), x + 12 * small, y,
+  s.text(say(lang.minesLegend, game.campaign->delves.size()), x + 12 * small, y,
          small, col::white);
   return y + row * 2;
 }
@@ -120,8 +121,8 @@ void MapMenu::render(Screen &s) {
               l.player->y / (16.0 * Chart::CELL) + yPan};
 
   s.rect(0, 0, s.w, s.h, {0.02f, 0.02f, 0.05f, 0.88f});
-  s.text("WORLD MAP", pad, pad, 2 * u, col::gold);
-  std::string seed = "SEED " + game.worldName();
+  s.text(lang.worldMap, pad, pad, 2 * u, col::gold);
+  std::string seed = say(lang.seed, game.worldName());
   s.text(seed, v.x + v.w - Screen::textWidth(seed, small), pad + 16 * u - 8 * small,
          small, col::muted);
   Chart::border(s, v, u);
@@ -129,7 +130,7 @@ void MapMenu::render(Screen &s) {
   campaign(s, v);
 
   float x = v.x + v.w + 2 * pad, y = this->legend(s, x, top), row = 18 * small;
-  s.text("BOUNTIES", x, y, small, col::white);
+  s.text(lang.bounties, x, y, small, col::white);
   y += row * 1.5f;
   for (const Bounty &b : l.bounties) {
     s.rect(x, y + 4 * small, 8 * small, 8 * small,
@@ -142,7 +143,7 @@ void MapMenu::render(Screen &s) {
     y += row * (b.done || b.goal <= 1 ? 1.2f : 2);
   }
   y += row;
-  s.text("REGIONS", x, y, small, col::white);
+  s.text(lang.regions, x, y, small, col::white);
   y += row * 1.5f;
   for (int b = 0; b < BIOME_COUNT; b++) {
     if (!c.cells[b])
@@ -156,12 +157,12 @@ void MapMenu::render(Screen &s) {
     y += row;
   }
   s.rect(x, y + 4 * small, 8 * small, 8 * small, {0.3f, 0.32f, 0.3f, 1});
-  s.text("EARLIER RUNS", x + 12 * small, y, small, col::muted);
+  s.text(lang.earlierRuns, x + 12 * small, y, small, col::muted);
   y += row * 2;
-  s.text(fmt::format("{} of {} walked", c.discovered, int(BIOME_COUNT)), x, y,
+  s.text(say(lang.walked, c.discovered, int(BIOME_COUNT)), x, y,
          small, col::muted);
   y += row;
-  s.text(fmt::format("{} tiles charted", c.charted * Chart::CELL * Chart::CELL),
+  s.text(say(lang.charted, c.charted * Chart::CELL * Chart::CELL),
          x, y, small, col::muted);
   y += row * 2;
   for (int k = 0; k < int(StructureKind::Count); k++) {
@@ -170,6 +171,6 @@ void MapMenu::render(Screen &s) {
     y += row;
   }
 
-  s.text(game.input.prompt("Arrows pan   1-3 zoom   Enter centre   Tab / Esc close"), pad,
+  s.text(game.input.prompt(lang.mapHint), pad,
          s.h - pad - 16 * small, small, col::muted);
 }

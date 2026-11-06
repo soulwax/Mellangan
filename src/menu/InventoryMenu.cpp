@@ -2,6 +2,7 @@
 
 #include <spdlog/fmt/fmt.h>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -112,7 +113,7 @@ void InventoryMenu::render(Screen &s) {
   float w = last.x + last.w - first.x + 24 * u, h = cell(GEAR - 1).y + cell(0).h - y0 + 40 * u;
   s.rect(x0, y0, w, h, {0.04f, 0.04f, 0.08f, 0.94f * in});
   s.bracket(x0, y0, w, h, u);
-  s.text("INVENTORY", x0 + 12 * u, y0 + 10 * u, u, col::gold.alpha(in));
+  s.text(lang.inventory, x0 + 12 * u, y0 + 10 * u, u, col::gold.alpha(in));
 
   for (int i = 0; i < SLOTS; i++) {
     SDL_FRect r = cell(i);
@@ -134,11 +135,11 @@ void InventoryMenu::render(Screen &s) {
   }
 
   float fy = cell(GEAR - 1).y + cell(0).h + 12 * u;
-  std::string head = fmt::format("{} gold   bag {}/{}", p.gold, p.bag.size(), Player::BAG);
+  std::string head = say(lang.bagLine, p.gold, p.bag.size(), Player::BAG);
   s.text(head, x0 + 12 * u, fy, small, col::gold.alpha(0.85f * in));
   gui::materials(s, p.materials, nullptr, x0 + 24 * u + Screen::textWidth(head, small), fy,
                  small, in);
-  s.textCenter(game.input.prompt("Arrows or mouse pick   Enter equip   Backspace drop   I close"), s.w / 2,
+  s.textCenter(game.input.prompt(lang.inventoryHint), s.w / 2,
                y0 + h + 8 * u, small, col::muted.alpha(in));
 
   if (const Item *item = at(selected)) {

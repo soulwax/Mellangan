@@ -2,6 +2,7 @@
 
 #include <spdlog/fmt/fmt.h>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -16,9 +17,9 @@ constexpr Color DEAR{1, 0.4f, 0.35f, 1};
 std::string wareLabel(const Ware &w) {
   switch (w.kind) {
   case WareKind::Draught:
-    return "Healing Draught";
+    return lang.healingDraught;
   case WareKind::Gamble:
-    return "? " + w.item.baseName();
+    return say(lang.gambleWare, w.item.baseName());
   default:
     return w.item.name();
   }
@@ -78,7 +79,7 @@ void VendorMenu::activate() {
     if (kind != WareKind::Gamble)
       return Sound::gem.play(0.4f, 0, 1.2f);
     const Item &got = p.bag.back();
-    tell("gambled: " + got.name(), got.color());
+    tell(say(lang.gambled, got.name()), got.color());
     spdlog::info("gamble: {} [{}] ilvl {}", got.name(), rarityName(got.rarity), got.ilvl);
     if (int(got.rarity) >= int(Rarity::Rare))
       return Sound::chest.play(0.6f, 0, got.rarity == Rarity::Unique ? 0.7f : 1.1f);
@@ -89,7 +90,7 @@ void VendorMenu::activate() {
     return;
   int gain = Vendor::sellPrice(p.bag[k]);
   Vendor::sell(p, k);
-  tell(fmt::format("sold for {} gold", gain), col::gold);
+  tell(say(lang.soldFor, gain), col::gold);
   Sound::gem.play(0.35f, 0.05f, 0.9f);
 }
 
@@ -129,8 +130,8 @@ void VendorMenu::render(Screen &s) {
   float pw = grid.x + grid.w - first.x + 24 * u, ph = 12 * 19 * u + 64 * u;
   s.rect(x0, y0, pw, ph, {0.04f, 0.04f, 0.08f, 0.94f * in});
   s.bracket(x0, y0, pw, ph, u);
-  s.text("MERCHANT", x0 + 12 * u, y0 + 10 * u, u, col::gold.alpha(in));
-  s.text("fresh wares at every lit shrine and at dawn", x0 + 12 * u, y0 + ph - 20 * u, small,
+  s.text(lang.merchantTitle, x0 + 12 * u, y0 + 10 * u, u, col::gold.alpha(in));
+  s.text(lang.freshWares, x0 + 12 * u, y0 + ph - 20 * u, small,
          col::muted.alpha(in));
 
   for (int i = 0; i < w; i++) {
@@ -148,7 +149,7 @@ void VendorMenu::render(Screen &s) {
     float a = (dim ? 0.35f : 1.0f) * in;
     s.text(Screen::fit(wareLabel(ware), r.w - 80 * u, small), r.x + 20 * u, r.y + 2 * u,
            small, ink.alpha(a));
-    std::string tag = dim ? "SOLD" : fmt::format("{}", cost);
+    std::string tag = dim ? std::string(lang.sold) : fmt::format("{}", cost);
     Color tc = dim ? col::muted : p.gold >= cost ? col::gold : DEAR;
     s.text(tag, r.x + r.w - Screen::textWidth(tag, small) - 4 * u, r.y + 2 * u, small,
            tc.alpha(a));
@@ -168,20 +169,20 @@ void VendorMenu::render(Screen &s) {
   }
 
   SDL_FRect bag = cell(w);
-  s.text("YOUR BAG", bag.x, bag.y - 14 * u, small, col::muted.alpha(in));
+  s.text(lang.yourBag, bag.x, bag.y - 14 * u, small, col::muted.alpha(in));
   float fy = grid.y + grid.h + 10 * u;
-  s.text(fmt::format("{} gold", p.gold), bag.x, fy, u, col::gold.alpha(in));
-  s.text(fmt::format("bag {}/{}", p.bag.size(), Player::BAG), bag.x, fy + 20 * u, small,
+  s.text(say(lang.goldLine, p.gold), bag.x, fy, u, col::gold.alpha(in));
+  s.text(say(lang.bagCount, p.bag.size(), Player::BAG), bag.x, fy + 20 * u, small,
          col::muted.alpha(in));
   if (toldTime > 0)
     s.text(Screen::fit(told, grid.x + grid.w - bag.x, small), bag.x, fy + 40 * u, small,
            toldColor.alpha(std::min(1.0f, toldTime) * in));
 
-  std::string hint = game.input.prompt("Arrows or mouse pick   Enter buy or sell   I close");
+  std::string hint = game.input.prompt(lang.vendorHint);
   if (selected < w && v.wares[size_t(selected)].kind == WareKind::Gamble)
-    hint = "A gamble rolls magic, rare or unique - rares twice and uniques three times as often";
+    hint = lang.gambleHint;
   else if (selected < w && v.wares[size_t(selected)].kind == WareKind::Draught)
-    hint = fmt::format("Restores {:.0f} health at once", Vendor::DRAUGHT);
+    hint = say(lang.draughtHint, Vendor::DRAUGHT);
   s.textCenter(hint, s.w / 2, y0 + ph + 8 * u, small, col::muted.alpha(in));
 
   const char *hero = p.hero ? p.hero->name : nullptr;

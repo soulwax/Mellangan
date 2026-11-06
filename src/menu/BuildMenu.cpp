@@ -2,6 +2,7 @@
 
 #include <spdlog/fmt/fmt.h>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "campaign/Campaign.hpp"
@@ -29,7 +30,7 @@ void BuildMenu::tick() {
   const PieceDef &d = PIECES[selected];
   for (int m = 0; m < MATS; m++)
     if (p.materials[m] < d.cost[m]) {
-      told = fmt::format("needs {} {}", d.cost[m],
+      told = say(lang.needs, d.cost[m],
                          d.cost[m] == 1 ? MATERIALS[m].name : MATERIALS[m].plural);
       toldTime = 3;
       return Sound::hurt.play(0.3f, 0);
@@ -46,7 +47,7 @@ void BuildMenu::render(Screen &s) {
   float x0 = (s.w - w) / 2, y0 = (s.h - h) / 2;
   s.rect(x0, y0, w, h, {0.04f, 0.04f, 0.08f, 0.94f * in});
   s.bracket(x0, y0, w, h, u);
-  s.text("BUILD", x0 + 12 * u, y0 + 8 * u, u, col::gold.alpha(in));
+  s.text(lang.build, x0 + 12 * u, y0 + 8 * u, u, col::gold.alpha(in));
   for (int i = 0; i < BUILDABLE; i++) {
     const PieceDef &d = PIECES[i];
     float y = y0 + 34 * u + i * row;
@@ -64,6 +65,6 @@ void BuildMenu::render(Screen &s) {
   }
   if (toldTime > 0)
     s.text(told, x0 + 12 * u, y0 + h - 22 * u, small, col::red.alpha(std::min(1.0f, toldTime) * in));
-  s.textCenter(game.input.prompt("Up/Down pick   Enter place it in front of you   B close"), s.w / 2, y0 + h + 8 * u,
+  s.textCenter(game.input.prompt(lang.buildHint), s.w / 2, y0 + h + 8 * u,
                small, col::muted.alpha(in));
 }

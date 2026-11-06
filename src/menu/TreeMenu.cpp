@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "campaign/Campaign.hpp"
@@ -84,7 +85,7 @@ void TreeMenu::activate() {
   if (u.skill && u.level > 0 && p.skill != &u &&
       (points() == 0 || u.level >= Tree::RANKS)) {
     u.levelUp(p);
-    told = fmt::format("{} is now your skill", u.name), toldTime = 3;
+    told = say(lang.nowSkill, u.name), toldTime = 3;
     return Sound::select.play(0.5f, 0, 1.2f);
   }
   std::string why = tree.why(p, n, points());
@@ -94,8 +95,7 @@ void TreeMenu::activate() {
   }
   bool evolving = u.canEvolve(p);
   tree.spend(p, n, points());
-  told = evolving ? fmt::format("{} evolved", u.name)
-                  : fmt::format("{} rank {}", u.name, u.level);
+  told = evolving ? say(lang.evolvedNotice, u.name) : say(lang.rankNotice, u.name, u.level);
   toldTime = 3;
   spdlog::info("tree: {} -> {} ({} points left)", u.name, u.level, points());
   Sound::levelUp.play(0.5f, 0);
@@ -137,9 +137,9 @@ void TreeMenu::render(Screen &s) {
   float y0 = s.h * 0.16f - 52 * u, y1 = s.h * 0.84f;
   s.rect(x0, y0, x1 - x0, y1 - y0, {0.04f, 0.04f, 0.08f, 0.94f * in});
   s.bracket(x0, y0, x1 - x0, y1 - y0, u);
-  s.text(fmt::format("{}  SKILL TREE", p.hero ? p.hero->name : ""), x0 + 12 * u, y0 + 8 * u, u,
+  s.text(say(lang.skillTree, p.hero ? p.hero->name : ""), x0 + 12 * u, y0 + 8 * u, u,
          col::gold.alpha(in));
-  std::string left = fmt::format("{} point{} to spend", points(), points() == 1 ? "" : "s");
+  std::string left = say(points() == 1 ? lang.pointToSpend : lang.pointsToSpend, points());
   s.text(left, x1 - Screen::textWidth(left, small) - 12 * u, y0 + 12 * u, small,
          (points() ? col::gold : col::muted).alpha(in));
 
@@ -153,7 +153,7 @@ void TreeMenu::render(Screen &s) {
       if (!any)
         continue;
       Color c = p.lvl >= Tree::NEED[tier] ? col::muted : WORSE * 0.8f;
-      s.text(fmt::format("TIER {}  level {}", tier + 1, Tree::NEED[tier]),
+      s.text(say(lang.tierRow, tier + 1, Tree::NEED[tier]),
              columnX(tab) + PAD * u, tierY(tab, tier), small, c.alpha(in));
     }
   }
@@ -184,15 +184,15 @@ void TreeMenu::render(Screen &s) {
   const Upgrade &up = *n.up;
   float dy = y1 - 64 * u, dx = x0 + 12 * u;
   int ranks = up.skill ? Tree::RANKS : up.rare ? 1 : Upgrade::MAX_LEVEL;
-  s.text(fmt::format("{}   rank {}/{}", up.name, up.level, ranks), dx, dy, u,
+  s.text(say(lang.rankRow, up.name, up.level, ranks), dx, dy, u,
          (up.level > 0 ? col::gold : col::white).alpha(in));
   const char *desc = up.desc[size_t(std::clamp(up.level, 0, Upgrade::MAX_LEVEL - 1))];
   s.text(Screen::fit(desc ? desc : "", x1 - dx - 12 * u, small), dx, dy + 20 * u, small,
          col::white.alpha(0.85f * in));
   std::string why = tree.why(p, n, points());
   std::string state = up.skill && up.level > 0 && p.skill != &up
-                          ? game.input.prompt("Enter: make it your skill, or rank it up with a point")
-                      : why.empty() ? (up.canEvolve(p) ? game.input.prompt("Enter: evolve") : game.input.prompt("Enter: learn"))
+                          ? game.input.prompt(lang.makeSkill)
+                      : why.empty() ? game.input.prompt(up.canEvolve(p) ? lang.enterEvolve : lang.enterLearn)
                                     : why;
   s.text(state, dx, dy + 36 * u, small,
          (why.empty() ? col::gold : col::muted).alpha(in));
@@ -201,6 +201,6 @@ void TreeMenu::render(Screen &s) {
     s.text(shown, x1 - Screen::textWidth(shown, small) - 12 * u, dy + 36 * u, small,
            col::gold.alpha(std::min(1.0f, toldTime) * in));
   }
-  s.textCenter(game.input.prompt("Arrows or mouse pick   Enter learn   K close"), s.w / 2, y1 + 8 * u, small,
+  s.textCenter(game.input.prompt(lang.treeHint), s.w / 2, y1 + 8 * u, small,
                col::muted.alpha(in));
 }

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "campaign/Campaign.hpp"
@@ -81,15 +82,15 @@ void QuestMenu::render(Screen &s) {
   s.text(quests::act(c).elder, x0 + 12 * u, y0 + 8 * u, small, col::muted.alpha(in));
   std::string title = q && c.stage != QuestStage::Road ? q->title : quests::act(c).town;
   std::string body = c.stage == QuestStage::Road ? quests::status(c)
-                     : !q ? "It is over. The dark is broken, and the shrines will hold."
+                     : !q ? lang.questOver
                      : c.stage == QuestStage::Offered ? q->offer
                      : c.stage == QuestStage::Ready   ? q->thanks
                                                  : quests::status(c);
-  std::string action = c.stage == QuestStage::Done ? "Enter begin Nightmare: every foe stronger"
-                       : !q                        ? "Esc close"
-                       : c.stage == QuestStage::Offered ? fmt::format("Enter accept   reward {}", quests::rewardText(c.quest))
-                       : c.stage == QuestStage::Ready   ? fmt::format("Enter claim {}", quests::rewardText(c.quest))
-                                                   : "Esc close   the task is not done yet";
+  std::string action = c.stage == QuestStage::Done      ? std::string(lang.beginNightmare)
+                       : !q                             ? std::string(lang.escClose)
+                       : c.stage == QuestStage::Offered ? say(lang.acceptReward, quests::rewardText(c.quest))
+                       : c.stage == QuestStage::Ready   ? say(lang.claimReward, quests::rewardText(c.quest))
+                                                        : std::string(lang.notDone);
   action = game.input.prompt(action);
   s.text(title, x0 + 12 * u, y0 + 24 * u, u, col::gold.alpha(in));
   float y = y0 + 48 * u;
@@ -99,13 +100,12 @@ void QuestMenu::render(Screen &s) {
          (c.stage == QuestStage::Active ? col::muted : col::gold).alpha(in));
   int town = std::clamp(c.act, 1, int(c.towns().size())) - 1;
   if (!c.fortified(town))
-    s.text(told.empty() ? game.input.prompt(fmt::format("B  raise a watchtower: {} gold, {} stone, {} wood",
-                                      Campaign::TOWER_GOLD, Campaign::TOWER_STONE,
-                                      Campaign::TOWER_WOOD))
+    s.text(told.empty() ? game.input.prompt(say(lang.raiseTower, Campaign::TOWER_GOLD, Campaign::TOWER_STONE,
+                                                          Campaign::TOWER_WOOD))
                         : told,
            x0 + 12 * u, y0 + h - 58 * u, small, (told.empty() ? col::muted : col::red * 0.8f).alpha(in));
   std::string forget =
-      game.input.prompt(fmt::format("R  forget your path and relearn it: {} gold", c.forgetCost()));
+      game.input.prompt(say(lang.forgetPath, c.forgetCost()));
   bool afford = game.level->player->gold >= c.forgetCost();
   s.text(forget, x0 + 12 * u, y0 + h - 40 * u, small,
          (afford ? col::muted : col::red * 0.8f).alpha(in));

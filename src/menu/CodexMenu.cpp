@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/enemy/Enemy.hpp"
@@ -24,7 +25,7 @@ void feats(Screen &s, float x, float top, float w, float bottom, uint64_t got) {
   int earned = 0;
   for (int i = 0; i < FEAT_COUNT; i++)
     earned += int(got >> i & 1);
-  s.text(fmt::format("ACHIEVEMENTS  {} / {}", earned, FEAT_COUNT), x, top, small, col::gold);
+  s.text(say(lang.achievements, earned, FEAT_COUNT), x, top, small, col::gold);
   int rows = (FEAT_COUNT + 2) / 3;
   float row = std::min(2 * 16 * small + 4 * u, (bottom - top - 24 * small) / rows);
   for (int i = 0; i < FEAT_COUNT; i++) {
@@ -68,19 +69,19 @@ std::string foeTitle(int kind) {
 }
 
 void heading(Screen &s, const Grid &g, float x, const char *name, int have, int of) {
-  s.text(fmt::format("{} {}/{}", name, have, of), x, g.top, g.small,
+  s.text(say(lang.codexCount, name, have, of), x, g.top, g.small,
          have == of ? col::gold : col::white);
 }
 
 void regions(Screen &s, const Grid &g, const Codex &c, float x, int page) {
-  heading(s, g, x, "REGIONS", c.count(c.biomes), BIOME_COUNT);
+  heading(s, g, x, lang.codexRegions, c.count(c.biomes), BIOME_COUNT);
   float y = g.start;
   for (int b = page * LIST_ROWS; b < std::min(int(BIOME_COUNT), (page + 1) * LIST_ROWS);
        b++, y += g.row) {
     bool known = c.biomes >> b & 1;
     if (known)
       s.rect(x, y + 4 * g.small, 8 * g.small, 8 * g.small, Chart::tone(BiomeId(b)));
-    s.text(Screen::fit(known ? Chart::title(BiomeId(b)) : "? ? ?", g.colW - 20 * g.small, g.small),
+    s.text(Screen::fit(known ? Chart::title(BiomeId(b)) : lang.unknown, g.colW - 20 * g.small, g.small),
            x + 12 * g.small, y, g.small, known ? col::white : col::muted * 0.6f);
   }
 }
@@ -91,7 +92,7 @@ void relics(Screen &s, const Grid &g, const Codex &c, float x, int page,
   for (auto &up : upgrades)
     if (up->rare)
       found += c.relics >> total++ & 1;
-  heading(s, g, x, "RELICS", found, total);
+  heading(s, g, x, lang.relics, found, total);
   float y = g.start, step = std::min(g.row * 1.6f, (g.footer - g.start) / RELIC_ROWS);
   int i = 0;
   for (auto &up : upgrades) {
@@ -104,7 +105,7 @@ void relics(Screen &s, const Grid &g, const Codex &c, float x, int page,
     s.color(col::white.alpha(known ? 1 : 0.15f));
     s.sprite(up->icon, x, y - 2 * g.small, 0, 0, g.small, g.small);
     s.color(col::white);
-    s.text(Screen::fit(known ? up->name : "? ? ?", g.colW - 28 * g.small, g.small),
+    s.text(Screen::fit(known ? up->name : lang.unknown, g.colW - 28 * g.small, g.small),
            x + 20 * g.small, y, g.small, known ? col::gold : col::muted * 0.6f);
     y += step;
   }
@@ -122,7 +123,7 @@ void tally(Screen &s, const Grid &g, float x, const char *title, const int *coun
     bool known = counts[k] > 0;
     std::string count = known ? std::to_string(counts[k]) : "";
     float width = Screen::textWidth(count, g.small);
-    s.text(Screen::fit(known ? name(k) : std::string("? ? ?"), g.colW - 16 * g.small - width,
+    s.text(Screen::fit(known ? name(k) : std::string(lang.unknown), g.colW - 16 * g.small - width,
                        g.small),
            x, y, g.small, known ? col::white : col::muted * 0.6f);
     if (known)
@@ -172,9 +173,8 @@ void CodexMenu::render(Screen &s) {
   Grid g;
   g.u = s.u, g.small = std::max(1.0f, g.u - 1), g.pad = 14 * g.u;
   s.rect(0, 0, s.w, s.h, {0.02f, 0.02f, 0.05f, 0.92f});
-  s.text("CODEX", g.pad, g.pad, 2 * g.u, col::gold);
-  s.text(Screen::fit(fmt::format("{} runs   {} dawn{}   best {}   best streak {}   {} slain",
-                                 c.runs, c.dawns, c.dawns == 1 ? "" : "s",
+  s.text(lang.codex, g.pad, g.pad, 2 * g.u, col::gold);
+  s.text(Screen::fit(say(c.dawns == 1 ? lang.codexLineOne : lang.codexLine, c.runs, c.dawns,
                                  clockText(c.bestTime), c.bestStreak, c.kills()),
                      s.w - 2 * g.pad, g.small),
          g.pad, g.pad + 36 * g.u, g.small, col::muted);
@@ -189,17 +189,17 @@ void CodexMenu::render(Screen &s) {
     regions(s, g, c, x, page);
     relics(s, g, c, x += g.colW, page,
            catalogue.empty() ? game.level->player->upgrades : catalogue);
-    tally(s, g, x += g.colW, "BESTIARY", c.slain, Codex::KINDS, page * LIST_ROWS,
+    tally(s, g, x += g.colW, lang.bestiary, c.slain, Codex::KINDS, page * LIST_ROWS,
           (page + 1) * LIST_ROWS, foeTitle);
     int siteRows = (Codex::SITES + PAGE_COUNT - 1) / PAGE_COUNT;
-    tally(s, g, x += g.colW, "PLACES", c.entered, Codex::SITES, page * siteRows,
+    tally(s, g, x += g.colW, lang.places, c.entered, Codex::SITES, page * siteRows,
           (page + 1) * siteRows, [](int k) {
-            return std::string(STRUCTURES[k].name ? STRUCTURES[k].name : "UNKNOWN SITE");
+            return std::string(STRUCTURES[k].name ? STRUCTURES[k].name : lang.unknownSite);
           });
   }
 
-  s.text(game.input.prompt("C / Esc back"), g.pad, s.h - g.pad - 16 * g.small, g.small, col::muted);
-  s.textCenter(fmt::format("PAGE {} / {}", page + 1, PAGES), s.w * 0.5f,
+  s.text(game.input.prompt(lang.codexBack), g.pad, s.h - g.pad - 16 * g.small, g.small, col::muted);
+  s.textCenter(say(lang.page, page + 1, PAGES), s.w * 0.5f,
                s.h - g.pad - 16 * g.small, g.small, col::white);
   for (int direction : {-1, 1}) {
     SDL_FRect button = pageButton(s, direction);

@@ -8,6 +8,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Changed
 
+- Every menu, the HUD, tooltips and level-up cards now take their text from the string table, and a translation line whose placeholders would not format is refused instead of crashing the screen.
 - Colourblind settings for each kind of colour vision: COLOURS now cycles STANDARD, DEUTERANOPIA, PROTANOPIA, TRITANOPIA and MONOCHROME. Each has its own colours for attack warnings, damage and healing numbers, better and worse stats, and loot rarities, chosen by simulating that vision: the closest two rarity colours (now counting plain white and superior grey) move from 0.07, 0.11, 0.17 and 0.00 apart under standard colours to 0.41, 0.47, 0.42 and 0.14. The old COLOURBLIND choice becomes DEUTERANOPIA.
 
 ### Removed

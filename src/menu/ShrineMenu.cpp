@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "gui/Lang.hpp"
 #include "Atlas.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
@@ -11,39 +12,39 @@
 
 namespace {
 struct ShrineOption {
-  const char *title;
-  const char *desc;
-  const char *cost;
+  const char *Lang::*title;
+  const char *Lang::*desc;
+  const char *Lang::*cost;
   Color color;
   Color costColor;
   int spriteIndex;
   const char *keyBadge;
 };
 
-const ShrineOption OPTIONS[4] = {{"FURY",
-                                  "+20% damage",
-                                  "-10 MAX HP",
+const ShrineOption OPTIONS[4] = {{&Lang::fury,
+                                  &Lang::furyGain,
+                                  &Lang::furyCost,
                                   {0.96f, 0.32f, 0.24f, 1.0f},
                                   {0.96f, 0.45f, 0.45f, 1.0f},
                                   atlas::ex::ShrineFury,
                                   "1"},
-                                 {"ROOTS",
-                                  "+30 maximum health",
-                                  "-6 SPEED",
+                                 {&Lang::roots,
+                                  &Lang::rootsGain,
+                                  &Lang::rootsCost,
                                   {0.28f, 0.88f, 0.44f, 1.0f},
                                   {0.96f, 0.70f, 0.45f, 1.0f},
                                   atlas::ex::ShrineRoots,
                                   "2"},
-                                 {"VISION",
-                                  "Gain a level",
-                                  "-1 ARMOUR",
+                                 {&Lang::vision,
+                                  &Lang::visionGain,
+                                  &Lang::visionCost,
                                   {0.38f, 0.72f, 1.0f, 1.0f},
                                   {0.96f, 0.65f, 0.50f, 1.0f},
                                   atlas::ex::ShrineVision,
                                   "3"},
-                                 {"KEEP THE FLAME",
-                                  "Leave the shrine undisturbed",
-                                  "NO COST",
+                                 {&Lang::keepFlame,
+                                  &Lang::keepFlameGain,
+                                  &Lang::noCost,
                                   {1.0f, 0.82f, 0.30f, 1.0f},
                                   {0.75f, 0.80f, 0.88f, 1.0f},
                                   atlas::ex::ShrineFlame,
@@ -99,7 +100,7 @@ void ShrineMenu::render(Screen &s) {
   float u = s.u, small = std::max(1.0f, u - 1);
   auto r = gui::ChoiceList::layout(s, 4);
 
-  s.textCenter("THE SHRINE OFFERS A BARGAIN", s.w * 0.5f, r[0].y - 28 * u,
+  s.textCenter(lang.shrineOffers, s.w * 0.5f, r[0].y - 28 * u,
                2 * u, col::gold.alpha(0.88f + 0.12f * std::sin(t * 5.0f)));
 
   for (int i = 0; i < 4; i++) {
@@ -125,9 +126,9 @@ void ShrineMenu::render(Screen &s) {
     s.color(col::white);
 
     float tx = bx + badgeSize + 8 * u;
-    s.text(opt.title, tx, y + 5.0f * u, u,
+    s.text(lang.*opt.title, tx, y + 5.0f * u, u,
            (sel ? col::white : themeCol).alpha(in));
-    s.text(opt.desc, tx, y + 25.0f * u, small,
+    s.text(lang.*opt.desc, tx, y + 25.0f * u, small,
            (sel ? col::white * 0.9f : col::muted).alpha(in));
 
     float kw = std::max(18 * u, Screen::textWidth(opt.keyBadge, small) + 10 * u);
@@ -136,11 +137,11 @@ void ShrineMenu::render(Screen &s) {
     gui::KeyBadge({kx, ky, kw, kh}, opt.keyBadge, themeCol, u, small, in, sel).render(s);
 
     float tagRight = kx - 8 * u;
-    s.text(opt.cost, tagRight - Screen::textWidth(opt.cost, small),
+    s.text(lang.*opt.cost, tagRight - Screen::textWidth(lang.*opt.cost, small),
            y + 5.0f * u, small, opt.costColor.alpha(in));
   }
 
   const SDL_FRect &last = r[3];
-  s.textCenter(game.input.prompt("1-3 choose  /  Arrows + Enter  /  Esc keep the flame"),
+  s.textCenter(game.input.prompt(lang.shrineHint),
                s.w * 0.5f, last.y + last.h + 9 * u, small, col::muted * 0.75f);
 }

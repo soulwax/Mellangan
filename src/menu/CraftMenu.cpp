@@ -4,6 +4,7 @@
 
 #include <algorithm>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -80,7 +81,7 @@ void CraftMenu::pick(size_t k) {
     return Sound::select.play(0.3f, 0, 0.8f);
   }
   if (!r.fits(p.bag[k], r)) {
-    tell(fmt::format("{} cannot take that item", r.name), WORSE);
+    tell(say(lang.cannotTake, r.name), WORSE);
     return Sound::hurt.play(0.3f, 0);
   }
   if (r.inputs == 1)
@@ -104,7 +105,7 @@ void CraftMenu::activate() {
   int at = craft(p, r, picks, rng);
   picks.clear();
   const Item &made = p.bag[size_t(at)];
-  tell(fmt::format("{}: {}", r.name, made.name()), made.color());
+  tell(say(lang.crafted, r.name, made.name()), made.color());
   spdlog::info("craft: {} -> {} [{}] ilvl {}", r.name, made.name(), rarityName(made.rarity),
                made.ilvl);
   Sound::chest.play(0.5f, 0, made.rarity == Rarity::Crafted ? 0.8f : 1.1f);
@@ -150,7 +151,7 @@ void CraftMenu::render(Screen &s) {
   float pw = grid.x + grid.w - first.x + 24 * u, ph = last.y + last.h - y0 + 30 * u;
   s.rect(x0, y0, pw, ph, {0.04f, 0.04f, 0.08f, 0.94f * in});
   s.bracket(x0, y0, pw, ph, u);
-  s.text("WORKBENCH", x0 + 12 * u, y0 + 10 * u, u, CRAFTED.alpha(in));
+  s.text(lang.workbench, x0 + 12 * u, y0 + 10 * u, u, CRAFTED.alpha(in));
 
   for (int i = 0; i < w; i++) {
     const Formula &rec = FORMULAS[i];
@@ -183,18 +184,18 @@ void CraftMenu::render(Screen &s) {
   }
 
   SDL_FRect bag = cell(w);
-  s.text("YOUR BAG", bag.x, bag.y - 14 * u, small, col::muted.alpha(in));
+  s.text(lang.yourBag, bag.x, bag.y - 14 * u, small, col::muted.alpha(in));
   float fy = grid.y + grid.h + 10 * u;
   gui::materials(s, p.materials, nullptr, bag.x, fy, small, in);
-  std::string head = fmt::format("{}  costs  ", r.name);
+  std::string head = say(lang.costs, r.name);
   s.text(head, bag.x, fy + 20 * u, small, CRAFTED.alpha(in));
   float cx = bag.x + Screen::textWidth(head, small);
   if (std::all_of(r.cost, r.cost + MATS, [](int c) { return c == 0; }))
-    s.text("nothing", cx, fy + 20 * u, small, col::muted.alpha(in));
+    s.text(lang.nothing, cx, fy + 20 * u, small, col::muted.alpha(in));
   else
     gui::materials(s, p.materials, r.cost, cx, fy + 20 * u, small, in);
   std::string why = missing(p, r, picks);
-  s.text(why.empty() ? game.input.prompt("ready - Enter on the recipe") : why, bag.x, fy + 36 * u, small,
+  s.text(why.empty() ? game.input.prompt(lang.readyRecipe) : why, bag.x, fy + 36 * u, small,
          (why.empty() ? col::gold : col::muted).alpha(in));
   if (toldTime > 0)
     s.text(Screen::fit(told, grid.x + grid.w - bag.x, small), bag.x, fy + 52 * u, small,
@@ -202,7 +203,7 @@ void CraftMenu::render(Screen &s) {
 
   s.textCenter(fmt::format("{}: {}", r.name, r.text), s.w / 2, y0 + ph + 8 * u, small,
                col::white.alpha(0.85f * in));
-  s.textCenter(game.input.prompt("pick items in the bag, then Enter on the recipe   I close"), s.w / 2,
+  s.textCenter(game.input.prompt(lang.craftHint), s.w / 2,
                y0 + ph + 24 * u, small, col::muted.alpha(in));
 
   if (selected < w)

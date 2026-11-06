@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "gui/Text.hpp"
@@ -25,17 +26,17 @@ std::vector<Chip> chips(const Hero &h) {
       out.push_back({fmt::format("{} {:+}%", name, n), lowGood ? n < 0 : n > 0});
   };
   if (h.hp)
-    out.push_back({fmt::format("{:+} HP", int(h.hp)), h.hp > 0});
+    out.push_back({say(lang.chipHp, int(h.hp)), h.hp > 0});
   if (h.armor)
-    out.push_back({fmt::format("ARMOUR +{}", int(h.armor)), true});
-  pct(h.speed - 1, "SPEED", false);
-  pct(h.might, "DAMAGE", false);
-  pct(h.haste, "COOLDOWN", true);
-  pct(h.luck, "CRIT", false);
+    out.push_back({say(lang.chipArmour, int(h.armor)), true});
+  pct(h.speed - 1, lang.chipSpeed, false);
+  pct(h.might, lang.chipDamage, false);
+  pct(h.haste, lang.chipCooldown, true);
+  pct(h.luck, lang.chipCrit, false);
   if (h.regen)
-    out.push_back({fmt::format("REGEN {:.1f}/S", h.regen), true});
+    out.push_back({say(lang.chipRegen, h.regen), true});
   if (h.magnet)
-    out.push_back({fmt::format("REACH +{}", int(h.magnet)), true});
+    out.push_back({say(lang.chipReach, int(h.magnet)), true});
   return out;
 }
 
@@ -129,8 +130,8 @@ float HeroCard::nature(Screen &s, float y, bool draw) const {
   }
   y += 15 * u;
   if (draw) {
-    s.text("favours", cx, y + 3 * u, small, col::muted.alpha(in));
-    float fx = cx + Screen::textWidth("favours ", small) + 4 * u;
+    s.text(lang.favours, cx, y + 3 * u, small, col::muted.alpha(in));
+    float fx = cx + Screen::textWidth(std::string(lang.favours) + " ", small) + 4 * u;
     for (int k = 0; k < 3; k++)
       if (const Upgrade *up = named(h.affinity[k]))
         s.sprite(up->icon, fx + k * 20 * u, y, 0, 0, u, u);
@@ -146,26 +147,26 @@ float HeroCard::layout(Screen &s, bool draw) const {
       6 * u;
   if (!open) {
     if (draw)
-      s.text("LOCKED", cx, y, body, col::red.alpha(in));
+      s.text(lang.lockedClass, cx, y, body, col::red.alpha(in));
     y += line + 4 * u;
-    y = gui::wrapText(s, fmt::format("Unlock: {}", h.need), cx, y, cw, body, line,
+    y = gui::wrapText(s, say(lang.unlockNeed, h.need), cx, y, cw, body, line,
                       prose, draw);
     return y + pad - top;
   }
 
-  y = label(s, "WEAPON", y, draw);
+  y = label(s, lang.cardWeapon, y, draw);
   if (draw) {
     if (const Upgrade *up = named(h.weapon))
       s.sprite(up->icon, cx, y - u, 0, 0, u, u);
     s.text(h.weapon, cx + gut, y, body, col::white.alpha(in));
   }
   y += line + 6 * u;
-  y = label(s, "TRAIT", y, draw);
+  y = label(s, lang.cardTrait, y, draw);
   if (draw)
     heroSigil(s, pick, cx + 8 * u, y + 7 * u, 7 * u, tint.alpha(in), t);
   y = gui::wrapText(s, h.trait, cx + gut, y, cw - gut, body, line, prose, draw) + 6 * u;
 
-  y = label(s, "SKILL", y, draw);
+  y = label(s, lang.cardSkill, y, draw);
   std::string cast = game.input.prompt("SPACE");
   float key = Screen::textWidth(cast, small) + 8 * u;
   if (draw) {
@@ -177,7 +178,7 @@ float HeroCard::layout(Screen &s, bool draw) const {
   y += line + 2 * u;
   y = gui::wrapText(s, h.skillDesc, cx, y, cw, body, line, prose, draw) + 6 * u;
 
-  y = arsenal(s, label(s, "ARSENAL", y, draw), draw);
-  y = nature(s, label(s, "NATURE", y, draw), draw);
+  y = arsenal(s, label(s, lang.cardArsenal, y, draw), draw);
+  y = nature(s, label(s, lang.cardNature, y, draw), draw);
   return y + pad - top;
 }

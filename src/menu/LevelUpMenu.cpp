@@ -4,6 +4,7 @@
 
 #include <cstring>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -135,7 +136,7 @@ void LevelUpMenu::render(Screen &s) {
   const Player &p = *game.level->player;
   float u = s.u, small = std::max(1.0f, u - 1);
   auto r = gui::ChoiceList::layout(s, int(choices.size()), cardHeight(s));
-  s.textCenter(treasure ? "TREASURE!" : "LEVEL UP!", s.w / 2, r[0].y - 34 * u,
+  s.textCenter(treasure ? lang.treasure : lang.levelUp, s.w / 2, r[0].y - 34 * u,
                2 * u, col::gold.alpha(0.88f + 0.12f * std::sin(t * 5)));
 
   for (int i = 0; i < int(choices.size()); i++) {
@@ -146,6 +147,6 @@ void LevelUpMenu::render(Screen &s) {
         .render(s, card, in, i == selection.selected, t);
   }
   const SDL_FRect &last = r[choices.size() - 1];
-  s.textCenter(game.input.prompt(fmt::format("1-{} / Arrows + Enter / Click", choices.size())),
+  s.textCenter(game.input.prompt(say(lang.levelUpHint, choices.size())),
                s.w / 2, last.y + last.h + 9 * u, small, col::muted * 0.75f);
 }

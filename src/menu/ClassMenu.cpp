@@ -1,5 +1,6 @@
 #include "menu/ClassMenu.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -191,7 +192,7 @@ void ClassMenu::renderHero(Screen &s, int i, const Pose &p, float in) const {
   Color label = on ? (open ? k.tint : col::muted)
                    : open ? col::white * 0.75f
                           : col::muted * 0.6f;
-  s.textCenter(open || on ? k.name : "???", cx, foot + 7 * u, small, label.alpha(in));
+  s.textCenter(open || on ? k.name : lang.locked, cx, foot + 7 * u, small, label.alpha(in));
 }
 
 void ClassMenu::render(Screen &s) {
@@ -201,35 +202,33 @@ void ClassMenu::render(Screen &s) {
   for (int i = 0; i < 10; i++)
     s.frame(i * edge, i * edge, s.w - 2 * i * edge, s.h - 2 * i * edge, edge,
             {0, 0, 0, 0.42f * (1 - i / 10.0f) * in});
-  s.textCenter("CHOOSE YOUR CLASS", s.w * 0.69f, s.h * 0.1f, small,
+  s.textCenter(lang.chooseClass, s.w * 0.69f, s.h * 0.1f, small,
                col::muted.alpha(in));
   Pose p = pose();
   for (int i = 0; i < HERO_COUNT; i++)
     renderHero(s, i, p, in);
   HeroCard(game, s, pick, t, in).render(s);
-  s.textCenter(game.input.prompt(daily() ? "Enter begin   Esc back"
-                                 : !campaign && game.codex.heat > 0
-                                     ? "Left/Right choose   Up/Down heat   Enter begin   Esc back"
-                                     : "Left/Right choose   Enter begin   Esc back"),
+  s.textCenter(game.input.prompt(daily()                                 ? lang.dailyHint
+                                 : !campaign && game.codex.heat > 0 ? lang.heatHint
+                                                                    : lang.classHint),
                s.w * 0.69f,
                s.h - 22 * u, u, col::muted.alpha(in));
   if (daily()) {
-    s.textCenter(Screen::fit(fmt::format("DAILY  {} AT HEAT {}   the same run for everyone today",
-                                         HEROES[pick]->name, game.heat),
+    s.textCenter(Screen::fit(say(lang.dailyLine, HEROES[pick]->name, game.heat),
                              s.w * 0.6f, small),
                  s.w * 0.69f, s.h - 44 * u, small, col::gold.alpha(in));
   } else if (!campaign) {
     Color hot = Color{1, 0.82f - 0.06f * game.heat, 0.32f - 0.03f * game.heat, 1};
-    std::string line = game.codex.heat == 0 ? std::string("HEAT unlocks at your first dawn")
+    std::string line = game.codex.heat == 0 ? std::string(lang.heatLocked)
                        : game.heat == 0
-                           ? game.input.prompt("HEAT 0   Up/Down to raise the stakes")
-                           : fmt::format("HEAT {}   {}", game.heat, heatNames(game.heat));
+                           ? game.input.prompt(lang.heatZero)
+                           : say(lang.heatLine, game.heat, heatNames(game.heat));
     s.textCenter(Screen::fit(line, s.w * 0.6f, small), s.w * 0.69f, s.h - 44 * u, small,
                  (game.heat ? hot : col::muted).alpha(in));
   }
   if (campaign)
-    s.textCenter(game.hardcoreNext ? game.input.prompt("R  HARDCORE: one life, death deletes the hero")
-                                   : game.input.prompt("R  HARDCORE: off"),
+    s.textCenter(game.hardcoreNext ? game.input.prompt(lang.hardcoreOn)
+                                   : game.input.prompt(lang.hardcoreOff),
                  s.w * 0.69f, s.h - 44 * u, small,
                  (game.hardcoreNext ? col::red : col::muted).alpha(in));
 }

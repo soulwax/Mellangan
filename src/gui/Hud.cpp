@@ -1,6 +1,7 @@
 #include "gui/Hud.hpp"
 
 #include "Game.hpp"
+#include "gui/Lang.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Workbench.hpp"
 #include "campaign/Harvest.hpp"
@@ -73,10 +74,10 @@ void Hud::stats(float top) {
   auto right = [&](const std::string &text, float ty, float size, Color c) {
     s.text(text, s.w - Screen::textWidth(text, size) - 4 * u, ty, size, c);
   };
-  right(fmt::format("LV {}", l.player->lvl), top, u, col::white);
-  right(fmt::format("{} kills", l.kills), top + 18 * u, small, col::muted);
+  right(say(lang.level, l.player->lvl), top, u, col::white);
+  right(say(lang.kills, l.kills), top + 18 * u, small, col::muted);
   if (l.streak >= 10)
-    right(fmt::format("x{} STREAK", l.streak), top + 34 * u, small,
+    right(say(lang.streak, l.streak), top + 34 * u, small,
           col::gold.alpha(0.5f + 0.5f * std::min(1.0f, l.streakTime)));
 }
 
@@ -87,19 +88,18 @@ void Hud::night(float top) {
   float u = s.u, small = std::max(1.0f, u - 1);
   bool cycle = !l.rules.endsAtDawn;
   std::string clock = cycle && n.dawn
-                          ? fmt::format("DAY {}  DUSK {}", n.nights,
-                                        clockText(std::max(0.0f, n.dayEnds - l.time)))
-                      : cycle ? fmt::format("NIGHT {}  DAWN {}", n.nights, clockText(n.left()))
-                      : game.endless ? fmt::format("ENDLESS {}", clockText(l.time - game.endlessFrom))
-                              : fmt::format("DAWN {}", clockText(n.left()));
+                          ? say(lang.dayClock, n.nights, clockText(std::max(0.0f, n.dayEnds - l.time)))
+                      : cycle        ? say(lang.nightClock, n.nights, clockText(n.left()))
+                      : game.endless ? say(lang.endlessClock, clockText(l.time - game.endlessFrom))
+                                     : say(lang.dawnClock, clockText(n.left()));
   s.textCenter(clock, s.w / 2, top, std::round(u * 1.5f), col::white);
   if (l.omen >= 0)
     s.textCenter(OMENS[l.omen].name, s.w / 2, top + 58 * u, small, OMENS[l.omen].tint);
-  s.textCenter(fmt::format("{} shrine{} lit", n.lit, n.lit == 1 ? "" : "s"),
+  s.textCenter(say(n.lit == 1 ? lang.shrineLit : lang.shrinesLit, n.lit),
                s.w / 2, top + 26 * u, small, n.lit ? col::gold : col::muted);
   if (game.campaign && game.campaign->points > 0)
-    s.textCenter(game.input.prompt(fmt::format("K  {} skill point{}", game.campaign->points,
-                             game.campaign->points == 1 ? "" : "s")),
+    s.textCenter(game.input.prompt(say(game.campaign->points == 1 ? lang.skillPoint : lang.skillPoints,
+                                       game.campaign->points)),
                  s.w / 2, top + 38 * u, small, col::gold.alpha(0.75f + 0.25f * std::sin(time * 4)));
   if (n.kindling > 0) {
     float kw = 120 * u, kx = (s.w - kw) / 2, ky = top + 46 * u;

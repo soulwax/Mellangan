@@ -5,6 +5,7 @@
 #include <cstring>
 #include <string>
 
+#include "gui/Lang.hpp"
 #include "entity/Player.hpp"
 #include "gui/Glyph.hpp"
 #include "gui/Widget.hpp"
@@ -95,20 +96,19 @@ void UpgradeCard::renderTag(Screen &s, float right, float y, float in) const {
   auto tag = [&](const std::string &text, Color c) {
     s.text(text, right - Screen::textWidth(text, small), y, small, c);
   };
-  const char *hero = p.hero ? p.hero->name : "CLASS";
+  const char *hero = p.hero ? p.hero->name : lang.classTag;
   if (evolving)
-    return tag("EVOLVE", col::xp.alpha(in));
+    return tag(lang.evolve, col::xp.alpha(in));
   if (!up)
     return;
   if (up->skill)
-    return tag(fmt::format("SKILL  REPLACES {}", p.skill ? p.skill->name : "NONE"),
+    return tag(say(lang.skillReplaces, p.skill ? p.skill->name : lang.none),
                tint.alpha(in));
   if (up->rare)
-    return tag("RELIC", tint.alpha(in));
+    return tag(lang.relic, tint.alpha(in));
   if (up->level == 0)
-    return classy ? tag(fmt::format("{}  TIER 1", hero), SILVER.alpha(in))
-                  : tag("TIER 1 (NEW)", tint.alpha(in));
-  std::string tier = fmt::format("T{}", up->level + 1);
+    return classy ? tag(say(lang.classTier, hero), SILVER.alpha(in)) : tag(lang.newTier, tint.alpha(in));
+  std::string tier = say(lang.tierShort, up->level + 1);
   float tierW = Screen::textWidth(tier, small);
   tag(tier, tint.alpha(in));
   float pipW = Upgrade::MAX_LEVEL * 4 * u, pipsX = right - tierW - pipW - 4 * u;
@@ -130,9 +130,9 @@ std::string UpgradeCard::synergy(bool &ready) const {
   };
   for (const auto &e : evolutionTable()) {
     if (up->weapon && std::strcmp(e[0], up->name) == 0)
-      return ready = held(e[1]), fmt::format("evolves with {}{}", e[1], ready ? ", which you hold" : "");
+      return ready = held(e[1]), say(ready ? lang.evolvesWithHeld : lang.evolvesWith, e[1]);
     if (!up->weapon && std::strcmp(e[1], up->name) == 0 && held(e[0]))
-      return ready = true, fmt::format("evolves your {}", e[0]);
+      return ready = true, say(lang.evolvesYour, e[0]);
   }
   return "";
 }
@@ -197,10 +197,10 @@ void UpgradeCard::render(Screen &s, SDL_FRect r, float in, bool selected, float 
   s.color(col::white);
 
   float tx = iconX + 16 * u + 7 * u;
-  const char *name = evolving ? up->evolvedName : up ? up->name : "Roast Feast";
-  std::string desc = evolving ? fmt::format("{} evolves: double damage, faster", up->name)
+  const char *name = evolving ? up->evolvedName : up ? up->name : lang.roastFeast;
+  std::string desc = evolving ? say(lang.evolves, up->name)
                      : up     ? up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)]
-                              : "Restore 40 health";
+                              : lang.restoreHealth;
   s.text(name, tx, y + 4.0f * u, u, (selected ? col::white : tint).alpha(in));
   s.text(desc, tx, y + 20.0f * u, small, (selected ? col::white * 0.9f : col::muted).alpha(in));
   float kw = 18 * u, kh = 18 * u;

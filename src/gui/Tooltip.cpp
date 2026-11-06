@@ -1,5 +1,6 @@
 #include "gui/Tooltip.hpp"
 
+#include "gui/Lang.hpp"
 #include "gfx/Palette.hpp"
 #include "item/loot/Unique.hpp"
 
@@ -29,8 +30,8 @@ void compare(Lines &lines, const Item &item, const Item &worn) {
     if (std::abs(delta) < 0.05f)
       continue;
     if (!header)
-      lines.push_back({"against what you wear:", col::muted}), header = true;
-    lines.push_back({(delta > 0 ? "" : "lose ") + describe(Stat(s), std::abs(delta)),
+      lines.push_back({lang.againstWorn, col::muted}), header = true;
+    lines.push_back({delta > 0 ? describe(Stat(s), delta) : say(lang.loseStat, describe(Stat(s), -delta)),
                      delta > 0 ? palette::better() : palette::worse()});
   }
 }
@@ -43,28 +44,28 @@ void itemTooltip(Screen &s, const Item &item, const Item *worn, const char *hero
   Lines lines{{item.name(), item.color()}};
   if (item.rarity == Rarity::Rare || item.rarity == Rarity::Crafted)
     lines.push_back({item.baseName(), col::white});
-  lines.push_back({fmt::format("{}  item level {}", gearName(item.gearSlot()), item.ilvl),
+  lines.push_back({say(lang.itemLevel, gearName(item.gearSlot()), item.ilvl),
                    col::muted});
   if (const UniqueDef *u = uniqueOf(item))
     lines.push_back({u->text, item.color()});
   else if (b.grants)
-    lines.push_back({fmt::format("grants {}", b.grants), col::white});
+    lines.push_back({say(lang.grants, b.grants), col::white});
   if (b.implicit != Stat::None)
     lines.push_back({describe(b.implicit, item.implicit()), col::white});
   for (int i = 0; i < item.count; i++)
     lines.push_back(
         {describe(AFFIXES[item.rolls[i].affix].stat, item.rolls[i].value), AFFIX});
   if (item.night())
-    lines.push_back({fmt::format("{}: {}", CURSES[item.curse].name, CURSES[item.curse].text),
+    lines.push_back({say(lang.curseLine, CURSES[item.curse].name, CURSES[item.curse].text),
                      CURSE});
   if (b.klass) {
     bool fits = hero && std::strcmp(hero, b.klass) == 0;
-    lines.push_back({fmt::format("{} only", b.klass), fits ? col::muted : CURSE});
+    lines.push_back({say(lang.classOnly, b.klass), fits ? col::muted : CURSE});
   }
   if (cost >= 0)
-    lines.push_back({fmt::format("costs {} gold", cost), col::gold});
+    lines.push_back({say(lang.costsGold, cost), col::gold});
   else
-    lines.push_back({fmt::format("sells for {} gold", Vendor::sellPrice(item)), col::muted});
+    lines.push_back({say(lang.sellsFor, Vendor::sellPrice(item)), col::muted});
   if (worn)
     compare(lines, item, *worn);
 

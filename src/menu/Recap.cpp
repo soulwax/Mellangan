@@ -7,6 +7,7 @@
 
 #include "Game.hpp"
 #include "meta/Feats.hpp"
+#include "gui/Lang.hpp"
 #include "gui/Widget.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
@@ -71,8 +72,8 @@ const RankInfo &rankOf(const Level &l) {
 
 std::string formatDistance(float metres) {
   if (metres < 1000.0f)
-    return fmt::format("{} m", int(std::round(metres)));
-  return fmt::format("{:.2f} km", metres / 1000.0f);
+    return say(lang.metres, int(std::round(metres)));
+  return say(lang.kilometres, metres / 1000.0f);
 }
 
 std::string formatDamage(float damage) {
@@ -95,7 +96,7 @@ void corners(Screen &s, float x, float y, float w, float h, float tick, float u,
 
 struct Tip {
   bool (*fits)(const Level &l);
-  const char *text;
+  const char *Lang::*text;
 };
 
 int weapons(const Level &l, bool maxed) {
@@ -107,19 +108,19 @@ int weapons(const Level &l, bool maxed) {
 
 const Tip TIPS[] = {
     {[](const Level &l) { return l.time < 60; },
-     "Keep moving from the first second: foes close in on a hero who stands still"},
+     &Lang::tipMove},
     {[](const Level &l) { return !l.bossIds.empty(); },
-     "Bosses telegraph their heaviest blows: step out of the warning ring before it fills"},
+     &Lang::tipBoss},
     {[](const Level &l) { return l.rules.endsAtDawn && l.night.lit == 0 && l.time > 180; },
-     "Kindle shrines: every shrine lit brings the dawn sooner"},
+     &Lang::tipShrines},
     {[](const Level &l) { return weapons(l, false) >= 3 && weapons(l, true) == 0; },
-     "Raise one weapon to level 5 before spreading out: maxed weapons can evolve"},
+     &Lang::tipFocus},
     {[](const Level &l) { return l.distanceRan < l.time * 25; },
-     "Keep moving: walking through the gaps keeps the crowd from closing the circle"},
+     &Lang::tipGaps},
     {[](const Level &l) { return l.player->lvl * 30 < l.time; },
-     "Gather the gems: a wider magnet and more experience level you faster"},
+     &Lang::tipGems},
     {[](const Level &) { return true; },
-     "Pair a maxed weapon with its partner relic to evolve it"}};
+     &Lang::tipEvolve}};
 
 } // namespace
 
@@ -132,12 +133,12 @@ RunStats computeRunStats(const Level &l) {
   stats.totalDamage = formatDamage(l.totalDamage);
 
   const Hero *h = l.player ? l.player->hero : nullptr;
-  stats.className = h ? h->name : "Adventurer";
+  stats.className = h ? h->name : lang.adventurer;
   stats.classColor = h ? h->tint : col::white;
 
   stats.difficulty = difficultyTitle(l.game.difficulty);
   if (l.game.heat > 0 && !l.game.campaign)
-    stats.difficulty += fmt::format("  HEAT {}", l.game.heat);
+    stats.difficulty += say(lang.heatTag, l.game.heat);
   stats.diffColor = {0.82f, 0.85f, 0.92f, 1.0f};
   if (l.omen >= 0 && l.omen < OMEN_COUNT)
     stats.omen = OMENS[l.omen].name, stats.omenColor = OMENS[l.omen].tint;
@@ -163,7 +164,7 @@ float renderEndStats(Screen &s, const Level &l, float y, float alpha) {
 
   corners(s, bx, by, badgeW, badgeH, 6 * u, u, col::white.alpha(alpha));
 
-  s.text("RANK", bx + 16 * u, by + (badgeH - 16 * small) * 0.5f, small, col::muted.alpha(alpha));
+  s.text(lang.rank, bx + 16 * u, by + (badgeH - 16 * small) * 0.5f, small, col::muted.alpha(alpha));
   s.textCenter(stats.rank, bx + badgeW - 38 * u, by + (badgeH - 16 * 1.8f * u) * 0.5f, 1.8f * u, stats.rankColor.alpha(alpha));
 
   float cardW = std::min(s.w * 0.88f, 340 * u);
@@ -180,20 +181,20 @@ float renderEndStats(Screen &s, const Level &l, float y, float alpha) {
     s.text(value, x + gap * u, y, small, c.alpha(alpha));
   };
   float top = cy + 4.5f * u, bottom = cy + 26.5f * u;
-  field("CLASS", stats.className, cx + 10 * u, top, 44, stats.classColor);
-  field("DIFF", stats.difficulty, cx + cardW * 0.35f, top, 36, stats.diffColor);
-  field("RAN", stats.distance, cx + cardW * 0.70f, top, 30, col::white);
+  field(lang.fieldClass, stats.className, cx + 10 * u, top, 44, stats.classColor);
+  field(lang.fieldDiff, stats.difficulty, cx + cardW * 0.35f, top, 36, stats.diffColor);
+  field(lang.fieldRan, stats.distance, cx + cardW * 0.70f, top, 30, col::white);
   s.line(cx + 8 * u, cy + 23 * u, cx + cardW - 8 * u, cy + 23 * u, 1,
          col::muted.alpha(0.2f * alpha));
-  field("DMG", stats.totalDamage, cx + 10 * u, bottom, 32, col::white);
-  field("FOES", std::to_string(stats.kills), cx + cardW * 0.28f, bottom, 38, col::white);
-  field("LIT", std::to_string(stats.shrines), cx + cardW * 0.54f, bottom, 28, col::gold);
-  field("TIME", stats.timeText, cx + cardW * 0.73f, bottom, 34,
+  field(lang.fieldDmg, stats.totalDamage, cx + 10 * u, bottom, 32, col::white);
+  field(lang.fieldFoes, std::to_string(stats.kills), cx + cardW * 0.28f, bottom, 38, col::white);
+  field(lang.fieldLit, std::to_string(stats.shrines), cx + cardW * 0.54f, bottom, 28, col::gold);
+  field(lang.fieldTime, stats.timeText, cx + cardW * 0.73f, bottom, 34,
         stats.isRecord ? col::gold : col::white);
 
   if (stats.omen.empty())
     return cy + cardH;
-  s.textCenter("under the omen " + stats.omen, s.w / 2, cy + cardH + 5 * u, small,
+  s.textCenter(say(lang.omen, stats.omen), s.w / 2, cy + cardH + 5 * u, small,
                stats.omenColor.alpha(0.85f * alpha));
   return cy + cardH + 5 * u + 16 * small;
 }
@@ -217,7 +218,7 @@ float recap(Screen &s, const Level &l, float y, float alpha) {
 
   float u = s.u, small = std::max(1.0f, u - 1), row = 18 * u;
   float w = std::min(s.w * 0.88f, 340 * u), x = (s.w - w) / 2, bar = w - 170 * u;
-  s.textCenter("WEAPON DAMAGE", s.w / 2, y, small, col::muted.alpha(alpha));
+  s.textCenter(lang.weaponDamage, s.w / 2, y, small, col::muted.alpha(alpha));
   y += 16 * u;
   for (int i = 0; i < n; i++) {
     const Upgrade *up = top[i];
@@ -242,7 +243,7 @@ float recap(Screen &s, const Level &l, float y, float alpha) {
 const char *advice(const Level &l) {
   for (const Tip &tip : TIPS)
     if (tip.fits(l))
-      return tip.text;
+      return lang.*tip.text;
   return "";
 }
 
@@ -253,7 +254,7 @@ float achievements(Screen &s, const Game &game, float y, float alpha) {
   std::string names;
   for (int f : game.earned)
     names += (names.empty() ? "" : "   ") + std::string(FEATS[f].title);
-  s.textCenter(Screen::fit("ACHIEVED  " + names, s.w - 32 * u, small), s.w / 2, y + 4 * u, small,
+  s.textCenter(Screen::fit(say(lang.achieved, names), s.w - 32 * u, small), s.w / 2, y + 4 * u, small,
                col::gold.alpha(alpha));
   return y + 4 * u + 16 * small;
 }

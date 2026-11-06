@@ -2,6 +2,7 @@
 
 #include <spdlog/fmt/fmt.h>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "campaign/Campaign.hpp"
@@ -82,7 +83,7 @@ void StashMenu::render(Screen &s) {
   float pw = last.x + last.w - first.x + 24 * u, ph = last.y + last.h - y0 + 30 * u;
   s.rect(x0, y0, pw, ph, {0.04f, 0.04f, 0.08f, 0.94f * in});
   s.bracket(x0, y0, pw, ph, u);
-  s.text("STASH", x0 + 12 * u, y0 + 8 * u, u, col::gold.alpha(in));
+  s.text(lang.stash, x0 + 12 * u, y0 + 8 * u, u, col::gold.alpha(in));
   for (int i = 0; i < 2 * CELLS; i++) {
     SDL_FRect r = cell(i);
     std::vector<Item> &items = side(i);
@@ -97,11 +98,11 @@ void StashMenu::render(Screen &s) {
       s.sprite(item->def().icon, r.x + 3 * u, r.y + 3 * u, 0, 0, u, u);
   }
   SDL_FRect bag = cell(0), chest = cell(CELLS);
-  s.text(fmt::format("YOUR BAG {}/{}", p.bag.size(), Player::BAG), bag.x, bag.y - 14 * u, small,
+  s.text(say(lang.yourBagCount, p.bag.size(), Player::BAG), bag.x, bag.y - 14 * u, small,
          col::muted.alpha(in));
-  s.text(fmt::format("STASH {}/{}", stash().size(), Campaign::STASH), chest.x, chest.y - 14 * u,
+  s.text(say(lang.stashCount, stash().size(), Campaign::STASH), chest.x, chest.y - 14 * u,
          small, col::muted.alpha(in));
-  s.textCenter(game.input.prompt("Enter moves an item across   I close   the stash stays in town"), s.w / 2,
+  s.textCenter(game.input.prompt(lang.stashHint), s.w / 2,
                y0 + ph + 8 * u, small, col::muted.alpha(in));
   std::vector<Item> &items = side(selected);
   size_t k = size_t(selected % CELLS);
