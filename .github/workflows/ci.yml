@@ -21,7 +21,7 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Submodules
         shell: bash
@@ -31,7 +31,7 @@ jobs:
 
       - name: Cache Vulkan SDK
         id: vulkan-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: C:\VulkanSDK\${{ env.VULKAN_VERSION }}
           key: vulkan-sdk-windows-${{ env.VULKAN_VERSION }}
@@ -70,7 +70,7 @@ jobs:
           "archive=$archive" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Mellangan-windows
           path: ${{ steps.package.outputs.archive }}
@@ -79,7 +79,7 @@ jobs:
 
       - name: Upload test log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-log
           path: build/bin/Debug/mellangan.log
@@ -90,7 +90,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Submodules
         run: |
@@ -98,7 +98,7 @@ jobs:
           git submodule update --init --recursive --depth 1 extern/Vulkan2D extern/spdlog extern/entt extern/stb
 
       - name: Cache build-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: build-deps
           key: macos-build-deps-${{ hashFiles('setup-macos.sh') }}
@@ -125,7 +125,7 @@ jobs:
 
       - name: Upload test log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: macos-log
           path: |
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Submodules
         run: |
@@ -154,7 +154,7 @@ jobs:
 
       - name: Cache Vulkan SDK
         id: vulkan-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/vulkansdk/${{ env.VULKAN_VERSION }}
           key: vulkan-sdk-linux-${{ env.VULKAN_VERSION }}
@@ -193,7 +193,7 @@ jobs:
 
       - name: Upload test log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-log
           path: |
