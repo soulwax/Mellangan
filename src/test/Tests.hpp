@@ -48,6 +48,8 @@ void testHints();
 void testRunLog();
 void testFeats();
 void testHeat();
+void testEndless();
+void testDaily();
 void testBlend();
 void testShapeForms();
 void testChampionTraits();

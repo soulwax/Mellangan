@@ -14,6 +14,8 @@ void DawnMenu::tick() {
   Input &in = game.input;
   if (t > 2 && (in.restart.clicked || in.confirm.clicked))
     game.newGame();
+  else if (t > 2 && !game.campaign && in.campaign.clicked)
+    game.beginEndless();
   else if (in.escape.clicked)
     game.toTitle();
 }
@@ -33,6 +35,9 @@ void DawnMenu::render(Screen &s) {
   if (t > 2 && std::fmod(t, 1.0f) < 0.65f)
     s.textCenter(game.input.prompt("R / Enter for another night"), s.w / 2, end + 12 * u, u,
                  col::gold);
+  if (t > 2 && !game.campaign)
+    s.textCenter(game.input.prompt("K  keep going into the endless night"), s.w / 2,
+                 end + 12 * u + 24 * u, std::max(1.0f, u - 1), col::muted);
   float small = std::max(1.0f, u - 1);
   s.textCenter("world " + game.worldName(), s.w / 2, s.h - 18 * small, small,
                col::muted * 0.8f);

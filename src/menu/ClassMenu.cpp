@@ -8,7 +8,19 @@
 #include "menu/TitleMenu.hpp"
 #include "meta/Heat.hpp"
 
+namespace {
+uint32_t dayHash(const std::string &code) {
+  uint32_t h = 2166136261u;
+  for (char c : code)
+    h = (h ^ uint8_t(c)) * 16777619u;
+  return h;
+}
+} // namespace
+
+bool ClassMenu::daily() const { return !campaign && game.worldMode == WorldMode::Daily; }
+
 ClassMenu::ClassMenu(Game &game) : Menu(game) {
+  game.heat = std::min(game.heat, game.codex.heat);
   pick = game.codex.start;
   if (pick < 0 || pick >= HERO_COUNT || !HEROES[pick]->met(game.codex))
     pick = 0;
@@ -58,6 +70,19 @@ void ClassMenu::tick() {
   if (campaign && in.restart.clicked) {
     game.hardcoreNext = !game.hardcoreNext;
     return Sound::select.play(0.5f, 0, game.hardcoreNext ? 0.7f : 1.2f);
+  }
+  if (daily()) {
+    uint32_t h = dayHash(game.seedCode);
+    int open[HERO_COUNT], n = 0;
+    for (int i = 0; i < HERO_COUNT; i++)
+      if (HEROES[i]->met(game.codex))
+        open[n++] = i;
+    if (n && pick != open[h % n])
+      pick = open[h % n], since = 0, game.level->player->tile = HEROES[pick]->tile;
+    game.heat = int(h >> 8 & 3);
+    if (in.confirm.clicked && t > 0.2f)
+      return begin();
+    return;
   }
   if (!campaign && (in.up.clicked || in.down.clicked)) {
     int h = std::clamp(game.heat + (in.up.clicked ? 1 : -1), 0, std::min(HEAT_MAX, game.codex.heat));
@@ -182,12 +207,18 @@ void ClassMenu::render(Screen &s) {
   for (int i = 0; i < HERO_COUNT; i++)
     renderHero(s, i, p, in);
   HeroCard(game, s, pick, t, in).render(s);
-  s.textCenter(game.input.prompt(!campaign && game.codex.heat > 0
+  s.textCenter(game.input.prompt(daily() ? "Enter begin   Esc back"
+                                 : !campaign && game.codex.heat > 0
                                      ? "Left/Right choose   Up/Down heat   Enter begin   Esc back"
                                      : "Left/Right choose   Enter begin   Esc back"),
                s.w * 0.69f,
                s.h - 22 * u, u, col::muted.alpha(in));
-  if (!campaign) {
+  if (daily()) {
+    s.textCenter(Screen::fit(fmt::format("DAILY  {} AT HEAT {}   the same run for everyone today",
+                                         HEROES[pick]->name, game.heat),
+                             s.w * 0.6f, small),
+                 s.w * 0.69f, s.h - 44 * u, small, col::gold.alpha(in));
+  } else if (!campaign) {
     Color hot = Color{1, 0.82f - 0.06f * game.heat, 0.32f - 0.03f * game.heat, 1};
     std::string line = game.codex.heat == 0 ? std::string("HEAT unlocks at your first dawn")
                        : game.heat == 0

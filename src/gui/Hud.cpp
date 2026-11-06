@@ -90,6 +90,7 @@ void Hud::night(float top) {
                           ? fmt::format("DAY {}  DUSK {}", n.nights,
                                         clockText(std::max(0.0f, n.dayEnds - l.time)))
                       : cycle ? fmt::format("NIGHT {}  DAWN {}", n.nights, clockText(n.left()))
+                      : game.endless ? fmt::format("ENDLESS {}", clockText(l.time - game.endlessFrom))
                               : fmt::format("DAWN {}", clockText(n.left()));
   s.textCenter(clock, s.w / 2, top, std::round(u * 1.5f), col::white);
   if (l.omen >= 0)

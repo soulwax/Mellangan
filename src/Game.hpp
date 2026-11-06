@@ -46,6 +46,9 @@ public:
   Balance balance;
   Difficulty difficulty = Difficulty::HurtMePlenty;
   int heat = 0;
+  bool endless = false;
+  float endlessFrom = 0;
+  void beginEndless();
   std::string base;
   Saves saves;
   Hud hud{*this};

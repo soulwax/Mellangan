@@ -11,6 +11,7 @@
 #include "entity/Player.hpp"
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
+#include "menu/ClassMenu.hpp"
 #include "menu/Recap.hpp"
 #include "meta/Feats.hpp"
 #include "meta/Heat.hpp"
@@ -166,5 +167,62 @@ void testHeat() {
   assert(fresh.parse("1 0 3 0 0 0 50.0\n1 2\n0\n4\n") && fresh.heat == 0);
   std::cout << "[TEST] Heat: each level adds its curse on top of the difficulty tier, heat 0 changes "
                "nothing, and a codex with dawns but no heat line unlocks heat 1: PASS"
+            << std::endl;
+}
+
+void testEndless() {
+  Rng kept = rng;
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Level &l = *game.level;
+  l.time = 900, l.player->god = true;
+  int runs = game.codex.runs;
+  game.beginEndless();
+  assert(game.endless && !l.night.dawn && !l.player->god && l.night.left() > 1e8f);
+  float hp = game.balance.enemyHp;
+  l.time = game.endlessFrom + 60;
+  game.observe();
+  assert(std::abs(game.balance.enemyHp - hp * 1.1f) < 1e-4f);
+  l.time = game.endlessFrom + 75;
+  game.onPlayerDied();
+  assert(std::abs(game.codex.bestEndless - 75) < 0.01f && game.codex.runs == runs);
+  game.newGame();
+  assert(!game.endless);
+  game.level.reset();
+  rng = kept;
+  std::cout << "[TEST] Endless night: dawn gives way to a night that never ends, it deepens every "
+               "minute, and a fall keeps the record without counting a second run: PASS"
+            << std::endl;
+}
+
+void testDaily() {
+  Rng kept = rng;
+  auto roll = [](const char *code, bool push) {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    game.worldMode = WorldMode::Daily, game.seedCode = code;
+    ClassMenu menu(game);
+    menu.tick();
+    if (push) {
+      game.input.right.toggle(true), game.input.up.toggle(true);
+      game.input.tick();
+      menu.tick();
+    }
+    std::pair<int, int> out{game.level->player->tile, game.heat};
+    game.level.reset();
+    return out;
+  };
+  auto a = roll("D20261106", false), b = roll("D20261106", true);
+  assert(a == b && a.second >= 0 && a.second <= 3);
+  bool varies = false;
+  for (const char *day : {"D20261107", "D20261108", "D20261109", "D20261110", "D20261111"}) {
+    auto d = roll(day, false);
+    assert(d.second >= 0 && d.second <= 3);
+    varies |= d != a;
+  }
+  assert(varies);
+  rng = kept;
+  std::cout << "[TEST] Daily: the date fixes the class and a heat of 0-3 for everyone, the arrows "
+               "cannot change them, and different days differ: PASS"
             << std::endl;
 }

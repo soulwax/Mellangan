@@ -91,7 +91,9 @@ const Feat FEATS[] = {
        return dawn && run(g).player->hp >= run(g).player->maxHp;
      }},
     {"dawn_heat5", "BLAZING", "Reach dawn at heat 5", [](const Game &g, bool dawn) { return dawn && g.heat >= 5; }},
-    {"dawn_heat10", "INFERNO", "Reach dawn at heat 10", [](const Game &g, bool dawn) { return dawn && g.heat >= 10; }}};
+    {"dawn_heat10", "INFERNO", "Reach dawn at heat 10", [](const Game &g, bool dawn) { return dawn && g.heat >= 10; }},
+    {"endless_5", "STILL STANDING", "Last 5 minutes into the endless night", [](const Game &g, bool) { return codex(g).bestEndless >= 300; }},
+    {"endless_15", "NIGHT EVERLASTING", "Last 15 minutes into the endless night", [](const Game &g, bool) { return codex(g).bestEndless >= 900; }}};
 
 const int FEAT_COUNT = int(sizeof FEATS / sizeof *FEATS);
 static_assert(sizeof FEATS / sizeof *FEATS <= 64);

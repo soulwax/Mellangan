@@ -34,5 +34,6 @@ private:
   void renderSwing(Screen &s, const Hero &k, const Upgrade &up, float hx, float hy,
                    float scale, const Pose &p, float in) const;
   void choose(int i);
+  bool daily() const;
   void begin();
 };

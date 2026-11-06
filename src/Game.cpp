@@ -359,7 +359,7 @@ void Game::reseed() {
 }
 
 void Game::newGame(bool reroll) {
-  earned.clear();
+  earned.clear(), endless = false;
   if (worldMode == WorldMode::Random && reroll)
     seedCode.clear();
   reseed();
@@ -478,6 +478,10 @@ void Game::observe() {
   Level::Trace &t = level->trace;
   Player &p = *level->player;
   t.biomes[world::biomeUnder(p.x, p.y)] += 1;
+  if (int s = int(level->time - endlessFrom); endless && s > 0 && s % 60 == 0) {
+    balance.enemyHp *= 1.1f, balance.enemyDamage *= 1.05f;
+    announce(fmt::format("THE DARK DEEPENS  {} MINUTE{}", s / 60, s >= 120 ? "S" : ""));
+  }
   if (int(level->time) % 60 == 0)
     t.levels.push_back(p.lvl);
 }
@@ -509,10 +513,29 @@ void Game::onPlayerDied() {
   }
   Player &p = *level->player;
   Sound::death.play(0.8f, 0);
+  if (endless) {
+    float lasted = level->time - endlessFrom;
+    codex.bestEndless = std::max(codex.bestEndless, lasted);
+    earned = unlockFeats(*this, false);
+    if (writes())
+      codex.save(saves.dir() + "codex.txt");
+    spdlog::info("Fallen {} into the endless night", clockText(lasted));
+    return setMenu(std::make_unique<DeadMenu>(*this));
+  }
   remember(false);
   spdlog::info("Fallen after {} at level {} with {} kills",
                clockText(level->time), p.lvl, level->kills);
   setMenu(std::make_unique<DeadMenu>(*this));
+}
+
+void Game::beginEndless() {
+  level->player->god = false;
+  level->rules.nightLength = 1e9f;
+  level->night.dawn = false;
+  endless = true, endlessFrom = level->time;
+  setMenu(nullptr);
+  announce("THE NIGHT DOES NOT END");
+  spdlog::info("Endless night from {}", clockText(level->time));
 }
 
 void Game::onDawn() {

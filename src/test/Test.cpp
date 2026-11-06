@@ -72,6 +72,8 @@ int runTests() {
   testRunLog();
   testFeats();
   testHeat();
+  testEndless();
+  testDaily();
   std::cout << "[TEST] Pool multithreaded concurrency: PASS" << std::endl;
   testStatuses();
   testStatusDamage();

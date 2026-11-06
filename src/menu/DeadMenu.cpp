@@ -31,7 +31,12 @@ void DeadMenu::render(Screen &s) {
     s.textCenter("overwhelmed by the dark", s.w / 2, subY,
                  std::max(1.0f, u - 1), col::red * 0.85f);
 
-  float nextY = renderEndStats(s, l, subY + 22 * u, std::min(1.0f, t * 1.2f));
+  if (game.endless)
+    s.textCenter(fmt::format("{} into the endless night   best {}", clockText(l.time - game.endlessFrom),
+                             clockText(game.codex.bestEndless)),
+                 s.w / 2, subY + 16 * u, std::max(1.0f, u - 1), col::gold);
+  float nextY = renderEndStats(s, l, subY + 22 * u + (game.endless ? 14 * u : 0),
+                               std::min(1.0f, t * 1.2f));
   float end = recap(s, l, nextY + 8 * u, std::min(1.0f, t));
   float small = std::max(1.0f, u - 1);
   s.textCenter(Screen::fit(fmt::format("TIP  {}", advice(l)), s.w - 32 * u, small), s.w / 2, end + 6 * u,

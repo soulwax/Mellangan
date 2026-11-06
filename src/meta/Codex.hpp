@@ -16,7 +16,7 @@ struct Codex {
   uint64_t feats = 0;
   int slain[KINDS]{}, entered[SITES]{};
   int runs = 0, dawns = 0, bestStreak = 0, start = 0, shrines = 0, heat = 0;
-  float bestTime = 0;
+  float bestTime = 0, bestEndless = 0;
 
   int kills() const;
   int count(uint32_t mask) const;
