@@ -169,9 +169,9 @@ void Hud::merchant() {
           close ? col::gold.alpha(0.75f + 0.25f * std::sin(time * 6)) : c.alpha(0.8f));
   };
   bool close = Merchant::near(l);
-  sign(*m, close ? "I  TRADE" : "MERCHANT", close, 24);
+  sign(*m, close ? game.input.prompt("I  TRADE") : "MERCHANT", close, 24);
   if (Workbench *b = Workbench::near(l); b && !close)
-    sign(*b, "I  CRAFT", true, 18);
+    sign(*b, game.input.prompt("I  CRAFT"), true, 18);
 }
 
 void Hud::compass() {

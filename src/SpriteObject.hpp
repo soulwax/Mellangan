@@ -46,6 +46,7 @@ public:
   virtual float occlusion(float &width) const { return width = 0, 0.0f; }
   virtual int layer() const { return 1; }
   virtual bool cosmeticParticle() const { return false; }
+  virtual bool damageNumber() const { return false; }
   void remove() { removed = true; }
 
   void remember() { xLast = x, yLast = y, zLast = z; }

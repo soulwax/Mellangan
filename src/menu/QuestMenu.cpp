@@ -90,6 +90,7 @@ void QuestMenu::render(Screen &s) {
                        : c.stage == QuestStage::Offered ? fmt::format("Enter accept   reward {}", quests::rewardText(c.quest))
                        : c.stage == QuestStage::Ready   ? fmt::format("Enter claim {}", quests::rewardText(c.quest))
                                                    : "Esc close   the task is not done yet";
+  action = game.input.prompt(action);
   s.text(title, x0 + 12 * u, y0 + 24 * u, u, col::gold.alpha(in));
   float y = y0 + 48 * u;
   for (const std::string &line : wrap(body, w - 24 * u, small))
@@ -98,12 +99,13 @@ void QuestMenu::render(Screen &s) {
          (c.stage == QuestStage::Active ? col::muted : col::gold).alpha(in));
   int town = std::clamp(c.act, 1, int(c.towns().size())) - 1;
   if (!c.fortified(town))
-    s.text(told.empty() ? fmt::format("B  raise a watchtower: {} gold, {} stone, {} wood",
+    s.text(told.empty() ? game.input.prompt(fmt::format("B  raise a watchtower: {} gold, {} stone, {} wood",
                                       Campaign::TOWER_GOLD, Campaign::TOWER_STONE,
-                                      Campaign::TOWER_WOOD)
+                                      Campaign::TOWER_WOOD))
                         : told,
            x0 + 12 * u, y0 + h - 58 * u, small, (told.empty() ? col::muted : col::red * 0.8f).alpha(in));
-  std::string forget = fmt::format("R  forget your path and relearn it: {} gold", c.forgetCost());
+  std::string forget =
+      game.input.prompt(fmt::format("R  forget your path and relearn it: {} gold", c.forgetCost()));
   bool afford = game.level->player->gold >= c.forgetCost();
   s.text(forget, x0 + 12 * u, y0 + h - 40 * u, small,
          (afford ? col::muted : col::red * 0.8f).alpha(in));

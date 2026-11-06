@@ -174,7 +174,7 @@ void CodexMenu::render(Screen &s) {
           return std::string(STRUCTURES[k].name ? STRUCTURES[k].name : "UNKNOWN SITE");
         });
 
-  s.text("C / Esc back", g.pad, s.h - g.pad - 16 * g.small, g.small, col::muted);
+  s.text(game.input.prompt("C / Esc back"), g.pad, s.h - g.pad - 16 * g.small, g.small, col::muted);
   s.textCenter(fmt::format("PAGE {} / {}", page + 1, PAGE_COUNT), s.w * 0.5f,
                s.h - g.pad - 16 * g.small, g.small, col::white);
   for (int direction : {-1, 1}) {

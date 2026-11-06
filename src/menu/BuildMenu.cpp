@@ -64,6 +64,6 @@ void BuildMenu::render(Screen &s) {
   }
   if (toldTime > 0)
     s.text(told, x0 + 12 * u, y0 + h - 22 * u, small, col::red.alpha(std::min(1.0f, toldTime) * in));
-  s.textCenter("Up/Down pick   Enter place it in front of you   B close", s.w / 2, y0 + h + 8 * u,
+  s.textCenter(game.input.prompt("Up/Down pick   Enter place it in front of you   B close"), s.w / 2, y0 + h + 8 * u,
                small, col::muted.alpha(in));
 }

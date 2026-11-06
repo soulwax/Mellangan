@@ -168,7 +168,7 @@ static int play(SDL_Window *window, const std::string &base, int argc, char **ar
 }
 
 int main(int argc, char **argv) {
-  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS))
+  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_GAMEPAD))
     return 1;
   const char *basePath = SDL_GetBasePath();
   std::string base = basePath ? basePath : "";

@@ -191,8 +191,8 @@ void TreeMenu::render(Screen &s) {
          col::white.alpha(0.85f * in));
   std::string why = tree.why(p, n, points());
   std::string state = up.skill && up.level > 0 && p.skill != &up
-                          ? "Enter: make it your skill, or rank it up with a point"
-                      : why.empty() ? (up.canEvolve(p) ? "Enter: evolve" : "Enter: learn")
+                          ? game.input.prompt("Enter: make it your skill, or rank it up with a point")
+                      : why.empty() ? (up.canEvolve(p) ? game.input.prompt("Enter: evolve") : game.input.prompt("Enter: learn"))
                                     : why;
   s.text(state, dx, dy + 36 * u, small,
          (why.empty() ? col::gold : col::muted).alpha(in));
@@ -201,6 +201,6 @@ void TreeMenu::render(Screen &s) {
     s.text(shown, x1 - Screen::textWidth(shown, small) - 12 * u, dy + 36 * u, small,
            col::gold.alpha(std::min(1.0f, toldTime) * in));
   }
-  s.textCenter("Arrows or mouse pick   Enter learn   K close", s.w / 2, y1 + 8 * u, small,
+  s.textCenter(game.input.prompt("Arrows or mouse pick   Enter learn   K close"), s.w / 2, y1 + 8 * u, small,
                col::muted.alpha(in));
 }

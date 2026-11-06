@@ -20,15 +20,16 @@ void PauseMenu::tick() {
 
 void PauseMenu::render(Screen &s) {
   float u = s.u, small = std::max(1.0f, u - 1);
+  bool pad = game.input.pad;
   s.rect(0, 0, s.w, s.h, {0, 0, 0, 0.5f});
   s.textCenter("PAUSED", s.w / 2, s.h * 0.35f, 3 * u, col::white);
-  s.textCenter("Enter / Esc to resume", s.w / 2, s.h * 0.35f + 60 * u, small,
+  s.textCenter(pad ? "A / B to resume" : "Enter / Esc to resume", s.w / 2, s.h * 0.35f + 60 * u, small,
                col::muted);
-  s.textCenter("C codex", s.w / 2, s.h * 0.35f + 60 * u + 40 * small, small,
+  s.textCenter(pad ? "Y codex" : "C codex", s.w / 2, s.h * 0.35f + 60 * u + 40 * small, small,
                col::muted);
-  s.textCenter("O settings",
+  s.textCenter(pad ? "RB settings" : "O settings",
                s.w / 2, s.h * 0.35f + 60 * u + 60 * small, small, col::muted);
-  s.textCenter("Q to quit to title", s.w / 2, s.h * 0.35f + 60 * u + 20 * small,
+  s.textCenter(pad ? "Back to quit to title" : "Q to quit to title", s.w / 2, s.h * 0.35f + 60 * u + 20 * small,
                small, col::muted);
   s.textCenter("world " + game.worldName(), s.w / 2, s.h - 30 * small, small,
                col::muted * 0.8f);

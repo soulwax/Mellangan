@@ -60,8 +60,10 @@ void Player::tick() {
 
   Input &in = level->game.input;
   double xd = in.right.down - in.left.down, yd = in.down.down - in.up.down;
+  if (in.stickX != 0 || in.stickY != 0)
+    xd = in.stickX, yd = in.stickY;
   double dd = std::sqrt(xd * xd + yd * yd);
-  if (dd > 0)
+  if (dd > 1)
     xd /= dd, yd /= dd;
   int surface = level->surfaceAt(x, y);
   double k = damp(surface == 1 ? 6 : surface == 2 ? 2.5f : 18, DT);

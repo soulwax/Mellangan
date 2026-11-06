@@ -174,11 +174,11 @@ void ClassMenu::render(Screen &s) {
   for (int i = 0; i < HERO_COUNT; i++)
     renderHero(s, i, p, in);
   HeroCard(game, s, pick, t, in).render(s);
-  s.textCenter("Left/Right choose   Enter begin   Esc back", s.w * 0.69f,
+  s.textCenter(game.input.prompt("Left/Right choose   Enter begin   Esc back"), s.w * 0.69f,
                s.h - 22 * u, u, col::muted.alpha(in));
   if (campaign)
-    s.textCenter(game.hardcoreNext ? "R  HARDCORE: one life, death deletes the hero"
-                                   : "R  HARDCORE: off",
+    s.textCenter(game.hardcoreNext ? game.input.prompt("R  HARDCORE: one life, death deletes the hero")
+                                   : game.input.prompt("R  HARDCORE: off"),
                  s.w * 0.69f, s.h - 44 * u, small,
                  (game.hardcoreNext ? col::red : col::muted).alpha(in));
 }

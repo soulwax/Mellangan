@@ -34,7 +34,7 @@ void DeadMenu::render(Screen &s) {
   float nextY = renderEndStats(s, l, subY + 22 * u, std::min(1.0f, t * 1.2f));
   float end = recap(s, l, nextY + 8 * u, std::min(1.0f, t));
   if (t > 1 && std::fmod(t, 1.0f) < 0.65f)
-    s.textCenter("R / Enter to rise again", s.w / 2, end + 12 * u, u, col::gold);
+    s.textCenter(game.input.prompt("R / Enter to rise again"), s.w / 2, end + 12 * u, u, col::gold);
   float small = std::max(1.0f, u - 1);
   s.textCenter("world " + game.worldName(), s.w / 2, s.h - 18 * small, small,
                col::muted * 0.8f);

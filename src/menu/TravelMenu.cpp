@@ -49,6 +49,6 @@ void TravelMenu::render(Screen &s) {
     s.text(fmt::format("ACT {}   {}", ACTS[i].numeral, ACTS[i].town), x0 + 14 * u, y, small,
            (on ? col::gold : col::white).alpha(in));
   }
-  s.textCenter("Up/Down pick   Enter travel   I close", s.w / 2, y0 + h + 8 * u, small,
+  s.textCenter(game.input.prompt("Up/Down pick   Enter travel   I close"), s.w / 2, y0 + h + 8 * u, small,
                col::muted.alpha(in));
 }

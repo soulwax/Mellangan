@@ -138,7 +138,7 @@ void InventoryMenu::render(Screen &s) {
   s.text(head, x0 + 12 * u, fy, small, col::gold.alpha(0.85f * in));
   gui::materials(s, p.materials, nullptr, x0 + 24 * u + Screen::textWidth(head, small), fy,
                  small, in);
-  s.textCenter("Arrows or mouse pick   Enter equip   Backspace drop   I close", s.w / 2,
+  s.textCenter(game.input.prompt("Arrows or mouse pick   Enter equip   Backspace drop   I close"), s.w / 2,
                y0 + h + 8 * u, small, col::muted.alpha(in));
 
   if (const Item *item = at(selected)) {

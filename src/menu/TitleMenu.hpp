@@ -2,6 +2,8 @@
 
 #include <SDL3/SDL.h>
 
+#include <string_view>
+
 #include "menu/Menu.hpp"
 
 class TitleMenu : public Menu {
@@ -27,7 +29,7 @@ private:
   void recall(int i);
   void stepDifficulty(int dir);
   void heading(Screen &s, const Layout &l, float y, const char *label,
-               const char *hint) const;
+               std::string_view hint) const;
   void renderModes(Screen &s, const Layout &l) const;
   void renderSeed(Screen &s, const Layout &l) const;
   void renderDifficulty(Screen &s, const Layout &l) const;

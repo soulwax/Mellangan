@@ -41,7 +41,7 @@ void Hud::handwork() {
     s.color(col::white);
     s.frame(gx, gy, 16 * k, 16 * k, u, tint);
     plate(tx * 16 + 8.0, ty * 16 - 18.0,
-          why.empty() ? fmt::format("{}  Enter build  Esc cancel", PIECES[c->building].name) : why,
+          why.empty() ? game.input.prompt(fmt::format("{}  Enter build  Esc cancel", PIECES[c->building].name)) : why,
           why.empty() ? col::gold : Color{1, 0.5f, 0.45f, 1});
     return;
   }
@@ -52,19 +52,19 @@ void Hud::handwork() {
                                       Delve::FLOORS, c->delve.inside(l));
     s.textCenter(depth, s.w / 2, 70 * u, small, Color{0.9f, 0.75f, 0.5f, 0.9f});
   } else if (Structure mine; Delve::entrance(l, *c, mine)) {
-    return plate(mine.centerX(), mine.centerY() - 26, "E  DELVE INTO THE MINE",
+    return plate(mine.centerX(), mine.centerY() - 26, game.input.prompt("E  DELVE INTO THE MINE"),
                  Color{0.9f, 0.75f, 0.5f, 1});
   }
   harvest::Target t;
   if (!harvest::target(l, *c, t))
     return;
   if (int cost = t.placed ? harvest::relight(c->edits.at(t.tx, t.ty)->piece) : -1; cost > 0)
-    return plate(t.x, t.y - 22, fmt::format("E  RELIGHT  {} wood", cost), col::gold);
+    return plate(t.x, t.y - 22, game.input.prompt(fmt::format("E  RELIGHT  {} wood", cost)), col::gold);
   if (t.placed)
-    return plate(t.x, t.y - 22, "E  TAKE DOWN", col::muted);
+    return plate(t.x, t.y - 22, game.input.prompt("E  TAKE DOWN"), col::muted);
   auto it = c->chops.find(Edits::key(t.tx, t.ty));
   int hits = it == c->chops.end() ? 0 : it->second;
-  std::string text = fmt::format("E  {}", MATERIALS[int(t.yield->mat)].name);
+  std::string text = game.input.prompt(fmt::format("E  {}", MATERIALS[int(t.yield->mat)].name));
   if (hits > 0)
     text += fmt::format("  {}/{}", hits, t.yield->hits);
   plate(t.x, t.y - 22, text, MATERIALS[int(t.yield->mat)].color);
@@ -118,7 +118,7 @@ void Hud::questLog() {
     bool near = Elder::near(l) != nullptr, news = c->stage == QuestStage::Offered ||
                                                   c->stage == QuestStage::Ready;
     if (near || news) {
-      plate(e->x, e->y - 22, near ? "I  TALK" : "!",
+      plate(e->x, e->y - 22, near ? game.input.prompt("I  TALK") : "!",
             col::gold.alpha(0.75f + 0.25f * std::sin(time * 5)));
     }
   }

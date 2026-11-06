@@ -141,6 +141,6 @@ void ShrineMenu::render(Screen &s) {
   }
 
   const SDL_FRect &last = r[3];
-  s.textCenter("1-3 choose  /  Arrows + Enter  /  Esc keep the flame",
+  s.textCenter(game.input.prompt("1-3 choose  /  Arrows + Enter  /  Esc keep the flame"),
                s.w * 0.5f, last.y + last.h + 9 * u, small, col::muted * 0.75f);
 }

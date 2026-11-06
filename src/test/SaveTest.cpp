@@ -14,6 +14,8 @@
 #include "meta/Codex.hpp"
 #include "meta/Saves.hpp"
 #include "meta/Settings.hpp"
+#include "particle/TextParticle.hpp"
+#include "particle/VisualDetail.hpp"
 
 namespace {
 void scribble(const std::string &file, std::string_view text) {
@@ -97,7 +99,12 @@ void testSaves() {
          set.music == 100 && set.reduced == 0);
   Settings again;
   again.parse(set.save());
-  assert(again.save() == set.save());
+  assert(again.save() == set.save() && again.numbers == 1 && again.vsync == 1);
+  {
+    TextParticle number(0, 0, 12, col::red);
+    assert(showParticle(number, false, true) && showParticle(number, true, true) &&
+           !showParticle(number, false, false));
+  }
 
   fs::remove_all(dir);
   std::cout << "[TEST] Saves: writes go through a temp file and keep the last good copy, an empty, "

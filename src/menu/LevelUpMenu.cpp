@@ -136,6 +136,6 @@ void LevelUpMenu::render(Screen &s) {
         .render(s, card, in, i == selection.selected, t);
   }
   const SDL_FRect &last = r[choices.size() - 1];
-  s.textCenter(fmt::format("1-{} / Arrows + Enter / Click", choices.size()),
+  s.textCenter(game.input.prompt(fmt::format("1-{} / Arrows + Enter / Click", choices.size())),
                s.w / 2, last.y + last.h + 9 * u, small, col::muted * 0.75f);
 }

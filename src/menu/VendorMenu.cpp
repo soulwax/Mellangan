@@ -177,7 +177,7 @@ void VendorMenu::render(Screen &s) {
     s.text(Screen::fit(told, grid.x + grid.w - bag.x, small), bag.x, fy + 40 * u, small,
            toldColor.alpha(std::min(1.0f, toldTime) * in));
 
-  std::string hint = "Arrows or mouse pick   Enter buy or sell   I close";
+  std::string hint = game.input.prompt("Arrows or mouse pick   Enter buy or sell   I close");
   if (selected < w && v.wares[size_t(selected)].kind == WareKind::Gamble)
     hint = "A gamble rolls magic, rare or unique - rares twice and uniques three times as often";
   else if (selected < w && v.wares[size_t(selected)].kind == WareKind::Draught)

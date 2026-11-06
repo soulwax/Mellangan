@@ -25,7 +25,9 @@ const Row ROWS[] = {
     {"SCREEN SHAKE", &Settings::shake, 25, 100, nullptr, nullptr},
     {"FLASHES", &Settings::flash, 25, 100, nullptr, nullptr},
     {"PARTICLES", &Settings::reduced, 1, 1, "FULL", "REDUCED"},
-    {"FULLSCREEN", &Settings::fullscreen, 1, 1, "OFF", "ON"}};
+    {"DAMAGE NUMBERS", &Settings::numbers, 1, 1, "OFF", "ON"},
+    {"FULLSCREEN", &Settings::fullscreen, 1, 1, "OFF", "ON"},
+    {"VSYNC", &Settings::vsync, 1, 1, "OFF", "ON"}};
 constexpr int ROW_COUNT = int(sizeof ROWS / sizeof *ROWS);
 } // namespace
 
@@ -85,6 +87,8 @@ void SettingsMenu::render(Screen &s) {
     std::string pct = fmt::format("{}%", v);
     s.text(pct, x + w - Screen::textWidth(pct, u), y, u, ink);
   }
-  s.textCenter("Up/Down choose   Left/Right change   Esc back", s.w / 2,
+  s.textCenter(game.input.pad ? "D-pad choose and change   B back"
+                               : "Up/Down choose   Left/Right change   Esc back",
+               s.w / 2,
                top + ROW_COUNT * line + 24 * u, small, col::muted);
 }

@@ -2,7 +2,9 @@
 
 #include "SpriteObject.hpp"
 
-inline bool showParticle(const SpriteObject &particle, bool reduced) {
+inline bool showParticle(const SpriteObject &particle, bool reduced, bool numbers = true) {
+  if (!numbers && particle.damageNumber())
+    return false;
   if (!reduced || !particle.cosmeticParticle())
     return true;
   uintptr_t value = reinterpret_cast<uintptr_t>(&particle) >> 4;

@@ -64,6 +64,7 @@ int runTests() {
   std::cout << "[TEST] Pool alloc/free & edge cases: PASS" << std::endl;
   testPoolConcurrency();
   testWorkers();
+  testGamepad();
   std::cout << "[TEST] Pool multithreaded concurrency: PASS" << std::endl;
   testStatuses();
   testStatusDamage();

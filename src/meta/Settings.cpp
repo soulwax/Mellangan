@@ -17,7 +17,8 @@ const Field FIELDS[] = {
     {"master", &Settings::master, 100},     {"music", &Settings::music, 100},
     {"effects", &Settings::effects, 100},   {"ambience", &Settings::ambience, 100},
     {"shake", &Settings::shake, 100},       {"flash", &Settings::flash, 100},
-    {"reduced_particles", &Settings::reduced, 1}, {"fullscreen", &Settings::fullscreen, 1}};
+    {"reduced_particles", &Settings::reduced, 1}, {"fullscreen", &Settings::fullscreen, 1},
+    {"damage_numbers", &Settings::numbers, 1},    {"vsync", &Settings::vsync, 1}};
 } // namespace
 
 void Settings::parse(std::string_view text) {

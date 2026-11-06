@@ -101,7 +101,7 @@ void StashMenu::render(Screen &s) {
          col::muted.alpha(in));
   s.text(fmt::format("STASH {}/{}", stash().size(), Campaign::STASH), chest.x, chest.y - 14 * u,
          small, col::muted.alpha(in));
-  s.textCenter("Enter moves an item across   I close   the stash stays in town", s.w / 2,
+  s.textCenter(game.input.prompt("Enter moves an item across   I close   the stash stays in town"), s.w / 2,
                y0 + ph + 8 * u, small, col::muted.alpha(in));
   std::vector<Item> &items = side(selected);
   size_t k = size_t(selected % CELLS);

@@ -440,6 +440,9 @@ void Game::applySettings() {
   camera.scale = settings.shake / 100.0f;
   if (window && bool(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) != bool(settings.fullscreen))
     SDL_SetWindowFullscreen(window, settings.fullscreen != 0);
+  VK2DScreenMode mode = settings.vsync ? VK2D_SCREEN_MODE_VSYNC : VK2D_SCREEN_MODE_TRIPLE_BUFFER;
+  if (VK2DRendererConfig config = vk2dRendererGetConfig(); window && config.screenMode != mode)
+    config.screenMode = mode, vk2dRendererSetConfig(config);
 }
 
 void Game::saveSettings() {

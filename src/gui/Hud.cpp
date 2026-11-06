@@ -97,8 +97,8 @@ void Hud::night(float top) {
   s.textCenter(fmt::format("{} shrine{} lit", n.lit, n.lit == 1 ? "" : "s"),
                s.w / 2, top + 26 * u, small, n.lit ? col::gold : col::muted);
   if (game.campaign && game.campaign->points > 0)
-    s.textCenter(fmt::format("K  {} skill point{}", game.campaign->points,
-                             game.campaign->points == 1 ? "" : "s"),
+    s.textCenter(game.input.prompt(fmt::format("K  {} skill point{}", game.campaign->points,
+                             game.campaign->points == 1 ? "" : "s")),
                  s.w / 2, top + 38 * u, small, col::gold.alpha(0.75f + 0.25f * std::sin(time * 4)));
   if (n.kindling > 0) {
     float kw = 120 * u, kx = (s.w - kw) / 2, ky = top + 46 * u;
@@ -210,7 +210,7 @@ void Hud::vitals() {
     s.frame(bx, by, box, box, u, wait > 0 ? col::muted.alpha(0.4f) : h->tint.alpha(0.9f));
     s.text(sk ? sk->name : h->skill, bx + box + 5 * u, by + 2 * u, small,
            wait > 0 ? col::muted : h->tint);
-    s.text(wait > 0 ? fmt::format("{:.0f}s", std::ceil(p.skillTime)) : std::string("SPACE"),
+    s.text(wait > 0 ? fmt::format("{:.0f}s", std::ceil(p.skillTime)) : game.input.prompt("SPACE"),
            bx + box + 5 * u, by + 2 * u + 16 * small, small, col::muted * 0.8f);
   }
   s.rect(4 * u, hy, hw, 6 * u, col::panel);

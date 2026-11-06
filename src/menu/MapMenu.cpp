@@ -170,6 +170,6 @@ void MapMenu::render(Screen &s) {
     y += row;
   }
 
-  s.text("Arrows pan   1-3 zoom   Enter centre   Tab / Esc close", pad,
+  s.text(game.input.prompt("Arrows pan   1-3 zoom   Enter centre   Tab / Esc close"), pad,
          s.h - pad - 16 * small, small, col::muted);
 }

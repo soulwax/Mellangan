@@ -166,11 +166,12 @@ float HeroCard::layout(Screen &s, bool draw) const {
   y = gui::wrapText(s, h.trait, cx + gut, y, cw - gut, body, line, prose, draw) + 6 * u;
 
   y = label(s, "SKILL", y, draw);
-  float key = Screen::textWidth("SPACE", small) + 8 * u;
+  std::string cast = game.input.prompt("SPACE");
+  float key = Screen::textWidth(cast, small) + 8 * u;
   if (draw) {
     s.rect(cx + cw - key, y - u, key, 14 * u, tint.alpha(0.15f * in));
     s.frame(cx + cw - key, y - u, key, 14 * u, 1, tint.alpha(0.7f * in));
-    s.text("SPACE", cx + cw - key + 4 * u, y + u, small, tint.alpha(in));
+    s.text(cast, cx + cw - key + 4 * u, y + u, small, tint.alpha(in));
     s.text(h.skill, cx, y, body, tint.alpha(in));
   }
   y += line + 2 * u;

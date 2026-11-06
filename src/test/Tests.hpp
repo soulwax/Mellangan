@@ -40,6 +40,7 @@ void testContentLinks();
 void testSaves();
 void testNearestStructure();
 void testWorkers();
+void testGamepad();
 void testBlend();
 void testShapeForms();
 void testChampionTraits();

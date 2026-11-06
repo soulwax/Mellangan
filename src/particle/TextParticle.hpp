@@ -20,4 +20,5 @@ public:
 
   void tick() override;
   void render(Screen &s) override;
+  bool damageNumber() const override { return true; }
 };
