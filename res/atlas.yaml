@@ -1,0 +1,1913 @@
+# res/atlas.yaml -- what every cell of res/atlas.png is.
+#
+# Built from: src/Atlas.hpp (accessors + named indices), call sites under src/, the generator scripts in tools/
+# (make_assets, make_*), and visual inspection. Every cell carries a `src` tag:
+#   code  -- named in src/Atlas.hpp or used by raw index in src/ (authoritative)
+#   gen   -- named by the tools/ generator that paints it (authoritative)
+#   eye   -- a visual guess from the PNG, NOT referenced by code. A human should confirm or rename these.
+# `ref` gives the C++ constant(s) that point at a cell; `xy` is the 16x16 sprite's top-left pixel.
+# Grid: 18px pitch (16px sprite + 1px transparent gutter each side); 24 columns over 432px.
+
+image: res/atlas.png
+size: [432, 1488]
+cell: {sprite: 16, pitch: 18, gutter: 1}
+validator: tools/atlas_layout.py   # declares the bands below and checks gutters/allocation
+rebuild: tools/make_assets.py      # Kenney base + FX, then every make_* step in PIPELINE order
+
+bands:
+
+  dungeon:
+    title: "Kenney Tiny Dungeon, unmodified (12x11)"
+    accessor: "atlas::tile(i)"
+    origin: [1, 1]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [12, 11]     # cols, rows
+    note: "rows 0-4 are dungeon walls/floors the game never draws except sand (42, 48-53)"
+    cells:
+      0: {name: floor, xy: [1, 1], src: eye, desc: "brown dungeon floor, plain"}
+      1: {name: floor_b, xy: [19, 1], src: eye, desc: "brown dungeon floor, plain variant"}
+      2: {name: floor_ledge_bottom, xy: [37, 1], src: eye, desc: "floor with a grey stone ledge along the bottom edge"}
+      3: {name: floor_c, xy: [55, 1], src: eye, desc: "brown dungeon floor, plain variant"}
+      4: {name: wall_cap_left, xy: [73, 1], src: eye, desc: "grey wall cap over brick-red floor, left half"}
+      5: {name: wall_cap_right, xy: [91, 1], src: eye, desc: "grey wall cap over brick-red floor, right half"}
+      6: {name: pillar_top, xy: [109, 1], src: eye, desc: "grey stone pillar/doorpost top on floor"}
+      7: {name: wall_drain, xy: [127, 1], src: eye, desc: "grey brick wall with a round drain hole"}
+      8: {name: wall_drain_slime, xy: [145, 1], src: eye, desc: "brick wall drain dripping green slime"}
+      9: {name: doorway_rubble, xy: [163, 1], src: eye, desc: "dark doorway, rubble at the threshold"}
+      10: {name: doorway_wide, xy: [181, 1], src: eye, desc: "dark open doorway, wide"}
+      11: {name: doorway_right, xy: [199, 1], src: eye, desc: "dark open doorway, right part"}
+      12: {name: floor_pits, xy: [1, 19], src: eye, desc: "floor with dark round pits/holes"}
+      13: {name: floor_wall_sides, xy: [19, 19], src: eye, desc: "floor between thin grey wall edges"}
+      14: {name: wall_bricks, xy: [37, 19], src: eye, desc: "grey brick wall"}
+      15: {name: floor_wall_left, xy: [55, 19], src: eye, desc: "floor with grey wall edge on the left"}
+      16: {name: floor_wall_u_left, xy: [73, 19], src: eye, desc: "floor framed by wall (left part of a U)"}
+      17: {name: floor_wall_u_right, xy: [91, 19], src: eye, desc: "floor framed by wall (right part of a U)"}
+      18: {name: column, xy: [109, 19], src: eye, desc: "carved grey column, vertical"}
+      19: {name: wall_gargoyle, xy: [127, 19], src: eye, desc: "wall with a gargoyle face"}
+      20: {name: wall_gargoyle_slime, xy: [145, 19], src: eye, desc: "gargoyle face spewing green slime"}
+      21: {name: door_open_left, xy: [163, 19], src: eye, desc: "dark doorway, wooden door swung left"}
+      22: {name: door_open_mid, xy: [181, 19], src: eye, desc: "dark doorway, door edge in the middle"}
+      23: {name: door_open_right, xy: [199, 19], src: eye, desc: "dark doorway, wooden door swung right"}
+      24: {name: floor_rubble, xy: [1, 37], src: eye, desc: "floor strewn with rocks and rubble"}
+      25: {name: floor_d, xy: [19, 37], src: eye, desc: "brown dungeon floor, plain variant"}
+      26: {name: floor_ledge_top_rubble, xy: [37, 37], src: eye, desc: "floor under a grey ledge, with rubble"}
+      27: {name: floor_e, xy: [55, 37], src: eye, desc: "brown dungeon floor, plain variant"}
+      28: {name: wall_grate, xy: [73, 37], src: eye, desc: "brick wall with a barred window"}
+      29: {name: wall_banner, xy: [91, 37], src: eye, desc: "red heraldic banner/shield on wall"}
+      30: {name: sand_pillar_foot, xy: [109, 37], src: eye, desc: "sand floor with a grey pillar foot at top"}
+      31: {name: stone_basin, xy: [127, 37], src: eye, desc: "grey stone basin/trough on sand"}
+      32: {name: slime_basin, xy: [145, 37], src: eye, desc: "stone basin brimming with green slime"}
+      33: {name: door_closed_left, xy: [163, 37], src: eye, desc: "wooden door in dark doorway, left half"}
+      34: {name: door_closed_mid, xy: [181, 37], src: eye, desc: "wooden door in dark doorway, middle"}
+      35: {name: door_closed_right, xy: [199, 37], src: eye, desc: "wooden door in dark doorway, right half"}
+      36: {name: stone_steps_left, xy: [1, 55], src: eye, desc: "horizontal grey stone slabs/steps, left"}
+      37: {name: stone_steps_mid, xy: [19, 55], src: eye, desc: "horizontal grey stone slabs/steps, middle"}
+      38: {name: stone_steps_right, xy: [37, 55], src: eye, desc: "horizontal grey stone slabs/steps, right"}
+      39: {name: stone_steps_single, xy: [55, 55], src: eye, desc: "horizontal grey stone slabs, single"}
+      40: {name: wall_bricks_b, xy: [73, 55], src: eye, desc: "grey brick wall variant"}
+      41: {name: spike_trap, xy: [91, 55], src: eye, desc: "raised spikes/portcullis teeth on sand"}
+      42: {name: sand_rocks, xy: [109, 55], src: code, ref: "t::SandRocks", desc: "sand with grey stone flags"}
+      43: {name: floor_grate, xy: [127, 55], src: eye, desc: "barred floor grate on sand"}
+      44: {name: floor_grate_slime, xy: [145, 55], src: eye, desc: "floor grate with green slime"}
+      45: {name: door_single, xy: [163, 55], src: eye, desc: "wooden door in dark doorway, single"}
+      46: {name: door_double_left, xy: [181, 55], src: eye, desc: "double wooden door, left leaf"}
+      47: {name: door_double_right, xy: [199, 55], src: eye, desc: "double wooden door, right leaf"}
+      48: {name: sand, xy: [1, 73], src: code, ref: "t::Sand", desc: "plain sand floor (desert ground fill)"}
+      49: {name: sand_speckle_a, xy: [19, 73], src: code, ref: "t::SandSpeckleA", desc: "sand with light specks"}
+      50: {name: sand_patch, xy: [37, 73], src: eye, desc: "sand with a darker patch"}
+      51: {name: sand_speckle_b, xy: [55, 73], src: code, ref: "t::SandSpeckleB", desc: "sand with specks, variant"}
+      52: {name: sand_edge, xy: [73, 73], src: eye, desc: "sand with a darker edge/curve"}
+      53: {name: sand_c, xy: [91, 73], src: eye, desc: "sand variant"}
+      54: {name: stone_coffin, xy: [109, 73], src: eye, desc: "grey stone box/sarcophagus, closed"}
+      55: {name: stone_altar, xy: [127, 73], src: eye, desc: "grey stone block/altar, dark top"}
+      56: {name: crystal, xy: [145, 73], src: code, ref: "t::Crystal", desc: "grey ore crystal/rock (code calls it Crystal, used in ruins)"}
+      57: {name: brick_pillar_left, xy: [163, 73], src: eye, desc: "grey brick pillar, left/wide"}
+      58: {name: pillar, xy: [181, 73], src: code, ref: "t::Pillar", desc: "grey brick pillar (stacked twice in ruins)"}
+      59: {name: brick_pillar_right, xy: [199, 73], src: eye, desc: "grey brick pillar, right"}
+      60: {name: ui_brackets, xy: [1, 91], src: eye, desc: "white corner brackets (selection cursor)"}
+      61: {name: ui_crate_glyph, xy: [19, 91], src: eye, desc: "white boxed crate glyph"}
+      62: {name: ui_stripes, xy: [37, 91], src: eye, desc: "white diagonal hazard stripes"}
+      63: {name: crate, xy: [55, 91], src: code, ref: "t::Crate", desc: "wooden crate/drawers"}
+      64: {name: grave_cross, xy: [73, 91], src: code, ref: "t::GraveCross", desc: "stone cross grave"}
+      65: {name: grave_stone, xy: [91, 91], src: code, ref: "t::GraveStone", desc: "rounded gravestone"}
+      66: {name: wooden_board, xy: [109, 91], src: eye, desc: "oval wooden board/round table top"}
+      67: {name: ladder_a, xy: [127, 91], src: eye, desc: "wooden ladder segment"}
+      68: {name: ladder_b, xy: [145, 91], src: eye, desc: "wooden ladder segment, variant"}
+      69: {name: frame_top_left, xy: [163, 91], src: eye, desc: "wood+iron frame, top-left (3x3 with 81,83,93-95)"}
+      70: {name: frame_top, xy: [181, 91], src: eye, desc: "wood+iron frame, top edge"}
+      71: {name: frame_top_right, xy: [199, 91], src: eye, desc: "wood+iron frame, top-right"}
+      72: {name: table, xy: [1, 109], src: code, desc: "wooden table (workbench, \"Edits\" table)"}
+      73: {name: stool, xy: [19, 109], src: eye, desc: "small wooden stool"}
+      74: {name: anvil, xy: [37, 109], src: code, desc: "iron anvil (workbench; also icon for Mail armour / Oathbound)"}
+      75: {name: drawers, xy: [55, 109], src: eye, desc: "wooden drawers/cabinet"}
+      76: {name: iron_fence_left, xy: [73, 109], src: eye, desc: "iron bar fence, left"}
+      77: {name: iron_fence_mid, xy: [91, 109], src: eye, desc: "iron bar fence, middle"}
+      78: {name: iron_fence_right, xy: [109, 109], src: eye, desc: "iron bar fence, right"}
+      79: {name: wood_rail_left, xy: [127, 109], src: eye, desc: "wooden rail with iron bands, left"}
+      80: {name: wood_rail_right, xy: [145, 109], src: eye, desc: "wooden rail with iron bands, right"}
+      81: {name: frame_left, xy: [163, 109], src: eye, desc: "wood+iron frame, left side"}
+      82: {name: barrel, xy: [181, 109], src: code, ref: "t::Barrel", desc: "wooden barrel (settlements, merchant, supply barrel foe)"}
+      83: {name: frame_right, xy: [199, 109], src: eye, desc: "wood+iron frame, right side"}
+      84: {name: wizard, xy: [1, 127], src: code, ref: "t::Wizard", desc: "purple-hat wizard: MAGE hero and the expansion heroes' fallback tile"}
+      85: {name: outlaw, xy: [19, 127], src: code, desc: "brown-haired peasant man: outlaw foe, townsfolk"}
+      86: {name: reaper, xy: [37, 127], src: code, desc: "bald bearded man: REAPER hero, merchant (TRADER)"}
+      87: {name: stormcaller, xy: [55, 127], src: code, desc: "horned-helm dwarf: STORMCALLER hero, berserker foe"}
+      88: {name: duelist, xy: [73, 127], src: code, desc: "dark-haired fighter: DUELIST hero, pit fighter foe, townsfolk"}
+      89: {name: chest, xy: [91, 127], src: code, ref: "t::Chest", desc: "small chest: pickup, mimic idle, stash"}
+      90: {name: reliquary, xy: [109, 127], src: code, desc: "large banded chest (campaign Cache RELIQUARY, HUD campaign icon)"}
+      91: {name: chest_open, xy: [127, 127], src: eye, desc: "open chest"}
+      92: {name: mimic, xy: [145, 127], src: code, desc: "chest with teeth and tongue: mimic foe"}
+      93: {name: frame_bottom_left, xy: [163, 127], src: eye, desc: "wood+iron frame, bottom-left"}
+      94: {name: frame_bottom, xy: [181, 127], src: eye, desc: "wood+iron frame, bottom edge"}
+      95: {name: frame_bottom_right, xy: [199, 127], src: eye, desc: "wood+iron frame, bottom-right"}
+      96: {name: knight, xy: [1, 145], src: code, ref: "t::Knight", desc: "steel-helmed knight: knight foe, decoy ally"}
+      97: {name: knight_visor, xy: [19, 145], src: code, desc: "visored knight: KNIGHT hero"}
+      98: {name: deserter, xy: [37, 145], src: code, desc: "brown-haired soldier: deserter foe, townsfolk"}
+      99: {name: priestess, xy: [55, 145], src: code, desc: "blonde woman in purple: PRIESTESS hero"}
+      100: {name: alchemist, xy: [73, 145], src: code, desc: "white-haired elder: ALCHEMIST hero, campaign Elder"}
+      101: {name: coin, xy: [91, 145], src: code, ref: "t::Coin", desc: "coin: magnet pickup, Lodestone, Transmute"}
+      102: {name: shield, xy: [109, 145], src: code, ref: "t::Shield", desc: "round shield: Shield offhand, Iron Buckler, Aegis"}
+      103: {name: dagger, xy: [127, 145], src: code, ref: "t::Dagger", desc: "dagger: Flurry, Orbiting Knives, thrown knife"}
+      104: {name: sword, xy: [145, 145], src: code, ref: "t::Sword", desc: "sword: Moon Blade, Crusader Strike, sweep"}
+      105: {name: cleaver, xy: [163, 145], src: code, desc: "broad curved blade: Whirling Edge icon"}
+      106: {name: longsword, xy: [181, 145], src: code, desc: "long blade: Judgement icon"}
+      107: {name: wooden_sword, xy: [199, 145], src: eye, desc: "wooden practice sword/club"}
+      108: {name: slime, xy: [1, 163], src: code, ref: "t::Slime", desc: "green slime foe"}
+      109: {name: cyclops, xy: [19, 163], src: code, ref: "t::Cyclops", desc: "one-eyed brute: the cyclops boss"}
+      110: {name: demon, xy: [37, 163], src: code, ref: "t::Demon", desc: "red horned demon foe"}
+      111: {name: cultist, xy: [55, 163], src: code, ref: "t::Cultist", desc: "hooded cultist foe; campaign Pilgrim"}
+      112: {name: ranger, xy: [73, 163], src: code, desc: "green-hooded archer: RANGER hero"}
+      113: {name: potion_grey, xy: [91, 163], src: code, ref: "t::PotionGrey", desc: "grey potion: Warding Halo icon"}
+      114: {name: potion_green, xy: [109, 163], src: code, ref: "t::PotionGreen", desc: "green potion: Hourglass Tonic"}
+      115: {name: potion_red, xy: [127, 163], src: code, ref: "t::PotionRed", desc: "red potion: health pickup, Heartroot, draughts"}
+      116: {name: potion_blue, xy: [145, 163], src: code, ref: "t::PotionBlue", desc: "blue potion: Quicksilver"}
+      117: {name: hammer, xy: [163, 163], src: code, ref: "t::Hammer", desc: "war hammer: Ogre Hammer"}
+      118: {name: axe, xy: [181, 163], src: code, ref: "t::Axe", desc: "double-bit axe: Hurled Axe"}
+      119: {name: hatchet, xy: [199, 163], src: eye, desc: "single-bit axe"}
+      120: {name: bat, xy: [1, 181], src: code, ref: "t::Bat", desc: "bat foe"}
+      121: {name: ghost, xy: [19, 181], src: code, ref: "t::Ghost", desc: "ghost foe, ghost ally"}
+      122: {name: spider, xy: [37, 181], src: code, ref: "t::Spider", desc: "spider foe"}
+      123: {name: rat, xy: [55, 181], src: code, ref: "t::Rat", desc: "rat foe"}
+      124: {name: scorpion, xy: [73, 181], src: code, ref: "t::Scorpion", desc: "scorpion foe"}
+      125: {name: vial_grey, xy: [91, 181], src: eye, desc: "grey vial"}
+      126: {name: vial_green, xy: [109, 181], src: code, ref: "t::VialGreen", desc: "green vial: Troll Blood, Soul Siphon"}
+      127: {name: vial_red, xy: [127, 181], src: code, desc: "red vial: Acid Flask icon, fire bomb lit variant"}
+      128: {name: vial_blue, xy: [145, 181], src: code, ref: "t::VialBlue", desc: "blue vial: Nova pickup, Tome offhand, Arcane Mind"}
+      129: {name: staff, xy: [163, 181], src: code, ref: "t::Staff", desc: "purple-gem staff: Arcane Staff"}
+      130: {name: storm_staff, xy: [181, 181], src: code, ref: "t::StormStaff", desc: "blue crooked staff: Storm Rod, Static Field"}
+      131: {name: spear, xy: [199, 181], src: eye, desc: "spear"}
+
+  town:
+    title: "Kenney Tiny Town, unmodified (12x11)"
+    accessor: "atlas::town(i)"
+    origin: [217, 1]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [12, 11]     # cols, rows
+    cells:
+      0: {name: grass, xy: [217, 1], src: code, ref: "tt::Grass", desc: "grass fill"}
+      1: {name: grass_tufts, xy: [235, 1], src: code, ref: "tt::GrassTufts", desc: "grass with tufts"}
+      2: {name: grass_flowers, xy: [253, 1], src: code, ref: "tt::GrassFlowers", desc: "grass with flowers"}
+      3: {name: autumn_crown, xy: [271, 1], src: code, ref: "tt::AutumnCrown, tt::RoofChimney", desc: "orange tree crown (top of autumn oak)"}
+      4: {name: crown, xy: [289, 1], src: code, ref: "tt::Crown", desc: "green tree crown (top of oak)"}
+      5: {name: bush, xy: [307, 1], src: code, ref: "tt::Bush", desc: "round green bush"}
+      6: {name: forest_top_left, xy: [325, 1], src: eye, desc: "dense green forest canopy, 3x3 block, top left"}
+      7: {name: forest_top, xy: [343, 1], src: eye, desc: "dense green forest canopy, 3x3 block, top"}
+      8: {name: forest_top_right, xy: [361, 1], src: eye, desc: "dense green forest canopy, 3x3 block, top right"}
+      9: {name: autumn_forest_top_left, xy: [379, 1], src: eye, desc: "dense autumn forest canopy, 3x3 block, top left"}
+      10: {name: autumn_forest_top, xy: [397, 1], src: eye, desc: "dense autumn forest canopy, 3x3 block, top"}
+      11: {name: autumn_forest_top_right, xy: [415, 1], src: eye, desc: "dense autumn forest canopy, 3x3 block, top right"}
+      12: {name: dirt_top_left, xy: [217, 19], src: code, ref: "tt::DirtTopLeft, tt::RoofEaves", desc: "dirt patch on grass, 3x3 edge set (top left); DirtTopLeft + offset"}
+      13: {name: dirt_top, xy: [235, 19], src: code, desc: "dirt patch on grass, 3x3 edge set (top); DirtTopLeft + offset"}
+      14: {name: dirt_top_right, xy: [253, 19], src: code, desc: "dirt patch on grass, 3x3 edge set (top right); DirtTopLeft + offset"}
+      15: {name: autumn_trunk, xy: [271, 19], src: code, ref: "tt::AutumnTrunk, tt::RoofGable", desc: "autumn oak foot"}
+      16: {name: trunk, xy: [289, 19], src: code, ref: "tt::Trunk", desc: "oak foot"}
+      17: {name: sprouts, xy: [307, 19], src: code, ref: "tt::Sprouts", desc: "green sprouts"}
+      18: {name: forest_left, xy: [325, 19], src: eye, desc: "dense green forest canopy, 3x3 block, left"}
+      19: {name: forest_centre, xy: [343, 19], src: eye, desc: "dense green forest canopy, 3x3 block, centre"}
+      20: {name: forest_right, xy: [361, 19], src: eye, desc: "dense green forest canopy, 3x3 block, right"}
+      21: {name: autumn_forest_left, xy: [379, 19], src: eye, desc: "dense autumn forest canopy, 3x3 block, left"}
+      22: {name: autumn_forest_centre, xy: [397, 19], src: eye, desc: "dense autumn forest canopy, 3x3 block, centre"}
+      23: {name: autumn_forest_right, xy: [415, 19], src: eye, desc: "dense autumn forest canopy, 3x3 block, right"}
+      24: {name: dirt_left, xy: [217, 37], src: code, desc: "dirt patch on grass, 3x3 edge set (left); DirtTopLeft + offset"}
+      25: {name: dirt_centre, xy: [235, 37], src: code, desc: "dirt patch on grass, 3x3 edge set (centre); DirtTopLeft + offset"}
+      26: {name: dirt_right, xy: [253, 37], src: code, desc: "dirt patch on grass, 3x3 edge set (right); DirtTopLeft + offset"}
+      27: {name: autumn_pine, xy: [271, 37], src: code, ref: "tt::AutumnPine", desc: "orange conifer"}
+      28: {name: pine, xy: [289, 37], src: code, ref: "tt::Pine", desc: "green conifer"}
+      29: {name: mushrooms, xy: [307, 37], src: code, ref: "tt::Mushrooms", desc: "red-capped mushrooms"}
+      30: {name: forest_bottom_left, xy: [325, 37], src: eye, desc: "dense green forest canopy, 3x3 block, bottom left"}
+      31: {name: forest_bottom, xy: [343, 37], src: eye, desc: "dense green forest canopy, 3x3 block, bottom"}
+      32: {name: forest_bottom_right, xy: [361, 37], src: eye, desc: "dense green forest canopy, 3x3 block, bottom right"}
+      33: {name: autumn_forest_bottom_left, xy: [379, 37], src: eye, desc: "dense autumn forest canopy, 3x3 block, bottom left"}
+      34: {name: autumn_forest_bottom, xy: [397, 37], src: eye, desc: "dense autumn forest canopy, 3x3 block, bottom"}
+      35: {name: autumn_forest_bottom_right, xy: [415, 37], src: eye, desc: "dense autumn forest canopy, 3x3 block, bottom right"}
+      36: {name: dirt_bottom_left, xy: [217, 55], src: code, desc: "dirt patch on grass, 3x3 edge set (bottom left); DirtTopLeft + offset"}
+      37: {name: dirt_bottom, xy: [235, 55], src: code, desc: "dirt patch on grass, 3x3 edge set (bottom); DirtTopLeft + offset"}
+      38: {name: dirt_bottom_right, xy: [253, 55], src: code, desc: "dirt patch on grass, 3x3 edge set (bottom right); DirtTopLeft + offset"}
+      39: {name: dirt_inner_tl, xy: [271, 55], src: eye, desc: "dirt with grass nub in the top-left corner (inner corner)"}
+      40: {name: dirt_inner_tr, xy: [289, 55], src: eye, desc: "dirt with grass nub top-right (inner corner)"}
+      41: {name: dirt_inner_br, xy: [307, 55], src: eye, desc: "dirt with grass nub bottom-right (inner corner)"}
+      42: {name: dirt_inner_bl, xy: [325, 55], src: eye, desc: "dirt with grass nub bottom-left (inner corner)"}
+      43: {name: path, xy: [343, 55], src: code, ref: "tt::Path", desc: "cobbled path on grass"}
+      44: {name: fence_top_left, xy: [361, 55], src: code, ref: "tt::FenceTopLeft", desc: "fence corner, top-left"}
+      45: {name: fence_top, xy: [379, 55], src: code, ref: "tt::FenceTop", desc: "fence, top run"}
+      46: {name: fence_top_right, xy: [397, 55], src: code, ref: "tt::FenceTopRight", desc: "fence corner, top-right"}
+      47: {name: fence_post_top, xy: [415, 55], src: eye, desc: "vertical fence end, top"}
+      48: {name: grey_roof_ridge_left, xy: [217, 73], src: code, ref: "tt::GreyRoof", desc: "grey slate roof: ridge left"}
+      49: {name: grey_roof_ridge, xy: [235, 73], src: code, desc: "grey slate roof: ridge"}
+      50: {name: grey_roof_ridge_right, xy: [253, 73], src: code, desc: "grey slate roof: ridge right"}
+      51: {name: grey_roof_chimney, xy: [271, 73], src: code, desc: "grey slate roof: chimney"}
+      52: {name: red_roof_ridge_left, xy: [289, 73], src: code, ref: "tt::RedRoof", desc: "red tile roof: ridge left"}
+      53: {name: red_roof_ridge, xy: [307, 73], src: code, desc: "red tile roof: ridge"}
+      54: {name: red_roof_ridge_right, xy: [325, 73], src: code, desc: "red tile roof: ridge right"}
+      55: {name: red_roof_chimney, xy: [343, 73], src: code, desc: "red tile roof: chimney"}
+      56: {name: fence_left, xy: [361, 73], src: code, ref: "tt::FenceLeft", desc: "fence, left side"}
+      57: {name: handcart, xy: [379, 73], src: code, desc: "wooden handcart (world edit CART)"}
+      58: {name: fence_post_mid, xy: [397, 73], src: eye, desc: "vertical fence, middle"}
+      59: {name: fence_right, xy: [415, 73], src: code, ref: "tt::FenceRight", desc: "fence, right side"}
+      60: {name: grey_roof_eaves_left, xy: [217, 91], src: code, desc: "grey slate roof: eaves left"}
+      61: {name: grey_roof_eaves, xy: [235, 91], src: code, desc: "grey slate roof: eaves"}
+      62: {name: grey_roof_eaves_right, xy: [253, 91], src: code, desc: "grey slate roof: eaves right"}
+      63: {name: grey_roof_gable, xy: [271, 91], src: code, desc: "grey slate roof: gable"}
+      64: {name: red_roof_eaves_left, xy: [289, 91], src: code, desc: "red tile roof: eaves left"}
+      65: {name: red_roof_eaves, xy: [307, 91], src: code, desc: "red tile roof: eaves"}
+      66: {name: red_roof_eaves_right, xy: [325, 91], src: code, desc: "red tile roof: eaves right"}
+      67: {name: red_roof_gable, xy: [343, 91], src: code, desc: "red tile roof: gable"}
+      68: {name: fence_bottom_left, xy: [361, 91], src: code, ref: "tt::FenceBottomLeft", desc: "fence corner, bottom-left"}
+      69: {name: fence_bottom, xy: [379, 91], src: eye, desc: "fence, bottom run"}
+      70: {name: fence_bottom_right, xy: [397, 91], src: code, ref: "tt::FenceBottomRight", desc: "fence corner, bottom-right"}
+      71: {name: fence_post_bottom, xy: [415, 91], src: eye, desc: "vertical fence end, bottom"}
+      72: {name: wood_wall_left, xy: [217, 109], src: code, ref: "tt::WoodWallLeft", desc: "timber house wall, left"}
+      73: {name: wood_wall, xy: [235, 109], src: code, ref: "tt::WoodWall", desc: "timber house wall"}
+      74: {name: wood_wall_doorway, xy: [253, 109], src: eye, desc: "timber wall with open doorway"}
+      75: {name: wood_wall_right, xy: [271, 109], src: code, ref: "tt::WoodWallRight", desc: "timber house wall, right"}
+      76: {name: stone_wall_left, xy: [289, 109], src: code, ref: "tt::StoneWallLeft", desc: "stone house wall, left"}
+      77: {name: stone_wall, xy: [307, 109], src: code, ref: "tt::StoneWall", desc: "stone house wall"}
+      78: {name: stone_wall_doorway, xy: [325, 109], src: eye, desc: "stone wall with open arched doorway"}
+      79: {name: stone_wall_right, xy: [343, 109], src: code, ref: "tt::StoneWallRight", desc: "stone house wall, right"}
+      80: {name: fence_end_left, xy: [361, 109], src: code, ref: "tt::FenceEndLeft", desc: "free-standing fence end, left"}
+      81: {name: fence_rail, xy: [379, 109], src: code, ref: "tt::FenceRail", desc: "free-standing fence rail"}
+      82: {name: fence_end_right, xy: [397, 109], src: code, ref: "tt::FenceEndRight", desc: "free-standing fence end, right"}
+      83: {name: sign, xy: [415, 109], src: code, ref: "tt::Sign", desc: "wooden signpost (also Lantern offhand icon)"}
+      84: {name: wood_window, xy: [217, 127], src: code, ref: "tt::WoodWindow", desc: "timber wall with window"}
+      85: {name: wood_door, xy: [235, 127], src: code, ref: "tt::WoodDoor", desc: "timber wall with door"}
+      86: {name: wood_door_wide_left, xy: [253, 127], src: eye, desc: "timber wall, wide door left half"}
+      87: {name: wood_door_wide_right, xy: [271, 127], src: eye, desc: "timber wall, wide door right half"}
+      88: {name: stone_window, xy: [289, 127], src: code, ref: "tt::StoneWindow", desc: "stone wall with window"}
+      89: {name: stone_door, xy: [307, 127], src: code, ref: "tt::StoneDoor", desc: "stone wall with door"}
+      90: {name: stone_door_wide_left, xy: [325, 127], src: eye, desc: "stone wall, wide door left half"}
+      91: {name: stone_door_wide_right, xy: [343, 127], src: eye, desc: "stone wall, wide door right half"}
+      92: {name: well_roof, xy: [361, 127], src: code, ref: "tt::WellRoof", desc: "well roof (stacks over 104)"}
+      93: {name: golden_egg, xy: [379, 127], src: eye, desc: "golden oval (egg? hay bale? nugget?)"}
+      94: {name: beehive, xy: [397, 127], src: code, ref: "tt::Beehive", desc: "beehive"}
+      95: {name: target, xy: [415, 127], src: eye, desc: "archery target"}
+      96: {name: tower_top_left, xy: [217, 145], src: code, ref: "tt::PlazaTopLeft, tt::TowerTop", desc: "crenellated tower/plaza top-left (3x3 slab 96-98,108-110,120-122)"}
+      97: {name: tower_top, xy: [235, 145], src: code, desc: "crenellated tower/plaza top"}
+      98: {name: tower_top_right, xy: [253, 145], src: code, desc: "crenellated tower/plaza top-right"}
+      99: {name: wall_top_left, xy: [271, 145], src: code, ref: "tt::WallTop", desc: "castle wall walk, left"}
+      100: {name: wall_top, xy: [289, 145], src: code, desc: "castle wall walk"}
+      101: {name: wall_top_right, xy: [307, 145], src: code, desc: "castle wall walk, right"}
+      102: {name: wall_top_single, xy: [325, 145], src: eye, desc: "castle wall walk, single piece"}
+      103: {name: tower_door, xy: [343, 145], src: eye, desc: "wooden door/ladder in stone"}
+      104: {name: well, xy: [361, 145], src: code, ref: "tt::Well", desc: "stone well with water"}
+      105: {name: bomb, xy: [379, 145], src: code, ref: "tt::Bomb", desc: "bomb: Fire Bomb, Meteor"}
+      106: {name: log, xy: [397, 145], src: code, ref: "tt::Log", desc: "log (wood material, camp props)"}
+      107: {name: sack, xy: [415, 145], src: code, ref: "tt::Sack", desc: "grain sack"}
+      108: {name: plaza_left, xy: [217, 163], src: code, desc: "raised stone slab, left (tower/plaza middle row)"}
+      109: {name: plaza_centre, xy: [235, 163], src: code, desc: "raised stone slab, centre"}
+      110: {name: plaza_right, xy: [253, 163], src: code, desc: "raised stone slab, right"}
+      111: {name: portcullis, xy: [271, 163], src: code, ref: "tt::Portcullis", desc: "castle gate portcullis, left"}
+      112: {name: portcullis_right, xy: [289, 163], src: code, desc: "castle gate portcullis, right"}
+      113: {name: open_gate, xy: [307, 163], src: code, ref: "tt::ArchLeft, tt::OpenGate", desc: "open stone arch, left (ArchLeft / OpenGate)"}
+      114: {name: open_gate_right, xy: [325, 163], src: code, ref: "tt::ArchRight", desc: "open stone arch, right (ArchRight)"}
+      115: {name: pickaxe, xy: [343, 163], src: eye, desc: "pickaxe"}
+      116: {name: pitchfork, xy: [361, 163], src: eye, desc: "pitchfork"}
+      117: {name: key, xy: [379, 163], src: code, ref: "tt::Key", desc: "key: Lucky Key"}
+      118: {name: bow, xy: [397, 163], src: code, ref: "tt::Bow", desc: "bow: Hunter's Bow, Scattershot"}
+      119: {name: arrow, xy: [415, 163], src: code, ref: "tt::Arrow", desc: "arrow projectile, Piercing Shot"}
+      120: {name: plaza_bottom_left, xy: [217, 181], src: code, desc: "tower/plaza bottom-left"}
+      121: {name: plaza_bottom, xy: [235, 181], src: code, desc: "tower/plaza bottom (watchtower uses TowerTop+25)"}
+      122: {name: plaza_bottom_right, xy: [253, 181], src: code, desc: "tower/plaza bottom-right"}
+      123: {name: castle_side_left, xy: [271, 181], src: eye, desc: "castle wall side edge, left"}
+      124: {name: castle_side_right, xy: [289, 181], src: eye, desc: "castle wall side edge, right"}
+      125: {name: arrow_slit, xy: [307, 181], src: code, ref: "tt::ArrowSlit", desc: "brick wall with arrow slit"}
+      126: {name: bricks, xy: [325, 181], src: code, ref: "tt::Bricks", desc: "stone bricks"}
+      127: {name: axe_single, xy: [343, 181], src: eye, desc: "single-bit axe"}
+      128: {name: mallet, xy: [361, 181], src: eye, desc: "mallet/hammer with red grip"}
+      129: {name: scythe, xy: [379, 181], src: code, ref: "tt::Scythe", desc: "scythe: Reaper's Scythe, reap sweep"}
+      130: {name: bucket, xy: [397, 181], src: eye, desc: "empty wooden bucket"}
+      131: {name: bucket_water, xy: [415, 181], src: eye, desc: "bucket of water"}
+
+  fx:
+    title: "Procedural FX strip (tools/make_assets.py build()); free-size rects, not grid cells"
+    origin: [0, 200]
+    sprites:
+      - {ref: "atlas::Glow", rect: [0, 200, 64, 64], src: code, desc: "banded, dithered radial glow (auras, fire pools)"}
+      - {ref: "atlas::Ring", rect: [64, 200, 64, 64], src: code, desc: "thin ring with soft inner band (smite, shockwaves)"}
+      - {ref: "atlas::Slash", rect: [128, 200, 24, 48], src: code, desc: "\")\"-shaped crescent; mirrored for left swings"}
+      - {ref: "atlas::Shadow", rect: [176, 200, 16, 8], src: code, desc: "two-step oval drop shadow"}
+      - {ref: "atlas::Gems[0]", rect: [197, 201, 7, 7], src: code, desc: "blue experience gem"}
+      - {ref: "atlas::Gems[1]", rect: [209, 201, 7, 7], src: code, desc: "green experience gem"}
+      - {ref: "atlas::Gems[2]", rect: [221, 201, 7, 7], src: code, desc: "red experience gem"}
+      - {ref: "atlas::Bolt", rect: [232, 200, 10, 10], src: code, desc: "glowing projectile core"}
+      - {ref: "atlas::Dot", rect: [244, 200, 8, 8], src: code, desc: "soft round dot"}
+      - {ref: "atlas::White", rect: [197, 213, 2, 2], src: code, desc: "solid white texel (drawn inside a 4x4 white block at 196,212)"}
+      - {ref: "atlas::digit(0..9)", rect: [176, 220, 50, 7], src: code, desc: "3x5 outlined digits in 5x7 cells; digit(d) = {176 + d*5, 220, 5, 7}"}
+      - {ref: "atlas::Light", rect: [256, 200, 64, 64], src: code, desc: "smooth (unbanded) radial glow for the light pass"}
+
+  winter:
+    title: "Tiny Town rows 0-3 with greens frosted (tools/make_winter.py)"
+    accessor: "atlas::winter(i)"
+    origin: [217, 265]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [12, 4]     # cols, rows
+    note: "cell i is town cell i frosted; Snow biome uses dirt 12..38 as snow-over-dirt edges"
+    cells:
+      0: {name: frosted_grass, xy: [217, 265], src: gen, desc: "frosted grass fill"}
+      1: {name: frosted_grass_tufts, xy: [235, 265], src: gen, desc: "frosted grass with tufts"}
+      2: {name: frosted_grass_flowers, xy: [253, 265], src: gen, desc: "frosted grass with flowers"}
+      3: {name: frosted_autumn_crown, xy: [271, 265], src: gen, desc: "frosted orange tree crown (top of autumn oak)"}
+      4: {name: frosted_crown, xy: [289, 265], src: gen, desc: "frosted green tree crown (top of oak)"}
+      5: {name: frosted_bush, xy: [307, 265], src: gen, desc: "frosted round green bush"}
+      6: {name: frosted_forest_top_left, xy: [325, 265], src: eye, desc: "frosted dense green forest canopy, 3x3 block, top left"}
+      7: {name: frosted_forest_top, xy: [343, 265], src: eye, desc: "frosted dense green forest canopy, 3x3 block, top"}
+      8: {name: frosted_forest_top_right, xy: [361, 265], src: eye, desc: "frosted dense green forest canopy, 3x3 block, top right"}
+      9: {name: frosted_autumn_forest_top_left, xy: [379, 265], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, top left"}
+      10: {name: frosted_autumn_forest_top, xy: [397, 265], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, top"}
+      11: {name: frosted_autumn_forest_top_right, xy: [415, 265], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, top right"}
+      12: {name: frosted_dirt_top_left, xy: [217, 283], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (top left); DirtTopLeft + offset"}
+      13: {name: frosted_dirt_top, xy: [235, 283], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (top); DirtTopLeft + offset"}
+      14: {name: frosted_dirt_top_right, xy: [253, 283], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (top right); DirtTopLeft + offset"}
+      15: {name: frosted_autumn_trunk, xy: [271, 283], src: gen, desc: "frosted autumn oak foot"}
+      16: {name: frosted_trunk, xy: [289, 283], src: gen, desc: "frosted oak foot"}
+      17: {name: frosted_sprouts, xy: [307, 283], src: gen, desc: "frosted green sprouts"}
+      18: {name: frosted_forest_left, xy: [325, 283], src: eye, desc: "frosted dense green forest canopy, 3x3 block, left"}
+      19: {name: frosted_forest_centre, xy: [343, 283], src: eye, desc: "frosted dense green forest canopy, 3x3 block, centre"}
+      20: {name: frosted_forest_right, xy: [361, 283], src: eye, desc: "frosted dense green forest canopy, 3x3 block, right"}
+      21: {name: frosted_autumn_forest_left, xy: [379, 283], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, left"}
+      22: {name: frosted_autumn_forest_centre, xy: [397, 283], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, centre"}
+      23: {name: frosted_autumn_forest_right, xy: [415, 283], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, right"}
+      24: {name: frosted_dirt_left, xy: [217, 301], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (left); DirtTopLeft + offset"}
+      25: {name: frosted_dirt_centre, xy: [235, 301], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (centre); DirtTopLeft + offset"}
+      26: {name: frosted_dirt_right, xy: [253, 301], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (right); DirtTopLeft + offset"}
+      27: {name: frosted_autumn_pine, xy: [271, 301], src: gen, desc: "frosted orange conifer"}
+      28: {name: frosted_pine, xy: [289, 301], src: gen, desc: "frosted green conifer"}
+      29: {name: frosted_mushrooms, xy: [307, 301], src: gen, desc: "frosted red-capped mushrooms"}
+      30: {name: frosted_forest_bottom_left, xy: [325, 301], src: eye, desc: "frosted dense green forest canopy, 3x3 block, bottom left"}
+      31: {name: frosted_forest_bottom, xy: [343, 301], src: eye, desc: "frosted dense green forest canopy, 3x3 block, bottom"}
+      32: {name: frosted_forest_bottom_right, xy: [361, 301], src: eye, desc: "frosted dense green forest canopy, 3x3 block, bottom right"}
+      33: {name: frosted_autumn_forest_bottom_left, xy: [379, 301], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, bottom left"}
+      34: {name: frosted_autumn_forest_bottom, xy: [397, 301], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, bottom"}
+      35: {name: frosted_autumn_forest_bottom_right, xy: [415, 301], src: eye, desc: "frosted dense autumn forest canopy, 3x3 block, bottom right"}
+      36: {name: frosted_dirt_bottom_left, xy: [217, 319], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (bottom left); DirtTopLeft + offset"}
+      37: {name: frosted_dirt_bottom, xy: [235, 319], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (bottom); DirtTopLeft + offset"}
+      38: {name: frosted_dirt_bottom_right, xy: [253, 319], src: gen, desc: "frosted dirt patch on grass, 3x3 edge set (bottom right); DirtTopLeft + offset"}
+      39: {name: frosted_dirt_inner_tl, xy: [271, 319], src: eye, desc: "frosted dirt with grass nub in the top-left corner (inner corner)"}
+      40: {name: frosted_dirt_inner_tr, xy: [289, 319], src: eye, desc: "frosted dirt with grass nub top-right (inner corner)"}
+      41: {name: frosted_dirt_inner_br, xy: [307, 319], src: eye, desc: "frosted dirt with grass nub bottom-right (inner corner)"}
+      42: {name: frosted_dirt_inner_bl, xy: [325, 319], src: eye, desc: "frosted dirt with grass nub bottom-left (inner corner)"}
+      43: {name: frosted_path, xy: [343, 319], src: gen, desc: "frosted cobbled path on grass"}
+      44: {name: frosted_fence_top_left, xy: [361, 319], src: gen, desc: "frosted fence corner, top-left"}
+      45: {name: frosted_fence_top, xy: [379, 319], src: gen, desc: "frosted fence, top run"}
+      46: {name: frosted_fence_top_right, xy: [397, 319], src: gen, desc: "frosted fence corner, top-right"}
+      47: {name: frosted_fence_post_top, xy: [415, 319], src: eye, desc: "frosted vertical fence end, top"}
+
+  snow_rim:
+    title: "Snow over dirt 3x3 edge set (tools/make_winter.py)"
+    accessor: "atlas::snowRim(offset)"
+    origin: [217, 337]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [12, 3]     # cols, rows
+    note: "offset = row*12 + col for the 3x3; the remaining 27 cells of these rows are empty"
+    cells:
+      0: {name: snow_rim_top_left, xy: [217, 337], src: gen}
+      1: {name: snow_rim_top, xy: [235, 337], src: gen}
+      2: {name: snow_rim_top_right, xy: [253, 337], src: gen}
+      12: {name: snow_rim_left, xy: [217, 355], src: gen}
+      13: {name: snow_rim_centre, xy: [235, 355], src: gen}
+      14: {name: snow_rim_right, xy: [253, 355], src: gen}
+      24: {name: snow_rim_bottom_left, xy: [217, 373], src: gen}
+      25: {name: snow_rim_bottom, xy: [235, 373], src: gen}
+      26: {name: snow_rim_bottom_right, xy: [253, 373], src: gen}
+
+  frontier:
+    title: "Badlands/taiga flora, standing stones, mine, frontier foes (tools/make_frontier.py)"
+    accessor: "atlas::frontier(i)"
+    origin: [1, 271]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [12, 4]     # cols, rows
+    note: "band is declared 12x11 in atlas_layout.py; rows 4-10 are empty. Tall sprites: High = top half, Low = 12 below"
+    cells:
+      0: {name: mesa_high, xy: [1, 271], src: code, ref: "fr::MesaHigh", desc: "mesa (top half)"}
+      1: {name: hoodoo_high, xy: [19, 271], src: code, ref: "fr::HoodooHigh", desc: "hoodoo (top half)"}
+      2: {name: juniper_high, xy: [37, 271], src: code, ref: "fr::JuniperHigh", desc: "juniper (top half)"}
+      3: {name: taiga_spruce_high, xy: [55, 271], src: code, ref: "fr::TaigaSpruceHigh", desc: "taiga spruce (top half)"}
+      4: {name: larch_high, xy: [73, 271], src: code, ref: "fr::LarchHigh", desc: "larch (top half)"}
+      5: {name: rune_stone_high, xy: [91, 271], src: code, ref: "fr::RuneStoneHigh", desc: "rune stone (top half)"}
+      6: {name: mine_left_high, xy: [109, 271], src: code, ref: "fr::MineLeftHigh", desc: "mine entrance, left (top half)"}
+      7: {name: mine_mouth_high, xy: [127, 271], src: code, ref: "fr::MineMouthHigh", desc: "mine entrance, mouth (top half)"}
+      8: {name: mine_right_high, xy: [145, 271], src: code, ref: "fr::MineRightHigh", desc: "mine entrance, right (top half)"}
+      9: {name: ocotillo, xy: [163, 271], src: code, ref: "fr::Ocotillo", desc: "ocotillo"}
+      10: {name: red_rocks, xy: [181, 271], src: code, ref: "fr::RedRocks", desc: "red rocks"}
+      11: {name: ribs, xy: [199, 271], src: code, ref: "fr::Ribs", desc: "ribs"}
+      12: {name: mesa_low, xy: [1, 289], src: code, ref: "fr::MesaLow", desc: "mesa (bottom half)"}
+      13: {name: hoodoo_low, xy: [19, 289], src: code, ref: "fr::HoodooLow", desc: "hoodoo (bottom half)"}
+      14: {name: juniper_low, xy: [37, 289], src: code, ref: "fr::JuniperLow", desc: "juniper (bottom half)"}
+      15: {name: taiga_spruce_low, xy: [55, 289], src: code, ref: "fr::TaigaSpruceLow", desc: "taiga spruce (bottom half)"}
+      16: {name: larch_low, xy: [73, 289], src: code, ref: "fr::LarchLow", desc: "larch (bottom half)"}
+      17: {name: rune_stone_low, xy: [91, 289], src: code, ref: "fr::RuneStoneLow", desc: "rune stone (bottom half)"}
+      18: {name: mine_left_low, xy: [109, 289], src: code, ref: "fr::MineLeftLow", desc: "mine entrance, left (bottom half)"}
+      19: {name: mine_mouth_low, xy: [127, 289], src: code, ref: "fr::MineMouthLow", desc: "mine entrance, mouth (bottom half)"}
+      20: {name: mine_right_low, xy: [145, 289], src: code, ref: "fr::MineRightLow", desc: "mine entrance, right (bottom half)"}
+      21: {name: clay_tuft, xy: [163, 289], src: code, ref: "fr::ClayTuft", desc: "clay tuft"}
+      22: {name: lingonberry, xy: [181, 289], src: code, ref: "fr::Lingonberry", desc: "lingonberry"}
+      23: {name: lichen_rock, xy: [199, 289], src: code, ref: "fr::LichenRock", desc: "lichen rock"}
+      24: {name: cotton_grass, xy: [1, 307], src: code, ref: "fr::CottonGrass", desc: "cotton grass"}
+      25: {name: needle_tuft, xy: [19, 307], src: code, ref: "fr::NeedleTuft", desc: "needle tuft"}
+      26: {name: shelf_stump, xy: [37, 307], src: code, ref: "fr::ShelfStump", desc: "shelf stump"}
+      27: {name: toppled_stone, xy: [55, 307], src: code, ref: "fr::ToppledStone", desc: "toppled stone"}
+      28: {name: altar, xy: [73, 307], src: code, ref: "fr::Altar", desc: "altar"}
+      29: {name: mine_cart, xy: [91, 307], src: code, ref: "fr::MineCart", desc: "mine cart"}
+      30: {name: ore_pile, xy: [109, 307], src: code, ref: "fr::OrePile", desc: "ore pile"}
+      31: {name: lantern_post, xy: [127, 307], src: code, ref: "fr::LanternPost", desc: "lantern post"}
+      32: {name: timber, xy: [145, 307], src: code, ref: "fr::Timber", desc: "timber"}
+      33: {name: rail_across, xy: [163, 307], src: code, ref: "fr::RailAcross", desc: "mine rail, horizontal (ground tile)"}
+      34: {name: rail_down, xy: [181, 307], src: code, ref: "fr::RailDown", desc: "mine rail, vertical (ground tile)"}
+      35: {name: wolf, xy: [199, 307], src: code, ref: "fr::Wolf", desc: "wolf"}
+      36: {name: alpha, xy: [1, 325], src: code, ref: "fr::Alpha", desc: "alpha wolf"}
+      37: {name: burrower, xy: [19, 325], src: code, ref: "fr::Burrower", desc: "burrower"}
+      38: {name: mound, xy: [37, 325], src: code, ref: "fr::Mound", desc: "burrower dirt mound"}
+      39: {name: necromancer, xy: [55, 325], src: code, ref: "fr::Necromancer", desc: "necromancer"}
+      40: {name: skeleton, xy: [73, 325], src: code, ref: "fr::Skeleton", desc: "skeleton"}
+      41: {name: thief, xy: [91, 325], src: code, ref: "fr::Thief", desc: "treasure thief foe"}
+      42: {name: chakram, xy: [109, 325], src: code, ref: "fr::Chakram", desc: "chakram disc"}
+      43: {name: glaive, xy: [127, 325], src: code, ref: "fr::Glaive", desc: "glaive blade"}
+      44: {name: censer, xy: [145, 325], src: code, ref: "fr::Censer", desc: "Censer weapon icon"}
+      45: {empty: true, xy: [163, 325]}
+      46: {empty: true, xy: [181, 325]}
+      47: {empty: true, xy: [199, 325]}
+
+  flora:
+    title: "Recoloured Tiny Town flora + desert (make_flora.py, make_desert.py) and three 3x3 rim sets"
+    accessor: "atlas::flora(i) / mudRim / sandRim / waterRim"
+    origin: [217, 391]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [12, 5]     # cols, rows
+    note: "rows 2-4: mudRim cols 0-2, sandRim cols 3-5, waterRim cols 6-8 (offset = row*12+col); cols 9-11 empty"
+    cells:
+      0: {name: pink_low, xy: [217, 391], src: code, ref: "fl::PinkLow", desc: "pink blossom tree foot"}
+      1: {name: pink_high, xy: [235, 391], src: code, ref: "fl::PinkHigh", desc: "pink blossom crown"}
+      2: {name: white_low, xy: [253, 391], src: code, ref: "fl::WhiteLow", desc: "white blossom foot"}
+      3: {name: white_high, xy: [271, 391], src: code, ref: "fl::WhiteHigh", desc: "white blossom crown"}
+      4: {name: lilac, xy: [289, 391], src: code, ref: "fl::Lilac", desc: "lilac bush"}
+      5: {name: berries, xy: [307, 391], src: code, ref: "fl::Berries", desc: "berry bush"}
+      6: {name: straw, xy: [325, 391], src: code, ref: "fl::Straw", desc: "dry straw bush"}
+      7: {name: dead_pine, xy: [343, 391], src: code, ref: "fl::DeadPine", desc: "dead pine"}
+      8: {name: spirit_pine, xy: [361, 391], src: code, ref: "fl::SpiritPine", desc: "glowing teal spirit pine"}
+      9: {name: moss_pine, xy: [379, 391], src: code, ref: "fl::MossPine", desc: "moss pine"}
+      10: {name: blue_shrooms, xy: [397, 391], src: code, ref: "fl::BlueShrooms", desc: "glowing blue mushrooms"}
+      11: {name: petals, xy: [415, 391], src: code, ref: "fl::Petals", desc: "pink flower ground"}
+      12: {name: petal_tufts, xy: [217, 409], src: code, ref: "fl::PetalTufts", desc: "fallen petals ground"}
+      13: {name: willow_low, xy: [235, 409], src: code, ref: "fl::WillowLow", desc: "willow foot"}
+      14: {name: willow_high, xy: [253, 409], src: code, ref: "fl::WillowHigh", desc: "willow crown"}
+      15: {name: reeds, xy: [271, 409], src: code, ref: "fl::Reeds", desc: "reeds"}
+      16: {name: toadstools, xy: [289, 409], src: code, ref: "fl::Toadstools", desc: "glowing purple toadstools"}
+      17: {name: sand, xy: [307, 409], src: code, ref: "fl::Sand", desc: "desert sand fill"}
+      18: {name: sand_speck, xy: [325, 409], src: code, ref: "fl::SandSpeck", desc: "sand with specks"}
+      19: {name: cactus, xy: [343, 409], src: code, ref: "fl::Cactus", desc: "saguaro cactus"}
+      20: {name: palm_low, xy: [361, 409], src: code, ref: "fl::PalmLow", desc: "palm foot"}
+      21: {name: palm_high, xy: [379, 409], src: code, ref: "fl::PalmHigh", desc: "palm crown"}
+      22: {name: sand_pebbles, xy: [397, 409], src: code, ref: "fl::SandPebbles", desc: "sand with pebbles"}
+      23: {name: barrel_cactus, xy: [415, 409], src: code, ref: "fl::BarrelCactus", desc: "barrel cactus with flower"}
+      24: {name: mud_rim_top_left, xy: [217, 427], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      27: {name: sand_rim_top_left, xy: [271, 427], src: code, desc: "sand over water/dirt (Desert)"}
+      30: {name: water_rim_top_left, xy: [325, 427], src: code, desc: "lake water edge on grass"}
+      25: {name: mud_rim_top, xy: [235, 427], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      28: {name: sand_rim_top, xy: [289, 427], src: code, desc: "sand over water/dirt (Desert)"}
+      31: {name: water_rim_top, xy: [343, 427], src: code, desc: "lake water edge on grass"}
+      26: {name: mud_rim_top_right, xy: [253, 427], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      29: {name: sand_rim_top_right, xy: [307, 427], src: code, desc: "sand over water/dirt (Desert)"}
+      32: {name: water_rim_top_right, xy: [361, 427], src: code, desc: "lake water edge on grass"}
+      36: {name: mud_rim_left, xy: [217, 445], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      39: {name: sand_rim_left, xy: [271, 445], src: code, desc: "sand over water/dirt (Desert)"}
+      42: {name: water_rim_left, xy: [325, 445], src: code, desc: "lake water edge on grass"}
+      37: {name: mud_rim_centre, xy: [235, 445], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      40: {name: sand_rim_centre, xy: [289, 445], src: code, desc: "sand over water/dirt (Desert)"}
+      43: {name: water_rim_centre, xy: [343, 445], src: code, desc: "lake water edge on grass"}
+      38: {name: mud_rim_right, xy: [253, 445], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      41: {name: sand_rim_right, xy: [307, 445], src: code, desc: "sand over water/dirt (Desert)"}
+      44: {name: water_rim_right, xy: [361, 445], src: code, desc: "lake water edge on grass"}
+      48: {name: mud_rim_bottom_left, xy: [217, 463], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      51: {name: sand_rim_bottom_left, xy: [271, 463], src: code, desc: "sand over water/dirt (Desert)"}
+      54: {name: water_rim_bottom_left, xy: [325, 463], src: code, desc: "lake water edge on grass"}
+      49: {name: mud_rim_bottom, xy: [235, 463], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      52: {name: sand_rim_bottom, xy: [289, 463], src: code, desc: "sand over water/dirt (Desert)"}
+      55: {name: water_rim_bottom, xy: [343, 463], src: code, desc: "lake water edge on grass"}
+      50: {name: mud_rim_bottom_right, xy: [253, 463], src: code, desc: "mud over grass (Jungle, Mire dirt rims)"}
+      53: {name: sand_rim_bottom_right, xy: [307, 463], src: code, desc: "sand over water/dirt (Desert)"}
+      56: {name: water_rim_bottom_right, xy: [361, 463], src: code, desc: "lake water edge on grass"}
+
+  kit:
+    title: "Procedural trees, plants, rocks (tools/make_sprites.py)"
+    accessor: "atlas::kit(i)"
+    origin: [1, 481]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 4]     # cols, rows
+    note: "two-cell trees: High is the top half, Low sits 24 cells below it"
+    cells:
+      0: {name: birch_high, xy: [1, 481], src: code, ref: "kt::BirchHigh"}
+      1: {name: frost_birch_high, xy: [19, 481], src: code, ref: "kt::FrostBirchHigh"}
+      2: {name: cypress_high, xy: [37, 481], src: code, ref: "kt::CypressHigh"}
+      3: {name: acacia_high, xy: [55, 481], src: code, ref: "kt::AcaciaHigh"}
+      4: {name: baobab_high, xy: [73, 481], src: code, ref: "kt::BaobabHigh"}
+      5: {name: mushroom_tree_high, xy: [91, 481], src: code, ref: "kt::MushroomTreeHigh"}
+      6: {name: jungle_tree_high, xy: [109, 481], src: code, ref: "kt::JungleTreeHigh"}
+      7: {name: charred_tree_high, xy: [127, 481], src: code, ref: "kt::CharredTreeHigh"}
+      8: {name: crystal_spire_high, xy: [145, 481], src: code, ref: "kt::CrystalSpireHigh"}
+      9: {name: fir_high, xy: [163, 481], src: code, ref: "kt::FirHigh"}
+      10: {name: snowy_fir_high, xy: [181, 481], src: code, ref: "kt::SnowyFirHigh"}
+      11: {name: fern, xy: [199, 481], src: code, ref: "kt::Fern"}
+      12: {name: frosted_fern, xy: [217, 481], src: code, ref: "kt::FrostedFern"}
+      13: {name: tall_grass, xy: [235, 481], src: code, ref: "kt::TallGrass"}
+      14: {name: dry_grass, xy: [253, 481], src: code, ref: "kt::DryGrass"}
+      15: {name: heather, xy: [271, 481], src: code, ref: "kt::Heather"}
+      16: {name: thornbush, xy: [289, 481], src: code, ref: "kt::Thornbush"}
+      17: {name: sunflower, xy: [307, 481], src: code, ref: "kt::Sunflower"}
+      18: {name: tulips, xy: [325, 481], src: code, ref: "kt::Tulips"}
+      19: {name: lavender, xy: [343, 481], src: code, ref: "kt::Lavender"}
+      20: {name: wheat, xy: [361, 481], src: code, ref: "kt::Wheat"}
+      21: {name: cattails, xy: [379, 481], src: code, ref: "kt::Cattails"}
+      22: {name: daisies, xy: [397, 481], src: code, ref: "kt::Daisies"}
+      23: {name: boulder, xy: [415, 481], src: code, ref: "kt::Boulder"}
+      24: {name: birch_low, xy: [1, 499], src: code, ref: "kt::BirchLow"}
+      25: {name: frost_birch_low, xy: [19, 499], src: code, ref: "kt::FrostBirchLow"}
+      26: {name: cypress_low, xy: [37, 499], src: code, ref: "kt::CypressLow"}
+      27: {name: acacia_low, xy: [55, 499], src: code, ref: "kt::AcaciaLow"}
+      28: {name: baobab_low, xy: [73, 499], src: code, ref: "kt::BaobabLow"}
+      29: {name: mushroom_tree_low, xy: [91, 499], src: code, ref: "kt::MushroomTreeLow"}
+      30: {name: jungle_tree_low, xy: [109, 499], src: code, ref: "kt::JungleTreeLow"}
+      31: {name: charred_tree_low, xy: [127, 499], src: code, ref: "kt::CharredTreeLow"}
+      32: {name: crystal_spire_low, xy: [145, 499], src: code, ref: "kt::CrystalSpireLow"}
+      33: {name: fir_low, xy: [163, 499], src: code, ref: "kt::FirLow"}
+      34: {name: snowy_fir_low, xy: [181, 499], src: code, ref: "kt::SnowyFirLow"}
+      35: {name: mossy_boulder, xy: [199, 499], src: code, ref: "kt::MossyBoulder"}
+      36: {name: snowy_boulder, xy: [217, 499], src: code, ref: "kt::SnowyBoulder"}
+      37: {name: sandstone, xy: [235, 499], src: code, ref: "kt::Sandstone"}
+      38: {name: ice_chunk, xy: [253, 499], src: code, ref: "kt::IceChunk"}
+      39: {name: obsidian, xy: [271, 499], src: code, ref: "kt::Obsidian"}
+      40: {name: pebbles, xy: [289, 499], src: code, ref: "kt::Pebbles"}
+      41: {name: sand_tuft, xy: [307, 499], src: code, ref: "kt::SandTuft"}
+      42: {name: frost_tuft, xy: [325, 499], src: code, ref: "kt::FrostTuft"}
+      43: {name: ash_tuft, xy: [343, 499], src: code, ref: "kt::AshTuft"}
+      44: {name: bog_tuft, xy: [361, 499], src: code, ref: "kt::BogTuft"}
+      45: {name: bloom_tuft, xy: [379, 499], src: code, ref: "kt::BloomTuft"}
+      46: {empty: true, xy: [397, 499]}
+      47: {empty: true, xy: [415, 499]}
+      48: {name: apple_tree_high, xy: [1, 517], src: code, ref: "kt::AppleTreeHigh"}
+      49: {name: autumn_birch_high, xy: [19, 517], src: code, ref: "kt::AutumnBirchHigh"}
+      50: {name: dead_oak_high, xy: [37, 517], src: code, ref: "kt::DeadOakHigh"}
+      51: {name: weeping_willow_high, xy: [55, 517], src: code, ref: "kt::WeepingWillowHigh"}
+      52: {name: bamboo_high, xy: [73, 517], src: code, ref: "kt::BambooHigh"}
+      53: {name: redwood_high, xy: [91, 517], src: code, ref: "kt::RedwoodHigh"}
+      54: {name: tree_fern_high, xy: [109, 517], src: code, ref: "kt::TreeFernHigh"}
+      55: {name: blue_spruce_high, xy: [127, 517], src: code, ref: "kt::BlueSpruceHigh"}
+      56: {name: joshua_tree_high, xy: [145, 517], src: code, ref: "kt::JoshuaTreeHigh"}
+      57: {name: roses, xy: [163, 517], src: code, ref: "kt::Roses"}
+      58: {name: blueberries, xy: [181, 517], src: code, ref: "kt::Blueberries"}
+      59: {name: hydrangea, xy: [199, 517], src: code, ref: "kt::Hydrangea"}
+      60: {name: holly, xy: [217, 517], src: code, ref: "kt::Holly"}
+      61: {name: pumpkins, xy: [235, 517], src: code, ref: "kt::Pumpkins"}
+      62: {name: brown_mushrooms, xy: [253, 517], src: code, ref: "kt::BrownMushrooms"}
+      63: {name: stump, xy: [271, 517], src: code, ref: "kt::Stump"}
+      64: {name: mossy_log, xy: [289, 517], src: code, ref: "kt::MossyLog"}
+      65: {name: poppies, xy: [307, 517], src: code, ref: "kt::Poppies"}
+      66: {name: cornflowers, xy: [325, 517], src: code, ref: "kt::Cornflowers"}
+      67: {name: bluebells, xy: [343, 517], src: code, ref: "kt::Bluebells"}
+      68: {name: bracken, xy: [361, 517], src: code, ref: "kt::Bracken"}
+      69: {name: clover, xy: [379, 517], src: code, ref: "kt::Clover"}
+      70: {name: menhir, xy: [397, 517], src: code, ref: "kt::Menhir"}
+      71: {name: rock_pile, xy: [415, 517], src: code, ref: "kt::RockPile"}
+      72: {name: apple_tree_low, xy: [1, 535], src: code, ref: "kt::AppleTreeLow"}
+      73: {name: autumn_birch_low, xy: [19, 535], src: code, ref: "kt::AutumnBirchLow"}
+      74: {name: dead_oak_low, xy: [37, 535], src: code, ref: "kt::DeadOakLow"}
+      75: {name: weeping_willow_low, xy: [55, 535], src: code, ref: "kt::WeepingWillowLow"}
+      76: {name: bamboo_low, xy: [73, 535], src: code, ref: "kt::BambooLow"}
+      77: {name: redwood_low, xy: [91, 535], src: code, ref: "kt::RedwoodLow"}
+      78: {name: tree_fern_low, xy: [109, 535], src: code, ref: "kt::TreeFernLow"}
+      79: {name: blue_spruce_low, xy: [127, 535], src: code, ref: "kt::BlueSpruceLow"}
+      80: {name: joshua_tree_low, xy: [145, 535], src: code, ref: "kt::JoshuaTreeLow"}
+      81: {name: amethyst, xy: [163, 535], src: code, ref: "kt::Amethyst"}
+      82: {name: skull, xy: [181, 535], src: code, ref: "kt::Skull"}
+      83: {name: driftwood, xy: [199, 535], src: code, ref: "kt::Driftwood"}
+      84: {name: prickly_pear, xy: [217, 535], src: code, ref: "kt::PricklyPear"}
+      85: {name: agave, xy: [235, 535], src: code, ref: "kt::Agave"}
+      86: {name: tumbleweed, xy: [253, 535], src: code, ref: "kt::Tumbleweed"}
+      87: {name: snowdrops, xy: [271, 535], src: code, ref: "kt::Snowdrops"}
+      88: {name: frozen_shrub, xy: [289, 535], src: code, ref: "kt::FrozenShrub"}
+      89: {name: glowshrooms, xy: [307, 535], src: code, ref: "kt::Glowshrooms"}
+      90: {name: ivy, xy: [325, 535], src: code, ref: "kt::Ivy"}
+      91: {name: sage, xy: [343, 535], src: code, ref: "kt::Sage"}
+      92: {name: calla_lilies, xy: [361, 535], src: code, ref: "kt::CallaLilies"}
+      93: {name: strawberries, xy: [379, 535], src: code, ref: "kt::Strawberries"}
+      94: {name: pampas, xy: [397, 535], src: code, ref: "kt::Pampas"}
+      95: {name: stone_ring, xy: [415, 535], src: code, ref: "kt::StoneRing"}
+
+  grounds:
+    title: "Biome carpet grounds (tools/make_grounds.py)"
+    accessor: "atlas::carpet(set, cell)"
+    origin: [1, 553]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 4]     # cols, rows
+    note: "set s at row s/2, cols (s%2)*12..+11. cell 0 fill, 1 tufted fill, 2 accented fill, 3-11 dirt-edge 3x3. Lava has no fill cells."
+    cells:
+      0: {name: straw_fill, xy: [1, 553], src: code, ref: "cp::Straw"}
+      1: {name: straw_fill_tufts, xy: [19, 553], src: code}
+      2: {name: straw_fill_accent, xy: [37, 553], src: code}
+      3: {name: straw_dirt_edge_top_left, xy: [55, 553], src: code}
+      4: {name: straw_dirt_edge_top, xy: [73, 553], src: code}
+      5: {name: straw_dirt_edge_top_right, xy: [91, 553], src: code}
+      6: {name: straw_dirt_edge_left, xy: [109, 553], src: code}
+      7: {name: straw_dirt_edge_centre, xy: [127, 553], src: code}
+      8: {name: straw_dirt_edge_right, xy: [145, 553], src: code}
+      9: {name: straw_dirt_edge_bottom_left, xy: [163, 553], src: code}
+      10: {name: straw_dirt_edge_bottom, xy: [181, 553], src: code}
+      11: {name: straw_dirt_edge_bottom_right, xy: [199, 553], src: code}
+      12: {name: ash_fill, xy: [217, 553], src: code, ref: "cp::Ash"}
+      13: {name: ash_fill_tufts, xy: [235, 553], src: code}
+      14: {name: ash_fill_accent, xy: [253, 553], src: code}
+      15: {name: ash_dirt_edge_top_left, xy: [271, 553], src: code}
+      16: {name: ash_dirt_edge_top, xy: [289, 553], src: code}
+      17: {name: ash_dirt_edge_top_right, xy: [307, 553], src: code}
+      18: {name: ash_dirt_edge_left, xy: [325, 553], src: code}
+      19: {name: ash_dirt_edge_centre, xy: [343, 553], src: code}
+      20: {name: ash_dirt_edge_right, xy: [361, 553], src: code}
+      21: {name: ash_dirt_edge_bottom_left, xy: [379, 553], src: code}
+      22: {name: ash_dirt_edge_bottom, xy: [397, 553], src: code}
+      23: {name: ash_dirt_edge_bottom_right, xy: [415, 553], src: code}
+      24: {name: crystal_moss_fill, xy: [1, 571], src: code, ref: "cp::CrystalMoss"}
+      25: {name: crystal_moss_fill_tufts, xy: [19, 571], src: code}
+      26: {name: crystal_moss_fill_accent, xy: [37, 571], src: code}
+      27: {name: crystal_moss_dirt_edge_top_left, xy: [55, 571], src: code}
+      28: {name: crystal_moss_dirt_edge_top, xy: [73, 571], src: code}
+      29: {name: crystal_moss_dirt_edge_top_right, xy: [91, 571], src: code}
+      30: {name: crystal_moss_dirt_edge_left, xy: [109, 571], src: code}
+      31: {name: crystal_moss_dirt_edge_centre, xy: [127, 571], src: code}
+      32: {name: crystal_moss_dirt_edge_right, xy: [145, 571], src: code}
+      33: {name: crystal_moss_dirt_edge_bottom_left, xy: [163, 571], src: code}
+      34: {name: crystal_moss_dirt_edge_bottom, xy: [181, 571], src: code}
+      35: {name: crystal_moss_dirt_edge_bottom_right, xy: [199, 571], src: code}
+      36: {name: mycelium_fill, xy: [217, 571], src: code, ref: "cp::Mycelium"}
+      37: {name: mycelium_fill_tufts, xy: [235, 571], src: code}
+      38: {name: mycelium_fill_accent, xy: [253, 571], src: code}
+      39: {name: mycelium_dirt_edge_top_left, xy: [271, 571], src: code}
+      40: {name: mycelium_dirt_edge_top, xy: [289, 571], src: code}
+      41: {name: mycelium_dirt_edge_top_right, xy: [307, 571], src: code}
+      42: {name: mycelium_dirt_edge_left, xy: [325, 571], src: code}
+      43: {name: mycelium_dirt_edge_centre, xy: [343, 571], src: code}
+      44: {name: mycelium_dirt_edge_right, xy: [361, 571], src: code}
+      45: {name: mycelium_dirt_edge_bottom_left, xy: [379, 571], src: code}
+      46: {name: mycelium_dirt_edge_bottom, xy: [397, 571], src: code}
+      47: {name: mycelium_dirt_edge_bottom_right, xy: [415, 571], src: code}
+      48: {empty: true, xy: [1, 589]}
+      49: {empty: true, xy: [19, 589]}
+      50: {empty: true, xy: [37, 589]}
+      51: {name: lava_dirt_edge_top_left, xy: [55, 589], src: code}
+      52: {name: lava_dirt_edge_top, xy: [73, 589], src: code}
+      53: {name: lava_dirt_edge_top_right, xy: [91, 589], src: code}
+      54: {name: lava_dirt_edge_left, xy: [109, 589], src: code}
+      55: {name: lava_dirt_edge_centre, xy: [127, 589], src: code}
+      56: {name: lava_dirt_edge_right, xy: [145, 589], src: code}
+      57: {name: lava_dirt_edge_bottom_left, xy: [163, 589], src: code}
+      58: {name: lava_dirt_edge_bottom, xy: [181, 589], src: code}
+      59: {name: lava_dirt_edge_bottom_right, xy: [199, 589], src: code}
+      60: {name: red_clay_fill, xy: [217, 589], src: code, ref: "cp::RedClay"}
+      61: {name: red_clay_fill_tufts, xy: [235, 589], src: code}
+      62: {name: red_clay_fill_accent, xy: [253, 589], src: code}
+      63: {name: red_clay_dirt_edge_top_left, xy: [271, 589], src: code}
+      64: {name: red_clay_dirt_edge_top, xy: [289, 589], src: code}
+      65: {name: red_clay_dirt_edge_top_right, xy: [307, 589], src: code}
+      66: {name: red_clay_dirt_edge_left, xy: [325, 589], src: code}
+      67: {name: red_clay_dirt_edge_centre, xy: [343, 589], src: code}
+      68: {name: red_clay_dirt_edge_right, xy: [361, 589], src: code}
+      69: {name: red_clay_dirt_edge_bottom_left, xy: [379, 589], src: code}
+      70: {name: red_clay_dirt_edge_bottom, xy: [397, 589], src: code}
+      71: {name: red_clay_dirt_edge_bottom_right, xy: [415, 589], src: code}
+      72: {name: needles_fill, xy: [1, 607], src: code, ref: "cp::Needles"}
+      73: {name: needles_fill_tufts, xy: [19, 607], src: code}
+      74: {name: needles_fill_accent, xy: [37, 607], src: code}
+      75: {name: needles_dirt_edge_top_left, xy: [55, 607], src: code}
+      76: {name: needles_dirt_edge_top, xy: [73, 607], src: code}
+      77: {name: needles_dirt_edge_top_right, xy: [91, 607], src: code}
+      78: {name: needles_dirt_edge_left, xy: [109, 607], src: code}
+      79: {name: needles_dirt_edge_centre, xy: [127, 607], src: code}
+      80: {name: needles_dirt_edge_right, xy: [145, 607], src: code}
+      81: {name: needles_dirt_edge_bottom_left, xy: [163, 607], src: code}
+      82: {name: needles_dirt_edge_bottom, xy: [181, 607], src: code}
+      83: {name: needles_dirt_edge_bottom_right, xy: [199, 607], src: code}
+
+  expansion:
+    title: "Expansion actors (tools/make_expansion.py)"
+    accessor: "atlas::expansion(i)"
+    origin: [1, 625]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 2]     # cols, rows
+    note: "0-9 monsters, 10-13 heroes, 14-21 weapons, 22-29 relics, 30-33 shrine symbols, 34-47 reserved \"effects\""
+    cells:
+      0: {name: mire_leech, xy: [1, 625], src: gen, ref: "ex::MireLeech", desc: "expansion foe"}
+      1: {name: bog_lantern, xy: [19, 625], src: gen, desc: "expansion foe"}
+      2: {name: glass_mantis, xy: [37, 625], src: gen, desc: "expansion foe"}
+      3: {name: dust_vulture, xy: [55, 625], src: gen, desc: "expansion foe"}
+      4: {name: frost_wisp, xy: [73, 625], src: gen, desc: "expansion foe"}
+      5: {name: iceback, xy: [91, 625], src: gen, desc: "expansion foe"}
+      6: {name: sporeling, xy: [109, 625], src: gen, desc: "expansion foe"}
+      7: {name: mycelial_brute, xy: [127, 625], src: gen, desc: "expansion foe"}
+      8: {name: ember_imp, xy: [145, 625], src: gen, desc: "expansion foe"}
+      9: {name: cinder_golem, xy: [163, 625], src: gen, desc: "expansion foe"}
+      10: {name: warden, xy: [181, 625], src: gen, desc: "expansion hero"}
+      11: {name: tinkerer, xy: [199, 625], src: gen, desc: "expansion hero"}
+      12: {name: oracle, xy: [217, 625], src: gen, desc: "expansion hero"}
+      13: {name: corsair, xy: [235, 625], src: gen, desc: "expansion hero"}
+      14: {name: ricochet_sling, xy: [253, 625], src: gen, ref: "ex::RicochetSling", desc: "expansion weapon icon"}
+      15: {name: harpoon, xy: [271, 625], src: gen, desc: "expansion weapon icon"}
+      16: {name: ground_sigil, xy: [289, 625], src: gen, desc: "expansion weapon icon"}
+      17: {name: boomerang, xy: [307, 625], src: gen, desc: "expansion weapon icon"}
+      18: {name: mortar, xy: [325, 625], src: gen, desc: "expansion weapon icon"}
+      19: {name: thorn_lash, xy: [343, 625], src: gen, desc: "expansion weapon icon"}
+      20: {name: prism_beam, xy: [361, 625], src: gen, desc: "expansion weapon icon"}
+      21: {name: spirit_swarm, xy: [379, 625], src: gen, desc: "expansion weapon icon"}
+      22: {name: carnage_bell, xy: [397, 625], src: gen, desc: "expansion relic icon"}
+      23: {name: last_bastion, xy: [415, 625], src: gen, desc: "expansion relic icon"}
+      24: {name: pilgrim_compass, xy: [1, 643], src: gen, desc: "expansion relic icon"}
+      25: {name: plague_seed, xy: [19, 643], src: gen, desc: "expansion relic icon"}
+      26: {name: recall_mirror, xy: [37, 643], src: gen, desc: "expansion relic icon"}
+      27: {name: weather_vane, xy: [55, 643], src: gen, desc: "expansion relic icon"}
+      28: {name: hunters_writ, xy: [73, 643], src: gen, desc: "expansion relic icon"}
+      29: {name: mercy_locket, xy: [91, 643], src: gen, desc: "expansion relic icon"}
+      30: {name: shrine_fury, xy: [109, 643], src: gen, ref: "ex::ShrineFury", desc: "shrine menu symbol"}
+      31: {name: shrine_roots, xy: [127, 643], src: gen, ref: "ex::ShrineRoots", desc: "shrine menu symbol"}
+      32: {name: shrine_vision, xy: [145, 643], src: gen, ref: "ex::ShrineVision", desc: "shrine menu symbol"}
+      33: {name: shrine_flame, xy: [163, 643], src: gen, ref: "ex::ShrineFlame", desc: "shrine menu symbol"}
+      34: {empty: true, xy: [181, 643]}
+      35: {empty: true, xy: [199, 643]}
+      36: {empty: true, xy: [217, 643]}
+      37: {empty: true, xy: [235, 643]}
+      38: {empty: true, xy: [253, 643]}
+      39: {empty: true, xy: [271, 643]}
+      40: {empty: true, xy: [289, 643]}
+      41: {empty: true, xy: [307, 643]}
+      42: {empty: true, xy: [325, 643]}
+      43: {empty: true, xy: [343, 643]}
+      44: {empty: true, xy: [361, 643]}
+      45: {empty: true, xy: [379, 643]}
+      46: {empty: true, xy: [397, 643]}
+      47: {empty: true, xy: [415, 643]}
+
+  biome_props:
+    title: "Expansion biome props + challenge markers (tools/make_expansion.py)"
+    accessor: "atlas::biomeProp(i)"
+    origin: [1, 661]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 2]     # cols, rows
+    note: "biome b owns 3b (tall, casts shadow), 3b+1 (small), 3b+2 (glowing fringe); 30+b is the ExpansionChallenge marker. Names per sprite are visual guesses: the generator only knows biome+variant."
+    cells:
+      0: {name: salt_flats_salt_cone, xy: [1, 661], src: eye, desc: "Salt Flats prop variant 0: salt cone"}
+      1: {name: salt_flats_salt_crust_slab, xy: [19, 661], src: eye, desc: "Salt Flats prop variant 1: salt crust slab"}
+      2: {name: salt_flats_bleached_skull_and_spine, xy: [37, 661], src: eye, desc: "Salt Flats prop variant 2: bleached skull and spine"}
+      3: {name: floodplain_cattail_reeds, xy: [55, 661], src: eye, desc: "Floodplain prop variant 0: cattail reeds"}
+      4: {name: floodplain_lily_pad_with_pink_flower, xy: [73, 661], src: eye, desc: "Floodplain prop variant 1: lily pad with pink flower"}
+      5: {name: floodplain_mossy_drowned_stump, xy: [91, 661], src: eye, desc: "Floodplain prop variant 2: mossy drowned stump"}
+      6: {name: moonlit_grove_blue_moon_tree, xy: [109, 661], src: eye, desc: "Moonlit Grove prop variant 0: blue moon tree"}
+      7: {name: moonlit_grove_dark_blue_moonstone, xy: [127, 661], src: eye, desc: "Moonlit Grove prop variant 1: dark blue moonstone"}
+      8: {name: moonlit_grove_glowing_blue_sapling, xy: [145, 661], src: eye, desc: "Moonlit Grove prop variant 2: glowing blue sapling"}
+      9: {name: sunken_ruins_broken_teal_column, xy: [163, 661], src: eye, desc: "Sunken Ruins prop variant 0: broken teal column"}
+      10: {name: sunken_ruins_column_stub, xy: [181, 661], src: eye, desc: "Sunken Ruins prop variant 1: column stub"}
+      11: {name: sunken_ruins_sunken_rubble, xy: [199, 661], src: eye, desc: "Sunken Ruins prop variant 2: sunken rubble"}
+      12: {name: ember_fen_charred_ember_tree, xy: [217, 661], src: eye, desc: "Ember Fen prop variant 0: charred ember tree"}
+      13: {name: ember_fen_ember_pool, xy: [235, 661], src: eye, desc: "Ember Fen prop variant 1: ember pool"}
+      14: {name: ember_fen_smouldering_stump, xy: [253, 661], src: eye, desc: "Ember Fen prop variant 2: smouldering stump"}
+      15: {name: amber_woods_amber_leaf_tree, xy: [271, 661], src: eye, desc: "Amber Woods prop variant 0: amber-leaf tree"}
+      16: {name: amber_woods_amber_shard, xy: [289, 661], src: eye, desc: "Amber Woods prop variant 1: amber shard"}
+      17: {name: amber_woods_amber_nugget, xy: [307, 661], src: eye, desc: "Amber Woods prop variant 2: amber nugget"}
+      18: {name: storm_steppe_steppe_grass_shrub, xy: [325, 661], src: eye, desc: "Storm Steppe prop variant 0: steppe grass shrub"}
+      19: {name: storm_steppe_rune_carved_standing_stone, xy: [343, 661], src: eye, desc: "Storm Steppe prop variant 1: rune-carved standing stone"}
+      20: {name: storm_steppe_windswept_twisted_shrub, xy: [361, 661], src: eye, desc: "Storm Steppe prop variant 2: windswept twisted shrub"}
+      21: {name: glass_desert_glass_shard_spire, xy: [379, 661], src: eye, desc: "Glass Desert prop variant 0: glass shard spire"}
+      22: {name: glass_desert_glass_puddle, xy: [397, 661], src: eye, desc: "Glass Desert prop variant 1: glass puddle"}
+      23: {name: glass_desert_white_glass_tree_fulgurite, xy: [415, 661], src: eye, desc: "Glass Desert prop variant 2: white glass tree (fulgurite)"}
+      24: {name: hollow_caverns_stalagmites, xy: [1, 679], src: eye, desc: "Hollow Caverns prop variant 0: stalagmites"}
+      25: {name: hollow_caverns_violet_cave_mushrooms, xy: [19, 679], src: eye, desc: "Hollow Caverns prop variant 1: violet cave mushrooms"}
+      26: {name: hollow_caverns_dark_burrow_hole, xy: [37, 679], src: eye, desc: "Hollow Caverns prop variant 2: dark burrow hole"}
+      27: {name: starfall_basin_star_veined_meteorite, xy: [55, 679], src: eye, desc: "Starfall Basin prop variant 0: star-veined meteorite"}
+      28: {name: starfall_basin_glowing_star_flower, xy: [73, 679], src: eye, desc: "Starfall Basin prop variant 1: glowing star flower"}
+      29: {name: starfall_basin_violet_meteor_shard, xy: [91, 679], src: eye, desc: "Starfall Basin prop variant 2: violet meteor shard"}
+      30: {name: salt_flats_marker, xy: [109, 679], src: eye, desc: "Salt Flats challenge marker: salt altar with chest"}
+      31: {name: floodplain_marker, xy: [127, 679], src: eye, desc: "Floodplain challenge marker: mossy shrine arch with lantern"}
+      32: {name: moonlit_grove_marker, xy: [145, 679], src: eye, desc: "Moonlit Grove challenge marker: blue crystal on pedestal"}
+      33: {name: sunken_ruins_marker, xy: [163, 679], src: eye, desc: "Sunken Ruins challenge marker: teal ruin arch with glow"}
+      34: {name: ember_fen_marker, xy: [181, 679], src: eye, desc: "Ember Fen challenge marker: ember brazier/forge"}
+      35: {name: amber_woods_marker, xy: [199, 679], src: eye, desc: "Amber Woods challenge marker: amber chest"}
+      36: {name: storm_steppe_marker, xy: [217, 679], src: eye, desc: "Storm Steppe challenge marker: green stone arch with bolt"}
+      37: {name: glass_desert_marker, xy: [235, 679], src: eye, desc: "Glass Desert challenge marker: glass crystal on pedestal"}
+      38: {name: hollow_caverns_marker, xy: [253, 679], src: eye, desc: "Hollow Caverns challenge marker: dark cavern chest"}
+      39: {name: starfall_basin_marker, xy: [271, 679], src: eye, desc: "Starfall Basin challenge marker: violet starlight pedestal"}
+      40: {empty: true, xy: [289, 679]}
+      41: {empty: true, xy: [307, 679]}
+      42: {empty: true, xy: [325, 679]}
+      43: {empty: true, xy: [343, 679]}
+      44: {empty: true, xy: [361, 679]}
+      45: {empty: true, xy: [379, 679]}
+      46: {empty: true, xy: [397, 679]}
+      47: {empty: true, xy: [415, 679]}
+
+  biome_grounds:
+    title: "Expansion biome grounds (tools/make_expansion.py)"
+    accessor: "atlas::biomeGround(set, cell)"
+    origin: [1, 697]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 5]     # cols, rows
+    note: "same 12-cell layout as grounds: 0 fill, 1-2 variants, 3-11 dirt-edge 3x3"
+    cells:
+      0: {name: salt_flats_fill, xy: [1, 697], src: gen}
+      1: {name: salt_flats_fill_b, xy: [19, 697], src: gen}
+      2: {name: salt_flats_fill_c, xy: [37, 697], src: gen}
+      3: {name: salt_flats_dirt_edge_top_left, xy: [55, 697], src: gen}
+      4: {name: salt_flats_dirt_edge_top, xy: [73, 697], src: gen}
+      5: {name: salt_flats_dirt_edge_top_right, xy: [91, 697], src: gen}
+      6: {name: salt_flats_dirt_edge_left, xy: [109, 697], src: gen}
+      7: {name: salt_flats_dirt_edge_centre, xy: [127, 697], src: gen}
+      8: {name: salt_flats_dirt_edge_right, xy: [145, 697], src: gen}
+      9: {name: salt_flats_dirt_edge_bottom_left, xy: [163, 697], src: gen}
+      10: {name: salt_flats_dirt_edge_bottom, xy: [181, 697], src: gen}
+      11: {name: salt_flats_dirt_edge_bottom_right, xy: [199, 697], src: gen}
+      12: {name: floodplain_fill, xy: [217, 697], src: gen}
+      13: {name: floodplain_fill_b, xy: [235, 697], src: gen}
+      14: {name: floodplain_fill_c, xy: [253, 697], src: gen}
+      15: {name: floodplain_dirt_edge_top_left, xy: [271, 697], src: gen}
+      16: {name: floodplain_dirt_edge_top, xy: [289, 697], src: gen}
+      17: {name: floodplain_dirt_edge_top_right, xy: [307, 697], src: gen}
+      18: {name: floodplain_dirt_edge_left, xy: [325, 697], src: gen}
+      19: {name: floodplain_dirt_edge_centre, xy: [343, 697], src: gen}
+      20: {name: floodplain_dirt_edge_right, xy: [361, 697], src: gen}
+      21: {name: floodplain_dirt_edge_bottom_left, xy: [379, 697], src: gen}
+      22: {name: floodplain_dirt_edge_bottom, xy: [397, 697], src: gen}
+      23: {name: floodplain_dirt_edge_bottom_right, xy: [415, 697], src: gen}
+      24: {name: moonlit_grove_fill, xy: [1, 715], src: gen}
+      25: {name: moonlit_grove_fill_b, xy: [19, 715], src: gen}
+      26: {name: moonlit_grove_fill_c, xy: [37, 715], src: gen}
+      27: {name: moonlit_grove_dirt_edge_top_left, xy: [55, 715], src: gen}
+      28: {name: moonlit_grove_dirt_edge_top, xy: [73, 715], src: gen}
+      29: {name: moonlit_grove_dirt_edge_top_right, xy: [91, 715], src: gen}
+      30: {name: moonlit_grove_dirt_edge_left, xy: [109, 715], src: gen}
+      31: {name: moonlit_grove_dirt_edge_centre, xy: [127, 715], src: gen}
+      32: {name: moonlit_grove_dirt_edge_right, xy: [145, 715], src: gen}
+      33: {name: moonlit_grove_dirt_edge_bottom_left, xy: [163, 715], src: gen}
+      34: {name: moonlit_grove_dirt_edge_bottom, xy: [181, 715], src: gen}
+      35: {name: moonlit_grove_dirt_edge_bottom_right, xy: [199, 715], src: gen}
+      36: {name: sunken_ruins_fill, xy: [217, 715], src: gen}
+      37: {name: sunken_ruins_fill_b, xy: [235, 715], src: gen}
+      38: {name: sunken_ruins_fill_c, xy: [253, 715], src: gen}
+      39: {name: sunken_ruins_dirt_edge_top_left, xy: [271, 715], src: gen}
+      40: {name: sunken_ruins_dirt_edge_top, xy: [289, 715], src: gen}
+      41: {name: sunken_ruins_dirt_edge_top_right, xy: [307, 715], src: gen}
+      42: {name: sunken_ruins_dirt_edge_left, xy: [325, 715], src: gen}
+      43: {name: sunken_ruins_dirt_edge_centre, xy: [343, 715], src: gen}
+      44: {name: sunken_ruins_dirt_edge_right, xy: [361, 715], src: gen}
+      45: {name: sunken_ruins_dirt_edge_bottom_left, xy: [379, 715], src: gen}
+      46: {name: sunken_ruins_dirt_edge_bottom, xy: [397, 715], src: gen}
+      47: {name: sunken_ruins_dirt_edge_bottom_right, xy: [415, 715], src: gen}
+      48: {name: ember_fen_fill, xy: [1, 733], src: gen}
+      49: {name: ember_fen_fill_b, xy: [19, 733], src: gen}
+      50: {name: ember_fen_fill_c, xy: [37, 733], src: gen}
+      51: {name: ember_fen_dirt_edge_top_left, xy: [55, 733], src: gen}
+      52: {name: ember_fen_dirt_edge_top, xy: [73, 733], src: gen}
+      53: {name: ember_fen_dirt_edge_top_right, xy: [91, 733], src: gen}
+      54: {name: ember_fen_dirt_edge_left, xy: [109, 733], src: gen}
+      55: {name: ember_fen_dirt_edge_centre, xy: [127, 733], src: gen}
+      56: {name: ember_fen_dirt_edge_right, xy: [145, 733], src: gen}
+      57: {name: ember_fen_dirt_edge_bottom_left, xy: [163, 733], src: gen}
+      58: {name: ember_fen_dirt_edge_bottom, xy: [181, 733], src: gen}
+      59: {name: ember_fen_dirt_edge_bottom_right, xy: [199, 733], src: gen}
+      60: {name: amber_woods_fill, xy: [217, 733], src: gen}
+      61: {name: amber_woods_fill_b, xy: [235, 733], src: gen}
+      62: {name: amber_woods_fill_c, xy: [253, 733], src: gen}
+      63: {name: amber_woods_dirt_edge_top_left, xy: [271, 733], src: gen}
+      64: {name: amber_woods_dirt_edge_top, xy: [289, 733], src: gen}
+      65: {name: amber_woods_dirt_edge_top_right, xy: [307, 733], src: gen}
+      66: {name: amber_woods_dirt_edge_left, xy: [325, 733], src: gen}
+      67: {name: amber_woods_dirt_edge_centre, xy: [343, 733], src: gen}
+      68: {name: amber_woods_dirt_edge_right, xy: [361, 733], src: gen}
+      69: {name: amber_woods_dirt_edge_bottom_left, xy: [379, 733], src: gen}
+      70: {name: amber_woods_dirt_edge_bottom, xy: [397, 733], src: gen}
+      71: {name: amber_woods_dirt_edge_bottom_right, xy: [415, 733], src: gen}
+      72: {name: storm_steppe_fill, xy: [1, 751], src: gen}
+      73: {name: storm_steppe_fill_b, xy: [19, 751], src: gen}
+      74: {name: storm_steppe_fill_c, xy: [37, 751], src: gen}
+      75: {name: storm_steppe_dirt_edge_top_left, xy: [55, 751], src: gen}
+      76: {name: storm_steppe_dirt_edge_top, xy: [73, 751], src: gen}
+      77: {name: storm_steppe_dirt_edge_top_right, xy: [91, 751], src: gen}
+      78: {name: storm_steppe_dirt_edge_left, xy: [109, 751], src: gen}
+      79: {name: storm_steppe_dirt_edge_centre, xy: [127, 751], src: gen}
+      80: {name: storm_steppe_dirt_edge_right, xy: [145, 751], src: gen}
+      81: {name: storm_steppe_dirt_edge_bottom_left, xy: [163, 751], src: gen}
+      82: {name: storm_steppe_dirt_edge_bottom, xy: [181, 751], src: gen}
+      83: {name: storm_steppe_dirt_edge_bottom_right, xy: [199, 751], src: gen}
+      84: {name: glass_desert_fill, xy: [217, 751], src: gen}
+      85: {name: glass_desert_fill_b, xy: [235, 751], src: gen}
+      86: {name: glass_desert_fill_c, xy: [253, 751], src: gen}
+      87: {name: glass_desert_dirt_edge_top_left, xy: [271, 751], src: gen}
+      88: {name: glass_desert_dirt_edge_top, xy: [289, 751], src: gen}
+      89: {name: glass_desert_dirt_edge_top_right, xy: [307, 751], src: gen}
+      90: {name: glass_desert_dirt_edge_left, xy: [325, 751], src: gen}
+      91: {name: glass_desert_dirt_edge_centre, xy: [343, 751], src: gen}
+      92: {name: glass_desert_dirt_edge_right, xy: [361, 751], src: gen}
+      93: {name: glass_desert_dirt_edge_bottom_left, xy: [379, 751], src: gen}
+      94: {name: glass_desert_dirt_edge_bottom, xy: [397, 751], src: gen}
+      95: {name: glass_desert_dirt_edge_bottom_right, xy: [415, 751], src: gen}
+      96: {name: hollow_caverns_fill, xy: [1, 769], src: gen}
+      97: {name: hollow_caverns_fill_b, xy: [19, 769], src: gen}
+      98: {name: hollow_caverns_fill_c, xy: [37, 769], src: gen}
+      99: {name: hollow_caverns_dirt_edge_top_left, xy: [55, 769], src: gen}
+      100: {name: hollow_caverns_dirt_edge_top, xy: [73, 769], src: gen}
+      101: {name: hollow_caverns_dirt_edge_top_right, xy: [91, 769], src: gen}
+      102: {name: hollow_caverns_dirt_edge_left, xy: [109, 769], src: gen}
+      103: {name: hollow_caverns_dirt_edge_centre, xy: [127, 769], src: gen}
+      104: {name: hollow_caverns_dirt_edge_right, xy: [145, 769], src: gen}
+      105: {name: hollow_caverns_dirt_edge_bottom_left, xy: [163, 769], src: gen}
+      106: {name: hollow_caverns_dirt_edge_bottom, xy: [181, 769], src: gen}
+      107: {name: hollow_caverns_dirt_edge_bottom_right, xy: [199, 769], src: gen}
+      108: {name: starfall_basin_fill, xy: [217, 769], src: gen}
+      109: {name: starfall_basin_fill_b, xy: [235, 769], src: gen}
+      110: {name: starfall_basin_fill_c, xy: [253, 769], src: gen}
+      111: {name: starfall_basin_dirt_edge_top_left, xy: [271, 769], src: gen}
+      112: {name: starfall_basin_dirt_edge_top, xy: [289, 769], src: gen}
+      113: {name: starfall_basin_dirt_edge_top_right, xy: [307, 769], src: gen}
+      114: {name: starfall_basin_dirt_edge_left, xy: [325, 769], src: gen}
+      115: {name: starfall_basin_dirt_edge_centre, xy: [343, 769], src: gen}
+      116: {name: starfall_basin_dirt_edge_right, xy: [361, 769], src: gen}
+      117: {name: starfall_basin_dirt_edge_bottom_left, xy: [379, 769], src: gen}
+      118: {name: starfall_basin_dirt_edge_bottom, xy: [397, 769], src: gen}
+      119: {name: starfall_basin_dirt_edge_bottom_right, xy: [415, 769], src: gen}
+
+  edges:
+    title: "Dirt and lake edge sets + DuskMoon cliff (tools/make_rims.py)"
+    accessor: "atlas::dirtEdge(set, off) / waterEdge(set, off) / cliff(0, off)"
+    origin: [1, 787]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 13]     # cols, rows
+    note: "dirtEdge set s: cells s*9..+8 (sets 0-5 carpets w/o lava, 6-15 expansion biomes). waterEdge set s: 144+s*9..+8 (16 = frozen lake in snow). 297-305 DuskMoon earth cliff; its centre is transparent."
+    cells:
+      0: {name: dirt_edge_straw_top_left, xy: [1, 787], src: gen}
+      1: {name: dirt_edge_straw_top, xy: [19, 787], src: gen}
+      2: {name: dirt_edge_straw_top_right, xy: [37, 787], src: gen}
+      3: {name: dirt_edge_straw_left, xy: [55, 787], src: gen}
+      4: {name: dirt_edge_straw_centre, xy: [73, 787], src: gen}
+      5: {name: dirt_edge_straw_right, xy: [91, 787], src: gen}
+      6: {name: dirt_edge_straw_bottom_left, xy: [109, 787], src: gen}
+      7: {name: dirt_edge_straw_bottom, xy: [127, 787], src: gen}
+      8: {name: dirt_edge_straw_bottom_right, xy: [145, 787], src: gen}
+      9: {name: dirt_edge_ash_top_left, xy: [163, 787], src: gen}
+      10: {name: dirt_edge_ash_top, xy: [181, 787], src: gen}
+      11: {name: dirt_edge_ash_top_right, xy: [199, 787], src: gen}
+      12: {name: dirt_edge_ash_left, xy: [217, 787], src: gen}
+      13: {name: dirt_edge_ash_centre, xy: [235, 787], src: gen}
+      14: {name: dirt_edge_ash_right, xy: [253, 787], src: gen}
+      15: {name: dirt_edge_ash_bottom_left, xy: [271, 787], src: gen}
+      16: {name: dirt_edge_ash_bottom, xy: [289, 787], src: gen}
+      17: {name: dirt_edge_ash_bottom_right, xy: [307, 787], src: gen}
+      18: {name: dirt_edge_crystal_moss_top_left, xy: [325, 787], src: gen}
+      19: {name: dirt_edge_crystal_moss_top, xy: [343, 787], src: gen}
+      20: {name: dirt_edge_crystal_moss_top_right, xy: [361, 787], src: gen}
+      21: {name: dirt_edge_crystal_moss_left, xy: [379, 787], src: gen}
+      22: {name: dirt_edge_crystal_moss_centre, xy: [397, 787], src: gen}
+      23: {name: dirt_edge_crystal_moss_right, xy: [415, 787], src: gen}
+      24: {name: dirt_edge_crystal_moss_bottom_left, xy: [1, 805], src: gen}
+      25: {name: dirt_edge_crystal_moss_bottom, xy: [19, 805], src: gen}
+      26: {name: dirt_edge_crystal_moss_bottom_right, xy: [37, 805], src: gen}
+      27: {name: dirt_edge_mycelium_top_left, xy: [55, 805], src: gen}
+      28: {name: dirt_edge_mycelium_top, xy: [73, 805], src: gen}
+      29: {name: dirt_edge_mycelium_top_right, xy: [91, 805], src: gen}
+      30: {name: dirt_edge_mycelium_left, xy: [109, 805], src: gen}
+      31: {name: dirt_edge_mycelium_centre, xy: [127, 805], src: gen}
+      32: {name: dirt_edge_mycelium_right, xy: [145, 805], src: gen}
+      33: {name: dirt_edge_mycelium_bottom_left, xy: [163, 805], src: gen}
+      34: {name: dirt_edge_mycelium_bottom, xy: [181, 805], src: gen}
+      35: {name: dirt_edge_mycelium_bottom_right, xy: [199, 805], src: gen}
+      36: {name: dirt_edge_red_clay_top_left, xy: [217, 805], src: gen}
+      37: {name: dirt_edge_red_clay_top, xy: [235, 805], src: gen}
+      38: {name: dirt_edge_red_clay_top_right, xy: [253, 805], src: gen}
+      39: {name: dirt_edge_red_clay_left, xy: [271, 805], src: gen}
+      40: {name: dirt_edge_red_clay_centre, xy: [289, 805], src: gen}
+      41: {name: dirt_edge_red_clay_right, xy: [307, 805], src: gen}
+      42: {name: dirt_edge_red_clay_bottom_left, xy: [325, 805], src: gen}
+      43: {name: dirt_edge_red_clay_bottom, xy: [343, 805], src: gen}
+      44: {name: dirt_edge_red_clay_bottom_right, xy: [361, 805], src: gen}
+      45: {name: dirt_edge_needles_top_left, xy: [379, 805], src: gen}
+      46: {name: dirt_edge_needles_top, xy: [397, 805], src: gen}
+      47: {name: dirt_edge_needles_top_right, xy: [415, 805], src: gen}
+      48: {name: dirt_edge_needles_left, xy: [1, 823], src: gen}
+      49: {name: dirt_edge_needles_centre, xy: [19, 823], src: gen}
+      50: {name: dirt_edge_needles_right, xy: [37, 823], src: gen}
+      51: {name: dirt_edge_needles_bottom_left, xy: [55, 823], src: gen}
+      52: {name: dirt_edge_needles_bottom, xy: [73, 823], src: gen}
+      53: {name: dirt_edge_needles_bottom_right, xy: [91, 823], src: gen}
+      54: {name: dirt_edge_salt_flats_top_left, xy: [109, 823], src: gen}
+      55: {name: dirt_edge_salt_flats_top, xy: [127, 823], src: gen}
+      56: {name: dirt_edge_salt_flats_top_right, xy: [145, 823], src: gen}
+      57: {name: dirt_edge_salt_flats_left, xy: [163, 823], src: gen}
+      58: {name: dirt_edge_salt_flats_centre, xy: [181, 823], src: gen}
+      59: {name: dirt_edge_salt_flats_right, xy: [199, 823], src: gen}
+      60: {name: dirt_edge_salt_flats_bottom_left, xy: [217, 823], src: gen}
+      61: {name: dirt_edge_salt_flats_bottom, xy: [235, 823], src: gen}
+      62: {name: dirt_edge_salt_flats_bottom_right, xy: [253, 823], src: gen}
+      63: {name: dirt_edge_floodplain_top_left, xy: [271, 823], src: gen}
+      64: {name: dirt_edge_floodplain_top, xy: [289, 823], src: gen}
+      65: {name: dirt_edge_floodplain_top_right, xy: [307, 823], src: gen}
+      66: {name: dirt_edge_floodplain_left, xy: [325, 823], src: gen}
+      67: {name: dirt_edge_floodplain_centre, xy: [343, 823], src: gen}
+      68: {name: dirt_edge_floodplain_right, xy: [361, 823], src: gen}
+      69: {name: dirt_edge_floodplain_bottom_left, xy: [379, 823], src: gen}
+      70: {name: dirt_edge_floodplain_bottom, xy: [397, 823], src: gen}
+      71: {name: dirt_edge_floodplain_bottom_right, xy: [415, 823], src: gen}
+      72: {name: dirt_edge_moonlit_grove_top_left, xy: [1, 841], src: gen}
+      73: {name: dirt_edge_moonlit_grove_top, xy: [19, 841], src: gen}
+      74: {name: dirt_edge_moonlit_grove_top_right, xy: [37, 841], src: gen}
+      75: {name: dirt_edge_moonlit_grove_left, xy: [55, 841], src: gen}
+      76: {name: dirt_edge_moonlit_grove_centre, xy: [73, 841], src: gen}
+      77: {name: dirt_edge_moonlit_grove_right, xy: [91, 841], src: gen}
+      78: {name: dirt_edge_moonlit_grove_bottom_left, xy: [109, 841], src: gen}
+      79: {name: dirt_edge_moonlit_grove_bottom, xy: [127, 841], src: gen}
+      80: {name: dirt_edge_moonlit_grove_bottom_right, xy: [145, 841], src: gen}
+      81: {name: dirt_edge_sunken_ruins_top_left, xy: [163, 841], src: gen}
+      82: {name: dirt_edge_sunken_ruins_top, xy: [181, 841], src: gen}
+      83: {name: dirt_edge_sunken_ruins_top_right, xy: [199, 841], src: gen}
+      84: {name: dirt_edge_sunken_ruins_left, xy: [217, 841], src: gen}
+      85: {name: dirt_edge_sunken_ruins_centre, xy: [235, 841], src: gen}
+      86: {name: dirt_edge_sunken_ruins_right, xy: [253, 841], src: gen}
+      87: {name: dirt_edge_sunken_ruins_bottom_left, xy: [271, 841], src: gen}
+      88: {name: dirt_edge_sunken_ruins_bottom, xy: [289, 841], src: gen}
+      89: {name: dirt_edge_sunken_ruins_bottom_right, xy: [307, 841], src: gen}
+      90: {name: dirt_edge_ember_fen_top_left, xy: [325, 841], src: gen}
+      91: {name: dirt_edge_ember_fen_top, xy: [343, 841], src: gen}
+      92: {name: dirt_edge_ember_fen_top_right, xy: [361, 841], src: gen}
+      93: {name: dirt_edge_ember_fen_left, xy: [379, 841], src: gen}
+      94: {name: dirt_edge_ember_fen_centre, xy: [397, 841], src: gen}
+      95: {name: dirt_edge_ember_fen_right, xy: [415, 841], src: gen}
+      96: {name: dirt_edge_ember_fen_bottom_left, xy: [1, 859], src: gen}
+      97: {name: dirt_edge_ember_fen_bottom, xy: [19, 859], src: gen}
+      98: {name: dirt_edge_ember_fen_bottom_right, xy: [37, 859], src: gen}
+      99: {name: dirt_edge_amber_woods_top_left, xy: [55, 859], src: gen}
+      100: {name: dirt_edge_amber_woods_top, xy: [73, 859], src: gen}
+      101: {name: dirt_edge_amber_woods_top_right, xy: [91, 859], src: gen}
+      102: {name: dirt_edge_amber_woods_left, xy: [109, 859], src: gen}
+      103: {name: dirt_edge_amber_woods_centre, xy: [127, 859], src: gen}
+      104: {name: dirt_edge_amber_woods_right, xy: [145, 859], src: gen}
+      105: {name: dirt_edge_amber_woods_bottom_left, xy: [163, 859], src: gen}
+      106: {name: dirt_edge_amber_woods_bottom, xy: [181, 859], src: gen}
+      107: {name: dirt_edge_amber_woods_bottom_right, xy: [199, 859], src: gen}
+      108: {name: dirt_edge_storm_steppe_top_left, xy: [217, 859], src: gen}
+      109: {name: dirt_edge_storm_steppe_top, xy: [235, 859], src: gen}
+      110: {name: dirt_edge_storm_steppe_top_right, xy: [253, 859], src: gen}
+      111: {name: dirt_edge_storm_steppe_left, xy: [271, 859], src: gen}
+      112: {name: dirt_edge_storm_steppe_centre, xy: [289, 859], src: gen}
+      113: {name: dirt_edge_storm_steppe_right, xy: [307, 859], src: gen}
+      114: {name: dirt_edge_storm_steppe_bottom_left, xy: [325, 859], src: gen}
+      115: {name: dirt_edge_storm_steppe_bottom, xy: [343, 859], src: gen}
+      116: {name: dirt_edge_storm_steppe_bottom_right, xy: [361, 859], src: gen}
+      117: {name: dirt_edge_glass_desert_top_left, xy: [379, 859], src: gen}
+      118: {name: dirt_edge_glass_desert_top, xy: [397, 859], src: gen}
+      119: {name: dirt_edge_glass_desert_top_right, xy: [415, 859], src: gen}
+      120: {name: dirt_edge_glass_desert_left, xy: [1, 877], src: gen}
+      121: {name: dirt_edge_glass_desert_centre, xy: [19, 877], src: gen}
+      122: {name: dirt_edge_glass_desert_right, xy: [37, 877], src: gen}
+      123: {name: dirt_edge_glass_desert_bottom_left, xy: [55, 877], src: gen}
+      124: {name: dirt_edge_glass_desert_bottom, xy: [73, 877], src: gen}
+      125: {name: dirt_edge_glass_desert_bottom_right, xy: [91, 877], src: gen}
+      126: {name: dirt_edge_hollow_caverns_top_left, xy: [109, 877], src: gen}
+      127: {name: dirt_edge_hollow_caverns_top, xy: [127, 877], src: gen}
+      128: {name: dirt_edge_hollow_caverns_top_right, xy: [145, 877], src: gen}
+      129: {name: dirt_edge_hollow_caverns_left, xy: [163, 877], src: gen}
+      130: {name: dirt_edge_hollow_caverns_centre, xy: [181, 877], src: gen}
+      131: {name: dirt_edge_hollow_caverns_right, xy: [199, 877], src: gen}
+      132: {name: dirt_edge_hollow_caverns_bottom_left, xy: [217, 877], src: gen}
+      133: {name: dirt_edge_hollow_caverns_bottom, xy: [235, 877], src: gen}
+      134: {name: dirt_edge_hollow_caverns_bottom_right, xy: [253, 877], src: gen}
+      135: {name: dirt_edge_starfall_basin_top_left, xy: [271, 877], src: gen}
+      136: {name: dirt_edge_starfall_basin_top, xy: [289, 877], src: gen}
+      137: {name: dirt_edge_starfall_basin_top_right, xy: [307, 877], src: gen}
+      138: {name: dirt_edge_starfall_basin_left, xy: [325, 877], src: gen}
+      139: {name: dirt_edge_starfall_basin_centre, xy: [343, 877], src: gen}
+      140: {name: dirt_edge_starfall_basin_right, xy: [361, 877], src: gen}
+      141: {name: dirt_edge_starfall_basin_bottom_left, xy: [379, 877], src: gen}
+      142: {name: dirt_edge_starfall_basin_bottom, xy: [397, 877], src: gen}
+      143: {name: dirt_edge_starfall_basin_bottom_right, xy: [415, 877], src: gen}
+      144: {name: lake_edge_straw_top_left, xy: [1, 895], src: gen}
+      145: {name: lake_edge_straw_top, xy: [19, 895], src: gen}
+      146: {name: lake_edge_straw_top_right, xy: [37, 895], src: gen}
+      147: {name: lake_edge_straw_left, xy: [55, 895], src: gen}
+      148: {name: lake_edge_straw_centre, xy: [73, 895], src: gen}
+      149: {name: lake_edge_straw_right, xy: [91, 895], src: gen}
+      150: {name: lake_edge_straw_bottom_left, xy: [109, 895], src: gen}
+      151: {name: lake_edge_straw_bottom, xy: [127, 895], src: gen}
+      152: {name: lake_edge_straw_bottom_right, xy: [145, 895], src: gen}
+      153: {name: lake_edge_ash_top_left, xy: [163, 895], src: gen}
+      154: {name: lake_edge_ash_top, xy: [181, 895], src: gen}
+      155: {name: lake_edge_ash_top_right, xy: [199, 895], src: gen}
+      156: {name: lake_edge_ash_left, xy: [217, 895], src: gen}
+      157: {name: lake_edge_ash_centre, xy: [235, 895], src: gen}
+      158: {name: lake_edge_ash_right, xy: [253, 895], src: gen}
+      159: {name: lake_edge_ash_bottom_left, xy: [271, 895], src: gen}
+      160: {name: lake_edge_ash_bottom, xy: [289, 895], src: gen}
+      161: {name: lake_edge_ash_bottom_right, xy: [307, 895], src: gen}
+      162: {name: lake_edge_crystal_moss_top_left, xy: [325, 895], src: gen}
+      163: {name: lake_edge_crystal_moss_top, xy: [343, 895], src: gen}
+      164: {name: lake_edge_crystal_moss_top_right, xy: [361, 895], src: gen}
+      165: {name: lake_edge_crystal_moss_left, xy: [379, 895], src: gen}
+      166: {name: lake_edge_crystal_moss_centre, xy: [397, 895], src: gen}
+      167: {name: lake_edge_crystal_moss_right, xy: [415, 895], src: gen}
+      168: {name: lake_edge_crystal_moss_bottom_left, xy: [1, 913], src: gen}
+      169: {name: lake_edge_crystal_moss_bottom, xy: [19, 913], src: gen}
+      170: {name: lake_edge_crystal_moss_bottom_right, xy: [37, 913], src: gen}
+      171: {name: lake_edge_mycelium_top_left, xy: [55, 913], src: gen}
+      172: {name: lake_edge_mycelium_top, xy: [73, 913], src: gen}
+      173: {name: lake_edge_mycelium_top_right, xy: [91, 913], src: gen}
+      174: {name: lake_edge_mycelium_left, xy: [109, 913], src: gen}
+      175: {name: lake_edge_mycelium_centre, xy: [127, 913], src: gen}
+      176: {name: lake_edge_mycelium_right, xy: [145, 913], src: gen}
+      177: {name: lake_edge_mycelium_bottom_left, xy: [163, 913], src: gen}
+      178: {name: lake_edge_mycelium_bottom, xy: [181, 913], src: gen}
+      179: {name: lake_edge_mycelium_bottom_right, xy: [199, 913], src: gen}
+      180: {name: lake_edge_red_clay_top_left, xy: [217, 913], src: gen}
+      181: {name: lake_edge_red_clay_top, xy: [235, 913], src: gen}
+      182: {name: lake_edge_red_clay_top_right, xy: [253, 913], src: gen}
+      183: {name: lake_edge_red_clay_left, xy: [271, 913], src: gen}
+      184: {name: lake_edge_red_clay_centre, xy: [289, 913], src: gen}
+      185: {name: lake_edge_red_clay_right, xy: [307, 913], src: gen}
+      186: {name: lake_edge_red_clay_bottom_left, xy: [325, 913], src: gen}
+      187: {name: lake_edge_red_clay_bottom, xy: [343, 913], src: gen}
+      188: {name: lake_edge_red_clay_bottom_right, xy: [361, 913], src: gen}
+      189: {name: lake_edge_needles_top_left, xy: [379, 913], src: gen}
+      190: {name: lake_edge_needles_top, xy: [397, 913], src: gen}
+      191: {name: lake_edge_needles_top_right, xy: [415, 913], src: gen}
+      192: {name: lake_edge_needles_left, xy: [1, 931], src: gen}
+      193: {name: lake_edge_needles_centre, xy: [19, 931], src: gen}
+      194: {name: lake_edge_needles_right, xy: [37, 931], src: gen}
+      195: {name: lake_edge_needles_bottom_left, xy: [55, 931], src: gen}
+      196: {name: lake_edge_needles_bottom, xy: [73, 931], src: gen}
+      197: {name: lake_edge_needles_bottom_right, xy: [91, 931], src: gen}
+      198: {name: lake_edge_salt_flats_top_left, xy: [109, 931], src: gen}
+      199: {name: lake_edge_salt_flats_top, xy: [127, 931], src: gen}
+      200: {name: lake_edge_salt_flats_top_right, xy: [145, 931], src: gen}
+      201: {name: lake_edge_salt_flats_left, xy: [163, 931], src: gen}
+      202: {name: lake_edge_salt_flats_centre, xy: [181, 931], src: gen}
+      203: {name: lake_edge_salt_flats_right, xy: [199, 931], src: gen}
+      204: {name: lake_edge_salt_flats_bottom_left, xy: [217, 931], src: gen}
+      205: {name: lake_edge_salt_flats_bottom, xy: [235, 931], src: gen}
+      206: {name: lake_edge_salt_flats_bottom_right, xy: [253, 931], src: gen}
+      207: {name: lake_edge_floodplain_top_left, xy: [271, 931], src: gen}
+      208: {name: lake_edge_floodplain_top, xy: [289, 931], src: gen}
+      209: {name: lake_edge_floodplain_top_right, xy: [307, 931], src: gen}
+      210: {name: lake_edge_floodplain_left, xy: [325, 931], src: gen}
+      211: {name: lake_edge_floodplain_centre, xy: [343, 931], src: gen}
+      212: {name: lake_edge_floodplain_right, xy: [361, 931], src: gen}
+      213: {name: lake_edge_floodplain_bottom_left, xy: [379, 931], src: gen}
+      214: {name: lake_edge_floodplain_bottom, xy: [397, 931], src: gen}
+      215: {name: lake_edge_floodplain_bottom_right, xy: [415, 931], src: gen}
+      216: {name: lake_edge_moonlit_grove_top_left, xy: [1, 949], src: gen}
+      217: {name: lake_edge_moonlit_grove_top, xy: [19, 949], src: gen}
+      218: {name: lake_edge_moonlit_grove_top_right, xy: [37, 949], src: gen}
+      219: {name: lake_edge_moonlit_grove_left, xy: [55, 949], src: gen}
+      220: {name: lake_edge_moonlit_grove_centre, xy: [73, 949], src: gen}
+      221: {name: lake_edge_moonlit_grove_right, xy: [91, 949], src: gen}
+      222: {name: lake_edge_moonlit_grove_bottom_left, xy: [109, 949], src: gen}
+      223: {name: lake_edge_moonlit_grove_bottom, xy: [127, 949], src: gen}
+      224: {name: lake_edge_moonlit_grove_bottom_right, xy: [145, 949], src: gen}
+      225: {name: lake_edge_sunken_ruins_top_left, xy: [163, 949], src: gen}
+      226: {name: lake_edge_sunken_ruins_top, xy: [181, 949], src: gen}
+      227: {name: lake_edge_sunken_ruins_top_right, xy: [199, 949], src: gen}
+      228: {name: lake_edge_sunken_ruins_left, xy: [217, 949], src: gen}
+      229: {name: lake_edge_sunken_ruins_centre, xy: [235, 949], src: gen}
+      230: {name: lake_edge_sunken_ruins_right, xy: [253, 949], src: gen}
+      231: {name: lake_edge_sunken_ruins_bottom_left, xy: [271, 949], src: gen}
+      232: {name: lake_edge_sunken_ruins_bottom, xy: [289, 949], src: gen}
+      233: {name: lake_edge_sunken_ruins_bottom_right, xy: [307, 949], src: gen}
+      234: {name: lake_edge_ember_fen_top_left, xy: [325, 949], src: gen}
+      235: {name: lake_edge_ember_fen_top, xy: [343, 949], src: gen}
+      236: {name: lake_edge_ember_fen_top_right, xy: [361, 949], src: gen}
+      237: {name: lake_edge_ember_fen_left, xy: [379, 949], src: gen}
+      238: {name: lake_edge_ember_fen_centre, xy: [397, 949], src: gen}
+      239: {name: lake_edge_ember_fen_right, xy: [415, 949], src: gen}
+      240: {name: lake_edge_ember_fen_bottom_left, xy: [1, 967], src: gen}
+      241: {name: lake_edge_ember_fen_bottom, xy: [19, 967], src: gen}
+      242: {name: lake_edge_ember_fen_bottom_right, xy: [37, 967], src: gen}
+      243: {name: lake_edge_amber_woods_top_left, xy: [55, 967], src: gen}
+      244: {name: lake_edge_amber_woods_top, xy: [73, 967], src: gen}
+      245: {name: lake_edge_amber_woods_top_right, xy: [91, 967], src: gen}
+      246: {name: lake_edge_amber_woods_left, xy: [109, 967], src: gen}
+      247: {name: lake_edge_amber_woods_centre, xy: [127, 967], src: gen}
+      248: {name: lake_edge_amber_woods_right, xy: [145, 967], src: gen}
+      249: {name: lake_edge_amber_woods_bottom_left, xy: [163, 967], src: gen}
+      250: {name: lake_edge_amber_woods_bottom, xy: [181, 967], src: gen}
+      251: {name: lake_edge_amber_woods_bottom_right, xy: [199, 967], src: gen}
+      252: {name: lake_edge_storm_steppe_top_left, xy: [217, 967], src: gen}
+      253: {name: lake_edge_storm_steppe_top, xy: [235, 967], src: gen}
+      254: {name: lake_edge_storm_steppe_top_right, xy: [253, 967], src: gen}
+      255: {name: lake_edge_storm_steppe_left, xy: [271, 967], src: gen}
+      256: {name: lake_edge_storm_steppe_centre, xy: [289, 967], src: gen}
+      257: {name: lake_edge_storm_steppe_right, xy: [307, 967], src: gen}
+      258: {name: lake_edge_storm_steppe_bottom_left, xy: [325, 967], src: gen}
+      259: {name: lake_edge_storm_steppe_bottom, xy: [343, 967], src: gen}
+      260: {name: lake_edge_storm_steppe_bottom_right, xy: [361, 967], src: gen}
+      261: {name: lake_edge_glass_desert_top_left, xy: [379, 967], src: gen}
+      262: {name: lake_edge_glass_desert_top, xy: [397, 967], src: gen}
+      263: {name: lake_edge_glass_desert_top_right, xy: [415, 967], src: gen}
+      264: {name: lake_edge_glass_desert_left, xy: [1, 985], src: gen}
+      265: {name: lake_edge_glass_desert_centre, xy: [19, 985], src: gen}
+      266: {name: lake_edge_glass_desert_right, xy: [37, 985], src: gen}
+      267: {name: lake_edge_glass_desert_bottom_left, xy: [55, 985], src: gen}
+      268: {name: lake_edge_glass_desert_bottom, xy: [73, 985], src: gen}
+      269: {name: lake_edge_glass_desert_bottom_right, xy: [91, 985], src: gen}
+      270: {name: lake_edge_hollow_caverns_top_left, xy: [109, 985], src: gen}
+      271: {name: lake_edge_hollow_caverns_top, xy: [127, 985], src: gen}
+      272: {name: lake_edge_hollow_caverns_top_right, xy: [145, 985], src: gen}
+      273: {name: lake_edge_hollow_caverns_left, xy: [163, 985], src: gen}
+      274: {name: lake_edge_hollow_caverns_centre, xy: [181, 985], src: gen}
+      275: {name: lake_edge_hollow_caverns_right, xy: [199, 985], src: gen}
+      276: {name: lake_edge_hollow_caverns_bottom_left, xy: [217, 985], src: gen}
+      277: {name: lake_edge_hollow_caverns_bottom, xy: [235, 985], src: gen}
+      278: {name: lake_edge_hollow_caverns_bottom_right, xy: [253, 985], src: gen}
+      279: {name: lake_edge_starfall_basin_top_left, xy: [271, 985], src: gen}
+      280: {name: lake_edge_starfall_basin_top, xy: [289, 985], src: gen}
+      281: {name: lake_edge_starfall_basin_top_right, xy: [307, 985], src: gen}
+      282: {name: lake_edge_starfall_basin_left, xy: [325, 985], src: gen}
+      283: {name: lake_edge_starfall_basin_centre, xy: [343, 985], src: gen}
+      284: {name: lake_edge_starfall_basin_right, xy: [361, 985], src: gen}
+      285: {name: lake_edge_starfall_basin_bottom_left, xy: [379, 985], src: gen}
+      286: {name: lake_edge_starfall_basin_bottom, xy: [397, 985], src: gen}
+      287: {name: lake_edge_starfall_basin_bottom_right, xy: [415, 985], src: gen}
+      288: {name: lake_edge_frozen_lake_snow_top_left, xy: [1, 1003], src: gen}
+      289: {name: lake_edge_frozen_lake_snow_top, xy: [19, 1003], src: gen}
+      290: {name: lake_edge_frozen_lake_snow_top_right, xy: [37, 1003], src: gen}
+      291: {name: lake_edge_frozen_lake_snow_left, xy: [55, 1003], src: gen}
+      292: {name: lake_edge_frozen_lake_snow_centre, xy: [73, 1003], src: gen}
+      293: {name: lake_edge_frozen_lake_snow_right, xy: [91, 1003], src: gen}
+      294: {name: lake_edge_frozen_lake_snow_bottom_left, xy: [109, 1003], src: gen}
+      295: {name: lake_edge_frozen_lake_snow_bottom, xy: [127, 1003], src: gen}
+      296: {name: lake_edge_frozen_lake_snow_bottom_right, xy: [145, 1003], src: gen}
+      297: {name: cliff_duskmoon_top_left, xy: [163, 1003], src: gen}
+      298: {name: cliff_duskmoon_top, xy: [181, 1003], src: gen}
+      299: {name: cliff_duskmoon_top_right, xy: [199, 1003], src: gen}
+      300: {name: cliff_duskmoon_left, xy: [217, 1003], src: gen}
+      301: {empty: true, xy: [235, 1003]}
+      302: {name: cliff_duskmoon_right, xy: [253, 1003], src: gen}
+      303: {name: cliff_duskmoon_bottom_left, xy: [271, 1003], src: gen}
+      304: {name: cliff_duskmoon_bottom, xy: [289, 1003], src: gen}
+      305: {name: cliff_duskmoon_bottom_right, xy: [307, 1003], src: gen}
+      306: {empty: true, xy: [325, 1003]}
+      307: {empty: true, xy: [343, 1003]}
+      308: {empty: true, xy: [361, 1003]}
+      309: {empty: true, xy: [379, 1003]}
+      310: {empty: true, xy: [397, 1003]}
+      311: {empty: true, xy: [415, 1003]}
+
+  arsenal:
+    title: "Recipe weapon, skill, talent, passive and charm icons (tools/make_arsenal.py)"
+    accessor: "atlas::arsenal(i)"
+    origin: [1, 1021]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 12]     # cols, rows
+    note: "0-151 weapons (0-52 used), 152-159 passives, 160-175 relics/charms, 176-191 uniques (empty), 192-263 skills (192-245 used), 264-287 talents"
+    cells:
+      0: {name: ember_lance, xy: [1, 1021], src: gen, desc: "recipe weapon icon"}
+      1: {name: hoarfrost_fan, xy: [19, 1021], src: gen, desc: "recipe weapon icon"}
+      2: {name: arcane_orbit, xy: [37, 1021], src: gen, desc: "recipe weapon icon"}
+      3: {name: starfall, xy: [55, 1021], src: gen, desc: "recipe weapon icon"}
+      4: {name: void_rift, xy: [73, 1021], src: gen, desc: "recipe weapon icon"}
+      5: {name: seeker_runes, xy: [91, 1021], src: gen, desc: "recipe weapon icon"}
+      6: {name: flame_ring, xy: [109, 1021], src: gen, desc: "recipe weapon icon"}
+      7: {name: lionheart_cleave, xy: [127, 1021], src: gen, desc: "recipe weapon icon"}
+      8: {name: bastion_shields, xy: [145, 1021], src: gen, desc: "recipe weapon icon"}
+      9: {name: hawk_talon, xy: [163, 1021], src: gen, desc: "recipe weapon icon"}
+      10: {name: bear_trap, xy: [181, 1021], src: gen, desc: "recipe weapon icon"}
+      11: {name: caustic_flask, xy: [199, 1021], src: gen, desc: "recipe weapon icon"}
+      12: {name: witchfire_phial, xy: [217, 1021], src: gen, desc: "recipe weapon icon"}
+      13: {name: ball_lightning, xy: [235, 1021], src: gen, desc: "recipe weapon icon"}
+      14: {name: arc_lance, xy: [253, 1021], src: gen, desc: "recipe weapon icon"}
+      15: {name: soul_harvest, xy: [271, 1021], src: gen, desc: "recipe weapon icon"}
+      16: {name: bone_wheel, xy: [289, 1021], src: gen, desc: "recipe weapon icon"}
+      17: {name: lance_of_dawn, xy: [307, 1021], src: gen, desc: "recipe weapon icon"}
+      18: {name: seraph_wings, xy: [325, 1021], src: gen, desc: "recipe weapon icon"}
+      19: {name: crescent_cut, xy: [343, 1021], src: gen, desc: "recipe weapon icon"}
+      20: {name: flicker_darts, xy: [361, 1021], src: gen, desc: "recipe weapon icon"}
+      21: {name: thornwhip, xy: [379, 1021], src: gen, desc: "recipe weapon icon"}
+      22: {name: root_snare, xy: [397, 1021], src: gen, desc: "recipe weapon icon"}
+      23: {name: clockwork_mine, xy: [415, 1021], src: gen, desc: "recipe weapon icon"}
+      24: {name: flash_grenade, xy: [1, 1039], src: gen, desc: "recipe weapon icon"}
+      25: {name: prophecy_ray, xy: [19, 1039], src: gen, desc: "recipe weapon icon"}
+      26: {name: fate_wheel, xy: [37, 1039], src: gen, desc: "recipe weapon icon"}
+      27: {name: chain_shot, xy: [55, 1039], src: gen, desc: "recipe weapon icon"}
+      28: {name: riptide, xy: [73, 1039], src: gen, desc: "recipe weapon icon"}
+      29: {name: bloodletter_fan, xy: [91, 1039], src: gen, desc: "recipe weapon icon"}
+      30: {name: hex_whip, xy: [109, 1039], src: gen, desc: "recipe weapon icon"}
+      31: {name: bone_spear, xy: [127, 1039], src: gen, desc: "recipe weapon icon"}
+      32: {name: thunder_drum, xy: [145, 1039], src: gen, desc: "recipe weapon icon"}
+      33: {name: frost_lantern, xy: [163, 1039], src: gen, desc: "recipe weapon icon"}
+      34: {name: rot_bellows, xy: [181, 1039], src: gen, desc: "recipe weapon icon"}
+      35: {name: grave_bell, xy: [199, 1039], src: gen, desc: "recipe weapon icon"}
+      36: {name: tidal_ring, xy: [217, 1039], src: gen, desc: "recipe weapon icon"}
+      37: {name: ember_wall, xy: [235, 1039], src: gen, desc: "recipe weapon icon"}
+      38: {name: sky_lance, xy: [253, 1039], src: gen, desc: "recipe weapon icon"}
+      39: {name: wolf_totem, xy: [271, 1039], src: gen, desc: "recipe weapon icon"}
+      40: {name: mirror_shards, xy: [289, 1039], src: gen, desc: "recipe weapon icon"}
+      41: {name: runic_wall, xy: [307, 1039], src: gen, desc: "recipe weapon icon"}
+      42: {name: hawk_companion, xy: [325, 1039], src: gen, desc: "recipe weapon icon"}
+      43: {name: shield_wall, xy: [343, 1039], src: gen, desc: "recipe weapon icon"}
+      44: {name: philosophers_spiral, xy: [361, 1039], src: gen, desc: "recipe weapon icon"}
+      45: {name: storm_whip, xy: [379, 1039], src: gen, desc: "recipe weapon icon"}
+      46: {name: ghoul_pack, xy: [397, 1039], src: gen, desc: "recipe weapon icon"}
+      47: {name: sun_spiral, xy: [415, 1039], src: gen, desc: "recipe weapon icon"}
+      48: {name: riposte_whip, xy: [1, 1057], src: gen, desc: "recipe weapon icon"}
+      49: {name: bramble_wall, xy: [19, 1057], src: gen, desc: "recipe weapon icon"}
+      50: {name: clockwork_drone, xy: [37, 1057], src: gen, desc: "recipe weapon icon"}
+      51: {name: fate_spiral, xy: [55, 1057], src: gen, desc: "recipe weapon icon"}
+      52: {name: powder_crew, xy: [73, 1057], src: gen, desc: "recipe weapon icon"}
+      53: {empty: true, xy: [91, 1057]}
+      54: {empty: true, xy: [109, 1057]}
+      55: {empty: true, xy: [127, 1057]}
+      56: {empty: true, xy: [145, 1057]}
+      57: {empty: true, xy: [163, 1057]}
+      58: {empty: true, xy: [181, 1057]}
+      59: {empty: true, xy: [199, 1057]}
+      60: {empty: true, xy: [217, 1057]}
+      61: {empty: true, xy: [235, 1057]}
+      62: {empty: true, xy: [253, 1057]}
+      63: {empty: true, xy: [271, 1057]}
+      64: {empty: true, xy: [289, 1057]}
+      65: {empty: true, xy: [307, 1057]}
+      66: {empty: true, xy: [325, 1057]}
+      67: {empty: true, xy: [343, 1057]}
+      68: {empty: true, xy: [361, 1057]}
+      69: {empty: true, xy: [379, 1057]}
+      70: {empty: true, xy: [397, 1057]}
+      71: {empty: true, xy: [415, 1057]}
+      72: {empty: true, xy: [1, 1075]}
+      73: {empty: true, xy: [19, 1075]}
+      74: {empty: true, xy: [37, 1075]}
+      75: {empty: true, xy: [55, 1075]}
+      76: {empty: true, xy: [73, 1075]}
+      77: {empty: true, xy: [91, 1075]}
+      78: {empty: true, xy: [109, 1075]}
+      79: {empty: true, xy: [127, 1075]}
+      80: {empty: true, xy: [145, 1075]}
+      81: {empty: true, xy: [163, 1075]}
+      82: {empty: true, xy: [181, 1075]}
+      83: {empty: true, xy: [199, 1075]}
+      84: {empty: true, xy: [217, 1075]}
+      85: {empty: true, xy: [235, 1075]}
+      86: {empty: true, xy: [253, 1075]}
+      87: {empty: true, xy: [271, 1075]}
+      88: {empty: true, xy: [289, 1075]}
+      89: {empty: true, xy: [307, 1075]}
+      90: {empty: true, xy: [325, 1075]}
+      91: {empty: true, xy: [343, 1075]}
+      92: {empty: true, xy: [361, 1075]}
+      93: {empty: true, xy: [379, 1075]}
+      94: {empty: true, xy: [397, 1075]}
+      95: {empty: true, xy: [415, 1075]}
+      96: {empty: true, xy: [1, 1093]}
+      97: {empty: true, xy: [19, 1093]}
+      98: {empty: true, xy: [37, 1093]}
+      99: {empty: true, xy: [55, 1093]}
+      100: {empty: true, xy: [73, 1093]}
+      101: {empty: true, xy: [91, 1093]}
+      102: {empty: true, xy: [109, 1093]}
+      103: {empty: true, xy: [127, 1093]}
+      104: {empty: true, xy: [145, 1093]}
+      105: {empty: true, xy: [163, 1093]}
+      106: {empty: true, xy: [181, 1093]}
+      107: {empty: true, xy: [199, 1093]}
+      108: {empty: true, xy: [217, 1093]}
+      109: {empty: true, xy: [235, 1093]}
+      110: {empty: true, xy: [253, 1093]}
+      111: {empty: true, xy: [271, 1093]}
+      112: {empty: true, xy: [289, 1093]}
+      113: {empty: true, xy: [307, 1093]}
+      114: {empty: true, xy: [325, 1093]}
+      115: {empty: true, xy: [343, 1093]}
+      116: {empty: true, xy: [361, 1093]}
+      117: {empty: true, xy: [379, 1093]}
+      118: {empty: true, xy: [397, 1093]}
+      119: {empty: true, xy: [415, 1093]}
+      120: {empty: true, xy: [1, 1111]}
+      121: {empty: true, xy: [19, 1111]}
+      122: {empty: true, xy: [37, 1111]}
+      123: {empty: true, xy: [55, 1111]}
+      124: {empty: true, xy: [73, 1111]}
+      125: {empty: true, xy: [91, 1111]}
+      126: {empty: true, xy: [109, 1111]}
+      127: {empty: true, xy: [127, 1111]}
+      128: {empty: true, xy: [145, 1111]}
+      129: {empty: true, xy: [163, 1111]}
+      130: {empty: true, xy: [181, 1111]}
+      131: {empty: true, xy: [199, 1111]}
+      132: {empty: true, xy: [217, 1111]}
+      133: {empty: true, xy: [235, 1111]}
+      134: {empty: true, xy: [253, 1111]}
+      135: {empty: true, xy: [271, 1111]}
+      136: {empty: true, xy: [289, 1111]}
+      137: {empty: true, xy: [307, 1111]}
+      138: {empty: true, xy: [325, 1111]}
+      139: {empty: true, xy: [343, 1111]}
+      140: {empty: true, xy: [361, 1111]}
+      141: {empty: true, xy: [379, 1111]}
+      142: {empty: true, xy: [397, 1111]}
+      143: {empty: true, xy: [415, 1111]}
+      144: {empty: true, xy: [1, 1129]}
+      145: {empty: true, xy: [19, 1129]}
+      146: {empty: true, xy: [37, 1129]}
+      147: {empty: true, xy: [55, 1129]}
+      148: {empty: true, xy: [73, 1129]}
+      149: {empty: true, xy: [91, 1129]}
+      150: {empty: true, xy: [109, 1129]}
+      151: {empty: true, xy: [127, 1129]}
+      152: {name: spellweave_thread, xy: [145, 1129], src: gen, desc: "passive talent icon (Talent::PASSIVE_ICONS)"}
+      153: {name: wide_grip, xy: [163, 1129], src: gen, desc: "passive talent icon (Talent::PASSIVE_ICONS)"}
+      154: {name: swift_quiver, xy: [181, 1129], src: gen, desc: "passive talent icon (Talent::PASSIVE_ICONS)"}
+      155: {name: keen_edge, xy: [199, 1129], src: gen, desc: "passive talent icon (Talent::PASSIVE_ICONS)"}
+      156: {name: fleet_heart, xy: [217, 1129], src: gen, desc: "passive talent icon (Talent::PASSIVE_ICONS)"}
+      157: {name: ember_heart, xy: [235, 1129], src: gen, desc: "passive talent icon (Talent::PASSIVE_ICONS)"}
+      158: {name: collector, xy: [253, 1129], src: gen, desc: "passive talent icon (Talent::PASSIVE_ICONS)"}
+      159: {name: summoners_seal, xy: [271, 1129], src: gen, desc: "passive talent icon (Talent::PASSIVE_ICONS)"}
+      160: {name: shrinekeepers_lamp, xy: [289, 1129], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      161: {name: cartographers_quill, xy: [307, 1129], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      162: {name: moon_dial, xy: [325, 1129], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      163: {name: storm_glass, xy: [343, 1129], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      164: {name: snow_globe, xy: [361, 1129], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      165: {name: sun_shard, xy: [379, 1129], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      166: {name: bog_heart, xy: [397, 1129], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      167: {name: hollow_crown, xy: [415, 1129], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      168: {name: grave_dirt, xy: [1, 1147], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      169: {name: pilgrims_staff, xy: [19, 1147], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      170: {name: tidecaller, xy: [37, 1147], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      171: {name: lantern_of_ages, xy: [55, 1147], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      172: {name: wanderers_boots, xy: [73, 1147], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      173: {name: star_chart, xy: [91, 1147], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      174: {name: thunder_idol, xy: [109, 1147], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS)"}
+      175: {name: dawnstone, xy: [127, 1147], src: gen, desc: "world relic/charm icon (WorldRelic::ICONS); charms from EmberLocket on reuse it"}
+      176: {empty: true, xy: [145, 1147]}
+      177: {empty: true, xy: [163, 1147]}
+      178: {empty: true, xy: [181, 1147]}
+      179: {empty: true, xy: [199, 1147]}
+      180: {empty: true, xy: [217, 1147]}
+      181: {empty: true, xy: [235, 1147]}
+      182: {empty: true, xy: [253, 1147]}
+      183: {empty: true, xy: [271, 1147]}
+      184: {empty: true, xy: [289, 1147]}
+      185: {empty: true, xy: [307, 1147]}
+      186: {empty: true, xy: [325, 1147]}
+      187: {empty: true, xy: [343, 1147]}
+      188: {empty: true, xy: [361, 1147]}
+      189: {empty: true, xy: [379, 1147]}
+      190: {empty: true, xy: [397, 1147]}
+      191: {empty: true, xy: [415, 1147]}
+      192: {name: time_warp, xy: [1, 1165], src: gen, desc: "skill icon"}
+      193: {name: mana_surge, xy: [19, 1165], src: gen, desc: "skill icon"}
+      194: {name: arcane_missiles, xy: [37, 1165], src: gen, desc: "skill icon"}
+      195: {name: singularity, xy: [55, 1165], src: gen, desc: "skill icon"}
+      196: {name: arrow_storm, xy: [73, 1165], src: gen, desc: "skill icon"}
+      197: {name: shield_charge, xy: [91, 1165], src: gen, desc: "skill icon"}
+      198: {name: miasma, xy: [109, 1165], src: gen, desc: "skill icon"}
+      199: {name: chain_storm, xy: [127, 1165], src: gen, desc: "skill icon"}
+      200: {name: death_grip, xy: [145, 1165], src: gen, desc: "skill icon"}
+      201: {name: sacred_light, xy: [163, 1165], src: gen, desc: "skill icon"}
+      202: {name: lunge, xy: [181, 1165], src: gen, desc: "skill icon"}
+      203: {name: brambles, xy: [199, 1165], src: gen, desc: "skill icon"}
+      204: {name: minefield, xy: [217, 1165], src: gen, desc: "skill icon"}
+      205: {name: comet, xy: [235, 1165], src: gen, desc: "skill icon"}
+      206: {name: powder_keg, xy: [253, 1165], src: gen, desc: "skill icon"}
+      207: {name: war_cry, xy: [271, 1165], src: gen, desc: "skill icon"}
+      208: {name: bandage, xy: [289, 1165], src: gen, desc: "skill icon"}
+      209: {name: tumble, xy: [307, 1165], src: gen, desc: "skill icon"}
+      210: {name: whirlwind, xy: [325, 1165], src: gen, desc: "skill icon"}
+      211: {name: ground_slam, xy: [343, 1165], src: gen, desc: "skill icon"}
+      212: {name: fire_ring, xy: [361, 1165], src: gen, desc: "skill icon"}
+      213: {name: lodestar, xy: [379, 1165], src: gen, desc: "skill icon"}
+      214: {name: snare_net, xy: [397, 1165], src: gen, desc: "skill icon"}
+      215: {name: war_banner, xy: [415, 1165], src: gen, desc: "skill icon"}
+      216: {name: hunters_mark, xy: [1, 1183], src: gen, desc: "skill icon"}
+      217: {name: flask_barrage, xy: [19, 1183], src: gen, desc: "skill icon"}
+      218: {name: tempest, xy: [37, 1183], src: gen, desc: "skill icon"}
+      219: {name: blood_pact, xy: [55, 1183], src: gen, desc: "skill icon"}
+      220: {name: hallowed_ground, xy: [73, 1183], src: gen, desc: "skill icon"}
+      221: {name: flash_step, xy: [91, 1183], src: gen, desc: "skill icon"}
+      222: {name: overgrowth, xy: [109, 1183], src: gen, desc: "skill icon"}
+      223: {name: scrap_barrage, xy: [127, 1183], src: gen, desc: "skill icon"}
+      224: {name: eclipse, xy: [145, 1183], src: gen, desc: "skill icon"}
+      225: {name: whirlpool, xy: [163, 1183], src: gen, desc: "skill icon"}
+      226: {name: smoke_bomb, xy: [181, 1183], src: gen, desc: "skill icon"}
+      227: {name: blood_rite, xy: [199, 1183], src: gen, desc: "skill icon"}
+      228: {name: gravity_well, xy: [217, 1183], src: gen, desc: "skill icon"}
+      229: {name: mirror_image, xy: [235, 1183], src: gen, desc: "skill icon"}
+      230: {name: rallying_horn, xy: [253, 1183], src: gen, desc: "skill icon"}
+      231: {name: shatter_wave, xy: [271, 1183], src: gen, desc: "skill icon"}
+      232: {name: second_sight, xy: [289, 1183], src: gen, desc: "skill icon"}
+      233: {name: sprint, xy: [307, 1183], src: gen, desc: "skill icon"}
+      234: {name: prismatic_prison, xy: [325, 1183], src: gen, desc: "skill icon"}
+      235: {name: call_the_hawk, xy: [343, 1183], src: gen, desc: "skill icon"}
+      236: {name: last_stand, xy: [361, 1183], src: gen, desc: "skill icon"}
+      237: {name: transmutation_circle, xy: [379, 1183], src: gen, desc: "skill icon"}
+      238: {name: eye_of_the_storm, xy: [397, 1183], src: gen, desc: "skill icon"}
+      239: {name: raise_dead, xy: [415, 1183], src: gen, desc: "skill icon"}
+      240: {name: halo_of_mercy, xy: [1, 1201], src: gen, desc: "skill icon"}
+      241: {name: perfect_parry, xy: [19, 1201], src: gen, desc: "skill icon"}
+      242: {name: earthen_wall, xy: [37, 1201], src: gen, desc: "skill icon"}
+      243: {name: overclock, xy: [55, 1201], src: gen, desc: "skill icon"}
+      244: {name: foresight, xy: [73, 1201], src: gen, desc: "skill icon"}
+      245: {name: cannonade, xy: [91, 1201], src: gen, desc: "skill icon"}
+      246: {empty: true, xy: [109, 1201]}
+      247: {empty: true, xy: [127, 1201]}
+      248: {empty: true, xy: [145, 1201]}
+      249: {empty: true, xy: [163, 1201]}
+      250: {empty: true, xy: [181, 1201]}
+      251: {empty: true, xy: [199, 1201]}
+      252: {empty: true, xy: [217, 1201]}
+      253: {empty: true, xy: [235, 1201]}
+      254: {empty: true, xy: [253, 1201]}
+      255: {empty: true, xy: [271, 1201]}
+      256: {empty: true, xy: [289, 1201]}
+      257: {empty: true, xy: [307, 1201]}
+      258: {empty: true, xy: [325, 1201]}
+      259: {empty: true, xy: [343, 1201]}
+      260: {empty: true, xy: [361, 1201]}
+      261: {empty: true, xy: [379, 1201]}
+      262: {empty: true, xy: [397, 1201]}
+      263: {empty: true, xy: [415, 1201]}
+      264: {name: bloodthirst, xy: [1, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      265: {name: glass_cannon, xy: [19, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      266: {name: momentum, xy: [37, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      267: {name: cold_blood, xy: [55, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      268: {name: pyromaniac, xy: [73, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      269: {name: scavenger, xy: [91, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      270: {name: thick_skin, xy: [109, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      271: {name: vengeance, xy: [127, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      272: {name: night_owl, xy: [145, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      273: {name: hunters_instinct, xy: [163, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      274: {name: overflow, xy: [181, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      275: {name: afterimage, xy: [199, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      276: {name: spellweave, xy: [217, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      277: {name: volley_master, xy: [235, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      278: {name: juggernaut, xy: [253, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      279: {name: catalyst, xy: [271, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      280: {name: static_build, xy: [289, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      281: {name: soul_hoard, xy: [307, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      282: {name: sanctified, xy: [325, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      283: {name: flow, xy: [343, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      284: {name: rooted, xy: [361, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      285: {name: spare_parts, xy: [379, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      286: {name: prophecy, xy: [397, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+      287: {name: plunderer, xy: [415, 1219], src: gen, desc: "talent badge (Talent::ICONS)"}
+
+  landmarks:
+    title: "10 landmarks, each 3 cols x 4 rows (tools/make_landmarks.py)"
+    accessor: "atlas::landmark(index, row, col)"
+    origin: [1, 1237]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 5]     # cols, rows
+    note: "cell = L*12 + row*3 + col; stacked as props at yo 0/-16/-32/-48"
+    cells:
+      0: {name: ancient_tree_r0c0, xy: [1, 1237], src: gen, desc: "a vast oak with lantern fruit"}
+      1: {name: ancient_tree_r0c1, xy: [19, 1237], src: gen}
+      2: {name: ancient_tree_r0c2, xy: [37, 1237], src: gen}
+      3: {name: ancient_tree_r1c0, xy: [55, 1237], src: gen}
+      4: {name: ancient_tree_r1c1, xy: [73, 1237], src: gen}
+      5: {name: ancient_tree_r1c2, xy: [91, 1237], src: gen}
+      6: {name: ancient_tree_r2c0, xy: [109, 1237], src: gen}
+      7: {name: ancient_tree_r2c1, xy: [127, 1237], src: gen}
+      8: {name: ancient_tree_r2c2, xy: [145, 1237], src: gen}
+      9: {name: ancient_tree_r3c0, xy: [163, 1237], src: gen}
+      10: {name: ancient_tree_r3c1, xy: [181, 1237], src: gen}
+      11: {name: ancient_tree_r3c2, xy: [199, 1237], src: gen}
+      12: {empty: true, xy: [217, 1237]}
+      13: {empty: true, xy: [235, 1237]}
+      14: {empty: true, xy: [253, 1237]}
+      15: {empty: true, xy: [271, 1237]}
+      16: {name: fallen_star_r1c1, xy: [289, 1237], src: gen}
+      17: {empty: true, xy: [307, 1237]}
+      18: {name: fallen_star_r2c0, xy: [325, 1237], src: gen}
+      19: {name: fallen_star_r2c1, xy: [343, 1237], src: gen}
+      20: {name: fallen_star_r2c2, xy: [361, 1237], src: gen}
+      21: {name: fallen_star_r3c0, xy: [379, 1237], src: gen}
+      22: {name: fallen_star_r3c1, xy: [397, 1237], src: gen}
+      23: {name: fallen_star_r3c2, xy: [415, 1237], src: gen}
+      24: {empty: true, xy: [1, 1255]}
+      25: {empty: true, xy: [19, 1255]}
+      26: {empty: true, xy: [37, 1255]}
+      27: {name: colossus_r1c0, xy: [55, 1255], src: gen}
+      28: {name: colossus_r1c1, xy: [73, 1255], src: gen}
+      29: {empty: true, xy: [91, 1255]}
+      30: {name: colossus_r2c0, xy: [109, 1255], src: gen}
+      31: {name: colossus_r2c1, xy: [127, 1255], src: gen}
+      32: {name: colossus_r2c2, xy: [145, 1255], src: gen}
+      33: {name: colossus_r3c0, xy: [163, 1255], src: gen}
+      34: {name: colossus_r3c1, xy: [181, 1255], src: gen}
+      35: {name: colossus_r3c2, xy: [199, 1255], src: gen}
+      36: {empty: true, xy: [217, 1255]}
+      37: {name: monolith_r0c1, xy: [235, 1255], src: gen}
+      38: {name: monolith_r0c2, xy: [253, 1255], src: gen}
+      39: {empty: true, xy: [271, 1255]}
+      40: {name: monolith_r1c1, xy: [289, 1255], src: gen}
+      41: {empty: true, xy: [307, 1255]}
+      42: {empty: true, xy: [325, 1255]}
+      43: {name: monolith_r2c1, xy: [343, 1255], src: gen}
+      44: {empty: true, xy: [361, 1255]}
+      45: {name: monolith_r3c0, xy: [379, 1255], src: gen}
+      46: {name: monolith_r3c1, xy: [397, 1255], src: gen}
+      47: {name: monolith_r3c2, xy: [415, 1255], src: gen}
+      48: {empty: true, xy: [1, 1273]}
+      49: {name: crystal_spire_r0c1, xy: [19, 1273], src: gen}
+      50: {empty: true, xy: [37, 1273]}
+      51: {name: crystal_spire_r1c0, xy: [55, 1273], src: gen}
+      52: {name: crystal_spire_r1c1, xy: [73, 1273], src: gen}
+      53: {name: crystal_spire_r1c2, xy: [91, 1273], src: gen}
+      54: {name: crystal_spire_r2c0, xy: [109, 1273], src: gen}
+      55: {name: crystal_spire_r2c1, xy: [127, 1273], src: gen}
+      56: {name: crystal_spire_r2c2, xy: [145, 1273], src: gen}
+      57: {name: crystal_spire_r3c0, xy: [163, 1273], src: gen}
+      58: {name: crystal_spire_r3c1, xy: [181, 1273], src: gen}
+      59: {name: crystal_spire_r3c2, xy: [199, 1273], src: gen}
+      60: {name: great_mushroom_r0c0, xy: [217, 1273], src: gen, desc: "a red-capped giant with a pale stem"}
+      61: {name: great_mushroom_r0c1, xy: [235, 1273], src: gen}
+      62: {name: great_mushroom_r0c2, xy: [253, 1273], src: gen}
+      63: {name: great_mushroom_r1c0, xy: [271, 1273], src: gen}
+      64: {name: great_mushroom_r1c1, xy: [289, 1273], src: gen}
+      65: {name: great_mushroom_r1c2, xy: [307, 1273], src: gen}
+      66: {empty: true, xy: [325, 1273]}
+      67: {name: great_mushroom_r2c1, xy: [343, 1273], src: gen}
+      68: {empty: true, xy: [361, 1273]}
+      69: {name: great_mushroom_r3c0, xy: [379, 1273], src: gen}
+      70: {name: great_mushroom_r3c1, xy: [397, 1273], src: gen}
+      71: {name: great_mushroom_r3c2, xy: [415, 1273], src: gen}
+      72: {empty: true, xy: [1, 1291]}
+      73: {name: shipwreck_r0c1, xy: [19, 1291], src: gen}
+      74: {name: shipwreck_r0c2, xy: [37, 1291], src: gen}
+      75: {name: shipwreck_r1c0, xy: [55, 1291], src: gen}
+      76: {name: shipwreck_r1c1, xy: [73, 1291], src: gen}
+      77: {name: shipwreck_r1c2, xy: [91, 1291], src: gen}
+      78: {name: shipwreck_r2c0, xy: [109, 1291], src: gen}
+      79: {name: shipwreck_r2c1, xy: [127, 1291], src: gen}
+      80: {name: shipwreck_r2c2, xy: [145, 1291], src: gen}
+      81: {name: shipwreck_r3c0, xy: [163, 1291], src: gen}
+      82: {name: shipwreck_r3c1, xy: [181, 1291], src: gen}
+      83: {name: shipwreck_r3c2, xy: [199, 1291], src: gen}
+      84: {name: ancient_gate_r0c0, xy: [217, 1291], src: gen, desc: "a stone arch around a swirling portal"}
+      85: {name: ancient_gate_r0c1, xy: [235, 1291], src: gen}
+      86: {name: ancient_gate_r0c2, xy: [253, 1291], src: gen}
+      87: {name: ancient_gate_r1c0, xy: [271, 1291], src: gen}
+      88: {name: ancient_gate_r1c1, xy: [289, 1291], src: gen}
+      89: {name: ancient_gate_r1c2, xy: [307, 1291], src: gen}
+      90: {name: ancient_gate_r2c0, xy: [325, 1291], src: gen}
+      91: {name: ancient_gate_r2c1, xy: [343, 1291], src: gen}
+      92: {name: ancient_gate_r2c2, xy: [361, 1291], src: gen}
+      93: {name: ancient_gate_r3c0, xy: [379, 1291], src: gen}
+      94: {name: ancient_gate_r3c1, xy: [397, 1291], src: gen}
+      95: {name: ancient_gate_r3c2, xy: [415, 1291], src: gen}
+      96: {name: ember_forge_r0c0, xy: [1, 1309], src: gen, desc: "an anvil on glowing coals"}
+      97: {name: ember_forge_r0c1, xy: [19, 1309], src: gen}
+      98: {empty: true, xy: [37, 1309]}
+      99: {name: ember_forge_r1c0, xy: [55, 1309], src: gen}
+      100: {name: ember_forge_r1c1, xy: [73, 1309], src: gen}
+      101: {name: ember_forge_r1c2, xy: [91, 1309], src: gen}
+      102: {name: ember_forge_r2c0, xy: [109, 1309], src: gen}
+      103: {name: ember_forge_r2c1, xy: [127, 1309], src: gen}
+      104: {name: ember_forge_r2c2, xy: [145, 1309], src: gen}
+      105: {name: ember_forge_r3c0, xy: [163, 1309], src: gen}
+      106: {name: ember_forge_r3c1, xy: [181, 1309], src: gen}
+      107: {name: ember_forge_r3c2, xy: [199, 1309], src: gen}
+      108: {name: frozen_giant_r0c0, xy: [217, 1309], src: gen, desc: "a figure sealed in a block of ice"}
+      109: {name: frozen_giant_r0c1, xy: [235, 1309], src: gen}
+      110: {name: frozen_giant_r0c2, xy: [253, 1309], src: gen}
+      111: {name: frozen_giant_r1c0, xy: [271, 1309], src: gen}
+      112: {name: frozen_giant_r1c1, xy: [289, 1309], src: gen}
+      113: {name: frozen_giant_r1c2, xy: [307, 1309], src: gen}
+      114: {name: frozen_giant_r2c0, xy: [325, 1309], src: gen}
+      115: {name: frozen_giant_r2c1, xy: [343, 1309], src: gen}
+      116: {name: frozen_giant_r2c2, xy: [361, 1309], src: gen}
+      117: {name: frozen_giant_r3c0, xy: [379, 1309], src: gen}
+      118: {name: frozen_giant_r3c1, xy: [397, 1309], src: gen}
+      119: {name: frozen_giant_r3c2, xy: [415, 1309], src: gen}
+
+  cliffs:
+    title: "Cliff materials + stairs (tools/make_cliffs.py)"
+    accessor: "atlas::cliff(m>0, off) / atlas::stairs(m, part)"
+    origin: [1, 1327]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 3]     # cols, rows
+    note: "material m (1-5) owns (m-1)*9..+8 (centre transparent); stairs for m 0-5 at 45+m*3..+2"
+    cells:
+      0: {name: cliff_stone_top_left, xy: [1, 1327], src: gen}
+      1: {name: cliff_stone_top, xy: [19, 1327], src: gen}
+      2: {name: cliff_stone_top_right, xy: [37, 1327], src: gen}
+      3: {name: cliff_stone_left, xy: [55, 1327], src: gen}
+      4: {empty: true, xy: [73, 1327]}
+      5: {name: cliff_stone_right, xy: [91, 1327], src: gen}
+      6: {name: cliff_stone_bottom_left, xy: [109, 1327], src: gen}
+      7: {name: cliff_stone_bottom, xy: [127, 1327], src: gen}
+      8: {name: cliff_stone_bottom_right, xy: [145, 1327], src: gen}
+      9: {name: cliff_sandstone_top_left, xy: [163, 1327], src: gen}
+      10: {name: cliff_sandstone_top, xy: [181, 1327], src: gen}
+      11: {name: cliff_sandstone_top_right, xy: [199, 1327], src: gen}
+      12: {name: cliff_sandstone_left, xy: [217, 1327], src: gen}
+      13: {empty: true, xy: [235, 1327]}
+      14: {name: cliff_sandstone_right, xy: [253, 1327], src: gen}
+      15: {name: cliff_sandstone_bottom_left, xy: [271, 1327], src: gen}
+      16: {name: cliff_sandstone_bottom, xy: [289, 1327], src: gen}
+      17: {name: cliff_sandstone_bottom_right, xy: [307, 1327], src: gen}
+      18: {name: cliff_ice_top_left, xy: [325, 1327], src: gen}
+      19: {name: cliff_ice_top, xy: [343, 1327], src: gen}
+      20: {name: cliff_ice_top_right, xy: [361, 1327], src: gen}
+      21: {name: cliff_ice_left, xy: [379, 1327], src: gen}
+      22: {empty: true, xy: [397, 1327]}
+      23: {name: cliff_ice_right, xy: [415, 1327], src: gen}
+      24: {name: cliff_ice_bottom_left, xy: [1, 1345], src: gen}
+      25: {name: cliff_ice_bottom, xy: [19, 1345], src: gen}
+      26: {name: cliff_ice_bottom_right, xy: [37, 1345], src: gen}
+      27: {name: cliff_basalt_top_left, xy: [55, 1345], src: gen}
+      28: {name: cliff_basalt_top, xy: [73, 1345], src: gen}
+      29: {name: cliff_basalt_top_right, xy: [91, 1345], src: gen}
+      30: {name: cliff_basalt_left, xy: [109, 1345], src: gen}
+      31: {empty: true, xy: [127, 1345]}
+      32: {name: cliff_basalt_right, xy: [145, 1345], src: gen}
+      33: {name: cliff_basalt_bottom_left, xy: [163, 1345], src: gen}
+      34: {name: cliff_basalt_bottom, xy: [181, 1345], src: gen}
+      35: {name: cliff_basalt_bottom_right, xy: [199, 1345], src: gen}
+      36: {name: cliff_mossy_stone_top_left, xy: [217, 1345], src: gen}
+      37: {name: cliff_mossy_stone_top, xy: [235, 1345], src: gen}
+      38: {name: cliff_mossy_stone_top_right, xy: [253, 1345], src: gen}
+      39: {name: cliff_mossy_stone_left, xy: [271, 1345], src: gen}
+      40: {empty: true, xy: [289, 1345]}
+      41: {name: cliff_mossy_stone_right, xy: [307, 1345], src: gen}
+      42: {name: cliff_mossy_stone_bottom_left, xy: [325, 1345], src: gen}
+      43: {name: cliff_mossy_stone_bottom, xy: [343, 1345], src: gen}
+      44: {name: cliff_mossy_stone_bottom_right, xy: [361, 1345], src: gen}
+      45: {name: stairs_duskmoon_earth_left, xy: [379, 1345], src: gen}
+      46: {name: stairs_duskmoon_earth_middle, xy: [397, 1345], src: gen}
+      47: {name: stairs_duskmoon_earth_right, xy: [415, 1345], src: gen}
+      48: {name: stairs_stone_left, xy: [1, 1363], src: gen}
+      49: {name: stairs_stone_middle, xy: [19, 1363], src: gen}
+      50: {name: stairs_stone_right, xy: [37, 1363], src: gen}
+      51: {name: stairs_sandstone_left, xy: [55, 1363], src: gen}
+      52: {name: stairs_sandstone_middle, xy: [73, 1363], src: gen}
+      53: {name: stairs_sandstone_right, xy: [91, 1363], src: gen}
+      54: {name: stairs_ice_left, xy: [109, 1363], src: gen}
+      55: {name: stairs_ice_middle, xy: [127, 1363], src: gen}
+      56: {name: stairs_ice_right, xy: [145, 1363], src: gen}
+      57: {name: stairs_basalt_left, xy: [163, 1363], src: gen}
+      58: {name: stairs_basalt_middle, xy: [181, 1363], src: gen}
+      59: {name: stairs_basalt_right, xy: [199, 1363], src: gen}
+      60: {name: stairs_mossy_stone_left, xy: [217, 1363], src: gen}
+      61: {name: stairs_mossy_stone_middle, xy: [235, 1363], src: gen}
+      62: {name: stairs_mossy_stone_right, xy: [253, 1363], src: gen}
+      63: {empty: true, xy: [271, 1363]}
+      64: {empty: true, xy: [289, 1363]}
+      65: {empty: true, xy: [307, 1363]}
+      66: {empty: true, xy: [325, 1363]}
+      67: {empty: true, xy: [343, 1363]}
+      68: {empty: true, xy: [361, 1363]}
+      69: {empty: true, xy: [379, 1363]}
+      70: {empty: true, xy: [397, 1363]}
+      71: {empty: true, xy: [415, 1363]}
+
+  bestiary:
+    title: "Post-expansion foes and crafting materials (tools/make_bestiary.py)"
+    accessor: "atlas::beast(i)"
+    origin: [1, 1381]   # pixel of cell 0 (inside the 1px gutter)
+    grid: [24, 6]     # cols, rows
+    note: "cell 72+i is the step (walk) frame of cell i (bs::Step = 72)"
+    cells:
+      0: {name: thornling, xy: [1, 1381], src: code, ref: "bs::Thornling", desc: "a walking bramble knot with red eyes"}
+      1: {name: wild_boar, xy: [19, 1381], src: code, ref: "bs::Boar", desc: "a bristled boar with ivory tusks"}
+      2: {name: goblin_archer, xy: [37, 1381], src: code, ref: "bs::GoblinArcher", desc: "a green goblin in a leather hood with a short bow"}
+      3: {name: goblin_shaman, xy: [55, 1381], src: code, ref: "bs::GoblinShaman", desc: "a goblin in a red robe with a feathered staff"}
+      4: {name: sapling, xy: [73, 1381], src: code, ref: "bs::Sapling", desc: "a young walking tree"}
+      5: {name: treant, xy: [91, 1381], src: code, ref: "bs::Treant", desc: "the sapling grown: a broad oak with a face in the bark"}
+      6: {name: moth_wisp, xy: [109, 1381], src: code, ref: "bs::MothWisp", desc: "a pale moth with a glowing body"}
+      7: {name: cutthroat, xy: [127, 1381], src: code, ref: "bs::Cutthroat", desc: "a hooded bandit with a knife"}
+      8: {name: bog_toad, xy: [145, 1381], src: code, ref: "bs::BogToad", desc: "a fat mottled toad with a pale belly"}
+      9: {name: drowned, xy: [163, 1381], src: code, ref: "bs::Drowned", desc: "a waterlogged corpse in kelp, glowing eyes"}
+      10: {name: snapjaw, xy: [181, 1381], src: code, ref: "bs::Snapjaw", desc: "a broad marsh crocodile, jaws open"}
+      11: {name: strangler_vine, xy: [199, 1381], src: code, ref: "bs::StranglerVine", desc: "a coiled thorny vine with a bulb mouth"}
+      12: {name: amber_beetle, xy: [217, 1381], src: code, ref: "bs::AmberBeetle", desc: "a beetle with a polished amber shell"}
+      13: {name: spore_puffer, xy: [235, 1381], src: code, ref: "bs::SporePuffer", desc: "a round violet puffball with tiny feet"}
+      14: {name: sunken_priest, xy: [253, 1381], src: code, ref: "bs::SunkenPriest", desc: "a hooded priest in sea-green robes with a coral staff"}
+      15: {name: yeti, xy: [271, 1381], src: code, ref: "bs::Yeti", desc: "a hulking white ape with a blue-grey face"}
+      16: {name: ice_wraith, xy: [289, 1381], src: code, ref: "bs::IceWraith", desc: "a floating frost-blue hood trailing tatters"}
+      17: {name: barrow_wight, xy: [307, 1381], src: code, ref: "bs::BarrowWight", desc: "a gaunt corpse in a rotted shroud, green eyes"}
+      18: {name: crystal_golem, xy: [325, 1381], src: code, ref: "bs::CrystalGolem", desc: "a violet crystal giant with spiked shoulders (the shard reuses it, scaled)"}
+      19: {name: moon_hound, xy: [343, 1381], src: code, ref: "bs::MoonHound", desc: "a lean silver-blue hound with glowing eyes"}
+      20: {name: lynx, xy: [361, 1381], src: code, ref: "bs::Lynx", desc: "a tawny spotted cat with black ear tufts"}
+      21: {name: barrow_archer, xy: [379, 1381], src: code, ref: "bs::BarrowArcher", desc: "a hooded skeleton with a bow and a frost arrow"}
+      22: {name: sand_wyrm, xy: [397, 1381], src: code, ref: "bs::SandWyrm", desc: "a sandworm rising from its mound, a ring of teeth (drawn at 2.2x)"}
+      23: {name: hyena, xy: [415, 1381], src: code, ref: "bs::Hyena", desc: "a dun hyena with a sloping back and dark spots"}
+      24: {name: salt_golem, xy: [1, 1399], src: code, ref: "bs::SaltGolem", desc: "a pale salt-crystal giant"}
+      25: {name: glass_spitter, xy: [19, 1399], src: code, ref: "bs::GlassSpitter", desc: "a green lizard with glassy spines"}
+      26: {name: storm_kite, xy: [37, 1399], src: code, ref: "bs::StormKite", desc: "a blue diamond ray with a forked tail"}
+      27: {name: dune_raider, xy: [55, 1399], src: code, ref: "bs::DuneRaider", desc: "a sand-wrapped raider with a red scarf and a spear"}
+      28: {name: totem_shaman, xy: [73, 1399], src: code, ref: "bs::TotemShaman", desc: "a masked shaman with a feather crown and a staff"}
+      29: {name: war_totem, xy: [91, 1399], src: code, ref: "bs::WarTotem", desc: "a carved pole with painted faces and wings"}
+      30: {name: magma_slug, xy: [109, 1399], src: code, ref: "bs::MagmaSlug", desc: "a crusted slug with glowing cracks and a molten underside"}
+      31: {name: ash_wraith, xy: [127, 1399], src: code, ref: "bs::AshWraith", desc: "a grey hooded spectre with ember eyes"}
+      32: {name: cave_horror, xy: [145, 1399], src: code, ref: "bs::CaveHorror", desc: "a pale eyeless brute with a wide maw and claws"}
+      33: {name: star_spawn, xy: [163, 1399], src: code, ref: "bs::StarSpawn", desc: "a five-pointed star creature with one eye (the starlet reuses it, scaled)"}
+      34: {name: flame_cultist, xy: [181, 1399], src: code, ref: "bs::FlameCultist", desc: "an orange-robed cultist holding fire in both hands"}
+      35: {name: hollow_sentinel, xy: [199, 1399], src: code, ref: "bs::HollowSentinel", desc: "a hollow knight with a tower shield and a spear"}
+      36: {name: ember_drake, xy: [217, 1399], src: code, ref: "bs::EmberDrake", desc: "a red drake, wings spread, fire in its belly (drawn at 2.2x)"}
+      37: {name: night_stalker, xy: [235, 1399], src: code, ref: "bs::NightStalker", desc: "a hunched shadow with red eyes (in game only the eyes show)"}
+      38: {name: grave_robber, xy: [253, 1399], src: code, ref: "bs::GraveRobber", desc: "a hooded robber with a sack and a shovel"}
+      39: {name: cave_bat, xy: [271, 1399], src: code, ref: "bs::CaveBat", desc: "a small dusky bat with red eyes"}
+      40: {name: rock_crawler, xy: [289, 1399], src: code, ref: "bs::RockCrawler", desc: "a grey stone crab that passes for a rock"}
+      41: {name: ore_golem, xy: [307, 1399], src: code, ref: "bs::OreGolem", desc: "the salt golem's shape in rust brown with gold ore"}
+      42: {name: kobold_miner, xy: [325, 1399], src: code, ref: "bs::KoboldMiner", desc: "a small kobold in a lamp helmet with a pickaxe"}
+      43: {name: hide, xy: [343, 1399], src: code, ref: "bs::Hide", desc: "a stretched pelt (crafting material, not a foe)"}
+      44: {name: bone, xy: [361, 1399], src: code, ref: "bs::Bone", desc: "a long bone (crafting material, not a foe)"}
+      45: {name: shade, xy: [379, 1399], src: code, ref: "bs::Shade", desc: "a hooded violet wisp with pale eyes that hunts lights"}
+      46: {name: nest, xy: [397, 1399], src: code, ref: "bs::Nest", desc: "a fleshy brood mound with glowing pores"}
+      47: {empty: true, xy: [415, 1399]}
+      48: {empty: true, xy: [1, 1417]}
+      49: {empty: true, xy: [19, 1417]}
+      50: {empty: true, xy: [37, 1417]}
+      51: {empty: true, xy: [55, 1417]}
+      52: {empty: true, xy: [73, 1417]}
+      53: {empty: true, xy: [91, 1417]}
+      54: {empty: true, xy: [109, 1417]}
+      55: {empty: true, xy: [127, 1417]}
+      56: {empty: true, xy: [145, 1417]}
+      57: {empty: true, xy: [163, 1417]}
+      58: {empty: true, xy: [181, 1417]}
+      59: {empty: true, xy: [199, 1417]}
+      60: {empty: true, xy: [217, 1417]}
+      61: {empty: true, xy: [235, 1417]}
+      62: {empty: true, xy: [253, 1417]}
+      63: {empty: true, xy: [271, 1417]}
+      64: {empty: true, xy: [289, 1417]}
+      65: {empty: true, xy: [307, 1417]}
+      66: {empty: true, xy: [325, 1417]}
+      67: {empty: true, xy: [343, 1417]}
+      68: {empty: true, xy: [361, 1417]}
+      69: {empty: true, xy: [379, 1417]}
+      70: {empty: true, xy: [397, 1417]}
+      71: {empty: true, xy: [415, 1417]}
+      72: {name: thornling_step, xy: [1, 1435], src: code, desc: "step frame"}
+      73: {name: wild_boar_step, xy: [19, 1435], src: code, desc: "step frame"}
+      74: {name: goblin_archer_step, xy: [37, 1435], src: code, desc: "step frame"}
+      75: {name: goblin_shaman_step, xy: [55, 1435], src: code, desc: "step frame"}
+      76: {name: sapling_step, xy: [73, 1435], src: code, desc: "step frame"}
+      77: {name: treant_step, xy: [91, 1435], src: code, desc: "step frame"}
+      78: {name: moth_wisp_step, xy: [109, 1435], src: code, desc: "step frame"}
+      79: {name: cutthroat_step, xy: [127, 1435], src: code, desc: "step frame"}
+      80: {name: bog_toad_step, xy: [145, 1435], src: code, desc: "step frame"}
+      81: {name: drowned_step, xy: [163, 1435], src: code, desc: "step frame"}
+      82: {name: snapjaw_step, xy: [181, 1435], src: code, desc: "step frame"}
+      83: {name: strangler_vine_step, xy: [199, 1435], src: code, desc: "step frame"}
+      84: {name: amber_beetle_step, xy: [217, 1435], src: code, desc: "step frame"}
+      85: {name: spore_puffer_step, xy: [235, 1435], src: code, desc: "step frame"}
+      86: {name: sunken_priest_step, xy: [253, 1435], src: code, desc: "step frame"}
+      87: {name: yeti_step, xy: [271, 1435], src: code, desc: "step frame"}
+      88: {name: ice_wraith_step, xy: [289, 1435], src: code, desc: "step frame"}
+      89: {name: barrow_wight_step, xy: [307, 1435], src: code, desc: "step frame"}
+      90: {name: crystal_golem_step, xy: [325, 1435], src: code, desc: "step frame"}
+      91: {name: moon_hound_step, xy: [343, 1435], src: code, desc: "step frame"}
+      92: {name: lynx_step, xy: [361, 1435], src: code, desc: "step frame"}
+      93: {name: barrow_archer_step, xy: [379, 1435], src: code, desc: "step frame"}
+      94: {name: sand_wyrm_step, xy: [397, 1435], src: code, desc: "step frame"}
+      95: {name: hyena_step, xy: [415, 1435], src: code, desc: "step frame"}
+      96: {name: salt_golem_step, xy: [1, 1453], src: code, desc: "step frame"}
+      97: {name: glass_spitter_step, xy: [19, 1453], src: code, desc: "step frame"}
+      98: {name: storm_kite_step, xy: [37, 1453], src: code, desc: "step frame"}
+      99: {name: dune_raider_step, xy: [55, 1453], src: code, desc: "step frame"}
+      100: {name: totem_shaman_step, xy: [73, 1453], src: code, desc: "step frame"}
+      101: {name: war_totem_step, xy: [91, 1453], src: code, desc: "step frame"}
+      102: {name: magma_slug_step, xy: [109, 1453], src: code, desc: "step frame"}
+      103: {name: ash_wraith_step, xy: [127, 1453], src: code, desc: "step frame"}
+      104: {name: cave_horror_step, xy: [145, 1453], src: code, desc: "step frame"}
+      105: {name: star_spawn_step, xy: [163, 1453], src: code, desc: "step frame"}
+      106: {name: flame_cultist_step, xy: [181, 1453], src: code, desc: "step frame"}
+      107: {name: hollow_sentinel_step, xy: [199, 1453], src: code, desc: "step frame"}
+      108: {name: ember_drake_step, xy: [217, 1453], src: code, desc: "step frame"}
+      109: {name: night_stalker_step, xy: [235, 1453], src: code, desc: "step frame"}
+      110: {name: grave_robber_step, xy: [253, 1453], src: code, desc: "step frame"}
+      111: {name: cave_bat_step, xy: [271, 1453], src: code, desc: "step frame"}
+      112: {name: rock_crawler_step, xy: [289, 1453], src: code, desc: "step frame"}
+      113: {name: ore_golem_step, xy: [307, 1453], src: code, desc: "step frame"}
+      114: {name: kobold_miner_step, xy: [325, 1453], src: code, desc: "step frame"}
+      115: {name: hide_step, xy: [343, 1453], src: code, desc: "step frame"}
+      116: {name: bone_step, xy: [361, 1453], src: code, desc: "step frame"}
+      117: {name: shade_step, xy: [379, 1453], src: code, desc: "step frame"}
+      118: {name: nest_step, xy: [397, 1453], src: code, desc: "step frame"}
+      119: {empty: true, xy: [415, 1453]}
+      120: {empty: true, xy: [1, 1471]}
+      121: {empty: true, xy: [19, 1471]}
+      122: {empty: true, xy: [37, 1471]}
+      123: {empty: true, xy: [55, 1471]}
+      124: {empty: true, xy: [73, 1471]}
+      125: {empty: true, xy: [91, 1471]}
+      126: {empty: true, xy: [109, 1471]}
+      127: {empty: true, xy: [127, 1471]}
+      128: {empty: true, xy: [145, 1471]}
+      129: {empty: true, xy: [163, 1471]}
+      130: {empty: true, xy: [181, 1471]}
+      131: {empty: true, xy: [199, 1471]}
+      132: {empty: true, xy: [217, 1471]}
+      133: {empty: true, xy: [235, 1471]}
+      134: {empty: true, xy: [253, 1471]}
+      135: {empty: true, xy: [271, 1471]}
+      136: {empty: true, xy: [289, 1471]}
+      137: {empty: true, xy: [307, 1471]}
+      138: {empty: true, xy: [325, 1471]}
+      139: {empty: true, xy: [343, 1471]}
+      140: {empty: true, xy: [361, 1471]}
+      141: {empty: true, xy: [379, 1471]}
+      142: {empty: true, xy: [397, 1471]}
+      143: {empty: true, xy: [415, 1471]}

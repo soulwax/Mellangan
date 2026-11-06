@@ -8,6 +8,7 @@ class Screen;
 class Night {
 public:
   static constexpr float KINDLE = 6;
+  static constexpr double PULL = 240;
   static constexpr int MAX_LIT = 64;
 
   int lit = 0;

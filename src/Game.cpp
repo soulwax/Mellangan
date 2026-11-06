@@ -576,7 +576,7 @@ void Game::render() {
   float shrine = menu ? menu->shrineEffect() : 0.0f;
   float flash = settings.flash / 100.0f;
   screen.beginGui(window, {time, hurt * flash, (health < 0.3f ? 1 - health / 0.3f : 0) * flash,
-                           pause, shrine});
+                           pause, shrine, menu ? menu->endGlow() : Color{0, 0, 0, 0}});
   if (worldDebug && dev)
     WorldDebug(screen, *level, xView, yView).render(input.mouseX, input.mouseY);
   if (!menu || menu->showHud())

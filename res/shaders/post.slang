@@ -26,7 +26,8 @@ struct PostData
     float pause;
     float shrine;
     float scale;       // screen pixels per world pixel
-    float _pad;
+    float glow;        // 0..1, the run is over
+    float4 glowTint;
 };
 [[vk::binding(3, 3)]]
 ConstantBuffer<PostData> post;
@@ -155,6 +156,36 @@ float4 PixelShader(float2 uv)
         psychCol += edgeAmethyst * edgeGlow * 0.6;
 
         col = lerp(col, psychCol, sAmt * 0.85);
+    }
+
+    if (post.glow > 0.001)
+    {
+        float gAmt = saturate(post.glow);
+        float2 gc = n * float2(res.x / res.y, 1.0);
+        float gDist = length(gc);
+        float gAng = atan2(gc.y, gc.x);
+        float3 tint = post.glowTint.rgb;
+        float breathe = 0.85 + 0.15 * sin(post.time * 2.0);
+
+        float gLuma = dot(col, float3(0.2126, 0.7152, 0.0722));
+        float3 calm = lerp(float3(gLuma, gLuma, gLuma), col, 0.25) * float3(0.26, 0.25, 0.3);
+        float centre = 1.0 - smoothstep(0.15, 0.8, gDist);
+        col = lerp(col, calm, gAmt * (0.7 + 0.25 * centre));
+
+        float flick = 0.5 + 0.5 * sin(gAng * 9.0 + post.time * 1.3) * sin(gAng * 5.0 - post.time * 0.9 + gDist * 5.0);
+        float tongues = pow(flick, 2.5);
+        float reach = 0.78 - tongues * 0.22 - 0.06 * saturate(n.y * 2.0);
+        float rim = smoothstep(reach, reach + 0.4, gDist);
+        float core = smoothstep(reach + 0.25, reach + 0.6, gDist);
+
+        float2 crown = (gc - float2(0.0, -0.4)) * float2(0.55, 2.4);
+        float halo = exp(-dot(crown, crown) * 5.0);
+
+        float3 lit = litAt(uv);
+        float shine = saturate(dot(lit, float3(0.333, 0.333, 0.333)) - 0.95);
+
+        col += tint * (rim * 0.75 + halo * 0.12 + shine * 0.8) * breathe * gAmt;
+        col += lerp(tint, float3(1.0, 0.95, 0.85), 0.5) * core * 0.35 * breathe * gAmt;
     }
 
     col += (hash(floor(uv) + frac(post.time * 7.31) * 113.0) - 0.5) * post.grain;

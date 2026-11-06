@@ -10,6 +10,9 @@
 #include "item/Upgrade.hpp"
 #include "entity/enemy/SupplyBarrel.hpp"
 #include "level/Level.hpp"
+#include "level/World.hpp"
+#include "entity/pickup/Gem.hpp"
+#include "entity/pickup/Magnet.hpp"
 
 void testRunRules() {
   {
@@ -81,5 +84,53 @@ void testRunRules() {
   }
   std::cout << "[TEST] Run rules: default dawn, day and night cycle, quiet spawner, fixed omen, "
                "safe zones, threat by place: PASS"
+            << std::endl;
+}
+
+namespace {
+bool shrineOnly(const Structure *s, const void *) { return s->kind == StructureKind::Shrine; }
+} // namespace
+
+void testLodestones() {
+  Rng kept = rng;
+  {
+    Game game;
+    game.level = std::make_unique<Level>(game);
+    Level &level = *game.level;
+    for (int i = 0; i < 20; i++) {
+      auto b = std::make_unique<SupplyBarrel>();
+      b->x = level.player->x + 200, b->y = level.player->y;
+      SupplyBarrel *at = b.get();
+      level.add(std::move(b));
+      at->hurt(1e6f, 0, 0, 0);
+    }
+    level.tick();
+    int stones = 0;
+    for (auto [id, o] : level.reg.view<Owned>().each())
+      stones += dynamic_cast<Magnet *>(o.self.get()) && !o.self->removed;
+    assert(stones == 20);
+    game.level.reset();
+  }
+  {
+    RunRules rules;
+    rules.spawnRate = 0, rules.waves = false, rules.bosses = false;
+    Game game;
+    game.level = std::make_unique<Level>(game, rules);
+    Level &level = *game.level;
+    Player &p = *level.player;
+    Structure s;
+    assert(world::nearestStructure(p.x, p.y, 8, s, shrineOnly));
+    p.x = s.centerX(), p.y = s.centerY(), p.god = true;
+    Gem *nearGem = level.add<Gem>(p.x + 150, p.y, 1.0f), *farGem = level.add<Gem>(p.x + 400, p.y, 1.0f);
+    for (int i = 0; i < 900 && !level.night.offering; i++) {
+      p.x = s.centerX(), p.y = s.centerY();
+      level.tick();
+    }
+    assert(level.night.offering && nearGem->magnet && !farGem->magnet);
+    game.level.reset();
+  }
+  rng = kept;
+  std::cout << "[TEST] Lodestones: every supply barrel drops one, and a kindled shrine pulls the gems "
+               "around it: PASS"
             << std::endl;
 }

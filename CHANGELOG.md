@@ -36,12 +36,18 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Changed
 
+- The end of a run glows. On the death screen ember-red tongues of light flicker at the screen edges, on the dawn screen sunrise gold; the world behind the recap darkens and loses its colour so the rank, stats and prompts stand out, and lanterns and fires keep a glow of the run's colour.
+- Lodestones are about three times as common: every supply barrel now drops one, beside its potion (45%) or nova (20%), so a run that fell behind on experience can catch up.
+- Kindling a shrine pulls in the gems lying within half a screen of it, like a small lodestone. The shrine's boon is chosen first; the levels those gems bring follow after it.
+- Foes lose sight of a fallen hero. Instead of crowding the body behind the death screen they go back about their own business and wander off; at dawn they still burn away as before.
+- Menu text for the pause, settings, controls, death and dawn screens comes from one string table, the first step towards translations. The pause screen's prompts now follow rebound keys and pad buttons like every other hint.
 - Level-up cards are more compact and only as tall as their content: a card without numbers or an evolution hint is about a third shorter than before. The LEVEL UP title no longer touches the first card, and the boss health bar sits at the bottom of the screen in line with your own, with its name clear above it.
 - Summons (Wolf Totem, Hawk Companion, Ghoul Pack, Clockwork Drone, Powder Crew) call fallen allies back every 2.5 s instead of 6 s; a call still only replaces the missing ones. Their level 4, which used to do nothing while the pack was alive, now reads "Hardier, 25% faster attacks": +60% ally health and 25% faster bites and shots, and evolving adds another +40% health. Ghoul Pack hits for 32 instead of 20. Against a walking crowd they used to fade to a sixth of a typical weapon's damage because allies died in about a second; they now reach half or more.
 - Eight weapons that the weapon lab found weak against both standing and walking crowds hit harder: Wraith Bolts 36 damage (from 16, +14 at level 3), Harpoon 60 (from 24, +30 and +40 on its damage levels), Hoarfrost Fan 22 (from 8), Seeker Runes 26 (from 11), Ball Lightning 28 (from 10), Tidal Ring 38 (from 18) and Fate Spiral 32 (from 14). Arcane Staff keeps its first level but gains +8 damage at levels 2 and 4 instead of +4 at level 2, so a maxed staff deals 26 per bolt instead of 14. Their level-5 damage roughly doubles, to between 0.4 and 0.8 times the median weapon.
 
 ### Fixed
 
+- Bastion sentries no longer walk through the town walls, and their shoulder-barge can no longer push a foe hugging the outside of a wall in through it. A wolf could slip inside that way.
 - Reaper's Scythe, Whirling Edge, Riposte and the sweeping foe strikes cut along the whole blade instead of only at its tip, so foes pressed against you are no longer missed and the "Longer reach" levels no longer lower their damage against a crowd.
 - The death and dawn screens no longer draw the HUD behind them, where the night clock ran into "YOU HAVE FALLEN".
 - The recap's DIFF field shows the difficulty tier you played (it showed the run's omen, or STANDARD); the omen now has its own line under the card.

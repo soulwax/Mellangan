@@ -28,6 +28,7 @@ constexpr Color muted{0.66f, 0.64f, 0.74f, 1};
 
 struct PostFx {
   float time, hurt, lowHealth, pause = 0, shrine = 0;
+  Color glow{0, 0, 0, 0};
 };
 class Screen {
 public:

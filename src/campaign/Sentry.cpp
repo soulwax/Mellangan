@@ -36,8 +36,10 @@ void Sentry::shove() {
     double xd = e.x - x, yd = e.y - y, d2 = xd * xd + yd * yd, min = BODY + e.radius;
     if (e.removed || d2 >= min * min || d2 < 1e-6)
       return;
-    double d = std::sqrt(d2);
+    double d = std::sqrt(d2), ox = e.x, oy = e.y;
     e.x = x + xd / d * min, e.y = y + yd / d * min;
+    if (level->rules.wall && !e.is(EnemyKind::Shade))
+      level->rules.wall(ox, oy, e.x, e.y);
   });
 }
 
@@ -87,6 +89,8 @@ void Sentry::tick() {
   double px = nx - post.x, py = ny - post.y, pd = std::sqrt(px * px + py * py);
   if (pd > GUARD * 0.7)
     nx = post.x + px / pd * GUARD * 0.7, ny = post.y + py / pd * GUARD * 0.7;
+  if (level->rules.wall)
+    level->rules.wall(x, y, nx, ny);
   x = nx, y = ny;
   if (!e)
     facing = xd < 0 ? -1.0f : 1.0f;

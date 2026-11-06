@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Math.hpp"
+#include "gfx/Screen.hpp"
 
 class Game;
-class Screen;
 
 class Menu {
 public:
@@ -18,4 +18,5 @@ public:
   virtual bool typing() const { return false; }
   virtual float pauseEffect() const { return 0; }
   virtual float shrineEffect() const { return 0; }
+  virtual Color endGlow() const { return {0, 0, 0, 0}; }
 };

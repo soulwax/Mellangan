@@ -68,6 +68,7 @@ int runTests() {
   testRebind();
   testPadRebind();
   testPalette();
+  testLang();
   testAdvice();
   testHints();
   testRunLog();
@@ -118,6 +119,8 @@ int runTests() {
   testSidedAbilities();
   testSidedEffects();
   testFoeKits();
+  testFallenUnseen();
+  testLodestones();
   testArtsBothSides();
   testGeneralSkills();
   testRunVariety();

@@ -7,6 +7,7 @@
 #include "test/Tests.hpp"
 
 #include <stdlib.h>
+#include <cmath>
 #include <cstring>
 #include <iostream>
 #include <thread>
@@ -370,5 +371,31 @@ void testArtsBothSides() {
     }
   }
   std::cout << "[TEST] New class skills strike foes for the player and the player for foes: PASS"
+            << std::endl;
+}
+
+void testFallenUnseen() {
+  Rng kept = rng;
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  std::vector<Enemy *> foes;
+  for (int i = 0; i < 8; i++) {
+    auto foe = Enemy::create(EnemyKind::Knight, 50, 1);
+    foe->x = p.x + std::cos(i * TAU / 8) * 60, foe->y = p.y + std::sin(i * TAU / 8) * 60, foe->aware = true;
+    foes.push_back(foe.get());
+    level.add(std::move(foe));
+  }
+  p.hp = 0;
+  for (int i = 0; i < 300; i++)
+    level.tick();
+  double sum = 0;
+  for (Enemy *e : foes)
+    sum += std::hypot(e->x - p.x, e->y - p.y);
+  assert(sum / foes.size() > 90);
+  game.level.reset();
+  rng = kept;
+  std::cout << "[TEST] Fallen hero: foes lose sight of the body and wander off about their plans: PASS"
             << std::endl;
 }

@@ -191,6 +191,29 @@ void testBastion() {
   assert(tally == 0 && p.gold == gold + held * Campaign::HONOUR_GOLD);
   kills = held;
 
+  {
+    Sentry *k = nullptr;
+    level.each<Sentry>([&](Sentry &s) { k = k ? k : &s; });
+    double hug = f.north + 20;
+    auto made = Enemy::create(EnemyKind::Wolf, 1, 1);
+    Enemy *wolf = made.get();
+    wolf->x = f.west - 1, wolf->y = hug;
+    level.add(std::move(made));
+    level.tick();
+    level.tick();
+    wolf->x = f.west - 1, wolf->y = hug;
+    k->x = f.west - 4, k->y = hug, k->swing = 1;
+    k->tick();
+    assert(!f.inside(wolf->x, wolf->y));
+    wolf->remove();
+    k->x = f.west + 4, k->y = hug, k->swing = 1;
+    for (int i = 0; i < 120; i++) {
+      double was = k->x, wasY = k->y;
+      k->tick();
+      assert(f.inside(was, wasY) == f.inside(k->x, k->y) || f.corridor(was, wasY) || f.corridor(k->x, k->y));
+    }
+  }
+
   double xr = ex, yr = ey;
   auto start = std::chrono::steady_clock::now();
   double sink = 0;

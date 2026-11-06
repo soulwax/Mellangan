@@ -6,32 +6,33 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
+#include "gui/Lang.hpp"
 #include "menu/ControlsMenu.hpp"
 #include "menu/PauseMenu.hpp"
 #include "menu/TitleMenu.hpp"
 
 namespace {
 struct Row {
-  const char *name;
+  const char *Lang::*name;
   int Settings::*value;
   int step, hi;
-  const char *off, *on;
+  const char *Lang::*off, *Lang::*on;
 };
 
 const Row ROWS[] = {
-    {"MASTER VOLUME", &Settings::master, 10, 100, nullptr, nullptr},
-    {"MUSIC", &Settings::music, 10, 100, nullptr, nullptr},
-    {"EFFECTS", &Settings::effects, 10, 100, nullptr, nullptr},
-    {"AMBIENCE", &Settings::ambience, 10, 100, nullptr, nullptr},
-    {"SCREEN SHAKE", &Settings::shake, 25, 100, nullptr, nullptr},
-    {"FLASHES", &Settings::flash, 25, 100, nullptr, nullptr},
-    {"PARTICLES", &Settings::reduced, 1, 1, "FULL", "REDUCED"},
-    {"DAMAGE NUMBERS", &Settings::numbers, 1, 1, "OFF", "ON"},
-    {"COLOURS", &Settings::colours, 1, 1, "STANDARD", "COLOURBLIND"},
-    {"FULLSCREEN", &Settings::fullscreen, 1, 1, "OFF", "ON"},
-    {"SCALING", &Settings::pixel, 1, 1, "FILL", "PIXEL PERFECT"},
-    {"VSYNC", &Settings::vsync, 1, 1, "OFF", "ON"},
-    {"CONTROLS", nullptr, 0, 0, nullptr, nullptr}};
+    {&Lang::masterVolume, &Settings::master, 10, 100, nullptr, nullptr},
+    {&Lang::music, &Settings::music, 10, 100, nullptr, nullptr},
+    {&Lang::effects, &Settings::effects, 10, 100, nullptr, nullptr},
+    {&Lang::ambience, &Settings::ambience, 10, 100, nullptr, nullptr},
+    {&Lang::screenShake, &Settings::shake, 25, 100, nullptr, nullptr},
+    {&Lang::flashes, &Settings::flash, 25, 100, nullptr, nullptr},
+    {&Lang::particles, &Settings::reduced, 1, 1, &Lang::full, &Lang::reduced},
+    {&Lang::damageNumbers, &Settings::numbers, 1, 1, &Lang::off, &Lang::on},
+    {&Lang::colours, &Settings::colours, 1, 1, &Lang::standard, &Lang::colourblind},
+    {&Lang::fullscreen, &Settings::fullscreen, 1, 1, &Lang::off, &Lang::on},
+    {&Lang::scaling, &Settings::pixel, 1, 1, &Lang::fill, &Lang::pixelPerfect},
+    {&Lang::vsync, &Settings::vsync, 1, 1, &Lang::off, &Lang::on},
+    {&Lang::controls, nullptr, 0, 0, nullptr, nullptr}};
 constexpr int ROW_COUNT = int(sizeof ROWS / sizeof *ROWS);
 } // namespace
 
@@ -76,7 +77,7 @@ void SettingsMenu::render(Screen &s) {
   float u = s.u, small = std::max(1.0f, u - 1), w = std::min(s.w - 32 * u, 300 * u),
         x = (s.w - w) / 2, line = 22 * u, top = s.h * 0.5f - line * ROW_COUNT / 2;
   s.rect(0, 0, s.w, s.h, {0.02f, 0.02f, 0.05f, fromPause ? 0.75f : 0.88f});
-  s.textCenter("SETTINGS", s.w / 2, top - 48 * u, 2 * u, col::gold);
+  s.textCenter(lang.settings, s.w / 2, top - 48 * u, 2 * u, col::gold);
   for (int i = 0; i < ROW_COUNT; i++) {
     const Row &r = ROWS[i];
     float y = top + i * line;
@@ -84,7 +85,7 @@ void SettingsMenu::render(Screen &s) {
     if (on)
       s.rect(x - 6 * u, y - 3 * u, w + 12 * u, line - 2 * u, col::panel.alpha(0.9f));
     Color ink = on ? col::gold : col::white;
-    s.text(r.name, x, y, u, ink);
+    s.text(lang.*r.name, x, y, u, ink);
     if (!r.value) {
       std::string open = game.input.prompt("Enter");
       s.text(open, x + w - Screen::textWidth(open, u), y, u, ink);
@@ -93,7 +94,7 @@ void SettingsMenu::render(Screen &s) {
     int v = game.settings.*r.value;
     float bw = 90 * u, bx = x + w - bw;
     if (r.hi == 1) {
-      std::string label = v ? r.on : r.off;
+      std::string label = lang.*(v ? r.on : r.off);
       s.text(label, x + w - Screen::textWidth(label, u), y, u, ink);
       continue;
     }
@@ -102,8 +103,6 @@ void SettingsMenu::render(Screen &s) {
     std::string pct = fmt::format("{}%", v);
     s.text(pct, x + w - Screen::textWidth(pct, u), y, u, ink);
   }
-  s.textCenter(game.input.pad ? "D-pad choose and change   B back"
-                               : "Up/Down choose   Left/Right change   Esc back",
-               s.w / 2,
+  s.textCenter(game.input.pad ? lang.settingsPadHint : lang.settingsHint, s.w / 2,
                top + ROW_COUNT * line + 24 * u, small, col::muted);
 }

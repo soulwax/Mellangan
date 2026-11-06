@@ -58,7 +58,7 @@ void Enemy::voice(Sound &s, float volume, float jitter) const {
 
 const Mob &Enemy::quarry() const {
   const Mob *best = level->player;
-  double px = best->x - x, py = best->y - y, bd = px * px + py * py;
+  double px = best->x - x, py = best->y - y, bd = best->dead() ? 1e18 : px * px + py * py;
   for (const Ally *a : level->allies) {
     double xd = a->x - x, yd = a->y - y, d = xd * xd + yd * yd;
     float reach = a->def.lure ? 220.0f : 110.0f;
@@ -74,6 +74,10 @@ const Mob &Enemy::quarry() const {
 
 Sense Enemy::sense() const {
   const Mob &p = quarry();
+  if (p.dead()) {
+    double a = (seed & 1023) / 1023.0 * TAU + animT * ((seed >> 10 & 1) ? 0.15 : -0.15);
+    return {std::cos(a) * 400, std::sin(a) * 400, 400, std::cos(a), std::sin(a), false};
+  }
   double rx = p.x - x, ry = p.y - y, raw = std::sqrt(rx * rx + ry * ry);
   double lead = std::min(0.7, raw / std::max(20.0, double(type.speed))) * 0.6;
   Sense s{rx + p.xa * lead, ry + p.ya * lead, 0, 0, 0, false};

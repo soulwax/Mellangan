@@ -43,10 +43,9 @@ void SupplyBarrel::die() {
   Sound::barrel.play(0.6f);
   Spark::burst(*level, x, bodyY(), type.blood, 12, 80, false);
   float r = rng.unit();
+  level->add<Magnet>(x, y);
   if (r < 0.45f)
-    level->add<Potion>(x, y);
-  else if (r < 0.8f)
-    level->add<Magnet>(x, y);
-  else
-    level->add<Nova>(x, y);
+    level->add<Potion>(x + 6, y);
+  else if (r >= 0.8f)
+    level->add<Nova>(x + 6, y);
 }

@@ -4,6 +4,7 @@
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "entity/pickup/Gem.hpp"
 #include "entity/pickup/Nova.hpp"
 #include "level/Level.hpp"
 #include "particle/Explosion.hpp"
@@ -103,6 +104,10 @@ void Night::kindle() {
   level.litBiomes |= 1u << world::biomeAt(current.x + current.w / 2,
                                           current.y + current.h / 2);
   double x = current.centerX(), y = current.centerY();
+  level.each<Gem>([&](Gem &g) {
+    if ((g.x - x) * (g.x - x) + (g.y - y) * (g.y - y) < PULL * PULL)
+      g.magnet = true, g.speed = 0;
+  });
   level.add<Nova>(x, y + 8);
   Spark::burst(level, x, y, col::gold, 20, 160, true);
   level.add<Explosion>(x, y, 6, 7);
