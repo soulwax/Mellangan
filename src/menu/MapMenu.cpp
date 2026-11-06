@@ -67,7 +67,7 @@ void MapMenu::campaign(Screen &s, const ChartView &v) const {
     s.line(sx, sy + r, sx - r, sy, u, col::gold), s.line(sx - r, sy, sx, sy - r, u, col::gold);
     if (home)
       s.rect(sx - u, sy - u, 2 * u, 2 * u, col::gold);
-    std::string name = ACTS[i].town;
+    std::string name = tr(ACTS[i].town);
     s.text(name, sx - Screen::textWidth(name, small) / 2, sy + r + 2 * u, small,
            col::gold.alpha(0.9f));
   }

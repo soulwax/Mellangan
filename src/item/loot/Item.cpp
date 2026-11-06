@@ -147,8 +147,11 @@ float Item::quality(int i) const {
   return t.hi > t.lo ? (rolls[i].value - t.lo) / (t.hi - t.lo) : 1;
 }
 
-std::string Item::baseName() const {
-  return fmt::format("{} {}", TIER_NAMES[tier], def().name);
+std::string Item::baseName(bool shown) const {
+  static const Lang english;
+  const Lang &l = shown ? lang : english;
+  auto w = [&](const char *s) { return shown ? tr(s) : s; };
+  return say(l.itemBase, w(TIER_NAMES[tier]), w(def().name));
 }
 
 const char *Item::grants() const {
@@ -157,26 +160,29 @@ const char *Item::grants() const {
   return def().grants;
 }
 
-std::string Item::name() const {
+std::string Item::name(bool shown) const {
+  static const Lang english;
+  const Lang &l = shown ? lang : english;
+  auto w = [&](const char *s) { return shown ? tr(s) : s; };
   if (const UniqueDef *u = uniqueOf(*this))
-    return u->name;
+    return w(u->name);
   std::string out;
   if (rarity == Rarity::Rare || rarity == Rarity::Crafted) {
     uint32_t h = hash2(int(seed), 17), k = hash2(int(seed), 91);
-    out = fmt::format("{} {}", pick(FIRST, h), secondWord(def().slots, k));
+    out = say(l.itemRare, w(pick(FIRST, h)), w(secondWord(def().slots, k)));
   } else if (rarity == Rarity::Magic) {
     const char *pre = nullptr, *suf = nullptr;
     for (int i = 0; i < count; i++)
       (AFFIXES[rolls[i].affix].prefix ? pre : suf) = tierOf(rolls[i]).name;
-    out = baseName();
+    out = baseName(shown);
     if (pre)
-      out = fmt::format("{} {}", pre, out);
+      out = say(l.itemPrefix, w(pre), out);
     if (suf)
-      out = fmt::format("{} {}", out, suf);
+      out = say(l.itemSuffix, out, w(suf));
   } else {
-    out = rarity == Rarity::Superior ? "Superior " + baseName() : baseName();
+    out = rarity == Rarity::Superior ? say(l.itemSuperior, baseName(shown)) : baseName(shown);
   }
-  return night() ? "Night-touched " + out : out;
+  return night() ? say(l.itemNight, out) : out;
 }
 
 Color Item::color() const {

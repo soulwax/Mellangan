@@ -274,6 +274,6 @@ std::string Campaign::fortify(Level &level) {
   Town t = towns()[size_t(town)];
   level.add<Watchtower>(t.x + 72, t.y - 8);
   level.add<Shockwave>(t.x + 72, t.y - 8, 6, 60, 0.6f, col::gold);
-  level.game.announce(say(lang.watchtowerRises, ACTS[town].town));
+  level.game.announce(say(lang.watchtowerRises, tr(ACTS[town].town)));
   return {};
 }

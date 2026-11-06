@@ -44,8 +44,8 @@ struct Item {
   bool addFixed(int affix, Rng &rng);
   void reroll(int i, Rng &rng);
   float quality(int i) const;
-  std::string baseName() const;
-  std::string name() const;
+  std::string baseName(bool shown = false) const;
+  std::string name(bool shown = false) const;
   const char *grants() const;
   Color color() const;
   int value() const;

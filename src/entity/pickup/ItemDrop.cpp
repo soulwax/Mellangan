@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "gui/Lang.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
 #include "entity/pickup/Potion.hpp"
@@ -46,10 +47,10 @@ bool ItemDrop::labelled(bool held) const {
 
 std::string ItemDrop::label() const {
   if (drop.kind == DropKind::Gold)
-    return std::to_string(drop.amount) + " gold";
+    return say(lang.goldLine, drop.amount);
   if (drop.kind == DropKind::Material)
-    return MATERIALS[drop.material].name;
-  return drop.item.name();
+    return tr(MATERIALS[drop.material].name);
+  return drop.item.name(true);
 }
 
 Color ItemDrop::color() const {

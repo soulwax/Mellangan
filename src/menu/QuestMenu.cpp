@@ -79,12 +79,12 @@ void QuestMenu::render(Screen &s) {
   float w = 300 * u, h = 150 * u, x0 = (s.w - w) / 2, y0 = (s.h - h) / 2;
   s.rect(x0, y0, w, h, {0.04f, 0.04f, 0.08f, 0.94f * in});
   s.bracket(x0, y0, w, h, u);
-  s.text(quests::act(c).elder, x0 + 12 * u, y0 + 8 * u, small, col::muted.alpha(in));
-  std::string title = q && c.stage != QuestStage::Road ? q->title : quests::act(c).town;
+  s.text(tr(quests::act(c).elder), x0 + 12 * u, y0 + 8 * u, small, col::muted.alpha(in));
+  std::string title = tr(q && c.stage != QuestStage::Road ? q->title : quests::act(c).town);
   std::string body = c.stage == QuestStage::Road ? quests::status(c)
                      : !q ? lang.questOver
-                     : c.stage == QuestStage::Offered ? q->offer
-                     : c.stage == QuestStage::Ready   ? q->thanks
+                     : c.stage == QuestStage::Offered ? tr(q->offer)
+                     : c.stage == QuestStage::Ready   ? tr(q->thanks)
                                                  : quests::status(c);
   std::string action = c.stage == QuestStage::Done      ? std::string(lang.beginNightmare)
                        : !q                             ? std::string(lang.escClose)

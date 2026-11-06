@@ -221,6 +221,14 @@ struct Lang {
              *bountyStreak = "Reach a {} kill streak", *bountyAlpha = "Slay the alpha",
              *bountyThief = "Catch a thief";
 
+  const char *itemBase = "{} {}", *itemRare = "{} {}", *itemPrefix = "{} {}", *itemSuffix = "{} {}",
+             *itemSuperior = "Superior {}", *itemNight = "Night-touched {}";
+
+  const char *pickOne = "pick an item from your bag", *pickMore = "pick {} more items",
+             *noFit = "that item does not fit this recipe", *pickDifferent = "pick different items",
+             *shareSlot = "the items must share a slot", *tooMany = "too many items picked",
+             *recipeLine = "{}: {}";
+
   int parse(std::string_view text);
 };
 

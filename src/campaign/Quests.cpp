@@ -252,7 +252,7 @@ void accept(Level &level, Campaign &c) {
       c.qx = h.x + 700, c.qy = h.y + 300, c.qsite = true;
   }
   begin(level, c);
-  level.game.announce(say(lang.questBanner, q->title));
+  level.game.announce(say(lang.questBanner, tr(q->title)));
 }
 
 void turnIn(Level &level, Campaign &c) {
@@ -264,7 +264,7 @@ void turnIn(Level &level, Campaign &c) {
     int &have = p.materials[q->material];
     if (have < q->count) {
       c.stage = QuestStage::Active;
-      return level.game.announce(say(lang.elderNeeds, act(c).elder, q->count, MATERIALS[q->material].plural));
+      return level.game.announce(say(lang.elderNeeds, tr(act(c).elder), q->count, tr(MATERIALS[q->material].plural)));
     }
     have -= q->count;
   }
@@ -280,8 +280,8 @@ void turnIn(Level &level, Campaign &c) {
     level.add<ItemDrop>(p.x, p.y, Drop{DropKind::Item, 1, prize}, p.x + 14, p.y + 8);
   spdlog::info("quest: {} rewards {} [{}] ilvl {}", q->title, prize.name(),
                rarityName(prize.rarity), prize.ilvl);
-  level.game.announce(say(lang.questDone, q->title, q->gold));
-  level.game.announce(say(lang.rewardBanner, prize.name()));
+  level.game.announce(say(lang.questDone, tr(q->title), q->gold));
+  level.game.announce(say(lang.rewardBanner, prize.name(true)));
   Sound::levelUp.play(0.6f, 0);
   c.quest++, c.progress = 0, c.qsite = false;
   if (c.quest % QUESTS_PER_ACT != 0)
@@ -300,10 +300,10 @@ void turnIn(Level &level, Campaign &c) {
   if (int(c.towns().size()) >= c.act) {
     c.stage = QuestStage::Offered;
     c.staff(level);
-    return level.game.announce(say(lang.returnTo, act(c).town));
+    return level.game.announce(say(lang.returnTo, tr(act(c).town)));
   }
   c.stage = QuestStage::Road;
-  level.game.announce(say(lang.followTo, act(c).road, act(c).town));
+  level.game.announce(say(lang.followTo, tr(act(c).road), tr(act(c).town)));
 }
 
 void tick(Level &level, Campaign &c) {
@@ -316,7 +316,7 @@ void tick(Level &level, Campaign &c) {
     if (!p.dead() && xd * xd + yd * yd < SETTLE * SETTLE) {
       c.settle(level, rx, ry);
       c.stage = QuestStage::Offered;
-      level.game.announce(say(lang.actBastion, act(c).numeral, act(c).town));
+      level.game.announce(say(lang.actBastion, act(c).numeral, tr(act(c).town)));
     }
     return;
   }
@@ -446,8 +446,8 @@ void tick(Level &level, Campaign &c) {
     if (e) {
       c.foe = e->id;
       level.add<Shockwave>(c.qx, c.qy, 8, 90, 0.7f, Color{0.9f, 0.2f, 0.25f, 1});
-      level.game.announce(q->goal == Objective::Boss ? bossOf(q->prey[0]).arrival
-                                                     : say(lang.questStirs, q->title));
+      level.game.announce(q->goal == Objective::Boss ? std::string(tr(bossOf(q->prey[0]).arrival))
+                                                     : say(lang.questStirs, tr(q->title)));
     }
     break;
   }
@@ -455,8 +455,8 @@ void tick(Level &level, Campaign &c) {
   if (c.progress >= q->count) {
     c.progress = q->count, c.stage = QuestStage::Ready;
     level.game.announce(q->goal == Objective::Fetch
-                            ? say(lang.carryHome, act(c).elder)
-                            : say(lang.questComplete, q->title, act(c).elder));
+                            ? say(lang.carryHome, tr(act(c).elder))
+                            : say(lang.questComplete, tr(q->title), tr(act(c).elder)));
     Sound::chest.play(0.5f, 0, 0.9f);
   }
 }
@@ -465,21 +465,21 @@ std::string status(const Campaign &c) {
   if (c.stage == QuestStage::Done)
     return lang.statusBroken;
   if (c.stage == QuestStage::Road)
-    return say(lang.statusFollow, act(c).road, act(c).town);
+    return say(lang.statusFollow, tr(act(c).road), tr(act(c).town));
   const QuestDef *q = current(c);
   if (!q)
     return "";
   switch (c.stage) {
   case QuestStage::Offered:
-    return say(lang.statusOffered, act(c).elder, act(c).town);
+    return say(lang.statusOffered, tr(act(c).elder), tr(act(c).town));
   case QuestStage::Ready:
-    return say(lang.statusReady, q->title, act(c).elder);
+    return say(lang.statusReady, tr(q->title), tr(act(c).elder));
   default:
     if (q->goal == Objective::Escort)
-      return say(lang.statusEscort, q->task, c.progress);
+      return say(lang.statusEscort, tr(q->task), c.progress);
     if (q->goal == Objective::Defend)
-      return c.holding ? say(lang.statusHolding, q->task, c.progress, q->count) : say(lang.statusReachCamp, q->task);
-    return q->count > 1 ? say(lang.statusCount, q->task, c.progress, q->count) : q->task;
+      return c.holding ? say(lang.statusHolding, tr(q->task), c.progress, q->count) : say(lang.statusReachCamp, tr(q->task));
+    return q->count > 1 ? say(lang.statusCount, tr(q->task), c.progress, q->count) : std::string(tr(q->task));
   }
 }
 

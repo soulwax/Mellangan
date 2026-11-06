@@ -100,7 +100,11 @@ const LangKey LANG_KEYS[] = {
     K(questStirs), K(carryHome), K(questComplete), K(statusBroken), K(statusFollow), K(statusOffered),
     K(statusReady), K(statusEscort), K(statusHolding), K(statusReachCamp), K(statusCount), K(seekerLostLine),
     K(seekerFollowLine), K(bountySlay), K(bountyKindle), K(bountyFind), K(bountyWalk), K(bountySurvive),
-    K(bountyStreak), K(bountyAlpha), K(bountyThief)};
+    K(bountyStreak), K(bountyAlpha), K(bountyThief),
+
+    K(itemBase), K(itemRare), K(itemPrefix), K(itemSuffix), K(itemSuperior), K(itemNight),
+
+    K(pickOne), K(pickMore), K(noFit), K(pickDifferent), K(shareSlot), K(tooMany), K(recipeLine)};
 #undef K
 const int LANG_COUNT = int(sizeof LANG_KEYS / sizeof *LANG_KEYS);
 static_assert(sizeof LANG_KEYS / sizeof *LANG_KEYS * sizeof(const char *) == sizeof(Lang));

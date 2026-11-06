@@ -19,9 +19,9 @@ std::string wareLabel(const Ware &w) {
   case WareKind::Draught:
     return lang.healingDraught;
   case WareKind::Gamble:
-    return say(lang.gambleWare, w.item.baseName());
+    return say(lang.gambleWare, w.item.baseName(true));
   default:
-    return w.item.name();
+    return w.item.name(true);
   }
 }
 
@@ -79,7 +79,7 @@ void VendorMenu::activate() {
     if (kind != WareKind::Gamble)
       return Sound::gem.play(0.4f, 0, 1.2f);
     const Item &got = p.bag.back();
-    tell(say(lang.gambled, got.name()), got.color());
+    tell(say(lang.gambled, got.name(true)), got.color());
     spdlog::info("gamble: {} [{}] ilvl {}", got.name(), rarityName(got.rarity), got.ilvl);
     if (int(got.rarity) >= int(Rarity::Rare))
       return Sound::chest.play(0.6f, 0, got.rarity == Rarity::Unique ? 0.7f : 1.1f);

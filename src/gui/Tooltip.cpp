@@ -41,9 +41,9 @@ void compare(Lines &lines, const Item &item, const Item &worn) {
 void itemTooltip(Screen &s, const Item &item, const Item *worn, const char *hero, float x,
                  float y, int cost) {
   const ItemBase &b = item.def();
-  Lines lines{{item.name(), item.color()}};
+  Lines lines{{item.name(true), item.color()}};
   if (item.rarity == Rarity::Rare || item.rarity == Rarity::Crafted)
-    lines.push_back({item.baseName(), col::white});
+    lines.push_back({item.baseName(true), col::white});
   lines.push_back({say(lang.itemLevel, gearName(item.gearSlot()), item.ilvl),
                    col::muted});
   if (const UniqueDef *u = uniqueOf(item))

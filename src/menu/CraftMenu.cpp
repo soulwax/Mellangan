@@ -81,7 +81,7 @@ void CraftMenu::pick(size_t k) {
     return Sound::select.play(0.3f, 0, 0.8f);
   }
   if (!r.fits(p.bag[k], r)) {
-    tell(say(lang.cannotTake, r.name), WORSE);
+    tell(say(lang.cannotTake, tr(r.name)), WORSE);
     return Sound::hurt.play(0.3f, 0);
   }
   if (r.inputs == 1)
@@ -105,7 +105,7 @@ void CraftMenu::activate() {
   int at = craft(p, r, picks, rng);
   picks.clear();
   const Item &made = p.bag[size_t(at)];
-  tell(say(lang.crafted, r.name, made.name()), made.color());
+  tell(say(lang.crafted, tr(r.name), made.name(true)), made.color());
   spdlog::info("craft: {} -> {} [{}] ilvl {}", r.name, made.name(), rarityName(made.rarity),
                made.ilvl);
   Sound::chest.play(0.5f, 0, made.rarity == Rarity::Crafted ? 0.8f : 1.1f);
@@ -161,7 +161,7 @@ void CraftMenu::render(Screen &s) {
     if (on)
       s.frame(c.x, c.y, c.w, c.h, u, (i == selected ? col::gold : col::muted).alpha(in));
     Color ink = rec.slot >= 0 ? CRAFTED : col::white;
-    s.text(rec.name, c.x + 4 * u, c.y + 2 * u, small,
+    s.text(tr(rec.name), c.x + 4 * u, c.y + 2 * u, small,
            ink.alpha((stocked(p, rec) ? 1 : 0.4f) * in));
   }
 
@@ -187,7 +187,7 @@ void CraftMenu::render(Screen &s) {
   s.text(lang.yourBag, bag.x, bag.y - 14 * u, small, col::muted.alpha(in));
   float fy = grid.y + grid.h + 10 * u;
   gui::materials(s, p.materials, nullptr, bag.x, fy, small, in);
-  std::string head = say(lang.costs, r.name);
+  std::string head = say(lang.costs, tr(r.name));
   s.text(head, bag.x, fy + 20 * u, small, CRAFTED.alpha(in));
   float cx = bag.x + Screen::textWidth(head, small);
   if (std::all_of(r.cost, r.cost + MATS, [](int c) { return c == 0; }))
@@ -201,7 +201,7 @@ void CraftMenu::render(Screen &s) {
     s.text(Screen::fit(told, grid.x + grid.w - bag.x, small), bag.x, fy + 52 * u, small,
            toldColor.alpha(std::min(1.0f, toldTime) * in));
 
-  s.textCenter(fmt::format("{}: {}", r.name, r.text), s.w / 2, y0 + ph + 8 * u, small,
+  s.textCenter(say(lang.recipeLine, tr(r.name), tr(r.text)), s.w / 2, y0 + ph + 8 * u, small,
                col::white.alpha(0.85f * in));
   s.textCenter(game.input.prompt(lang.craftHint), s.w / 2,
                y0 + ph + 24 * u, small, col::muted.alpha(in));

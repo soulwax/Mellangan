@@ -129,7 +129,7 @@ void InventoryMenu::render(Screen &s) {
       float tx = r.x + r.w + 6 * u;
       s.text(gearName(i), tx, r.y + 2 * u, small, col::muted.alpha(in));
       if (item)
-        s.text(Screen::fit(item->name(), 100 * u, small), tx, r.y + 2 * u + 16 * small,
+        s.text(Screen::fit(item->name(true), 100 * u, small), tx, r.y + 2 * u + 16 * small,
                small, item->color().alpha(in));
     }
   }

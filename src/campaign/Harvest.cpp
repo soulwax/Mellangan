@@ -150,7 +150,7 @@ std::string blocked(const Level &level, const Campaign &c, int piece, int tx, in
   for (int m = 0; m < MATS; m++)
     if (p.materials[m] < d.cost[m])
       return say(lang.needsLower, d.cost[m],
-                         d.cost[m] == 1 ? MATERIALS[m].name : MATERIALS[m].plural);
+                         tr(d.cost[m] == 1 ? MATERIALS[m].name : MATERIALS[m].plural));
   Structure site;
   Prop prop;
   if (world::isWater(tx, ty) || world::isRamp(tx, ty))

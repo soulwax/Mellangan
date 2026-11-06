@@ -42,7 +42,7 @@ void Hud::handwork() {
     s.color(col::white);
     s.frame(gx, gy, 16 * k, 16 * k, u, tint);
     plate(tx * 16 + 8.0, ty * 16 - 18.0,
-          why.empty() ? game.input.prompt(say(lang.buildPrompt, PIECES[c->building].name)) : why,
+          why.empty() ? game.input.prompt(say(lang.buildPrompt, tr(PIECES[c->building].name))) : why,
           why.empty() ? col::gold : Color{1, 0.5f, 0.45f, 1});
     return;
   }
@@ -64,7 +64,7 @@ void Hud::handwork() {
     return plate(t.x, t.y - 22, game.input.prompt(lang.takeDown), col::muted);
   auto it = c->chops.find(Edits::key(t.tx, t.ty));
   int hits = it == c->chops.end() ? 0 : it->second;
-  std::string text = game.input.prompt(say(lang.gather, MATERIALS[int(t.yield->mat)].name));
+  std::string text = game.input.prompt(say(lang.gather, tr(MATERIALS[int(t.yield->mat)].name)));
   if (hits > 0)
     text += fmt::format("  {}/{}", hits, t.yield->hits);
   plate(t.x, t.y - 22, text, MATERIALS[int(t.yield->mat)].color);
@@ -104,7 +104,7 @@ void Hud::questLog() {
       continue;
     SDL_FPoint g = gui(gx, gy);
     float sx = g.x, sy = g.y;
-    std::string name = ACTS[i].town;
+    std::string name = tr(ACTS[i].town);
     float w = Screen::textWidth(name, small) + 10 * u, h = 16 * small + 4 * u;
     s.rect(sx - w / 2, sy - h, w, h, Color{0.12f, 0.08f, 0.05f, 0.85f});
     s.frame(sx - w / 2, sy - h, w, h, u, Color{0.55f, 0.38f, 0.2f, 0.9f});

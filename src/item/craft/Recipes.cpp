@@ -5,6 +5,7 @@
 
 #include <spdlog/fmt/fmt.h>
 
+#include "gui/Lang.hpp"
 #include "entity/Player.hpp"
 #include "item/loot/Loot.hpp"
 
@@ -150,23 +151,21 @@ const int FORMULA_COUNT = int(std::size(FORMULAS));
 std::string missing(const Player &p, const Formula &r, const std::vector<size_t> &picks) {
   for (int m = 0; m < MATS; m++)
     if (owned(p, Mat(m)) < r.cost[m])
-      return fmt::format("needs {} {}", r.cost[m],
-                         r.cost[m] == 1 ? MATERIALS[m].name : MATERIALS[m].plural);
+      return say(lang.needsLower, r.cost[m], tr(r.cost[m] == 1 ? MATERIALS[m].name : MATERIALS[m].plural));
   if (int(picks.size()) < r.inputs)
-    return r.inputs == 1 ? "pick an item from your bag"
-                         : fmt::format("pick {} more items", r.inputs - int(picks.size()));
+    return r.inputs == 1 ? std::string(lang.pickOne) : say(lang.pickMore, r.inputs - int(picks.size()));
   for (size_t k : picks)
     if (k >= p.bag.size() || !r.fits(p.bag[k], r))
-      return "that item does not fit this recipe";
+      return lang.noFit;
   for (size_t i = 0; i < picks.size(); i++)
     for (size_t j = i + 1; j < picks.size(); j++)
       if (picks[i] == picks[j])
-        return "pick different items";
+        return lang.pickDifferent;
   for (size_t k : picks)
     if (p.bag[k].gearSlot() != p.bag[picks[0]].gearSlot())
-      return "the items must share a slot";
+      return lang.shareSlot;
   if (int(picks.size()) > r.inputs)
-    return "too many items picked";
+    return lang.tooMany;
   return {};
 }
 

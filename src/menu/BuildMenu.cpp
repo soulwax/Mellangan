@@ -31,7 +31,7 @@ void BuildMenu::tick() {
   for (int m = 0; m < MATS; m++)
     if (p.materials[m] < d.cost[m]) {
       told = say(lang.needs, d.cost[m],
-                         d.cost[m] == 1 ? MATERIALS[m].name : MATERIALS[m].plural);
+                         tr(d.cost[m] == 1 ? MATERIALS[m].name : MATERIALS[m].plural));
       toldTime = 3;
       return Sound::hurt.play(0.3f, 0);
     }
@@ -60,7 +60,7 @@ void BuildMenu::render(Screen &s) {
     for (int k = prop.count - 1; k >= 0; k--)
       s.sprite(prop.parts[k].sprite, x0 + 14 * u, y - 3 * u + prop.parts[k].yo * u * 0.5f, 0, 0,
                u * 0.9f, u * 0.9f);
-    s.text(d.name, x0 + 36 * u, y, small, col::white.alpha(in));
+    s.text(tr(d.name), x0 + 36 * u, y, small, col::white.alpha(in));
     gui::materials(s, p.materials, d.cost, x0 + 120 * u, y + 2 * u, small, in);
   }
   if (toldTime > 0)

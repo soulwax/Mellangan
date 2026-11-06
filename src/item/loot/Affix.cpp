@@ -1,5 +1,7 @@
 #include "item/loot/Affix.hpp"
 
+#include "gui/Lang.hpp"
+
 #include <spdlog/fmt/fmt.h>
 
 #include <iterator>
@@ -108,71 +110,71 @@ int findAffix(std::string_view key) {
 std::string describe(Stat stat, float value) {
   switch (stat) {
   case S::Damage:
-    return fmt::format("+{:.0f}% weapon damage", value);
+    return say(tr("+{:.0f}% weapon damage"), value);
   case S::Burn:
-    return fmt::format("{:.0f}% chance to burn", value);
+    return say(tr("{:.0f}% chance to burn"), value);
   case S::Chill:
-    return fmt::format("{:.0f}% chance to chill", value);
+    return say(tr("{:.0f}% chance to chill"), value);
   case S::Poison:
-    return fmt::format("{:.0f}% chance to poison", value);
+    return say(tr("{:.0f}% chance to poison"), value);
   case S::Shock:
-    return fmt::format("{:.0f}% chance to chain lightning", value);
+    return say(tr("{:.0f}% chance to chain lightning"), value);
   case S::Bleed:
-    return fmt::format("{:.0f}% chance to bleed", value);
+    return say(tr("{:.0f}% chance to bleed"), value);
   case S::Projectiles:
-    return fmt::format("+{:.0f} projectile{}", value, value > 1 ? "s" : "");
+    return say(tr(value > 1 ? "+{:.0f} projectiles" : "+{:.0f} projectile"), value);
   case S::Area:
-    return fmt::format("+{:.0f}% area", value);
+    return say(tr("+{:.0f}% area"), value);
   case S::Crit:
-    return fmt::format("+{:.0f}% critical hit chance", value);
+    return say(tr("+{:.0f}% critical hit chance"), value);
   case S::Leech:
-    return fmt::format("{:.0f}% of damage healed", value);
+    return say(tr("{:.0f}% of damage healed"), value);
   case S::Armour:
-    return fmt::format("+{:.0f} armour", value);
+    return say(tr("+{:.0f} armour"), value);
   case S::Life:
-    return fmt::format("+{:.0f} max health", value);
+    return say(tr("+{:.0f} max health"), value);
   case S::MagicFind:
-    return fmt::format("+{:.0f}% magic find", value);
+    return say(tr("+{:.0f}% magic find"), value);
   case S::GoldFind:
-    return fmt::format("+{:.0f}% gem and gold value", value);
+    return say(tr("+{:.0f}% gem and gold value"), value);
   case S::Speed:
-    return fmt::format("+{:.0f}% movement speed", value);
+    return say(tr("+{:.0f}% movement speed"), value);
   case S::Haste:
-    return fmt::format("-{:.0f}% weapon cooldowns", value);
+    return say(tr("-{:.0f}% weapon cooldowns"), value);
   case S::Regen:
-    return fmt::format("+{:.1f} health per second", value);
+    return say(tr("+{:.1f} health per second"), value);
   case S::Reach:
-    return fmt::format("+{:.0f}% pickup range", value);
+    return say(tr("+{:.0f}% pickup range"), value);
   case S::Wisdom:
-    return fmt::format("+{:.0f}% experience", value);
+    return say(tr("+{:.0f}% experience"), value);
   case S::Thorns:
-    return fmt::format("{:.0f} damage to melee attackers", value);
+    return say(tr("{:.0f} damage to melee attackers"), value);
   case S::ResistBurn:
-    return fmt::format("-{:.0f}% burn on you", value);
+    return say(tr("-{:.0f}% burn on you"), value);
   case S::ResistChill:
-    return fmt::format("-{:.0f}% chill on you", value);
+    return say(tr("-{:.0f}% chill on you"), value);
   case S::ResistPoison:
-    return fmt::format("-{:.0f}% poison on you", value);
+    return say(tr("-{:.0f}% poison on you"), value);
   case S::Kindling:
-    return fmt::format("shrines kindle {:.0f}% faster", value);
+    return say(tr("shrines kindle {:.0f}% faster"), value);
   case S::NightDamage:
-    return fmt::format("+{:.0f}% damage at night", value);
+    return say(tr("+{:.0f}% damage at night"), value);
   case S::BossDamage:
-    return fmt::format("+{:.0f}% damage to bosses", value);
+    return say(tr("+{:.0f}% damage to bosses"), value);
   case S::EliteDamage:
-    return fmt::format("+{:.0f}% damage to elites", value);
+    return say(tr("+{:.0f}% damage to elites"), value);
   case S::Arms:
-    return fmt::format("+{:.0f} to Arms", value);
+    return say(tr("+{:.0f} to Arms"), value);
   case S::Arts:
-    return fmt::format("+{:.0f} to Arts", value);
+    return say(tr("+{:.0f} to Arts"), value);
   case S::Instincts:
-    return fmt::format("+{:.0f} to Instincts", value);
+    return say(tr("+{:.0f} to Instincts"), value);
   case S::Block:
-    return fmt::format("{:.0f}% chance to block", value);
+    return say(tr("{:.0f}% chance to block"), value);
   case S::ProjectileSpeed:
-    return fmt::format("+{:.0f}% projectile speed", value);
+    return say(tr("+{:.0f}% projectile speed"), value);
   case S::Light:
-    return fmt::format("+{:.0f}% light radius", value);
+    return say(tr("+{:.0f}% light radius"), value);
   default:
     return "";
   }

@@ -26,7 +26,7 @@ void TravelMenu::tick() {
     return;
   c.travel(*game.level, selected);
   Sound::potion.play(0.5f, 0, 1.3f);
-  game.announce(say(lang.actAnnounce, ACTS[selected].numeral, ACTS[selected].town));
+  game.announce(say(lang.actAnnounce, ACTS[selected].numeral, tr(ACTS[selected].town)));
   game.snapCamera();
   game.saveCampaign();
   game.setMenu(nullptr);
@@ -47,7 +47,7 @@ void TravelMenu::render(Screen &s) {
     s.rect(x0 + 8 * u, y - 3 * u, w - 16 * u, row - 4 * u, col::panel.alpha((on ? 0.95f : 0.6f) * in));
     if (on)
       s.frame(x0 + 8 * u, y - 3 * u, w - 16 * u, row - 4 * u, u, col::gold.alpha(in));
-    s.text(say(lang.actRow, ACTS[i].numeral, ACTS[i].town), x0 + 14 * u, y, small,
+    s.text(say(lang.actRow, ACTS[i].numeral, tr(ACTS[i].town)), x0 + 14 * u, y, small,
            (on ? col::gold : col::white).alpha(in));
   }
   s.textCenter(game.input.prompt(lang.travelHint), s.w / 2, y0 + h + 8 * u, small,

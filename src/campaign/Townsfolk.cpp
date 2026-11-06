@@ -37,7 +37,7 @@ const char *Townsfolk::line() const {
     return lang.seekerLostLine;
   if (mode == Mode::Following)
     return lang.seekerFollowLine;
-  return LINES[town % 5][(voice + said) % 4];
+  return tr(LINES[town % 5][(voice + said) % 4]);
 }
 
 void Townsfolk::settle(double cx, double cy, int tn) {

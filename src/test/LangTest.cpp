@@ -9,6 +9,7 @@
 #include <string>
 
 #include "gui/Lang.hpp"
+#include "item/loot/Item.hpp"
 
 void testLang() {
   for (int i = 0; i < LANG_COUNT; i++) {
@@ -35,6 +36,17 @@ void testLang() {
                  "~Bad {}\t{:d} x\nArcane Staff\tno tilde\n~\tempty\n") == 2);
   assert(std::strcmp(g(staff), "Baton arcanique") == 0 && g("Frost Nova") == std::string("Frost Nova") &&
          g(nullptr) == nullptr && say(g("Slay {} {}"), 3, "bats") == "Tuez 3 bats");
+  Item it;
+  it.rarity = Rarity::Superior;
+  std::string english = it.name(), base = it.def().name;
+  const char *superior = lang.itemSuperior;
+  lang.itemSuperior = "{} superieur";
+  glossary.words["Worn"] = "Use";
+  glossary.words[base] = "Chose";
+  assert(english == "Superior Worn " + base && it.name(true) == "Use Chose superieur" && it.name() == english);
+  glossary.words.clear();
+  lang.itemSuperior = superior;
+  assert(it.name(true) == english);
   std::cout << "[TEST] Lang: " << LANG_COUNT << " strings, unique keys, formats parse, overrides keep placeholders; "
                "the glossary passes English through and swaps only well-formed translations"
             << std::endl;
