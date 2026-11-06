@@ -31,10 +31,10 @@ void feats(Screen &s, float x, float top, float w, float bottom, uint64_t got) {
   for (int i = 0; i < FEAT_COUNT; i++) {
     bool has = got >> i & 1;
     float fx = x + (i / rows) * colW, fy = top + 24 * small + (i % rows) * row;
-    s.text(Screen::fit(FEATS[i].title, colW - 12 * u, small), fx, fy, small,
+    s.text(Screen::fit(tr(FEATS[i].title), colW - 12 * u, small), fx, fy, small,
            has ? col::gold : col::muted * 0.8f);
     if (row >= 2 * 16 * small)
-      s.text(Screen::fit(FEATS[i].hint, colW - 12 * u, small), fx, fy + 15 * small, small,
+      s.text(Screen::fit(tr(FEATS[i].hint), colW - 12 * u, small), fx, fy + 15 * small, small,
              has ? col::muted : col::muted * 0.55f);
   }
 }
@@ -56,9 +56,10 @@ struct Grid {
 };
 
 std::string foeTitle(int kind) {
-  std::string_view n = Enemy::nameOf(EnemyKind(kind));
+  const char *english = Enemy::nameOf(EnemyKind(kind));
+  std::string_view n = tr(english);
   for (std::string_view article : {"a ", "an ", "the "})
-    if (n.starts_with(article)) {
+    if (n.data() == english && n.starts_with(article)) {
       n.remove_prefix(article.size());
       break;
     }
@@ -81,7 +82,7 @@ void regions(Screen &s, const Grid &g, const Codex &c, float x, int page) {
     bool known = c.biomes >> b & 1;
     if (known)
       s.rect(x, y + 4 * g.small, 8 * g.small, 8 * g.small, Chart::tone(BiomeId(b)));
-    s.text(Screen::fit(known ? Chart::title(BiomeId(b)) : lang.unknown, g.colW - 20 * g.small, g.small),
+    s.text(Screen::fit(known ? tr(Chart::title(BiomeId(b))) : lang.unknown, g.colW - 20 * g.small, g.small),
            x + 12 * g.small, y, g.small, known ? col::white : col::muted * 0.6f);
   }
 }
@@ -105,7 +106,7 @@ void relics(Screen &s, const Grid &g, const Codex &c, float x, int page,
     s.color(col::white.alpha(known ? 1 : 0.15f));
     s.sprite(up->icon, x, y - 2 * g.small, 0, 0, g.small, g.small);
     s.color(col::white);
-    s.text(Screen::fit(known ? up->name : lang.unknown, g.colW - 28 * g.small, g.small),
+    s.text(Screen::fit(known ? tr(up->name) : lang.unknown, g.colW - 28 * g.small, g.small),
            x + 20 * g.small, y, g.small, known ? col::gold : col::muted * 0.6f);
     y += step;
   }
@@ -194,7 +195,7 @@ void CodexMenu::render(Screen &s) {
     int siteRows = (Codex::SITES + PAGE_COUNT - 1) / PAGE_COUNT;
     tally(s, g, x += g.colW, lang.places, c.entered, Codex::SITES, page * siteRows,
           (page + 1) * siteRows, [](int k) {
-            return std::string(STRUCTURES[k].name ? STRUCTURES[k].name : lang.unknownSite);
+            return std::string(STRUCTURES[k].name ? tr(STRUCTURES[k].name) : lang.unknownSite);
           });
   }
 

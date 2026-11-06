@@ -133,7 +133,7 @@ RunStats computeRunStats(const Level &l) {
   stats.totalDamage = formatDamage(l.totalDamage);
 
   const Hero *h = l.player ? l.player->hero : nullptr;
-  stats.className = h ? h->name : lang.adventurer;
+  stats.className = h ? tr(h->name) : lang.adventurer;
   stats.classColor = h ? h->tint : col::white;
 
   stats.difficulty = difficultyTitle(l.game.difficulty);
@@ -141,7 +141,7 @@ RunStats computeRunStats(const Level &l) {
     stats.difficulty += say(lang.heatTag, l.game.heat);
   stats.diffColor = {0.82f, 0.85f, 0.92f, 1.0f};
   if (l.omen >= 0 && l.omen < OMEN_COUNT)
-    stats.omen = OMENS[l.omen].name, stats.omenColor = OMENS[l.omen].tint;
+    stats.omen = tr(OMENS[l.omen].name), stats.omenColor = OMENS[l.omen].tint;
 
   stats.timeText = clockText(l.time);
   stats.isRecord = l.time > l.game.best;
@@ -227,7 +227,7 @@ float recap(Screen &s, const Level &l, float y, float alpha) {
     s.color(col::white.alpha(alpha));
     s.sprite(up->icon, x, y, 0, 0, u, u);
     s.color(col::white);
-    s.text(up->name, x + 20 * u, y + 2 * u, small, c.alpha(alpha));
+    s.text(tr(up->name), x + 20 * u, y + 2 * u, small, c.alpha(alpha));
     float bx = x + 130 * u;
     s.rect(bx, y + 6 * u, bar, 5 * u, col::panel.alpha(alpha));
     s.rect(bx, y + 6 * u, bar * share, 5 * u,
@@ -253,7 +253,7 @@ float achievements(Screen &s, const Game &game, float y, float alpha) {
   float u = s.u, small = std::max(1.0f, u - 1);
   std::string names;
   for (int f : game.earned)
-    names += (names.empty() ? "" : "   ") + std::string(FEATS[f].title);
+    names += (names.empty() ? "" : "   ") + std::string(tr(FEATS[f].title));
   s.textCenter(Screen::fit(say(lang.achieved, names), s.w - 32 * u, small), s.w / 2, y + 4 * u, small,
                col::gold.alpha(alpha));
   return y + 4 * u + 16 * small;

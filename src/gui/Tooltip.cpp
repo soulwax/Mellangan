@@ -47,20 +47,20 @@ void itemTooltip(Screen &s, const Item &item, const Item *worn, const char *hero
   lines.push_back({say(lang.itemLevel, gearName(item.gearSlot()), item.ilvl),
                    col::muted});
   if (const UniqueDef *u = uniqueOf(item))
-    lines.push_back({u->text, item.color()});
+    lines.push_back({tr(u->text), item.color()});
   else if (b.grants)
-    lines.push_back({say(lang.grants, b.grants), col::white});
+    lines.push_back({say(lang.grants, tr(b.grants)), col::white});
   if (b.implicit != Stat::None)
     lines.push_back({describe(b.implicit, item.implicit()), col::white});
   for (int i = 0; i < item.count; i++)
     lines.push_back(
         {describe(AFFIXES[item.rolls[i].affix].stat, item.rolls[i].value), AFFIX});
   if (item.night())
-    lines.push_back({say(lang.curseLine, CURSES[item.curse].name, CURSES[item.curse].text),
+    lines.push_back({say(lang.curseLine, tr(CURSES[item.curse].name), tr(CURSES[item.curse].text)),
                      CURSE});
   if (b.klass) {
     bool fits = hero && std::strcmp(hero, b.klass) == 0;
-    lines.push_back({say(lang.classOnly, b.klass), fits ? col::muted : CURSE});
+    lines.push_back({say(lang.classOnly, tr(b.klass)), fits ? col::muted : CURSE});
   }
   if (cost >= 0)
     lines.push_back({say(lang.costsGold, cost), col::gold});

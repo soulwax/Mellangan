@@ -160,7 +160,7 @@ void Spawner::champions() {
   double x, y;
   ring(rng.range(300, 340), x, y);
   if (Enemy *c = champion(x, y))
-    level.game.announce(say(lang.championStalks, c->title));
+    level.game.announce(say(lang.championStalks, tr(c->title)));
 }
 
 void Spawner::barrel() {

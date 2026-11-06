@@ -130,9 +130,9 @@ std::string UpgradeCard::synergy(bool &ready) const {
   };
   for (const auto &e : evolutionTable()) {
     if (up->weapon && std::strcmp(e[0], up->name) == 0)
-      return ready = held(e[1]), say(ready ? lang.evolvesWithHeld : lang.evolvesWith, e[1]);
+      return ready = held(e[1]), say(ready ? lang.evolvesWithHeld : lang.evolvesWith, tr(e[1]));
     if (!up->weapon && std::strcmp(e[1], up->name) == 0 && held(e[0]))
-      return ready = true, say(lang.evolvesYour, e[0]);
+      return ready = true, say(lang.evolvesYour, tr(e[0]));
   }
   return "";
 }
@@ -164,12 +164,12 @@ std::vector<std::string> UpgradeCard::numbers() const {
   for (int i = 0; i < then.n; i++) {
     std::string b = show(then.line[i], power, pace);
     if (fresh) {
-      out.push_back(fmt::format("{} {}", then.line[i].name, b));
+      out.push_back(fmt::format("{} {}", tr(then.line[i].name), b));
       continue;
     }
     std::string a = show(now.line[i], up->power, up->pace);
     if (a != b)
-      out.push_back(fmt::format("{} {} > {}", then.line[i].name, a, b));
+      out.push_back(fmt::format("{} {} > {}", tr(then.line[i].name), a, b));
   }
   return out;
 }
@@ -197,9 +197,9 @@ void UpgradeCard::render(Screen &s, SDL_FRect r, float in, bool selected, float 
   s.color(col::white);
 
   float tx = iconX + 16 * u + 7 * u;
-  const char *name = evolving ? up->evolvedName : up ? up->name : lang.roastFeast;
-  std::string desc = evolving ? say(lang.evolves, up->name)
-                     : up     ? up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)]
+  const char *name = evolving ? tr(up->evolvedName) : up ? tr(up->name) : lang.roastFeast;
+  std::string desc = evolving ? say(lang.evolves, tr(up->name))
+                     : up     ? tr(up->desc[std::min(up->level, Upgrade::MAX_LEVEL - 1)])
                               : lang.restoreHealth;
   s.text(name, tx, y + 4.0f * u, u, (selected ? col::white : tint).alpha(in));
   s.text(desc, tx, y + 20.0f * u, small, (selected ? col::white * 0.9f : col::muted).alpha(in));

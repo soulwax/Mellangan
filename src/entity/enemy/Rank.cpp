@@ -106,7 +106,7 @@ void Enemy::enrage() {
   level->add<Shockwave>(x, bodyY(), 8, 90, 0.5f, def->tone);
   Spark::burst(*level, x, bodyY(), def->tone, 24, 140, true);
   level->game.hitStop(0.06f);
-  level->game.announce(say(lang.enrages, def->title));
+  level->game.announce(say(lang.enrages, tr(def->title)));
   Sound::boss.play(0.6f, 0);
 }
 

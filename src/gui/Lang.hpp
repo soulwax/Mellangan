@@ -4,6 +4,7 @@
 
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 
 struct Lang {
@@ -232,6 +233,27 @@ struct LangKey {
 
 extern const LangKey LANG_KEYS[];
 extern const int LANG_COUNT;
+
+struct Glossary {
+  struct Hash {
+    using is_transparent = void;
+    size_t operator()(std::string_view s) const { return std::hash<std::string_view>{}(s); }
+  };
+  std::unordered_map<std::string, std::string, Hash, std::equal_to<>> words;
+
+  int parse(std::string_view text);
+  const char *operator()(const char *english) const {
+    if (words.empty() || !english)
+      return english;
+    auto it = words.find(std::string_view(english));
+    return it == words.end() ? english : it->second.c_str();
+  }
+};
+
+extern Glossary glossary;
+
+inline const char *tr(const char *english) { return glossary(english); }
+inline std::string tr(const std::string &english) { return glossary(english.c_str()); }
 
 template <class... A> std::string say(const char *f, A &&...a) {
   return fmt::format(fmt::runtime(f), std::forward<A>(a)...);

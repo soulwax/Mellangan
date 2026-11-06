@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "gui/Lang.hpp"
 #include "level/RunRules.hpp"
 #include "meta/Balance.hpp"
 
@@ -35,6 +36,6 @@ void applyHeat(int heat, Balance &b, RunRules &r) {
 std::string heatNames(int heat) {
   std::string out;
   for (int i = 0; i < std::clamp(heat, 0, HEAT_MAX); i++)
-    out += (out.empty() ? "" : "   ") + std::string(HEAT[i].name);
+    out += (out.empty() ? "" : "   ") + std::string(tr(HEAT[i].name));
   return out;
 }

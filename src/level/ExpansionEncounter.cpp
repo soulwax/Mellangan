@@ -37,8 +37,8 @@ void ExpansionChallenge::onAdded() {
   defenders = spawnEncounterGuards(*level, biome, site, x, y, objective.heading, state, guardIds);
   if (!defenders)
     return finish(false);
-  level->game.announce(say(lang.encounterTask, STYLES[objective.kind].name, STYLES[objective.kind].task));
-  level->game.announce(say(lang.rewardColon, biomeRewardText(biome)));
+  level->game.announce(say(lang.encounterTask, tr(STYLES[objective.kind].name), tr(STYLES[objective.kind].task)));
+  level->game.announce(say(lang.rewardColon, tr(biomeRewardText(biome))));
 }
 
 bool ExpansionChallenge::complete() const {
@@ -63,9 +63,9 @@ void ExpansionChallenge::finish(bool success) {
     if (objective.kind == 3)
       p.status.clear();
     Spark::burst(*level, x, y, STYLES[objective.kind].color, 20, 100, true);
-    level->game.announce(say(lang.rewardColon, biomeRewardText(biome)));
+    level->game.announce(say(lang.rewardColon, tr(biomeRewardText(biome))));
   } else {
-    level->game.announce(say(lang.encounterLost, STYLES[objective.kind].name));
+    level->game.announce(say(lang.encounterLost, tr(STYLES[objective.kind].name)));
   }
   remove();
 }

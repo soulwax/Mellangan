@@ -291,7 +291,7 @@ void Level::quake(double x, double y, double r, float damage, float force) {
 void Level::explore() {
   int found = chart.tick(player->x, player->y);
   if (found >= 0 && chart.discovered > 1)
-    game.announce(Chart::title(BiomeId(found)));
+    game.announce(tr(Chart::title(BiomeId(found))));
   if (found >= 0)
     game.codex.biomes |= 1u << found;
   Structure s;

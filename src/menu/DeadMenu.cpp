@@ -26,7 +26,7 @@ void DeadMenu::render(Screen &s) {
   s.textCenter(lang.fallen, s.w / 2, y, 2.0f * u, col::red);
   float subY = y + 36 * u;
   if (const char *by = l.player->felledBy)
-    s.textCenter(say(lang.felledBy, by), s.w / 2, subY,
+    s.textCenter(say(lang.felledBy, tr(by)), s.w / 2, subY,
                  std::max(1.0f, u - 1), col::red * 0.85f);
   else
     s.textCenter(lang.overwhelmed, s.w / 2, subY,

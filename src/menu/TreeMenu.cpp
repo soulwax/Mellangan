@@ -184,9 +184,9 @@ void TreeMenu::render(Screen &s) {
   const Upgrade &up = *n.up;
   float dy = y1 - 64 * u, dx = x0 + 12 * u;
   int ranks = up.skill ? Tree::RANKS : up.rare ? 1 : Upgrade::MAX_LEVEL;
-  s.text(say(lang.rankRow, up.name, up.level, ranks), dx, dy, u,
+  s.text(say(lang.rankRow, tr(up.name), up.level, ranks), dx, dy, u,
          (up.level > 0 ? col::gold : col::white).alpha(in));
-  const char *desc = up.desc[size_t(std::clamp(up.level, 0, Upgrade::MAX_LEVEL - 1))];
+  const char *desc = tr(up.desc[size_t(std::clamp(up.level, 0, Upgrade::MAX_LEVEL - 1))]);
   s.text(Screen::fit(desc ? desc : "", x1 - dx - 12 * u, small), dx, dy + 20 * u, small,
          col::white.alpha(0.85f * in));
   std::string why = tree.why(p, n, points());

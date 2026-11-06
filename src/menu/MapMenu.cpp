@@ -151,7 +151,7 @@ void MapMenu::render(Screen &s) {
     BiomeId id = BiomeId(b);
     s.rect(x, y + 4 * small, 8 * small, 8 * small, Chart::tone(id));
     Color label = c.knows(id) ? col::white : col::muted;
-    s.text(fmt::format("{} {}%", Chart::title(id),
+    s.text(fmt::format("{} {}%", tr(Chart::title(id)),
                        c.cells[b] * 100 / std::max(1, c.charted)),
            x + 12 * small, y, small, label);
     y += row;
@@ -167,7 +167,7 @@ void MapMenu::render(Screen &s) {
   y += row * 2;
   for (int k = 0; k < int(StructureKind::Count); k++) {
     s.rect(x + small, y + 5 * small, 6 * small, 6 * small, STRUCTURES[k].debug);
-    s.text(STRUCTURES[k].name, x + 12 * small, y, small, col::muted);
+    s.text(tr(STRUCTURES[k].name), x + 12 * small, y, small, col::muted);
     y += row;
   }
 

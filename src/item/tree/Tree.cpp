@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 
+#include "gui/Lang.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
 #include "item/Passive.hpp"
@@ -49,7 +50,7 @@ int owned(const Player &p, bool weapon) {
 
 const char *Tree::tabName(Tab t) {
   constexpr const char *names[] = {"ARMS", "ARTS", "INSTINCTS"};
-  return names[int(t)];
+  return tr(names[int(t)]);
 }
 
 Tree Tree::of(const Player &p) {

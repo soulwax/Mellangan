@@ -1,5 +1,7 @@
 #include "meta/Balance.hpp"
 
+#include "gui/Lang.hpp"
+
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -65,11 +67,11 @@ const char *difficultyName(Difficulty d) {
 }
 
 const char *difficultyTitle(Difficulty d) {
-  return TITLES[std::clamp(int(d), 0, int(Difficulty::Count) - 1)];
+  return tr(TITLES[std::clamp(int(d), 0, int(Difficulty::Count) - 1)]);
 }
 
 const char *difficultyBlurb(Difficulty d) {
-  return BLURBS[std::clamp(int(d), 0, int(Difficulty::Count) - 1)];
+  return tr(BLURBS[std::clamp(int(d), 0, int(Difficulty::Count) - 1)]);
 }
 
 Difficulty difficultyFrom(const std::string &name) {

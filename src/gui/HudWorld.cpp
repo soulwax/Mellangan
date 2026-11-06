@@ -145,7 +145,7 @@ void Hud::champions() {
     Color c = col::gold.alpha(0.7f + 0.3f * std::sin(time * 6));
     arrow(pin, 7, 4, c);
     double xs = e->x - p.x, ys = e->y - p.y;
-    tag(fmt::format("{} {:.0f}", e->title, std::sqrt(xs * xs + ys * ys) / 16), pin, 18, c);
+    tag(fmt::format("{} {:.0f}", tr(e->title), std::sqrt(xs * xs + ys * ys) / 16), pin, 18, c);
   }
 }
 

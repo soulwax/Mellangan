@@ -192,7 +192,7 @@ void ClassMenu::renderHero(Screen &s, int i, const Pose &p, float in) const {
   Color label = on ? (open ? k.tint : col::muted)
                    : open ? col::white * 0.75f
                           : col::muted * 0.6f;
-  s.textCenter(open || on ? k.name : lang.locked, cx, foot + 7 * u, small, label.alpha(in));
+  s.textCenter(open || on ? tr(k.name) : lang.locked, cx, foot + 7 * u, small, label.alpha(in));
 }
 
 void ClassMenu::render(Screen &s) {

@@ -1,5 +1,6 @@
 #include "item/loot/Item.hpp"
 
+#include "gui/Lang.hpp"
 #include "gfx/Palette.hpp"
 #include "item/loot/Unique.hpp"
 
@@ -63,7 +64,7 @@ const char *rarityName(Rarity r) {
 
 const char *gearName(int slot) {
   constexpr const char *names[GEAR] = {"WEAPON", "OFF-HAND", "ARMOUR", "CHARM", "CHARM"};
-  return names[slot];
+  return tr(names[slot]);
 }
 
 int Item::gearSlot() const {

@@ -53,7 +53,7 @@ void Hud::minimap() {
     s.text(text, s.w - Screen::textWidth(text, small) - 4 * u, ty, small, c);
   };
   right(FLAVOURS[b].note, y - 4 * u - 32 * small, col::gold * 0.8f);
-  right(Chart::title(b), y - 2 * u - 16 * small, col::muted);
+  right(tr(Chart::title(b)), y - 2 * u - 16 * small, col::muted);
   right(game.level->sky.name(), y - 6 * u - 48 * small, Color{0.62f, 0.72f, 0.9f, 0.85f});
 }
 
@@ -94,7 +94,7 @@ void Hud::night(float top) {
                                      : say(lang.dawnClock, clockText(n.left()));
   s.textCenter(clock, s.w / 2, top, std::round(u * 1.5f), col::white);
   if (l.omen >= 0)
-    s.textCenter(OMENS[l.omen].name, s.w / 2, top + 58 * u, small, OMENS[l.omen].tint);
+    s.textCenter(tr(OMENS[l.omen].name), s.w / 2, top + 58 * u, small, OMENS[l.omen].tint);
   s.textCenter(say(n.lit == 1 ? lang.shrineLit : lang.shrinesLit, n.lit),
                s.w / 2, top + 26 * u, small, n.lit ? col::gold : col::muted);
   if (game.campaign && game.campaign->points > 0)
@@ -137,7 +137,7 @@ void Hud::statuses(float top) {
     const StatusEffect &effect = p.status.effect(kind);
     if (effect.time <= 0)
       continue;
-    std::string label = fmt::format("{} {:.1f}s", statusName(kind), effect.time);
+    std::string label = fmt::format("{} {:.1f}s", tr(statusName(kind)), effect.time);
     s.text(label, sx, sy, small, statusColor(kind));
     sx += Screen::textWidth(label, small) + 8 * u;
   }
@@ -163,7 +163,7 @@ void Hud::bossBar() {
   if (!top)
     return;
   Enemy &b = *top;
-  const char *name = b.name();
+  const char *name = tr(b.name());
   float bw = 160 * u, bx = (s.w - bw) / 2, by = s.h - 12 * u;
   float k = clampf(b.hp / b.maxHp, 0, 1);
   s.textCenter(ids.size() > 1 ? fmt::format("{}  +{}", name, ids.size() - 1)
@@ -209,7 +209,7 @@ void Hud::vitals() {
     if (wait > 0)
       s.rect(bx, by, box, box * wait, {0.02f, 0.02f, 0.05f, 0.7f});
     s.frame(bx, by, box, box, u, wait > 0 ? col::muted.alpha(0.4f) : h->tint.alpha(0.9f));
-    s.text(sk ? sk->name : h->skill, bx + box + 5 * u, by + 2 * u, small,
+    s.text(tr(sk ? sk->name : h->skill), bx + box + 5 * u, by + 2 * u, small,
            wait > 0 ? col::muted : h->tint);
     s.text(wait > 0 ? fmt::format("{:.0f}s", std::ceil(p.skillTime)) : game.input.prompt("SPACE"),
            bx + box + 5 * u, by + 2 * u + 16 * small, small, col::muted * 0.8f);

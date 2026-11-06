@@ -27,6 +27,15 @@ void testLang() {
   assert(say(l.kilometres, 2.5f) == "2.5 km");
   assert(std::strcmp(l.paused, "PAUSA") == 0 && say(l.felledBy, "wolf") == "abattu par wolf");
   assert(std::strcmp(l.world, lang.world) == 0 && std::strcmp(lang.paused, "PAUSED") == 0);
-  std::cout << "[TEST] Lang: " << LANG_COUNT << " strings, unique keys, formats parse, overrides keep placeholders"
+
+  const char *staff = "Arcane Staff";
+  assert(tr(staff) == staff && glossary.words.empty());
+  Glossary g;
+  assert(g.parse("~Arcane Staff\tBaton arcanique\r\n~Slay {} {}\tTuez {} {}\n~Slay {}\tTuez\n"
+                 "~Bad {}\t{:d} x\nArcane Staff\tno tilde\n~\tempty\n") == 2);
+  assert(std::strcmp(g(staff), "Baton arcanique") == 0 && g("Frost Nova") == std::string("Frost Nova") &&
+         g(nullptr) == nullptr && say(g("Slay {} {}"), 3, "bats") == "Tuez 3 bats");
+  std::cout << "[TEST] Lang: " << LANG_COUNT << " strings, unique keys, formats parse, overrides keep placeholders; "
+               "the glossary passes English through and swaps only well-formed translations"
             << std::endl;
 }

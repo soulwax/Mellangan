@@ -5,6 +5,7 @@
 #include <deque>
 
 Lang lang;
+Glossary glossary;
 
 #define K(m) {#m, &Lang::m}
 const LangKey LANG_KEYS[] = {
@@ -138,6 +139,28 @@ int Lang::parse(std::string_view text) {
       this->*k.text = held.emplace_back(value).c_str();
       taken++;
     }
+  }
+  return taken;
+}
+
+int Glossary::parse(std::string_view text) {
+  int taken = 0;
+  for (size_t at = 0; at < text.size();) {
+    size_t end = std::min(text.find('\n', at), text.size());
+    std::string_view line = text.substr(at, end - at);
+    at = end + 1;
+    if (!line.empty() && line.back() == '\r')
+      line.remove_suffix(1);
+    size_t gap = line.find('\t');
+    if (line.size() < 2 || line[0] != '~' || gap == std::string_view::npos)
+      continue;
+    std::string_view english = line.substr(1, gap - 1), value = line.substr(gap + 1);
+    if (english.empty() || value.empty() ||
+        std::count(english.begin(), english.end(), '{') != std::count(value.begin(), value.end(), '{') ||
+        (value.find('{') != std::string_view::npos && !formats(value)))
+      continue;
+    words[std::string(english)] = std::string(value);
+    taken++;
   }
   return taken;
 }

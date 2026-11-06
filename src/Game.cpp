@@ -374,7 +374,7 @@ void Game::newGame(bool reroll) {
   setMenu(nullptr);
   best = 0, beatBest = false;
   if (level->omen >= 0)
-    announce(say(lang.omenBanner, OMENS[level->omen].name, OMENS[level->omen].note));
+    announce(say(lang.omenBanner, tr(OMENS[level->omen].name), tr(OMENS[level->omen].note)));
   for (const PastWorld &w : saves.history)
     if (w.code == worldName())
       best = w.best;

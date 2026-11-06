@@ -78,7 +78,7 @@ float HeroCard::banner(Screen &s, bool draw) const {
                 tint.alpha(0.07f * in), t);
     heroSigil(s, pick, x + 21 * u, top + band / 2, 14 * u,
               (open ? tint : col::muted * 0.6f).alpha(in), t);
-    s.text(h.name, x + 42 * u, top + band / 2 - 8 * big, big, tint.alpha(in));
+    s.text(tr(h.name), x + 42 * u, top + band / 2 - 8 * big, big, tint.alpha(in));
     s.rect(x, top + band, w, u, tint.alpha(0.7f * in));
   }
   return top + band + 8 * u;
@@ -106,7 +106,7 @@ float HeroCard::arsenal(Screen &s, float y, bool draw) const {
     if (draw) {
       s.sprite(up->icon, ix, iy - u, 0, 0, iconScale, iconScale);
       if (!dense)
-        s.text(Screen::fit(up->name, colW - 16 * u, small), ix + 14 * u, iy + u,
+        s.text(Screen::fit(tr(up->name), colW - 16 * u, small), ix + 14 * u, iy + u,
                small, (up->weapon ? col::white : tint).alpha(in));
     }
     n++;
@@ -143,13 +143,13 @@ float HeroCard::layout(Screen &s, bool draw) const {
   float y = banner(s, draw);
   float cx = x + pad, cw = w - 2 * pad;
   Color prose = col::white.alpha(0.85f * in);
-  y = gui::wrapText(s, h.title, cx, y, cw, body, line, tint.alpha(0.75f * in), draw) +
+  y = gui::wrapText(s, tr(h.title), cx, y, cw, body, line, tint.alpha(0.75f * in), draw) +
       6 * u;
   if (!open) {
     if (draw)
       s.text(lang.lockedClass, cx, y, body, col::red.alpha(in));
     y += line + 4 * u;
-    y = gui::wrapText(s, say(lang.unlockNeed, h.need), cx, y, cw, body, line,
+    y = gui::wrapText(s, say(lang.unlockNeed, tr(h.need)), cx, y, cw, body, line,
                       prose, draw);
     return y + pad - top;
   }
@@ -158,13 +158,13 @@ float HeroCard::layout(Screen &s, bool draw) const {
   if (draw) {
     if (const Upgrade *up = named(h.weapon))
       s.sprite(up->icon, cx, y - u, 0, 0, u, u);
-    s.text(h.weapon, cx + gut, y, body, col::white.alpha(in));
+    s.text(tr(h.weapon), cx + gut, y, body, col::white.alpha(in));
   }
   y += line + 6 * u;
   y = label(s, lang.cardTrait, y, draw);
   if (draw)
     heroSigil(s, pick, cx + 8 * u, y + 7 * u, 7 * u, tint.alpha(in), t);
-  y = gui::wrapText(s, h.trait, cx + gut, y, cw - gut, body, line, prose, draw) + 6 * u;
+  y = gui::wrapText(s, tr(h.trait), cx + gut, y, cw - gut, body, line, prose, draw) + 6 * u;
 
   y = label(s, lang.cardSkill, y, draw);
   std::string cast = game.input.prompt("SPACE");
@@ -173,10 +173,10 @@ float HeroCard::layout(Screen &s, bool draw) const {
     s.rect(cx + cw - key, y - u, key, 14 * u, tint.alpha(0.15f * in));
     s.frame(cx + cw - key, y - u, key, 14 * u, 1, tint.alpha(0.7f * in));
     s.text(cast, cx + cw - key + 4 * u, y + u, small, tint.alpha(in));
-    s.text(h.skill, cx, y, body, tint.alpha(in));
+    s.text(tr(h.skill), cx, y, body, tint.alpha(in));
   }
   y += line + 2 * u;
-  y = gui::wrapText(s, h.skillDesc, cx, y, cw, body, line, prose, draw) + 6 * u;
+  y = gui::wrapText(s, tr(h.skillDesc), cx, y, cw, body, line, prose, draw) + 6 * u;
 
   y = arsenal(s, label(s, lang.cardArsenal, y, draw), draw);
   y = nature(s, label(s, lang.cardNature, y, draw), draw);

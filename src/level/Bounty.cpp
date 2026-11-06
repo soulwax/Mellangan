@@ -73,7 +73,7 @@ std::string Bounty::text() const {
   case SLAY:
     return say(lang.bountySlay, goal, FOES[arg]);
   case KINDLE:
-    return say(lang.bountyKindle, lower(Chart::title(BiomeId(arg))));
+    return say(lang.bountyKindle, lower(tr(Chart::title(BiomeId(arg)))));
   case ENTER:
     return say(lang.bountyFind, lower(STRUCTURES[arg].name));
   case WALK:
