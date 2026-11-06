@@ -71,6 +71,7 @@ struct Campaign {
 
   std::string save() const;
   static bool load(std::string_view text, Campaign &out);
+  static bool valid(std::string_view text);
   RunRules rules() const;
   void capture(const Level &level);
   void enter(Level &level);

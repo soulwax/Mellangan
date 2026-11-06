@@ -9,6 +9,7 @@
 #include "entity/Player.hpp"
 #include "menu/ClassMenu.hpp"
 #include "menu/CodexMenu.hpp"
+#include "menu/SettingsMenu.hpp"
 #include "item/Upgrade.hpp"
 #include "menu/Menu.hpp"
 
@@ -120,6 +121,8 @@ void TitleMenu::tick() {
     return choose((int(game.worldMode) + 1) % 4);
   if (!typing() && in.codex.clicked)
     return game.setMenu(std::make_unique<CodexMenu>(game, false));
+  if (!typing() && in.options.clicked)
+    return game.setMenu(std::make_unique<SettingsMenu>(game, false));
   if (!typing() && (in.prior.clicked || in.next.clicked))
     return stepDifficulty(in.next.clicked ? 1 : -1);
   int n = int(game.saves.history.size());
@@ -168,7 +171,7 @@ void TitleMenu::render(Screen &s) {
     saved = game.campaignSaved();
     if (saved && !game.saves.dir().empty()) {
       Campaign probe;
-      Campaign::load(game.saves.read("campaign.txt"), probe);
+      Campaign::load(game.saves.read("campaign.txt", Campaign::valid), probe);
       summary = fmt::format("{}  level {}  act {}  day {}{}", HEROES[probe.hero % HERO_COUNT]->name,
                             probe.lvl, ACTS[std::clamp(probe.act, 1, ACT_COUNT) - 1].numeral,
                             probe.day, probe.hardcore ? "  HARDCORE" : "");
@@ -180,13 +183,16 @@ void TitleMenu::render(Screen &s) {
                s.h * 0.62f + 24 * u, small, col::gold.alpha(0.8f));
   if (saved && !summary.empty())
     s.textCenter(summary, s.w / 2, s.h * 0.62f + 40 * u, small, col::muted);
-  s.textCenter("WASD/Arrows move   Tab map   C codex   Esc pause   M mute   F11 fullscreen",
-               s.w / 2, s.h - 30 * small, small, col::muted);
+  Layout l = layout();
+  float room = l.panel.x - 16 * u;
+  s.textCenter(Screen::fit("WASD/Arrows move   Tab map   C codex   O settings   Esc pause   M mute   "
+                           "F11 fullscreen",
+                           room, small),
+               8 * u + room / 2, s.h - 30 * small, small, col::muted);
   std::string_view version = "v" MELLANGAN_VERSION;
   s.text(version, s.w - Screen::textWidth(version, small) - 6 * small,
          s.h - 22 * small, small, col::muted * 0.7f);
 
-  Layout l = layout();
   const SDL_FRect &p = l.panel;
   s.rect(p.x, p.y, p.w, p.h, {0.04f, 0.04f, 0.07f, 0.8f});
   s.bracket(p.x, p.y, p.w, p.h, u);

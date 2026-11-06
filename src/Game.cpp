@@ -60,15 +60,18 @@ bool Game::init(SDL_Window *w, const std::string &root) {
     return false;
   saves.open();
   if (!saves.dir().empty() && !bench.enabled) {
-    std::string setting = saves.read("visual.txt");
-    if (!setting.empty())
-      reducedParticles = setting[0] == '1';
+    std::string text = saves.read("settings.txt");
+    if (!text.empty())
+      settings.parse(text);
+    else if (std::string visual = saves.read("visual.txt"); !visual.empty())
+      settings.reduced = visual[0] == '1';
     difficulty = difficultyFrom(saves.read("difficulty.txt"));
   }
   loadWorld();
   if (!saves.dir().empty() && !bench.enabled)
     codex.load(saves.dir() + "codex.txt");
   Sound::init(base);
+  applySettings();
   if (wantsCampaign)
     beginCampaign();
   else
@@ -107,7 +110,7 @@ void Game::run() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
       if (e.type == SDL_EVENT_QUIT)
-        running = false;
+        running = false, bench.interrupt();
       input.handle(e, SDL_GetWindowPixelDensity(window));
     }
     uint64_t work = SDL_GetPerformanceCounter();
@@ -178,9 +181,9 @@ void Game::hotkeys() {
   if (input.mute.clicked && !typing)
     Sound::toggleMute();
   if (input.particles.clicked && !typing)
-    setReducedParticles(!reducedParticles);
+    settings.reduced = !settings.reduced, saveSettings();
   if (input.fullscreen.clicked)
-    SDL_SetWindowFullscreen(window, !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN));
+    settings.fullscreen = !settings.fullscreen, applySettings(), saveSettings();
 }
 
 bool Game::route() {
@@ -431,12 +434,17 @@ void Game::announce(std::string text) {
   hud.announce(std::move(text));
 }
 
-void Game::setReducedParticles(bool reduced) {
-  reducedParticles = reduced;
-  if (writes()) {
-    const char *value = reduced ? "1\n" : "0\n";
-    saves.write("visual.txt", std::string_view(value, 2));
-  }
+void Game::applySettings() {
+  Sound::mix(settings.master / 100.0f, settings.music / 100.0f, settings.effects / 100.0f,
+             settings.ambience / 100.0f);
+  camera.scale = settings.shake / 100.0f;
+  if (window && bool(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) != bool(settings.fullscreen))
+    SDL_SetWindowFullscreen(window, settings.fullscreen != 0);
+}
+
+void Game::saveSettings() {
+  if (writes())
+    saves.write("settings.txt", settings.save());
 }
 
 void Game::onPlayerDied() {
@@ -497,7 +505,8 @@ void Game::render() {
   float health = p.hp / p.maxHp;
   float pause = menu ? menu->pauseEffect() : 0.0f;
   float shrine = menu ? menu->shrineEffect() : 0.0f;
-  screen.beginGui(window, {time, hurt, health < 0.3f ? 1 - health / 0.3f : 0,
+  float flash = settings.flash / 100.0f;
+  screen.beginGui(window, {time, hurt * flash, (health < 0.3f ? 1 - health / 0.3f : 0) * flash,
                            pause, shrine});
   if (worldDebug && dev)
     WorldDebug(screen, *level, xView, yView).render(input.mouseX, input.mouseY);

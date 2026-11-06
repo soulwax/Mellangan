@@ -205,7 +205,7 @@ void Sky::tick(Level &level) {
   shiftFront(biome);
   blow(level.time);
   int n = std::min(active(), int(drops.size()));
-  if (level.game.reducedParticles)
+  if (level.game.settings.reduced)
     n = n * 2 / 3;
   for (int i = shown == front ? before : 0; i < n; i++)
     respawn(drops[i], true);

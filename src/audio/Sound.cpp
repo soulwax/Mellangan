@@ -21,6 +21,7 @@ SDL_AudioStream *musicStream = nullptr;
 short *musicData = nullptr;
 int musicLength = 0;
 bool muted = false;
+float masterGain = 1, musicGain = 1, effectsGain = 1, ambienceGain = 1;
 
 struct Bed {
   const char *file;
@@ -44,7 +45,7 @@ void loadMusic(const std::string &path) {
   SDL_AudioSpec spec{SDL_AUDIO_S16, channels, rate};
   musicStream = SDL_CreateAudioStream(&spec, nullptr);
   SDL_BindAudioStream(device, musicStream);
-  SDL_SetAudioStreamGain(musicStream, MUSIC_VOLUME);
+  SDL_SetAudioStreamGain(musicStream, MUSIC_VOLUME * musicGain);
   spdlog::info("Music: {} ({:.0f} s, {} Hz, {} ch)", path,
                frames / double(rate), rate, channels);
 }
@@ -179,14 +180,22 @@ void Sound::tick() {
 }
 
 void Sound::ambience(float rain, float wind) {
-  beds[0].want = beds[0].peak * clampf(rain, 0, 1);
-  beds[1].want = beds[1].peak * clampf(wind, 0, 1);
+  beds[0].want = beds[0].peak * ambienceGain * clampf(rain, 0, 1);
+  beds[1].want = beds[1].peak * ambienceGain * clampf(wind, 0, 1);
+}
+
+void Sound::mix(float master, float music, float effects, float ambience) {
+  masterGain = master, musicGain = music, effectsGain = effects, ambienceGain = ambience;
+  if (device)
+    SDL_SetAudioDeviceGain(device, muted ? 0.0f : masterGain);
+  if (musicStream)
+    SDL_SetAudioStreamGain(musicStream, MUSIC_VOLUME * musicGain);
 }
 
 void Sound::toggleMute() {
   muted = !muted;
   if (device)
-    SDL_SetAudioDeviceGain(device, muted ? 0.0f : 1.0f);
+    SDL_SetAudioDeviceGain(device, muted ? 0.0f : masterGain);
 }
 
 void Sound::play(float volume, float pitchJitter, float pitch) {
@@ -206,7 +215,7 @@ void Sound::play(float volume, float pitchJitter, float pitch) {
   }
   SDL_AudioStream *v = voices[pick];
   SDL_ClearAudioStream(v);
-  SDL_SetAudioStreamGain(v, volume);
+  SDL_SetAudioStreamGain(v, volume * effectsGain);
   SDL_SetAudioStreamFrequencyRatio(v, pitch * (1 + rng.range(-pitchJitter, pitchJitter)));
   SDL_PutAudioStreamData(v, data, int(length));
   SDL_FlushAudioStream(v);

@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <cstdint>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -18,15 +19,15 @@ public:
 private:
   Workers();
   void loop();
-  void work();
+  int work(uint32_t gen, Job job, void *ctx, int count, int chunk);
 
   std::vector<std::thread> threads;
   std::mutex mutex;
   std::condition_variable wake, done;
-  std::atomic<int> next{0};
+  std::atomic<uint64_t> next{0};
   Job job = nullptr;
   void *ctx = nullptr;
-  int count = 0, chunk = 1, busy = 0;
-  unsigned generation = 0;
+  int count = 0, chunk = 1, finished = 0, total = 0;
+  uint32_t generation = 0;
   bool quit = false;
 };

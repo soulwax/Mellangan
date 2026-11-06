@@ -58,10 +58,12 @@ int runTests() {
   std::cout << "[TEST] Running memory leak & stability tests..." << std::endl;
   testContentLinks();
   testSaves();
+  testNearestStructure();
   testBlend();
   testPoolAllocAndFree();
   std::cout << "[TEST] Pool alloc/free & edge cases: PASS" << std::endl;
   testPoolConcurrency();
+  testWorkers();
   std::cout << "[TEST] Pool multithreaded concurrency: PASS" << std::endl;
   testStatuses();
   testStatusDamage();

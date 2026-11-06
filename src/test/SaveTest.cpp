@@ -9,9 +9,11 @@
 #include <iostream>
 #include <string>
 
+#include "campaign/Campaign.hpp"
 #include "level/Chart.hpp"
 #include "meta/Codex.hpp"
 #include "meta/Saves.hpp"
+#include "meta/Settings.hpp"
 
 namespace {
 void scribble(const std::string &file, std::string_view text) {
@@ -55,6 +57,22 @@ void testSaves() {
   Codex fresh;
   fresh.load(cf);
   assert(fresh.slain[3] == 8);
+  assert(whole.find("\nversion 2\n") != std::string::npos);
+  scribble(cf, whole.substr(0, whole.find("version")));
+  Codex legacy;
+  legacy.load(cf);
+  assert(legacy.slain[3] == 8 && legacy.runs == 2);
+
+  std::string pf = (dir / "campaign.txt").string();
+  Campaign camp;
+  camp.world = "SAVETEST", camp.gold = 5;
+  assert(Saves::store(pf, camp.save()));
+  camp.gold = 9;
+  assert(Saves::store(pf, camp.save()));
+  std::string text = Saves::slurp(pf);
+  scribble(pf, "mellangan-campaign 99\n" + text.substr(text.find('\n') + 1));
+  Campaign restored;
+  assert(Campaign::load(Saves::recall(pf, Campaign::valid), restored) && restored.gold == 5);
 
   std::string mf = (dir / "chart.bin").string();
   Chart chart;
@@ -73,8 +91,16 @@ void testSaves() {
   lost.load(mf);
   assert(lost.at(0, 0) == 0);
 
+  Settings set;
+  set.parse("master 40\nflash 300\nbogus 5\nfullscreen 1\nshake -20\n");
+  assert(set.master == 40 && set.flash == 100 && set.fullscreen == 1 && set.shake == 0 &&
+         set.music == 100 && set.reduced == 0);
+  Settings again;
+  again.parse(set.save());
+  assert(again.save() == set.save());
+
   fs::remove_all(dir);
   std::cout << "[TEST] Saves: writes go through a temp file and keep the last good copy, an empty, "
-               "missing or damaged codex or chart falls back to it, and erase removes both: PASS"
+               "missing or damaged codex, campaign or chart falls back to it, the codex is versioned, and erase removes both: PASS"
             << std::endl;
 }

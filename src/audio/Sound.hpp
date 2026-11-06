@@ -14,6 +14,7 @@ public:
   static void shutdown();
   static void tick();
   static void toggleMute();
+  static void mix(float master, float music, float effects, float ambience);
   static void ambience(float rain, float wind);
 
   void play(float volume = 1, float pitchJitter = 0.06f, float pitch = 1);

@@ -20,7 +20,7 @@ public:
 
   void open();
   const std::string &dir() const { return path; }
-  std::string read(const std::string &name) const;
+  std::string read(const std::string &name, bool (*valid)(std::string_view) = nullptr) const;
   void write(const std::string &name, std::string_view data) const;
   void loadWorld(WorldMode &mode, std::string &code);
   void saveWorld(WorldMode mode, const std::string &code) const;

@@ -17,7 +17,7 @@
 void Game::beginCampaign() {
   dawnRules = rules;
   campaign = std::make_unique<Campaign>();
-  std::string text = saves.dir().empty() ? std::string() : saves.read("campaign.txt");
+  std::string text = saves.dir().empty() ? std::string() : saves.read("campaign.txt", Campaign::valid);
   bool fresh = text.empty() || !Campaign::load(text, *campaign);
   if (fresh) {
     *campaign = Campaign{};
@@ -74,7 +74,7 @@ bool Game::campaignSaved() const {
   if (saves.dir().empty())
     return false;
   Campaign probe;
-  return Campaign::load(saves.read("campaign.txt"), probe);
+  return Campaign::load(saves.read("campaign.txt", Campaign::valid), probe);
 }
 
 void Game::saveCampaign() {

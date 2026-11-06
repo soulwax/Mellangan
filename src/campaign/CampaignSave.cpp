@@ -54,6 +54,11 @@ std::string Campaign::save() const {
   return out + edits.save();
 }
 
+bool Campaign::valid(std::string_view text) {
+  Campaign probe;
+  return load(text, probe);
+}
+
 bool Campaign::load(std::string_view text, Campaign &out) {
   std::istringstream in{std::string(text)};
   std::string line;

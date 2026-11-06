@@ -58,6 +58,6 @@ void Codex::save(const std::string &path) const {
   out += "\n";
   for (int k : entered)
     out += fmt::format("{} ", k);
-  out += fmt::format("\n{}\n", shrines);
+  out += fmt::format("\n{}\nversion {}\n", shrines, VERSION);
   Saves::store(path, out);
 }

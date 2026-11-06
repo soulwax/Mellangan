@@ -15,6 +15,7 @@
 #include "campaign/Campaign.hpp"
 #include "level/Level.hpp"
 #include "menu/Menu.hpp"
+#include "meta/Settings.hpp"
 #include "meta/Balance.hpp"
 #include "meta/Codex.hpp"
 #include "meta/Saves.hpp"
@@ -34,7 +35,8 @@ public:
   Input input;
   std::unique_ptr<Level> level;
   std::unique_ptr<Menu> menu;
-  bool running = true, dev = false, reducedParticles = false;
+  bool running = true, dev = false;
+  Settings settings;
   Bench bench;
 
   WorldMode worldMode = WorldMode::Classic;
@@ -67,7 +69,8 @@ public:
   void setDifficulty(Difficulty d);
   std::string worldName() const;
   void announce(std::string text);
-  void setReducedParticles(bool reduced);
+  void applySettings();
+  void saveSettings();
   void onPlayerHurt() { hurt = 1, camera.shake = 4; }
   void onExplosion() { camera.jolt(2.5f); }
   void hitStop(float seconds);

@@ -38,6 +38,8 @@ void testNamedPacks();
 void testRunRules();
 void testContentLinks();
 void testSaves();
+void testNearestStructure();
+void testWorkers();
 void testBlend();
 void testShapeForms();
 void testChampionTraits();

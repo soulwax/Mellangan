@@ -49,8 +49,8 @@ void Saves::erase(const std::string &file) {
     SDL_RemovePath((file + end).c_str());
 }
 
-std::string Saves::read(const std::string &name) const {
-  return path.empty() ? std::string() : recall(path + name);
+std::string Saves::read(const std::string &name, bool (*valid)(std::string_view)) const {
+  return path.empty() ? std::string() : recall(path + name, valid);
 }
 
 void Saves::write(const std::string &name, std::string_view data) const {

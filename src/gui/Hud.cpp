@@ -184,7 +184,7 @@ void Hud::heartbeat() {
   if (low <= 0 || p.dead())
     return;
   float rate = 4 + 6 * low, beat = std::pow(std::abs(std::sin(time * rate)), 6.0f);
-  float a = (0.12f + 0.28f * beat) * low;
+  float a = (0.12f + 0.28f * beat) * low * game.settings.flash / 100.0f;
   for (int i = 0; i < 4; i++) {
     float band = (4 - i) * 6 * u, k = a * (i + 1) / 4;
     Color c = col::red.alpha(k * 0.6f);

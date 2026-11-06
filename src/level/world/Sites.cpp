@@ -96,16 +96,27 @@ bool nearestStructure(double x, double y, int maxRegions, Structure &out,
   int tx = int(std::floor(x / 16)), ty = int(std::floor(y / 16)),
       rx = regionOf(tx), ry = regionOf(ty);
   double best = INFINITY;
+  int by = 0, bx = 0;
   Structure s;
-  for (int yr = ry - maxRegions; yr <= ry + maxRegions; yr++)
-    for (int xr = rx - maxRegions; xr <= rx + maxRegions; xr++) {
-      if (!structureIn(xr, yr, s) || s.contains(tx, ty) ||
-          (keep && !keep(&s, ctx)))
-        continue;
-      double xd = s.centerX() - x, yd = s.centerY() - y, d = xd * xd + yd * yd;
-      if (d < best)
-        best = d, out = s;
+  auto visit = [&](int xr, int yr) {
+    if (!structureIn(xr, yr, s) || s.contains(tx, ty) || (keep && !keep(&s, ctx)))
+      return;
+    double xd = s.centerX() - x, yd = s.centerY() - y, d = xd * xd + yd * yd;
+    if (d < best || (d == best && (yr < by || (yr == by && xr < bx))))
+      best = d, by = yr, bx = xr, out = s;
+  };
+  for (int k = 0; k <= maxRegions; k++) {
+    double gap = double(k - 1) * REGION * 16;
+    if (k > 1 && gap * gap > best)
+      break;
+    for (int i = -k; i <= k; i++) {
+      visit(rx + i, ry - k);
+      if (k)
+        visit(rx + i, ry + k);
     }
+    for (int i = 1 - k; i < k; i++)
+      visit(rx - k, ry + i), visit(rx + k, ry + i);
+  }
   return best < INFINITY;
 }
 

@@ -9,12 +9,20 @@ All notable changes to Mellangan are documented here. The format follows
 ### Added
 
 - CI packages its Windows Release build and keeps it as the `Mellangan-windows` artifact. `ci-artifact.ps1 [ref]` downloads the package for a commit whose CI run passed, so a release can ship the clean-checkout build instead of a local one. Packaging moved from `dist.ps1` to `package.ps1`, which both use.
+- A settings menu, opened with O on the title and pause screens: master, music, effects and ambience volume in steps of 10%, screen shake and flash strength (the red hurt flash and the low-health pulse) in steps of 25%, full or reduced particles, and fullscreen. Up and Down pick a row, Left and Right change it, and every change applies at once and is saved to `settings.txt`. The old `visual.txt` particle choice is picked up the first time. M still mutes and F11 and V still work, and both now save their setting.
+- `--soak [minutes]` (60 by default): god-mode runs on autopilot that walk, answer every menu and start a new run at each dawn, logging fps, frame p99, process memory and entity counts every minute. It exits with code 2 on a slow minute (under 55 fps or p99 over 16.7 ms), on memory in later runs peaking more than 32 MB above the first run, or when frames stall because the window is minimized or the screen is locked. It never touches the save folder.
+- The README lists system requirements: Vulkan 1.2, and the measured reference machine (Intel Iris Xe) with its soak and bench numbers.
 - Crash reports on Windows: an unhandled exception or `abort` logs the exception code, the version, the world and hero, and a stack as module offsets to `mellangan.log`, and writes a `crash.dmp` minidump beside it. Until now a Windows crash left nothing behind. Linux and macOS crash lines also name the version, world and hero.
 - When the executable's folder is read-only (for example under Program Files), the log is written to the save folder instead of nowhere, and the first log line says where it is.
+- A damaged campaign save loads from its backup instead of starting a fresh campaign that would then be saved over it. The codex now ends with a `version` line, at the end so that older builds still read it, for future layout changes to migrate from.
 - Saves survive a crash or power cut mid-write. Every save file (codex, campaign, world charts, world history, settings) is written to a temporary file and renamed into place, and the previous version is kept beside it as `.bak`. A save that is empty, missing or damaged loads from its backup instead, with a warning in the log, and deleting a save (hardcore death, an old world's chart) removes its backup too, so nothing comes back.
 
 ### Fixed
 
+- Fewer hitches on a busy computer. The worker pool that runs enemy AI waited for every worker thread to wake up and report in, even when the main thread had already done all the work, so a worker Windows had not scheduled yet could hold a frame for a whole 16 ms time slice or more. It now waits only for the work itself. With every core busy, the worst wait in 3,000 rounds fell from 57-78 ms to 11-32 ms, and waits over 10 ms from 5-20 to 2-3.
+- `--soak` logs every frame over 16.7 ms with its tick and render split and the profiler slots, so a hitch names the system it came from.
+- Stepping into an Ancient Gate no longer freezes the game for about half a second. Finding the nearest sleeping shrine checked every region in an 81 by 81 square, generating each one from scratch; the search now widens ring by ring and stops at the first ring that cannot hold anything closer, with the same result (460 ms down to about 4 ms). The campaign's mine lookup and the night's shrine beacon use the same search.
+- `--soak` reports a closed window as an interrupted soak and exits with code 2, instead of ending without a verdict.
 - The minute horde is the strongest unlocked kind again. Drawing it from the top three (0.6.4) let the bastion siege test land on a different foe on Linux and macOS, where it failed; the bastion test now logs its breach, kill and straggler counts when it fails.
 
 ## [0.6.4] - 2026-11-05

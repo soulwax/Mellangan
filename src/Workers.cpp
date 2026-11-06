@@ -28,36 +28,50 @@ void Workers::run(int n, int size, Job j, void *c) {
     return;
   if (threads.empty() || n <= size)
     return j(c, 0, n);
+  uint32_t gen;
   {
     std::lock_guard<std::mutex> lock(mutex);
-    job = j, ctx = c, count = n, chunk = size, busy = int(threads.size()),
-    generation++;
-    next.store(0);
+    job = j, ctx = c, count = n, chunk = size, finished = 0, total = (n + size - 1) / size;
+    gen = ++generation;
+    next.store(uint64_t(gen) << 32);
   }
   wake.notify_all();
-  work();
+  int mine = work(gen, j, c, n, size);
   std::unique_lock<std::mutex> lock(mutex);
-  done.wait(lock, [this] { return busy == 0; });
+  finished += mine;
+  done.wait(lock, [this] { return finished == total; });
 }
 
-void Workers::work() {
-  for (int begin; (begin = next.fetch_add(chunk)) < count;)
-    job(ctx, begin, std::min(begin + chunk, count));
+int Workers::work(uint32_t gen, Job j, void *c, int n, int size) {
+  int chunks = 0;
+  for (uint64_t v = next.load(); uint32_t(v >> 32) == gen && int(uint32_t(v)) < n;) {
+    if (!next.compare_exchange_weak(v, v + uint64_t(size)))
+      continue;
+    int begin = int(uint32_t(v));
+    j(c, begin, std::min(begin + size, n));
+    chunks++;
+    v = next.load();
+  }
+  return chunks;
 }
 
 void Workers::loop() {
-  unsigned seen = 0;
+  uint32_t seen = 0;
   for (;;) {
+    Job j;
+    void *c;
+    int n, size;
     {
       std::unique_lock<std::mutex> lock(mutex);
       wake.wait(lock, [&] { return quit || generation != seen; });
       if (quit)
         return;
-      seen = generation;
+      seen = generation, j = job, c = ctx, n = count, size = chunk;
     }
-    work();
-    std::lock_guard<std::mutex> lock(mutex);
-    if (--busy == 0)
-      done.notify_one();
+    if (int chunks = work(seen, j, c, n, size)) {
+      std::lock_guard<std::mutex> lock(mutex);
+      if ((finished += chunks) == total)
+        done.notify_one();
+    }
   }
 }

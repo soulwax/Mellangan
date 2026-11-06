@@ -27,6 +27,7 @@
 #include "particle/Spark.hpp"
 #include "menu/TitleMenu.hpp"
 #include "menu/ClassMenu.hpp"
+#include "menu/SettingsMenu.hpp"
 #include "entity/pickup/Gem.hpp"
 
 void captureScreenshotSuite(SDL_Window *window, const std::string &base) {
@@ -152,6 +153,14 @@ void captureScreenshotSuite(SDL_Window *window, const std::string &base) {
     vk2dRendererPresent();
   }
   snap("static/screenshots/04-upgrades.png");
+
+  game.setMenu(std::make_unique<SettingsMenu>(game, true));
+  for (int i = 0; i < 30; i++) {
+    game.tick();
+    game.render();
+    vk2dRendererPresent();
+  }
+  snap("static/screenshots/05-settings.png");
 
   vk2dTextureFree(cap);
   game.shutdown();

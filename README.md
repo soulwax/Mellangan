@@ -21,6 +21,12 @@ Enemies can have their own type of attacks, upgrades, passives and abilities.
 | Combat and exploration | Upgrades |
 | [![Surviving enemies in the savanna](static/screenshots/03-combat.png)](static/screenshots/03-combat.png) | [![Choosing a level-up upgrade during a run](static/screenshots/04-upgrades.png)](static/screenshots/04-upgrades.png) |
 
+## System requirements
+
+- **Required:** a GPU and driver with Vulkan 1.2 (on macOS, through MoltenVK), 64-bit Windows 10 or later, Linux or macOS on Apple Silicon, and about 12 MB of disk.
+- **Reference machine**, the only one measured: Intel Iris Xe integrated graphics, 8 logical cores, 16 GB of RAM, Windows 11. A 36-minute `--soak` (three runs, about 550 foes on screen from minute 3) held 60 fps every minute with a frame p99 between 1.9 and 6.3 ms and about 180 MB of memory. `--bench-gate` holds 60 fps with a p99 of about 8 ms at 10,000 foes.
+- Anything at or above the reference machine should hold 60 fps. Slower GPUs are untested; report what you see with the `--bench` and `--soak` numbers from `mellangan.log`.
+
 ## Building
 
 Requires CMake 3.21+, a C++20 compiler (MSVC on Windows, GCC 11+ or Clang 14+ on Linux), and the
@@ -139,6 +145,7 @@ and fire pools leave a short burn when enemies move away. Afflictions clear on d
 | Up / Down (title) | Recall a past world |
 | Left / Right (class screen) | Choose a class |
 | C (title, pause) | Codex |
+| O (title, pause) | Settings: master, music, effects and ambience volume, screen shake, flashes, particles and fullscreen, kept in `settings.txt` in the save folder |
 | Esc / P | Pause |
 | F11 | Fullscreen |
 | F3 | FPS counter and frame-time graph |
@@ -175,6 +182,8 @@ Days and nights repeat, and foes grow stronger the further you roam from town.
 - **Nightmare.** After the last act, the acts begin again with every foe stronger.
 
 Run with `--bench` to log performance at 100 to 50,000 enemies (the game quits when it is done). `--bench-gate` stops after 10,000 and exits with code 2 unless that row holds 55 fps with a frame p99 under 16.7 ms; `dist.ps1` runs it before packaging (`-SkipBench` to skip).
+
+`--soak [minutes]` (60 by default) plays real god-mode runs on autopilot: it walks, answers every menu with Enter and starts a new run at each dawn. Each minute it logs fps, frame p99, process memory and entity counts. It exits with code 2 if any minute after the first drops under 55 fps or has a p99 over 16.7 ms, or if memory in later runs peaks more than 32 MB above the first run's peak. Like `--bench`, it never reads or writes the save folder.
 
 ## Layout
 

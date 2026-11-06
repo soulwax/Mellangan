@@ -8,6 +8,7 @@
 #include "level/Structure.hpp"
 
 struct Codex {
+  static constexpr int VERSION = 2;
   static constexpr int KINDS = int(EnemyKind::Count),
                        SITES = int(StructureKind::Count);
 

@@ -216,7 +216,7 @@ void viewCombatReadability(SDL_Window *window, const std::string &base) {
           (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE))
         running = false;
       if (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_V)
-        game.reducedParticles = !game.reducedParticles;
+        game.settings.reduced = !game.settings.reduced;
     }
     if (frame % 180 == 0)
       level.add<Orb>(p.x - 50, p.y - 12, 0, 0, 0);
@@ -232,7 +232,7 @@ void viewCombatReadability(SDL_Window *window, const std::string &base) {
     level.render(game.screen);
     enemyWarning(game.screen, p.x + 110, p.y, 18, 0.9f, 0);
     game.screen.beginGui(window, {0, 0, 0, 0, 0});
-    game.screen.textCenter(game.reducedParticles ? "V: REDUCED PARTICLES" : "V: FULL PARTICLES",
+    game.screen.textCenter(game.settings.reduced ? "V: REDUCED PARTICLES" : "V: FULL PARTICLES",
                            game.screen.w / 2, 12 * game.screen.u, game.screen.u, col::white);
     vk2dRendererPresent();
     SDL_Delay(16);

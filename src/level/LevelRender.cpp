@@ -108,7 +108,7 @@ void Level::render(Screen &s) {
   drawn.clear(), keys.clear();
   queueVisible(s);
   for (auto &p : particles)
-    if (!p->removed && showParticle(*p, game.reducedParticles) &&
+    if (!p->removed && showParticle(*p, game.settings.reduced) &&
         s.visible(p->x, p->y, 48))
       queue(p.get());
   for (Prop &p : props)
@@ -213,7 +213,7 @@ void Level::renderLight(Screen &s) {
         s.visible(o.self->x, o.self->y, 160))
       o.self->drawLight(s);
   for (auto &p : particles)
-    if (!p->removed && showParticle(*p, game.reducedParticles) &&
+    if (!p->removed && showParticle(*p, game.settings.reduced) &&
         s.visible(p->x, p->y, 60))
       p->drawLight(s);
   for (const Prop &p : props)

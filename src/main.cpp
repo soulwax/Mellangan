@@ -148,7 +148,9 @@ static int play(SDL_Window *window, const std::string &base, int argc, char **ar
   for (int i = 1; i < argc; i++) {
     game.dev |= std::string_view(argv[i]) == "--dev";
     game.bench.gate |= std::string_view(argv[i]) == "--bench-gate";
-    game.bench.enabled |= std::string_view(argv[i]) == "--bench" || game.bench.gate;
+    if (std::string_view(argv[i]) == "--soak")
+      game.bench.soak = i + 1 < argc && parseNumber(argv[i + 1], game.bench.soak) ? game.bench.soak : 60;
+    game.bench.enabled |= std::string_view(argv[i]) == "--bench" || game.bench.gate || game.bench.soak;
     game.rules.loot |= std::string_view(argv[i]) == "--loot";
     game.wantsCampaign |= std::string_view(argv[i]) == "--campaign";
   }
