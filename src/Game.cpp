@@ -66,6 +66,7 @@ bool Game::init(SDL_Window *w, const std::string &root) {
       settings.parse(text);
     else if (std::string visual = saves.read("visual.txt"); !visual.empty())
       settings.reduced = visual[0] == '1';
+    input.parseKeys(saves.read("keys.txt"));
     difficulty = difficultyFrom(saves.read("difficulty.txt"));
   }
   loadWorld();
@@ -445,6 +446,11 @@ void Game::applySettings() {
   VK2DScreenMode mode = settings.vsync ? VK2D_SCREEN_MODE_VSYNC : VK2D_SCREEN_MODE_TRIPLE_BUFFER;
   if (VK2DRendererConfig config = vk2dRendererGetConfig(); window && config.screenMode != mode)
     config.screenMode = mode, vk2dRendererSetConfig(config);
+}
+
+void Game::saveKeys() {
+  if (writes())
+    saves.write("keys.txt", input.saveKeys());
 }
 
 void Game::saveSettings() {

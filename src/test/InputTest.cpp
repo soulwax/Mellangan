@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <string>
 
 #include "input/Input.hpp"
 
@@ -78,5 +79,49 @@ void testGamepad() {
   std::cout << "[TEST] Gamepad: buttons reach their keys, the stick has a dead zone, partial speed "
                "and a press/release gap for menus, triggers act as buttons, keys switch prompts "
                "back: PASS"
+            << std::endl;
+}
+
+void testRebind() {
+  Input in;
+  auto press = [&](SDL_Scancode sc, bool down) {
+    SDL_Event e{};
+    e.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
+    e.key.scancode = sc, e.key.down = down;
+    in.handle(e, 1);
+  };
+  int inventory = 7, gather = 8;
+  assert(std::string(Input::BINDINGS[inventory].name) == "INVENTORY" &&
+         std::string(Input::BINDINGS[gather].name) == "GATHER");
+  in.listening = inventory;
+  press(SDL_SCANCODE_G, true);
+  press(SDL_SCANCODE_G, false);
+  assert(in.listening == -1 && in.keymap[inventory] == SDL_SCANCODE_G);
+  press(SDL_SCANCODE_G, true);
+  in.tick();
+  assert(in.inventory.clicked);
+  press(SDL_SCANCODE_G, false);
+  press(SDL_SCANCODE_I, true);
+  in.tick();
+  assert(!in.inventory.down);
+  press(SDL_SCANCODE_I, false);
+  assert(in.prompt("Enter equip   I close") == "Enter equip   G close");
+  assert(in.rebind(inventory, SDL_SCANCODE_E) && in.keymap[gather] == SDL_SCANCODE_G);
+  assert(!in.rebind(inventory, SDL_SCANCODE_ESCAPE) && !in.rebind(inventory, SDL_SCANCODE_UP));
+  in.listening = gather;
+  press(SDL_SCANCODE_ESCAPE, true);
+  assert(in.listening == -1 && in.keymap[gather] == SDL_SCANCODE_G);
+  in.tick();
+  assert(!in.escape.clicked);
+  press(SDL_SCANCODE_ESCAPE, false);
+  std::string saved = in.saveKeys();
+  Input other;
+  other.parseKeys(saved);
+  for (int i = 0; i < Input::BINDING_COUNT; i++)
+    assert(other.keymap[i] == in.keymap[i]);
+  other.resetKeys();
+  assert(other.keymap[inventory] == SDL_SCANCODE_I && other.prompt("I close") == "I close");
+  std::cout << "[TEST] Rebinding: a captured key drives its action and frees the old one, taken keys "
+               "swap, fixed keys are refused, Esc cancels, hints name the new key, keys.txt round-trips: PASS"
             << std::endl;
 }

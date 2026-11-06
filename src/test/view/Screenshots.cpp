@@ -35,6 +35,7 @@ void captureScreenshotSuite(SDL_Window *window, const std::string &base) {
   game.window = window, game.readOnly = true;
   if (!game.init(window, base))
     return;
+  game.codex.hints = ~0u;
 
   VK2DTexture cap = vk2dTextureCreate(1440, 810);
   if (!cap) {

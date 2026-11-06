@@ -71,6 +71,7 @@ public:
   void announce(std::string text);
   void applySettings();
   void saveSettings();
+  void saveKeys();
   void onPlayerHurt() { hurt = 1, camera.shake = 4; }
   void onExplosion() { camera.jolt(2.5f); }
   void hitStop(float seconds);

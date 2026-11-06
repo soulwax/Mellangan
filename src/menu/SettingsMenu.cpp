@@ -6,6 +6,7 @@
 
 #include "Game.hpp"
 #include "audio/Sound.hpp"
+#include "menu/ControlsMenu.hpp"
 #include "menu/PauseMenu.hpp"
 #include "menu/TitleMenu.hpp"
 
@@ -28,12 +29,19 @@ const Row ROWS[] = {
     {"DAMAGE NUMBERS", &Settings::numbers, 1, 1, "OFF", "ON"},
     {"COLOURS", &Settings::colours, 1, 1, "STANDARD", "COLOURBLIND"},
     {"FULLSCREEN", &Settings::fullscreen, 1, 1, "OFF", "ON"},
-    {"VSYNC", &Settings::vsync, 1, 1, "OFF", "ON"}};
+    {"VSYNC", &Settings::vsync, 1, 1, "OFF", "ON"},
+    {"CONTROLS", nullptr, 0, 0, nullptr, nullptr}};
 constexpr int ROW_COUNT = int(sizeof ROWS / sizeof *ROWS);
 } // namespace
 
 void SettingsMenu::change(int direction) {
   const Row &r = ROWS[row];
+  if (!r.value) {
+    if (direction < 0)
+      return;
+    Sound::select.play(0.5f, 0);
+    return game.setMenu(std::make_unique<ControlsMenu>(game, fromPause));
+  }
   int &v = game.settings.*r.value;
   int was = v;
   v = r.hi == 1 ? 1 - v : std::clamp(v + direction * r.step, 0, r.hi);
@@ -59,7 +67,7 @@ void SettingsMenu::tick() {
     row = (row + 1) % ROW_COUNT, Sound::select.play(0.3f, 0);
   else if (in.left.clicked)
     change(-1);
-  else if (in.right.clicked || (in.confirm.clicked && ROWS[row].hi == 1))
+  else if (in.right.clicked || (in.confirm.clicked && ROWS[row].hi <= 1))
     change(1);
 }
 
@@ -70,13 +78,18 @@ void SettingsMenu::render(Screen &s) {
   s.textCenter("SETTINGS", s.w / 2, top - 48 * u, 2 * u, col::gold);
   for (int i = 0; i < ROW_COUNT; i++) {
     const Row &r = ROWS[i];
-    int v = game.settings.*r.value;
     float y = top + i * line;
     bool on = i == row;
     if (on)
       s.rect(x - 6 * u, y - 3 * u, w + 12 * u, line - 2 * u, col::panel.alpha(0.9f));
     Color ink = on ? col::gold : col::white;
     s.text(r.name, x, y, u, ink);
+    if (!r.value) {
+      std::string open = game.input.prompt("Enter");
+      s.text(open, x + w - Screen::textWidth(open, u), y, u, ink);
+      continue;
+    }
+    int v = game.settings.*r.value;
     float bw = 90 * u, bx = x + w - bw;
     if (r.hi == 1) {
       std::string label = v ? r.on : r.off;

@@ -28,7 +28,7 @@ void Hud::clear() {
 
 void Hud::tick(bool running) {
   if (running)
-    bannerTime = std::max(0.0f, bannerTime - DT);
+    bannerTime = std::max(0.0f, bannerTime - DT), teach();
   if (bannerTime <= 0 && !banners.empty())
     banner = std::move(banners.front()), banners.pop_front(), bannerTime = 3;
 }
@@ -260,4 +260,6 @@ void Hud::draw() {
   vitals();
   if (bannerTime > 0 && !game.menu)
     bannerBox();
+  if (!game.menu)
+    tutor();
 }

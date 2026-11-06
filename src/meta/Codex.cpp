@@ -38,6 +38,8 @@ bool Codex::parse(std::string_view text) {
   row(slain, KINDS);
   row(entered, SITES);
   std::sscanf(at, "%d", &shrines);
+  if (const char *h = std::strstr(at, "hints "))
+    std::sscanf(h + 6, "%u", &hints);
   return true;
 }
 
@@ -58,6 +60,6 @@ void Codex::save(const std::string &path) const {
   out += "\n";
   for (int k : entered)
     out += fmt::format("{} ", k);
-  out += fmt::format("\n{}\nversion {}\n", shrines, VERSION);
+  out += fmt::format("\n{}\nhints {}\nversion {}\n", shrines, hints, VERSION);
   Saves::store(path, out);
 }

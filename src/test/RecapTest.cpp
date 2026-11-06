@@ -40,3 +40,31 @@ void testAdvice() {
                "their own tip, and there is always one: PASS"
             << std::endl;
 }
+
+void testHints() {
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Level &l = *game.level;
+  auto run = [&](float seconds) {
+    for (int i = 0; i < int(seconds * 60); i++)
+      l.time += DT, game.hud.tick(true);
+  };
+  run(4);
+  assert(std::strstr(game.hud.lesson().c_str(), "move") && game.codex.hints == 1);
+  run(11);
+  assert(std::strstr(game.hud.lesson().c_str(), "gems") && game.codex.hints == 3);
+  uint32_t seen = game.codex.hints;
+  game.level->player->lvl = 2;
+  run(12);
+  assert(std::strstr(game.hud.lesson().c_str(), "upgrade") && game.codex.hints == (seen | 4));
+  Game again;
+  again.level = std::make_unique<Level>(again);
+  again.codex.hints = ~0u;
+  for (int i = 0; i < 6000; i++)
+    again.level->time += DT, again.hud.tick(true);
+  assert(again.hud.lesson().empty());
+  game.level.reset(), again.level.reset();
+  std::cout << "[TEST] Hints: lessons come one at a time in order when their moment arrives, each is "
+               "remembered in the codex, and a codex that knows them all shows none: PASS"
+            << std::endl;
+}
