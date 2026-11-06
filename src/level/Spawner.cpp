@@ -1,5 +1,6 @@
 #include "level/Spawner.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include <spdlog/fmt/fmt.h>
 #include "audio/Sound.hpp"
@@ -147,7 +148,7 @@ void Spawner::renegades(float t) {
       k = EnemyKind::Outlaw;
     spawn(k, x + rng.range(-24, 24), y + rng.range(-24, 24));
   }
-  level.game.announce("RENEGADES ON YOUR TRAIL");
+  level.game.announce(lang.renegades);
 }
 
 void Spawner::champions() {
@@ -159,7 +160,7 @@ void Spawner::champions() {
   double x, y;
   ring(rng.range(300, 340), x, y);
   if (Enemy *c = champion(x, y))
-    level.game.announce(fmt::format("A CHAMPION STALKS: {}", c->title));
+    level.game.announce(say(lang.championStalks, c->title));
 }
 
 void Spawner::barrel() {

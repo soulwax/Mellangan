@@ -30,7 +30,7 @@ public:
   Key up, down, left, right, confirm, escape, pause, one, two, three, four, restart,
       quit, map, codex, erase, older, newer, prior, next, fps, fullscreen, mute, particles, devLevel, devTime, devGod, devWorld, devWarp, devSky, loot, inventory, campaign, gather, build, options;
   float mouseX = 0, mouseY = 0, stickX = 0, stickY = 0;
-  bool mouseClicked = false, mouseMoved = false, pad = false;
+  bool mouseClicked = false, mouseMoved = false, pad = false, any = false;
   std::string typed;
 
   SDL_Scancode keymap[BINDING_COUNT];
@@ -50,7 +50,7 @@ public:
   void tick();
 
 private:
-  int clicks = 0, moves = 0;
+  int clicks = 0, moves = 0, anys = 0;
   std::string pending;
 
   float axis[4]{};

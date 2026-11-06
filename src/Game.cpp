@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstdio>
 
+#include "gui/Lang.hpp"
 #include "Crash.hpp"
 #include "meta/Feats.hpp"
 #include "meta/Heat.hpp"
@@ -28,6 +29,7 @@
 #include "menu/DeadMenu.hpp"
 #include "menu/LevelUpMenu.hpp"
 #include "menu/InventoryMenu.hpp"
+#include "menu/IntroMenu.hpp"
 #include "menu/VendorMenu.hpp"
 #include "menu/CraftMenu.hpp"
 #include "menu/StashMenu.hpp"
@@ -82,6 +84,10 @@ bool Game::init(SDL_Window *w, const std::string &root) {
     beginCampaign();
   else
     toTitle();
+  if (!wantsCampaign && !dev && !bench.enabled && !readOnly && settings.intro && IntroMenu::ready(base))
+    setMenu(std::make_unique<IntroMenu>(*this));
+  if (menuChanged)
+    menu = std::move(nextMenu), menuChanged = false;
   if (bench.enabled)
     bench.start(*this);
   return true;
@@ -176,7 +182,7 @@ void Game::tick() {
   camera.follow(level->player->x, level->player->y);
   hurt *= std::exp(-3.5f * DT);
   if (!menu && best > 0 && !beatBest && level->time > best)
-    beatBest = true, announce("NEW BEST");
+    beatBest = true, announce(lang.newBest);
   hud.tick(!menu);
 }
 
@@ -368,8 +374,7 @@ void Game::newGame(bool reroll) {
   setMenu(nullptr);
   best = 0, beatBest = false;
   if (level->omen >= 0)
-    announce(fmt::format("{}  {}", OMENS[level->omen].name,
-                         OMENS[level->omen].note));
+    announce(say(lang.omenBanner, OMENS[level->omen].name, OMENS[level->omen].note));
   for (const PastWorld &w : saves.history)
     if (w.code == worldName())
       best = w.best;
@@ -481,7 +486,7 @@ void Game::observe() {
   t.biomes[world::biomeUnder(p.x, p.y)] += 1;
   if (int s = int(level->time - endlessFrom); endless && s > 0 && s % 60 == 0) {
     balance.enemyHp *= 1.1f, balance.enemyDamage *= 1.05f;
-    announce(fmt::format("THE DARK DEEPENS  {} MINUTE{}", s / 60, s >= 120 ? "S" : ""));
+    announce(say(s >= 120 ? lang.darkDeepensMany : lang.darkDeepens, s / 60));
   }
   if (int(level->time) % 60 == 0)
     t.levels.push_back(p.lvl);
@@ -535,7 +540,7 @@ void Game::beginEndless() {
   level->night.dawn = false;
   endless = true, endlessFrom = level->time;
   setMenu(nullptr);
-  announce("THE NIGHT DOES NOT END");
+  announce(lang.nightNoEnd);
   spdlog::info("Endless night from {}", clockText(level->time));
 }
 

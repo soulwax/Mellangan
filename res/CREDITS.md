@@ -12,3 +12,5 @@
 - **Cliff walls** (`atlas.png`, rims band): from the sunken-patch tiles of [DuskMoon](https://github.com/soulwax/DuskMoon) by soulwax, with the grass cut out by `tools/make_rims.py` (source: `tools/source/duskmoon_cliffs.png`).
 - **Landmark sprites** (`atlas.png`, landmarks band): painted by `tools/make_landmarks.py`.
 - **Cliff materials** (`atlas.png`, cliffs band): stone, sandstone, ice, basalt and mossy stone painted by `tools/make_cliffs.py`.
+- **Intro** (`videos/moth_studios.mpg`, `videos/moth_studios.ogg`): Moth Studios logo animation, converted to MPEG-1 video and Ogg Vorbis audio from the studio's original.
+- **Video decoding**: [pl_mpeg](https://github.com/phoboslab/pl_mpeg) by Dominic Szablewski, MIT license (`extern/pl_mpeg`).

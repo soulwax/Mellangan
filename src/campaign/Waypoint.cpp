@@ -1,5 +1,6 @@
 #include "campaign/Waypoint.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "campaign/Campaign.hpp"
@@ -32,7 +33,7 @@ void Waypoint::tick() {
     level->add<Shockwave>(x, y - 10, 4, 34, 0.5f, RUNE, false);
     Spark::burst(*level, x, y - 12, RUNE, 10, 50, true);
     Sound::potion.play(0.5f, 0, 1.2f);
-    level->game.announce("THE WAYPOINT KEEPS YOUR PATH");
+    level->game.announce(lang.waypointKeeps);
   }
   inside = near;
 }

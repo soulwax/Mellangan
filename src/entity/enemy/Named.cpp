@@ -4,6 +4,7 @@
 
 #include <cctype>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "entity/pickup/ItemDrop.hpp"
@@ -59,7 +60,7 @@ void tick(Level &level) {
       continue;
     double a = rng.range(0, TAU), r = level.game.screen.reach() + 60;
     if (raise(level, i, p.x + std::cos(a) * r, p.y + std::sin(a) * r))
-      level.game.announce(fmt::format("{} STIRS NEARBY", shout(n.name)));
+      level.game.announce(say(lang.stirsNearby, shout(n.name)));
     return;
   }
 }
@@ -89,7 +90,7 @@ Enemy *raise(Level &level, int index, double x, double y) {
 
 void fall(Enemy &leader) {
   Level &level = *leader.level;
-  level.game.announce(fmt::format("{} HAS FALLEN", shout(leader.pack->name)));
+  level.game.announce(say(lang.hasFallen, shout(leader.pack->name)));
   if (!level.rules.loot)
     return;
   Player &p = *level.player;

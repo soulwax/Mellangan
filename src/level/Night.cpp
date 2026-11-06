@@ -1,5 +1,6 @@
 #include "level/Night.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -43,12 +44,12 @@ void Night::cycle() {
     if (level.time < dayEnds)
       return;
     dawn = false, nightStart = level.time, nights++;
-    level.game.announce(level.rules.town ? "NIGHT FALLS  HOLD THE BRIDGE" : "NIGHT FALLS");
+    level.game.announce(level.rules.town ? lang.nightFallsBridge : lang.nightFalls);
     return;
   }
   if (level.time >= dawnAt())
     dawn = true, dayEnds = level.time + level.rules.dayLength,
-    level.game.announce(level.rules.town ? "DAWN  THE BASTION STILL STANDS" : "DAWN BREAKS");
+    level.game.announce(level.rules.town ? lang.dawnBastion : lang.dawnBreaks);
 }
 
 bool Night::isLit(const Structure &s) const {

@@ -140,6 +140,8 @@ void Input::parseKeys(std::string_view text) {
 }
 
 void Input::handle(const SDL_Event &e, float density) {
+  anys += (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) || e.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN ||
+          e.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
   switch (e.type) {
   case SDL_EVENT_GAMEPAD_ADDED:
     SDL_OpenGamepad(e.gdevice.which);
@@ -224,10 +226,10 @@ void Input::handle(const SDL_Event &e, float density) {
 void Input::tick() {
   for (Key *k : keys())
     k->tick();
-  mouseClicked = clicks > 0, mouseMoved = moves > 0;
+  mouseClicked = clicks > 0, mouseMoved = moves > 0, any = anys > 0;
   typed = std::move(pending);
   pending.clear();
-  clicks = moves = 0;
+  clicks = moves = anys = 0;
 }
 
 std::array<Key *, 36> Input::keys() {

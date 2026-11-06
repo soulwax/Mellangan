@@ -200,6 +200,8 @@ void TitleMenu::render(Screen &s) {
   renderSeed(s, l);
   renderDifficulty(s, l);
   renderHistory(s, l);
+  if (t < veil)
+    s.rect(0, 0, s.w, s.h, col::black.alpha(std::pow(1 - t / veil, 2.2f)));
 }
 
 void TitleMenu::heading(Screen &s, const Layout &l, float y, const char *label,

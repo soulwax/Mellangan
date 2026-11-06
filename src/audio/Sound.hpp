@@ -16,6 +16,10 @@ public:
   static void toggleMute();
   static void mix(float master, float music, float effects, float ambience);
   static void ambience(float rain, float wind);
+  static bool clip(const std::string &path);
+  static void clipGain(float gain);
+  static double clipTime();
+  static void endClip();
 
   void play(float volume = 1, float pitchJitter = 0.06f, float pitch = 1);
 

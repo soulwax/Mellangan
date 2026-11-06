@@ -33,6 +33,7 @@ const Row ROWS[] = {
     {&Lang::fullscreen, &Settings::fullscreen, 1, 1, {&Lang::off, &Lang::on}},
     {&Lang::scaling, &Settings::pixel, 1, 1, {&Lang::fill, &Lang::pixelPerfect}},
     {&Lang::vsync, &Settings::vsync, 1, 1, {&Lang::off, &Lang::on}},
+    {&Lang::intro, &Settings::intro, 1, 1, {&Lang::off, &Lang::on}},
     {&Lang::controls, nullptr, 0, 0, {}}};
 constexpr int ROW_COUNT = int(sizeof ROWS / sizeof *ROWS);
 } // namespace

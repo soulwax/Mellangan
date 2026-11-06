@@ -74,7 +74,32 @@ const LangKey LANG_KEYS[] = {
     K(yourBagCount), K(stashCount), K(stashHint), K(needs), K(build), K(buildHint),
 
     K(againstWorn), K(loseStat), K(itemLevel), K(grants), K(curseLine), K(classOnly), K(costsGold),
-    K(sellsFor)};
+    K(sellsFor),
+
+    K(intro),
+
+    K(nightmareReturns), K(reliquarySlips), K(wakeCampfire), K(wakeWaypoint), K(wakeLost), K(seekerJoins),
+    K(hunterHound), K(criesForHelp), K(houndLimps), K(bastionHeld), K(houndBack), K(watchtowerRises),
+    K(mineCavesIn), K(mineCleared), K(relightNeeds),
+
+    K(questBanner), K(elderNeeds), K(questDone), K(rewardBanner), K(actCleared), K(darkBroken), K(returnTo),
+    K(followTo), K(actBastion), K(nestsPulse), K(holdCamp), K(sealedReliquary), K(sealBreaks), K(imraFallen),
+    K(imraSetsOut), K(seekerLost), K(seekerFollows), K(waypointKeeps),
+
+    K(cyclopsFalls), K(isSlain), K(stirsNearby), K(hasFallen), K(enrages), K(thiefCaught), K(shadeFire),
+    K(shadeTorch), K(merchantCamps), K(merchantRestocks), K(phoenixRises), K(newBest), K(omenBanner),
+    K(darkDeepens), K(darkDeepensMany), K(nightNoEnd), K(hearthwickHolds), K(hearthwickStands),
+    K(pathForgotten), K(levelPoint), K(levelPoints),
+
+    K(treeRenews), K(powerRings), K(sporesMend), K(gateSilent), K(gateCarries), K(forgeNothing),
+    K(forgeTempers), K(iceClaims), K(encounterTask), K(rewardColon), K(encounterLost), K(bountyBanner),
+    K(nightFallsBridge), K(nightFalls), K(dawnBastion), K(renegades), K(championStalks),
+
+    K(towerHas), K(towerNeeds), K(needsLower), K(buildWater), K(buildRuin), K(buildTaken), K(buildClear),
+    K(questStirs), K(carryHome), K(questComplete), K(statusBroken), K(statusFollow), K(statusOffered),
+    K(statusReady), K(statusEscort), K(statusHolding), K(statusReachCamp), K(statusCount), K(seekerLostLine),
+    K(seekerFollowLine), K(bountySlay), K(bountyKindle), K(bountyFind), K(bountyWalk), K(bountySurvive),
+    K(bountyStreak), K(bountyAlpha), K(bountyThief)};
 #undef K
 const int LANG_COUNT = int(sizeof LANG_KEYS / sizeof *LANG_KEYS);
 static_assert(sizeof LANG_KEYS / sizeof *LANG_KEYS * sizeof(const char *) == sizeof(Lang));

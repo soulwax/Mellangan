@@ -1,5 +1,6 @@
 #include "entity/Player.hpp"
 
+#include "gui/Lang.hpp"
 #include "gfx/Palette.hpp"
 
 #include <cstring>
@@ -221,7 +222,7 @@ void Player::rise() {
   for (int i = 0; i < 10; i++)
     level->add<FlameDebris>(x, y, 8);
   level->game.onExplosion();
-  level->game.announce("THE PHOENIX RISES");
+  level->game.announce(lang.phoenixRises);
   Sound::nova.play(0.8f, 0);
 }
 

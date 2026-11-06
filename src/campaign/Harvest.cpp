@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstring>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "campaign/Campaign.hpp"
@@ -102,7 +103,7 @@ bool strike(Level &level, Campaign &c) {
     Piece dark = c.edits.at(t.tx, t.ty)->piece;
     int &wood = level.player->materials[int(Mat::Wood)], cost = harvest::relight(dark);
     if (wood < cost) {
-      level.game.announce(fmt::format("RELIGHTING NEEDS {} WOOD", cost));
+      level.game.announce(say(lang.relightNeeds, cost));
       return true;
     }
     wood -= cost;
@@ -148,18 +149,18 @@ std::string blocked(const Level &level, const Campaign &c, int piece, int tx, in
   const PieceDef &d = PIECES[piece];
   for (int m = 0; m < MATS; m++)
     if (p.materials[m] < d.cost[m])
-      return fmt::format("needs {} {}", d.cost[m],
+      return say(lang.needsLower, d.cost[m],
                          d.cost[m] == 1 ? MATERIALS[m].name : MATERIALS[m].plural);
   Structure site;
   Prop prop;
   if (world::isWater(tx, ty) || world::isRamp(tx, ty))
-    return "cannot build on water or stairs";
+    return lang.buildWater;
   if (world::structureAt(tx, ty, site, 1))
-    return "too close to a ruin or house";
+    return lang.buildRuin;
   if (c.edits.at(tx, ty) && c.edits.at(tx, ty)->placed)
-    return "something is already built here";
+    return lang.buildTaken;
   if (world::propAt(tx, ty, prop) && prop.count > 0)
-    return "clear this spot first (E)";
+    return lang.buildClear;
   return {};
 }
 

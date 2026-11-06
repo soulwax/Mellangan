@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Ability.hpp"
@@ -612,7 +613,7 @@ void WildFoe::haunt(Player &p) {
   level->add<Shockwave>(tx, ty, 4, 30, 0.5f, Color{0.3f, 0.2f, 0.45f, 1}, false);
   Spark::burst(*level, tx, ty - 8, Color{0.2f, 0.15f, 0.3f, 1}, 10, 50, true);
   if (level->time - level->snuffed > 4)
-    level->game.announce(fire ? "A SHADE SMOTHERS A FIRE" : "A SHADE SNUFFS A TORCH");
+    level->game.announce(fire ? lang.shadeFire : lang.shadeTorch);
   level->snuffed = level->time;
   hunting = false, snuff = 0;
 }

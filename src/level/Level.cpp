@@ -1,4 +1,5 @@
 #include "level/Level.hpp"
+#include "gui/Lang.hpp"
 #include "item/Upgrade.hpp"
 
 #include <spdlog/spdlog.h>
@@ -229,7 +230,7 @@ void Level::hunt() {
     b.done = true;
     double dir = std::atan2(player->yAim, player->xAim);
     add<Chest>(player->x + std::cos(dir) * 40, player->y + std::sin(dir) * 40);
-    game.announce("BOUNTY: " + b.text());
+    game.announce(say(lang.bountyBanner, b.text()));
   }
 }
 

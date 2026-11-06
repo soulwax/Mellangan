@@ -1,5 +1,6 @@
 #include "entity/pickup/Chest.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -18,6 +19,6 @@ void Chest::renderLight(Screen &s) {
 void Chest::take(Player &p) {
   p.pendingLevels++, p.pendingTreasures++;
   Sound::chest.play(0.8f, 0);
-  level->game.announce("TREASURE!");
+  level->game.announce(lang.treasure);
   Spark::burst(*level, x, y, col::gold, 30, 110, true);
 }

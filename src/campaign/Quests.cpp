@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "item/craft/Recipes.hpp"
@@ -251,7 +252,7 @@ void accept(Level &level, Campaign &c) {
       c.qx = h.x + 700, c.qy = h.y + 300, c.qsite = true;
   }
   begin(level, c);
-  level.game.announce(fmt::format("QUEST  {}", q->title));
+  level.game.announce(say(lang.questBanner, q->title));
 }
 
 void turnIn(Level &level, Campaign &c) {
@@ -263,8 +264,7 @@ void turnIn(Level &level, Campaign &c) {
     int &have = p.materials[q->material];
     if (have < q->count) {
       c.stage = QuestStage::Active;
-      return level.game.announce(fmt::format("{} NEEDS {} {}", act(c).elder, q->count,
-                                             MATERIALS[q->material].plural));
+      return level.game.announce(say(lang.elderNeeds, act(c).elder, q->count, MATERIALS[q->material].plural));
     }
     have -= q->count;
   }
@@ -280,13 +280,13 @@ void turnIn(Level &level, Campaign &c) {
     level.add<ItemDrop>(p.x, p.y, Drop{DropKind::Item, 1, prize}, p.x + 14, p.y + 8);
   spdlog::info("quest: {} rewards {} [{}] ilvl {}", q->title, prize.name(),
                rarityName(prize.rarity), prize.ilvl);
-  level.game.announce(fmt::format("{} DONE  +{} GOLD", q->title, q->gold));
-  level.game.announce(fmt::format("REWARD  {}", prize.name()));
+  level.game.announce(say(lang.questDone, q->title, q->gold));
+  level.game.announce(say(lang.rewardBanner, prize.name()));
   Sound::levelUp.play(0.6f, 0);
   c.quest++, c.progress = 0, c.qsite = false;
   if (c.quest % QUESTS_PER_ACT != 0)
     return void(c.stage = QuestStage::Offered);
-  level.game.announce(fmt::format("ACT {} CLEARED", act(c).numeral));
+  level.game.announce(say(lang.actCleared, act(c).numeral));
   level.game.celebrate();
   for (int i = 0; i < 3; i++)
     level.add<Shockwave>(p.x, p.bodyY(), 6 + i * 4, 70 + i * 40, 0.6f + i * 0.2f, col::gold);
@@ -294,16 +294,16 @@ void turnIn(Level &level, Campaign &c) {
   Sound::chest.play(0.8f, 0, 0.7f);
   if (c.quest >= QUEST_COUNT) {
     c.stage = QuestStage::Done;
-    return level.game.announce("THE DARK IS BROKEN");
+    return level.game.announce(lang.darkBroken);
   }
   c.act++;
   if (int(c.towns().size()) >= c.act) {
     c.stage = QuestStage::Offered;
     c.staff(level);
-    return level.game.announce(fmt::format("RETURN TO {}", act(c).town));
+    return level.game.announce(say(lang.returnTo, act(c).town));
   }
   c.stage = QuestStage::Road;
-  level.game.announce(fmt::format("FOLLOW {} TO {}", act(c).road, act(c).town));
+  level.game.announce(say(lang.followTo, act(c).road, act(c).town));
 }
 
 void tick(Level &level, Campaign &c) {
@@ -316,8 +316,7 @@ void tick(Level &level, Campaign &c) {
     if (!p.dead() && xd * xd + yd * yd < SETTLE * SETTLE) {
       c.settle(level, rx, ry);
       c.stage = QuestStage::Offered;
-      level.game.announce(fmt::format("ACT {}  {}  A BASTION STILL STANDING", act(c).numeral,
-                                      act(c).town));
+      level.game.announce(say(lang.actBastion, act(c).numeral, act(c).town));
     }
     return;
   }
@@ -349,7 +348,7 @@ void tick(Level &level, Campaign &c) {
         }
       }
       if (!c.nests.empty())
-        level.game.announce("THE NESTS PULSE  BURN THEM OUT");
+        level.game.announce(lang.nestsPulse);
     }
     int alive = 0;
     for (entt::entity id : c.nests)
@@ -365,7 +364,7 @@ void tick(Level &level, Campaign &c) {
     double xd = p.x - c.qx, yd = p.y - c.qy, d2 = xd * xd + yd * yd;
     if (!c.holding) {
       if (!p.dead() && d2 < ARRIVE * ARRIVE)
-        c.holding = true, c.waveTime = 1, level.game.announce("HOLD THE CAMP");
+        c.holding = true, c.waveTime = 1, level.game.announce(lang.holdCamp);
       break;
     }
     if (d2 < HOLD * HOLD && !p.dead() && (c.holdTick += DT) >= 1)
@@ -389,7 +388,7 @@ void tick(Level &level, Campaign &c) {
       if (!c.guarded && q->named >= 0)
         if (Enemy *g = named::raise(level, q->named, c.qx, c.qy - 50))
           c.foe = g->id, c.guarded = true;
-      level.game.announce("A SEALED RELIQUARY  BREAK ITS KEEPER");
+      level.game.announce(lang.sealedReliquary);
       break;
     }
     if (!box)
@@ -398,7 +397,7 @@ void tick(Level &level, Campaign &c) {
     if (box->sealed && !keeper) {
       box->sealed = false, c.foe = entt::null;
       level.add<Shockwave>(box->x, box->y - 6, 4, 34, 0.5f, Color{1, 0.85f, 0.45f, 1}, false);
-      level.game.announce("THE SEAL BREAKS");
+      level.game.announce(lang.sealBreaks);
     }
     if (!box->sealed && std::hypot(p.x - box->x, p.y - box->y) < Cache::REACH + p.radius) {
       box->remove(), c.cache = entt::null, c.progress = q->count;
@@ -413,7 +412,7 @@ void tick(Level &level, Campaign &c) {
     Pilgrim *w = c.pilgrim == entt::null ? nullptr : level.get<Pilgrim>(c.pilgrim);
     if (c.pilgrim != entt::null && !w && !level.reg.valid(c.pilgrim)) {
       c.pilgrim = entt::null, c.progress = 0, c.stage = QuestStage::Offered, c.qsite = false;
-      level.game.announce("SISTER IMRA HAS FALLEN  RETURN TO THE KEEPER");
+      level.game.announce(lang.imraFallen);
       Sound::death.play(0.5f, 0);
       return;
     }
@@ -422,7 +421,7 @@ void tick(Level &level, Campaign &c) {
       double sx = h.x, sy = std::floor(h.y / 16) * 16 + 7 * 16;
       c.journey = std::max(1.0, std::hypot(c.qx - sx, c.qy - sy));
       c.pilgrim = level.add<Pilgrim>(sx, sy, c.qx, c.qy)->id;
-      level.game.announce("SISTER IMRA SETS OUT  STAY CLOSE");
+      level.game.announce(lang.imraSetsOut);
       break;
     }
     if (!w)
@@ -448,7 +447,7 @@ void tick(Level &level, Campaign &c) {
       c.foe = e->id;
       level.add<Shockwave>(c.qx, c.qy, 8, 90, 0.7f, Color{0.9f, 0.2f, 0.25f, 1});
       level.game.announce(q->goal == Objective::Boss ? bossOf(q->prey[0]).arrival
-                                                     : fmt::format("{} STIRS", q->title));
+                                                     : say(lang.questStirs, q->title));
     }
     break;
   }
@@ -456,32 +455,31 @@ void tick(Level &level, Campaign &c) {
   if (c.progress >= q->count) {
     c.progress = q->count, c.stage = QuestStage::Ready;
     level.game.announce(q->goal == Objective::Fetch
-                            ? fmt::format("CARRY IT HOME TO {}", act(c).elder)
-                            : fmt::format("{} COMPLETE  RETURN TO {}", q->title, act(c).elder));
+                            ? say(lang.carryHome, act(c).elder)
+                            : say(lang.questComplete, q->title, act(c).elder));
     Sound::chest.play(0.5f, 0, 0.9f);
   }
 }
 
 std::string status(const Campaign &c) {
   if (c.stage == QuestStage::Done)
-    return "The dark is broken";
+    return lang.statusBroken;
   if (c.stage == QuestStage::Road)
-    return fmt::format("Follow {} to {}", act(c).road, act(c).town);
+    return say(lang.statusFollow, act(c).road, act(c).town);
   const QuestDef *q = current(c);
   if (!q)
     return "";
   switch (c.stage) {
   case QuestStage::Offered:
-    return fmt::format("{} in {} has work for you", act(c).elder, act(c).town);
+    return say(lang.statusOffered, act(c).elder, act(c).town);
   case QuestStage::Ready:
-    return fmt::format("{}: return to {}", q->title, act(c).elder);
+    return say(lang.statusReady, q->title, act(c).elder);
   default:
     if (q->goal == Objective::Escort)
-      return fmt::format("{}  {}%", q->task, c.progress);
+      return say(lang.statusEscort, q->task, c.progress);
     if (q->goal == Objective::Defend)
-      return c.holding ? fmt::format("{}  {}/{} s", q->task, c.progress, q->count)
-                       : fmt::format("{}: reach the camp", q->task);
-    return q->count > 1 ? fmt::format("{}  {}/{}", q->task, c.progress, q->count) : q->task;
+      return c.holding ? say(lang.statusHolding, q->task, c.progress, q->count) : say(lang.statusReachCamp, q->task);
+    return q->count > 1 ? say(lang.statusCount, q->task, c.progress, q->count) : q->task;
   }
 }
 

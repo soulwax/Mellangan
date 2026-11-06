@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "campaign/Bastion.hpp"
 #include "campaign/Harvest.hpp"
@@ -263,17 +264,16 @@ bool Campaign::fortified(int town) const {
 std::string Campaign::fortify(Level &level) {
   int town = std::clamp(act, 1, int(towns().size())) - 1;
   if (fortified(town))
-    return "this town already has its watchtower";
+    return lang.towerHas;
   Player &p = *level.player;
   int &stone = p.materials[int(Mat::Stone)], &wood = p.materials[int(Mat::Wood)];
   if (p.gold < TOWER_GOLD || stone < TOWER_STONE || wood < TOWER_WOOD)
-    return fmt::format("a watchtower needs {} gold, {} stone and {} wood", TOWER_GOLD,
-                       TOWER_STONE, TOWER_WOOD);
+    return say(lang.towerNeeds, TOWER_GOLD, TOWER_STONE, TOWER_WOOD);
   p.gold -= TOWER_GOLD, stone -= TOWER_STONE, wood -= TOWER_WOOD;
   towers.push_back(town);
   Town t = towns()[size_t(town)];
   level.add<Watchtower>(t.x + 72, t.y - 8);
   level.add<Shockwave>(t.x + 72, t.y - 8, 6, 60, 0.6f, col::gold);
-  level.game.announce(fmt::format("A WATCHTOWER RISES OVER {}", ACTS[town].town));
+  level.game.announce(say(lang.watchtowerRises, ACTS[town].town));
   return {};
 }

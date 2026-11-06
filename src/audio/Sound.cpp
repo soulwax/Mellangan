@@ -20,7 +20,10 @@ std::array<Uint64, 32> voiceStarted{};
 SDL_AudioStream *musicStream = nullptr;
 short *musicData = nullptr;
 int musicLength = 0;
-bool muted = false;
+SDL_AudioStream *clipStream = nullptr;
+short *clipData = nullptr;
+int clipBytes = 0, clipRate = 0;
+bool muted = false, hushed = false;
 float masterGain = 1, musicGain = 1, effectsGain = 1, ambienceGain = 1;
 
 struct Bed {
@@ -146,6 +149,7 @@ void Sound::shutdown() {
   voices.fill(nullptr);
   if (musicStream)
     SDL_DestroyAudioStream(musicStream), musicStream = nullptr;
+  endClip();
   for (Bed &b : beds) {
     if (b.stream)
       SDL_DestroyAudioStream(b.stream), b.stream = nullptr;
@@ -162,7 +166,7 @@ void Sound::shutdown() {
 }
 
 void Sound::tick() {
-  if (musicStream && SDL_GetAudioStreamQueued(musicStream) < musicLength)
+  if (musicStream && !hushed && SDL_GetAudioStreamQueued(musicStream) < musicLength)
     SDL_PutAudioStreamData(musicStream, musicData, musicLength);
   for (Bed &b : beds) {
     if (!b.stream)
@@ -177,6 +181,45 @@ void Sound::tick() {
     if (SDL_GetAudioStreamQueued(b.stream) < int(b.length))
       SDL_PutAudioStreamData(b.stream, b.data, int(b.length));
   }
+}
+
+bool Sound::clip(const std::string &path) {
+  endClip();
+  int channels = 0, rate = 0;
+  int frames = device ? stb_vorbis_decode_filename(path.c_str(), &channels, &rate, &clipData) : 0;
+  if (frames <= 0) {
+    spdlog::warn("Can't decode {}", path);
+    return false;
+  }
+  SDL_AudioSpec spec{SDL_AUDIO_S16, channels, rate};
+  clipStream = SDL_CreateAudioStream(&spec, nullptr);
+  SDL_BindAudioStream(device, clipStream);
+  clipBytes = frames * channels * int(sizeof(short)), clipRate = rate * channels * int(sizeof(short));
+  SDL_PutAudioStreamData(clipStream, clipData, clipBytes);
+  SDL_FlushAudioStream(clipStream);
+  hushed = true;
+  if (musicStream)
+    SDL_ClearAudioStream(musicStream);
+  return true;
+}
+
+void Sound::clipGain(float gain) {
+  if (clipStream)
+    SDL_SetAudioStreamGain(clipStream, clampf(gain, 0, 1));
+}
+
+double Sound::clipTime() {
+  if (!clipStream || clipRate <= 0)
+    return -1;
+  return double(clipBytes - SDL_GetAudioStreamQueued(clipStream)) / clipRate;
+}
+
+void Sound::endClip() {
+  if (clipStream)
+    SDL_DestroyAudioStream(clipStream), clipStream = nullptr;
+  if (clipData)
+    std::free(clipData), clipData = nullptr;
+  hushed = false;
 }
 
 void Sound::ambience(float rain, float wind) {

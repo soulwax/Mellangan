@@ -1,4 +1,5 @@
 #include "entity/enemy/Enemy.hpp"
+#include "gui/Lang.hpp"
 #include "entity/enemy/Boss.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "entity/Ability.hpp"
@@ -225,7 +226,7 @@ void championFalls(Enemy &e) {
   l.add<Shockwave>(e.x, e.bodyY(), 6, 70, 0.5f, col::gold.alpha(0.9f));
   Spark::burst(l, e.x, e.bodyY(), col::gold, 24, 130, true);
   l.game.hitStop(0.08f);
-  l.game.announce(fmt::format("{} IS SLAIN", e.title));
+  l.game.announce(say(lang.isSlain, e.title));
 }
 
 enum class Remains { Gore, Spirit, Flame, Slime, Fallen };

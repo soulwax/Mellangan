@@ -1,5 +1,6 @@
 #include "level/encounter/Common.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
@@ -38,7 +39,7 @@ void ancientTree(Level *level, Site s) {
   for (int i = 0; i < 14; i++)
     drift(level, s->centerX() + rng.range(-24, 24), footY(s) - rng.range(30, 60),
           atlas::pt::Leaf, {1, 1, 1, 1}, 12);
-  level->game.announce("THE TREE RENEWS YOU: +15 MAX HEALTH");
+  level->game.announce(lang.treeRenews);
   Sound::potion.play(0.7f, 0);
 }
 
@@ -108,7 +109,7 @@ void spire(Level *level, Site s) {
   double x = s->centerX(), y = footY(s) - 20;
   level->add<Shockwave>(x, y, 6, 120, 0.5f, Color{0.75f, 0.55f, 1, 1})->spokes = 8;
   level->quake(x, y, 120, 40 + level->time * 0.08f, 120);
-  level->game.announce("YOUR POWER RINGS: SKILL READY, +5% MIGHT");
+  level->game.announce(lang.powerRings);
   Sound::nova.play(0.5f, 0);
 }
 
@@ -128,7 +129,7 @@ void mushroom(Level *level, Site s) {
   for (int i = 0; i < 16; i++)
     drift(level, s->centerX() + rng.range(-30, 30), footY(s) - rng.range(20, 50),
           atlas::pt::Spore, {0.95f, 0.7f, 0.85f, 0.9f}, -8);
-  level->game.announce("THE SPORES MEND YOU: +0.4 REGEN/S");
+  level->game.announce(lang.sporesMend);
   Sound::potion.play(0.6f, 0);
 }
 
@@ -150,7 +151,7 @@ void gate(Level *level, Site) {
   Player &p = *level->player;
   Structure target;
   if (!world::nearestStructure(p.x, p.y, 40, target, unlitShrine, level)) {
-    level->game.announce("THE GATE IS SILENT");
+    level->game.announce(lang.gateSilent);
     return;
   }
   level->add<Shockwave>(p.x, p.bodyY(), 4, 60, 0.4f, Color{0.6f, 0.4f, 1, 1});
@@ -158,7 +159,7 @@ void gate(Level *level, Site) {
   p.invuln = std::max(p.invuln, 1.0f);
   level->game.snapCamera();
   level->add<Shockwave>(p.x, p.bodyY(), 4, 80, 0.5f, Color{0.6f, 0.4f, 1, 1})->spokes = 10;
-  level->game.announce("THE GATE CARRIES YOU TO A SLEEPING SHRINE");
+  level->game.announce(lang.gateCarries);
   Sound::magnet.play(0.7f, 0);
 }
 
@@ -176,14 +177,14 @@ void forge(Level *level, Site s) {
     if (u->weapon && u->level > 0 && !u->maxed())
       arms.push_back(u.get());
   if (arms.empty()) {
-    level->game.announce("THE FORGE HAS NOTHING TO TEMPER");
+    level->game.announce(lang.forgeNothing);
     return;
   }
   Upgrade &u = *arms[rng.irange(0, int(arms.size()) - 1)];
   u.levelUp(p);
   for (int i = 0; i < 18; i++)
     FlameDebris::lick(*level, s->centerX() + rng.range(-14, 14), footY(s), 8, 1.2f);
-  level->game.announce(std::string("THE FORGE TEMPERS ") + u.name);
+  level->game.announce(say(lang.forgeTempers, u.name));
   Sound::axe.play(0.8f, 0);
 }
 
@@ -201,7 +202,7 @@ void frozen(Level *level, Site s) {
   });
   level->add<Shockwave>(s->centerX(), footY(s) - 20, 6, 200, 0.7f,
                         Color{0.75f, 0.9f, 1, 1})->spokes = 12;
-  level->game.announce("THE ICE CLAIMS YOU: +0.5 ARMOUR, A FREEZING TRAIL");
+  level->game.announce(lang.iceClaims);
   Sound::nova.play(0.5f, 0);
 }
 

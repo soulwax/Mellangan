@@ -1,5 +1,6 @@
 #include "entity/enemy/Cyclops.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "entity/pickup/Chest.hpp"
@@ -16,6 +17,6 @@ void Cyclops::die() {
   level->add<Chest>(x, y);
   Spark::burst(*level, x, bodyY(), type.blood, 40, 140, true);
   level->add<Explosion>(x, y, 10, 9);
-  level->game.announce("THE CYCLOPS FALLS");
+  level->game.announce(lang.cyclopsFalls);
   level->game.hitStop(0.12f);
 }

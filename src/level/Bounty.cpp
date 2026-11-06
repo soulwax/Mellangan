@@ -2,6 +2,7 @@
 
 #include <cctype>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "level/Chart.hpp"
 #include "level/Level.hpp"
@@ -70,21 +71,21 @@ void Bounty::roll(Bounty *out, int n) {
 std::string Bounty::text() const {
   switch (kind) {
   case SLAY:
-    return fmt::format("Slay {} {}", goal, FOES[arg]);
+    return say(lang.bountySlay, goal, FOES[arg]);
   case KINDLE:
-    return fmt::format("Kindle a shrine in {}", lower(Chart::title(BiomeId(arg))));
+    return say(lang.bountyKindle, lower(Chart::title(BiomeId(arg))));
   case ENTER:
-    return fmt::format("Find a {}", lower(STRUCTURES[arg].name));
+    return say(lang.bountyFind, lower(STRUCTURES[arg].name));
   case WALK:
-    return fmt::format("Walk {} regions", goal);
+    return say(lang.bountyWalk, goal);
   case SURVIVE:
-    return fmt::format("Survive until {}", clockText(float(goal)));
+    return say(lang.bountySurvive, clockText(float(goal)));
   case STREAK:
-    return fmt::format("Reach a {} kill streak", goal);
+    return say(lang.bountyStreak, goal);
   case SLAY_ALPHA:
-    return "Slay the alpha";
+    return lang.bountyAlpha;
   case CATCH_THIEF:
-    return "Catch a thief";
+    return lang.bountyThief;
   default:
     return "";
   }

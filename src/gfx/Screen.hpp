@@ -67,6 +67,7 @@ public:
   void sky(const Sprite &s, double x, double y, Color c, float xs = 1,
            float ys = 1, float rot = 0);
   void rect(double x, double y, float rw, float rh, Color c);
+  void image(VK2DTexture t, double x, double y, float rw, float rh, Color c);
   void frame(double x, double y, float rw, float rh, float t, Color c);
   void bracket(float x, float y, float w, float h, float u);
   void line(double x0, double y0, double x1, double y1, float width, Color c);

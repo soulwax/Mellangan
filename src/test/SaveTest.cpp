@@ -125,8 +125,8 @@ void testSaves() {
   again.parse(set.save());
   assert(again.save() == set.save() && again.numbers == 1 && again.vsync == 1);
   Settings crisp;
-  crisp.parse("pixel_perfect 1\n");
-  assert(crisp.pixel == 1 && set.pixel == 0);
+  crisp.parse("pixel_perfect 1\nintro 0\ncolourblind 9\n");
+  assert(crisp.pixel == 1 && set.pixel == 0 && crisp.intro == 0 && set.intro == 1 && crisp.colours == 4);
   {
     TextParticle number(0, 0, 12, col::red);
     assert(showParticle(number, false, true) && showParticle(number, true, true) &&

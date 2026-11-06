@@ -153,6 +153,73 @@ struct Lang {
              *grants = "grants {}", *curseLine = "{}: {}", *classOnly = "{} only",
              *costsGold = "costs {} gold", *sellsFor = "sells for {} gold";
 
+  const char *intro = "INTRO";
+
+  const char *nightmareReturns = "NIGHTMARE {}  THE DARK RETURNS STRONGER",
+             *reliquarySlips = "THE RELIQUARY SLIPS AWAY  IT WAITS IN THE RUINS",
+             *wakeCampfire = "YOU WAKE BY YOUR CAMPFIRE", *wakeWaypoint = "YOU WAKE BY THE WAYPOINT",
+             *wakeLost = "{}  -{} GOLD",
+             *seekerJoins = "A SANCTUARY SEEKER JOINS THE BASTION  {} SHELTERED  THE MERCHANT IS {}% KINDER",
+             *hunterHound = "A GRATEFUL HUNTER GIVES YOU HIS HOUND",
+             *criesForHelp = "SOMEONE CRIES FOR HELP OUT THERE",
+             *houndLimps = "YOUR HOUND LIMPS HOME  IT RETURNS AT DAWN",
+             *bastionHeld = "THE BASTION HELD  {} FELL AT THE BRIDGE  +{} GOLD",
+             *houndBack = "YOUR HOUND IS BACK AT YOUR SIDE", *watchtowerRises = "A WATCHTOWER RISES OVER {}",
+             *mineCavesIn = "THE MINE CAVES IN BEHIND YOU", *mineCleared = "THE MINE IS CLEARED",
+             *relightNeeds = "RELIGHTING NEEDS {} WOOD";
+
+  const char *questBanner = "QUEST  {}", *elderNeeds = "{} NEEDS {} {}", *questDone = "{} DONE  +{} GOLD",
+             *rewardBanner = "REWARD  {}", *actCleared = "ACT {} CLEARED", *darkBroken = "THE DARK IS BROKEN",
+             *returnTo = "RETURN TO {}", *followTo = "FOLLOW {} TO {}",
+             *actBastion = "ACT {}  {}  A BASTION STILL STANDING",
+             *nestsPulse = "THE NESTS PULSE  BURN THEM OUT", *holdCamp = "HOLD THE CAMP",
+             *sealedReliquary = "A SEALED RELIQUARY  BREAK ITS KEEPER", *sealBreaks = "THE SEAL BREAKS",
+             *imraFallen = "SISTER IMRA HAS FALLEN  RETURN TO THE KEEPER",
+             *imraSetsOut = "SISTER IMRA SETS OUT  STAY CLOSE",
+             *seekerLost = "A SANCTUARY SEEKER IS LOST TO THE DARK",
+             *seekerFollows = "A SANCTUARY SEEKER FOLLOWS YOU  BRING THEM TO A BASTION",
+             *waypointKeeps = "THE WAYPOINT KEEPS YOUR PATH";
+
+  const char *cyclopsFalls = "THE CYCLOPS FALLS", *isSlain = "{} IS SLAIN", *stirsNearby = "{} STIRS NEARBY",
+             *hasFallen = "{} HAS FALLEN", *enrages = "{} ENRAGES", *thiefCaught = "THIEF CAUGHT!",
+             *shadeFire = "A SHADE SMOTHERS A FIRE", *shadeTorch = "A SHADE SNUFFS A TORCH",
+             *merchantCamps = "A MERCHANT CAMPS BY THE FIRE",
+             *merchantRestocks = "THE MERCHANT RESTOCKS AT DAWN", *phoenixRises = "THE PHOENIX RISES",
+             *newBest = "NEW BEST", *omenBanner = "{}  {}", *darkDeepens = "THE DARK DEEPENS  {} MINUTE",
+             *darkDeepensMany = "THE DARK DEEPENS  {} MINUTES", *nightNoEnd = "THE NIGHT DOES NOT END",
+             *hearthwickHolds = "ACT I  HEARTHWICK  THE BASTION HOLDS",
+             *hearthwickStands = "HEARTHWICK STILL STANDS",
+             *pathForgotten = "YOUR PATH IS FORGOTTEN  {} SKILL POINTS",
+             *levelPoint = "LEVEL {}  +{} SKILL POINT  K TO SPEND",
+             *levelPoints = "LEVEL {}  +{} SKILL POINTS  K TO SPEND";
+
+  const char *treeRenews = "THE TREE RENEWS YOU: +15 MAX HEALTH",
+             *powerRings = "YOUR POWER RINGS: SKILL READY, +5% MIGHT",
+             *sporesMend = "THE SPORES MEND YOU: +0.4 REGEN/S", *gateSilent = "THE GATE IS SILENT",
+             *gateCarries = "THE GATE CARRIES YOU TO A SLEEPING SHRINE",
+             *forgeNothing = "THE FORGE HAS NOTHING TO TEMPER", *forgeTempers = "THE FORGE TEMPERS {}",
+             *iceClaims = "THE ICE CLAIMS YOU: +0.5 ARMOUR, A FREEZING TRAIL", *encounterTask = "{}: {}",
+             *rewardColon = "REWARD: {}", *encounterLost = "{} LOST", *bountyBanner = "BOUNTY: {}",
+             *nightFallsBridge = "NIGHT FALLS  HOLD THE BRIDGE", *nightFalls = "NIGHT FALLS",
+             *dawnBastion = "DAWN  THE BASTION STILL STANDS", *renegades = "RENEGADES ON YOUR TRAIL",
+             *championStalks = "A CHAMPION STALKS: {}";
+
+  const char *towerHas = "this town already has its watchtower",
+             *towerNeeds = "a watchtower needs {} gold, {} stone and {} wood", *needsLower = "needs {} {}",
+             *buildWater = "cannot build on water or stairs", *buildRuin = "too close to a ruin or house",
+             *buildTaken = "something is already built here", *buildClear = "clear this spot first (E)",
+             *questStirs = "{} STIRS", *carryHome = "CARRY IT HOME TO {}",
+             *questComplete = "{} COMPLETE  RETURN TO {}", *statusBroken = "The dark is broken",
+             *statusFollow = "Follow {} to {}", *statusOffered = "{} in {} has work for you",
+             *statusReady = "{}: return to {}", *statusEscort = "{}  {}%", *statusHolding = "{}  {}/{} s",
+             *statusReachCamp = "{}: reach the camp", *statusCount = "{}  {}/{}",
+             *seekerLostLine = "Please! Is the bastion still standing?",
+             *seekerFollowLine = "Take me to the walls. I'll help hold them.", *bountySlay = "Slay {} {}",
+             *bountyKindle = "Kindle a shrine in {}", *bountyFind = "Find a {}",
+             *bountyWalk = "Walk {} regions", *bountySurvive = "Survive until {}",
+             *bountyStreak = "Reach a {} kill streak", *bountyAlpha = "Slay the alpha",
+             *bountyThief = "Catch a thief";
+
   int parse(std::string_view text);
 };
 

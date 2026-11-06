@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "campaign/Bastion.hpp"
 #include "entity/Player.hpp"
@@ -33,9 +34,9 @@ void Townsfolk::onAdded() {
 
 const char *Townsfolk::line() const {
   if (mode == Mode::Lost)
-    return "Please! Is the bastion still standing?";
+    return lang.seekerLostLine;
   if (mode == Mode::Following)
-    return "Take me to the walls. I'll help hold them.";
+    return lang.seekerFollowLine;
   return LINES[town % 5][(voice + said) % 4];
 }
 
@@ -53,14 +54,14 @@ void Townsfolk::trail() {
   });
   if (hp <= 0) {
     Spark::burst(*level, x, y - 8, col::white, 12, 60, true);
-    level->game.announce("A SANCTUARY SEEKER IS LOST TO THE DARK");
+    level->game.announce(lang.seekerLost);
     return remove();
   }
   double xd = p.x - x, yd = p.y - y, d = std::hypot(xd, yd);
   if (mode == Mode::Lost) {
     if (d < CALL && !p.dead()) {
       mode = Mode::Following, talk = SAY, hush = SAY + 6, spoken = line();
-      level->game.announce("A SANCTUARY SEEKER FOLLOWS YOU  BRING THEM TO A BASTION");
+      level->game.announce(lang.seekerFollows);
     }
     return;
   }

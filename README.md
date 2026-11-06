@@ -147,7 +147,7 @@ and fire pools leave a short burn when enemies move away. Afflictions clear on d
 | C (title, pause) | Codex |
 | Gamepad | Left stick or D-pad move (the stick also walks slower when pushed part way), A confirm and class skill, B back, Start pause, Back map (quit to title while paused), X gather or retry, Y inventory or codex, LB show loot, RB settings, LT skill tree or campaign, RT build, L3 drop an item. Hints name pad buttons while you play on the pad |
 | Settings, CONTROLS | Rebind the main keys (saved in `keys.txt`); the arrows, Enter, Esc, 1-4 and Q stay fixed. Opened from a gamepad it lists the pad buttons instead: X, Y, Back, the shoulders, the triggers, the stick clicks and any paddles can take any of the eight pad actions, while A, B, Start and the D-pad stay fixed |
-| O (title, pause) | Settings: master, music, effects and ambience volume, screen shake, flashes, particles, damage numbers, a colourblind palette, fullscreen, pixel-perfect scaling and vsync, kept in `settings.txt` in the save folder |
+| O (title, pause) | Settings: master, music, effects and ambience volume, screen shake, flashes, particles, damage numbers, a colourblind palette, fullscreen, pixel-perfect scaling, vsync and the intro, kept in `settings.txt` in the save folder |
 | Esc / P | Pause |
 | F11 | Fullscreen |
 | F3 | FPS counter and frame-time graph |

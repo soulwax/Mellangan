@@ -15,6 +15,8 @@ public:
   bool showHud() const override { return false; }
   bool typing() const override;
 
+  float veil = 0;
+
 private:
   static constexpr int MAX_CODE = 12;
 

@@ -36,7 +36,7 @@ Copy-Item "$bin/$exe" (Join-Path $stage $targetName)
 Copy-Item CHANGELOG.md $stage
 Copy-Item res/atlas.png, res/particles.png, res/weather.png, res/font.png, res/balance.ini, res/CREDITS.md "$stage/res"
 Copy-Item "$bin/res/shaders/*.spv" "$stage/res/shaders"
-Copy-Item res/sfx, res/music "$stage/res" -Recurse
+Copy-Item res/sfx, res/music, res/videos "$stage/res" -Recurse
 
 Push-Location dist
 try {

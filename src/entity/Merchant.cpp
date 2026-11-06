@@ -1,5 +1,6 @@
 #include "entity/Merchant.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "entity/Workbench.hpp"
@@ -73,12 +74,12 @@ void Merchant::visit(Level &level) {
   if (const Structure *s = n.lastLit(); s && n.lit != v.camp && !level.rules.town) {
     v.camp = n.lit;
     camp(level, s->centerX() + 28, s->centerY() + 12);
-    level.game.announce("A MERCHANT CAMPS BY THE FIRE");
+    level.game.announce(lang.merchantCamps);
   }
   Merchant *m = level.get<Merchant>(v.merchant);
   if (m && n.dawn && !v.day) {
     v.restock(stockLevel(level, m->x, m->y), rng);
-    level.game.announce("THE MERCHANT RESTOCKS AT DAWN");
+    level.game.announce(lang.merchantRestocks);
   }
   v.day = n.dawn;
 }

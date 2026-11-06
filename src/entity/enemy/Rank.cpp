@@ -1,4 +1,5 @@
 #include "entity/enemy/Enemy.hpp"
+#include "gui/Lang.hpp"
 #include "entity/enemy/Boss.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "entity/Ability.hpp"
@@ -105,7 +106,7 @@ void Enemy::enrage() {
   level->add<Shockwave>(x, bodyY(), 8, 90, 0.5f, def->tone);
   Spark::burst(*level, x, bodyY(), def->tone, 24, 140, true);
   level->game.hitStop(0.06f);
-  level->game.announce(fmt::format("{} ENRAGES", def->title));
+  level->game.announce(say(lang.enrages, def->title));
   Sound::boss.play(0.6f, 0);
 }
 

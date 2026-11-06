@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "gui/Lang.hpp"
 #include "campaign/Campaign.hpp"
 #include "campaign/Delve.hpp"
 #include "campaign/Harvest.hpp"
@@ -67,7 +68,7 @@ void Game::beginCampaign() {
   saveCampaign();
   spdlog::info("campaign: {} world {} as hero {}, day {}", fresh ? "new" : "loaded",
                campaign->world, campaign->hero, campaign->day);
-  announce(fresh ? "ACT I  HEARTHWICK  THE BASTION HOLDS" : "HEARTHWICK STILL STANDS");
+  announce(fresh ? lang.hearthwickHolds : lang.hearthwickStands);
 }
 
 bool Game::campaignSaved() const {
@@ -114,7 +115,7 @@ bool Game::forget() {
   saveCampaign();
   spdlog::info("campaign: forgot the path for {} gold, {} points to spend", cost,
                campaign->points);
-  announce(fmt::format("YOUR PATH IS FORGOTTEN  {} SKILL POINTS", campaign->points));
+  announce(say(lang.pathForgotten, campaign->points));
   return true;
 }
 
@@ -163,6 +164,5 @@ void Game::bankLevels() {
   int gained = p.pendingLevels - p.pendingTreasures;
   campaign->points += gained, p.pendingLevels = p.pendingTreasures;
   celebrate();
-  announce(fmt::format("LEVEL {}  +{} SKILL POINT{}  K TO SPEND", p.lvl, gained,
-                       gained == 1 ? "" : "S"));
+  announce(say(gained == 1 ? lang.levelPoint : lang.levelPoints, p.lvl, gained));
 }

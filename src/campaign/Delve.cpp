@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
 #include "campaign/Campaign.hpp"
@@ -95,7 +96,7 @@ bool Delve::start(Level &level, Campaign &c, const Structure &site) {
   Spark::burst(level, x, y - 6, DUST, 24, 120, true);
   level.game.onExplosion();
   Sound::erupt.play(0.7f, 0);
-  level.game.announce("THE MINE CAVES IN BEHIND YOU");
+  level.game.announce(lang.mineCavesIn);
   return true;
 }
 
@@ -174,7 +175,7 @@ void Delve::finish(Level &level, Campaign &c) {
                         y + std::sin(a) * r * 0.7f);
   }
   level.add<Shockwave>(x, y, 8, RING * 16, 0.8f, col::gold);
-  level.game.announce("THE MINE IS CLEARED");
+  level.game.announce(lang.mineCleared);
   Sound::chest.play(0.7f, 0, 0.8f);
   level.game.saveCampaign();
 }

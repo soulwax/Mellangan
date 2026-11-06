@@ -220,6 +220,16 @@ void Screen::glow(double x, double y, float size, Color c) {
   center(atlas::Light, x, y, size / atlas::Light.w);
 }
 
+void Screen::image(VK2DTexture t, double x, double y, float rw, float rh, Color c) {
+  if (mirrored || !t)
+    return;
+  Color prev = current;
+  color(c);
+  float tw = vk2dTextureWidth(t), th = vk2dTextureHeight(t);
+  vk2dRendererDrawTexture(t, float(x - xOffset), float(y - yOffset), rw / tw, rh / th, 0, 0, 0, 0, 0, tw, th);
+  color(prev);
+}
+
 void Screen::rect(double x, double y, float rw, float rh, Color c) {
   if (mirrored)
     return;

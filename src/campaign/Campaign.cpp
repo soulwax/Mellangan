@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "campaign/Bastion.hpp"
 #include "campaign/Harvest.hpp"
@@ -116,7 +117,7 @@ void Campaign::awaken(Level &level) {
   threatScale = float(1 + nightmare);
   delves.clear();
   staff(level);
-  level.game.announce(fmt::format("NIGHTMARE {}  THE DARK RETURNS STRONGER", nightmare));
+  level.game.announce(say(lang.nightmareReturns, nightmare));
 }
 
 void Campaign::fall(Level &level) {
@@ -124,7 +125,7 @@ void Campaign::fall(Level &level) {
   if (const QuestDef *q = quests::current(*this);
       q && q->goal == Objective::Fetch && stage == QuestStage::Ready) {
     stage = QuestStage::Active, progress = 0, cache = entt::null;
-    level.game.announce("THE RELIQUARY SLIPS AWAY  IT WAITS IN THE RUINS");
+    level.game.announce(lang.reliquarySlips);
   }
   Player &p = *level.player;
   int lost = p.gold / 10;
@@ -143,8 +144,8 @@ void Campaign::fall(Level &level) {
   p.x = bx, p.y = by;
   p.status.clear();
   level.add<Shockwave>(p.x, p.bodyY(), 5, 50, 0.6f, Color{0.5f, 0.85f, 1, 1});
-  const char *where = fire ? "YOU WAKE BY YOUR CAMPFIRE" : "YOU WAKE BY THE WAYPOINT";
-  level.game.announce(lost > 0 ? fmt::format("{}  -{} GOLD", where, lost) : std::string(where));
+  const char *where = fire ? lang.wakeCampfire : lang.wakeWaypoint;
+  level.game.announce(lost > 0 ? say(lang.wakeLost, where, lost) : std::string(where));
 }
 
 void Campaign::regrow(int today) {
@@ -222,11 +223,10 @@ void Campaign::stray(Level &level) {
         }
         level.vendor.discount = discount();
         level.add<Shockwave>(f.x, f.y - 6, 4, 40, 0.5f, col::gold, false);
-        level.game.announce(fmt::format("A SANCTUARY SEEKER JOINS THE BASTION  {} SHELTERED  THE MERCHANT IS {}% KINDER",
-                                        rescued, int(discount() * 100 + 0.5f)));
+        level.game.announce(say(lang.seekerJoins, rescued, int(discount() * 100 + 0.5f)));
         if (rescued >= HOUND_AFTER && !hound) {
           hound = true;
-          level.game.announce("A GRATEFUL HUNTER GIVES YOU HIS HOUND");
+          level.game.announce(lang.hunterHound);
         }
         level.game.saveCampaign();
         return;
@@ -246,7 +246,7 @@ void Campaign::stray(Level &level) {
     auto *f = level.add<Townsfolk>(lx, ly, lx, ly, FOLK[rng.irange(0, 2)], std::max(0, act - 1),
                                    rng.irange(0, 3));
     f->mode = Townsfolk::Mode::Lost;
-    level.game.announce("SOMEONE CRIES FOR HELP OUT THERE");
+    level.game.announce(lang.criesForHelp);
     return;
   }
 }
@@ -257,7 +257,7 @@ void Campaign::heel(Level &level) {
   Player &p = *level.player;
   if (companion != entt::null && !level.reg.valid(companion)) {
     companion = entt::null, houndDown = true;
-    level.game.announce("YOUR HOUND LIMPS HOME  IT RETURNS AT DAWN");
+    level.game.announce(lang.houndLimps);
   }
   if (houndDown || p.dead())
     return;
@@ -288,7 +288,7 @@ void Campaign::honour(Level &level) {
   int reward = fell * HONOUR_GOLD;
   p.gold += reward;
   p.gainXp(fell * HONOUR_XP);
-  level.game.announce(fmt::format("THE BASTION HELD  {} FELL AT THE BRIDGE  +{} GOLD", fell, reward));
+  level.game.announce(say(lang.bastionHeld, fell, reward));
 }
 
 void Campaign::tick(Level &level) {
@@ -296,7 +296,7 @@ void Campaign::tick(Level &level) {
   if (dawn && !wasDay) {
     regrow(level.night.nights);
     if (hound && houndDown)
-      houndDown = false, level.game.announce("YOUR HOUND IS BACK AT YOUR SIDE");
+      houndDown = false, level.game.announce(lang.houndBack);
     honour(level);
   }
   wasDay = dawn;

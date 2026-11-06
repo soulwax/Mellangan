@@ -1,5 +1,6 @@
 #include "level/ExpansionEncounter.hpp"
 
+#include "gui/Lang.hpp"
 #include "Game.hpp"
 #include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
@@ -36,8 +37,8 @@ void ExpansionChallenge::onAdded() {
   defenders = spawnEncounterGuards(*level, biome, site, x, y, objective.heading, state, guardIds);
   if (!defenders)
     return finish(false);
-  level->game.announce(std::string(STYLES[objective.kind].name) + ": " + STYLES[objective.kind].task);
-  level->game.announce(std::string("REWARD: ") + biomeRewardText(biome));
+  level->game.announce(say(lang.encounterTask, STYLES[objective.kind].name, STYLES[objective.kind].task));
+  level->game.announce(say(lang.rewardColon, biomeRewardText(biome)));
 }
 
 bool ExpansionChallenge::complete() const {
@@ -62,9 +63,9 @@ void ExpansionChallenge::finish(bool success) {
     if (objective.kind == 3)
       p.status.clear();
     Spark::burst(*level, x, y, STYLES[objective.kind].color, 20, 100, true);
-    level->game.announce(std::string("REWARD: ") + biomeRewardText(biome));
+    level->game.announce(say(lang.rewardColon, biomeRewardText(biome)));
   } else {
-    level->game.announce(std::string(STYLES[objective.kind].name) + " LOST");
+    level->game.announce(say(lang.encounterLost, STYLES[objective.kind].name));
   }
   remove();
 }

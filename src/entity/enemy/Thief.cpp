@@ -1,5 +1,6 @@
 #include "entity/enemy/Thief.hpp"
 
+#include "gui/Lang.hpp"
 #include "Atlas.hpp"
 #include "Game.hpp"
 #include "audio/Sound.hpp"
@@ -31,5 +32,5 @@ void Thief::die() {
   Enemy::die();
   level->add<Chest>(x, y);
   Spark::burst(*level, x, bodyY(), col::gold, 35, 120, true);
-  level->game.announce("THIEF CAUGHT!");
+  level->game.announce(lang.thiefCaught);
 }
