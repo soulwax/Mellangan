@@ -466,7 +466,7 @@ void Game::applySettings() {
   Sound::mix(settings.master / 100.0f, settings.music / 100.0f, settings.effects / 100.0f,
              settings.ambience / 100.0f);
   camera.scale = settings.shake / 100.0f;
-  palette::safe = settings.colours != 0;
+  palette::mode = std::clamp(settings.colours, 0, palette::MODES - 1);
   screen.crisp = settings.pixel != 0;
   if (window && bool(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) != bool(settings.fullscreen))
     SDL_SetWindowFullscreen(window, settings.fullscreen != 0);

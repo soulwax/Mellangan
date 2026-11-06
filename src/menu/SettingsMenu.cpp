@@ -16,23 +16,24 @@ struct Row {
   const char *Lang::*name;
   int Settings::*value;
   int step, hi;
-  const char *Lang::*off, *Lang::*on;
+  const char *Lang::*labels[5];
 };
 
 const Row ROWS[] = {
-    {&Lang::masterVolume, &Settings::master, 10, 100, nullptr, nullptr},
-    {&Lang::music, &Settings::music, 10, 100, nullptr, nullptr},
-    {&Lang::effects, &Settings::effects, 10, 100, nullptr, nullptr},
-    {&Lang::ambience, &Settings::ambience, 10, 100, nullptr, nullptr},
-    {&Lang::screenShake, &Settings::shake, 25, 100, nullptr, nullptr},
-    {&Lang::flashes, &Settings::flash, 25, 100, nullptr, nullptr},
-    {&Lang::particles, &Settings::reduced, 1, 1, &Lang::full, &Lang::reduced},
-    {&Lang::damageNumbers, &Settings::numbers, 1, 1, &Lang::off, &Lang::on},
-    {&Lang::colours, &Settings::colours, 1, 1, &Lang::standard, &Lang::colourblind},
-    {&Lang::fullscreen, &Settings::fullscreen, 1, 1, &Lang::off, &Lang::on},
-    {&Lang::scaling, &Settings::pixel, 1, 1, &Lang::fill, &Lang::pixelPerfect},
-    {&Lang::vsync, &Settings::vsync, 1, 1, &Lang::off, &Lang::on},
-    {&Lang::controls, nullptr, 0, 0, nullptr, nullptr}};
+    {&Lang::masterVolume, &Settings::master, 10, 100, {}},
+    {&Lang::music, &Settings::music, 10, 100, {}},
+    {&Lang::effects, &Settings::effects, 10, 100, {}},
+    {&Lang::ambience, &Settings::ambience, 10, 100, {}},
+    {&Lang::screenShake, &Settings::shake, 25, 100, {}},
+    {&Lang::flashes, &Settings::flash, 25, 100, {}},
+    {&Lang::particles, &Settings::reduced, 1, 1, {&Lang::full, &Lang::reduced}},
+    {&Lang::damageNumbers, &Settings::numbers, 1, 1, {&Lang::off, &Lang::on}},
+    {&Lang::colours, &Settings::colours, 1, 4,
+     {&Lang::standard, &Lang::deuteranopia, &Lang::protanopia, &Lang::tritanopia, &Lang::monochrome}},
+    {&Lang::fullscreen, &Settings::fullscreen, 1, 1, {&Lang::off, &Lang::on}},
+    {&Lang::scaling, &Settings::pixel, 1, 1, {&Lang::fill, &Lang::pixelPerfect}},
+    {&Lang::vsync, &Settings::vsync, 1, 1, {&Lang::off, &Lang::on}},
+    {&Lang::controls, nullptr, 0, 0, {}}};
 constexpr int ROW_COUNT = int(sizeof ROWS / sizeof *ROWS);
 } // namespace
 
@@ -46,7 +47,7 @@ void SettingsMenu::change(int direction) {
   }
   int &v = game.settings.*r.value;
   int was = v;
-  v = r.hi == 1 ? 1 - v : std::clamp(v + direction * r.step, 0, r.hi);
+  v = r.labels[0] ? (v + direction + r.hi + 1) % (r.hi + 1) : std::clamp(v + direction * r.step, 0, r.hi);
   if (v == was)
     return;
   game.applySettings();
@@ -69,7 +70,7 @@ void SettingsMenu::tick() {
     row = (row + 1) % ROW_COUNT, Sound::select.play(0.3f, 0);
   else if (in.left.clicked)
     change(-1);
-  else if (in.right.clicked || (in.confirm.clicked && ROWS[row].hi <= 1))
+  else if (in.right.clicked || (in.confirm.clicked && (!ROWS[row].value || ROWS[row].labels[0])))
     change(1);
 }
 
@@ -93,8 +94,8 @@ void SettingsMenu::render(Screen &s) {
     }
     int v = game.settings.*r.value;
     float bw = 90 * u, bx = x + w - bw;
-    if (r.hi == 1) {
-      std::string label = lang.*(v ? r.on : r.off);
+    if (r.labels[0]) {
+      std::string label = lang.*r.labels[v];
       s.text(label, x + w - Screen::textWidth(label, u), y, u, ink);
       continue;
     }

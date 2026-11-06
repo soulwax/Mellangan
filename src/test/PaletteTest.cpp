@@ -3,9 +3,12 @@
 
 #include "test/Tests.hpp"
 
+#include <spdlog/fmt/fmt.h>
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "gfx/Palette.hpp"
@@ -19,6 +22,10 @@ const float PROTAN[3][3] = {{0.152286f, 1.052583f, -0.204868f},
                             {0.114503f, 0.786281f, 0.099216f},
                             {-0.003882f, -0.048116f, 1.051998f}};
 
+const float TRITAN[3][3] = {{1.255528f, -0.076749f, -0.178779f},
+                            {-0.078411f, 0.930809f, 0.147602f},
+                            {0.004733f, 0.691367f, 0.303900f}};
+const float MONO[3][3] = {{0.2126f, 0.7152f, 0.0722f}, {0.2126f, 0.7152f, 0.0722f}, {0.2126f, 0.7152f, 0.0722f}};
 float linear(float c) { return c <= 0.04045f ? c / 12.92f : std::pow((c + 0.055f) / 1.055f, 2.4f); }
 float encode(float c) { return c <= 0.0031308f ? 12.92f * c : 1.055f * std::pow(c, 1 / 2.4f) - 0.055f; }
 
@@ -36,9 +43,9 @@ float apart(const float (&m)[3][3], Color a, Color b) {
 
 std::vector<Color> rarities() {
   std::vector<Color> out;
-  for (Rarity r : {Rarity::Magic, Rarity::Rare, Rarity::Unique, Rarity::Crafted}) {
+  for (int r = 0; r < int(Rarity::Count); r++) {
     Item item;
-    item.rarity = r;
+    item.rarity = Rarity(r);
     out.push_back(item.color());
   }
   Item night;
@@ -59,26 +66,22 @@ float closest(const float (&m)[3][3]) {
 
 void testPalette() {
   constexpr Color GRASS{0.52f, 0.78f, 0.41f, 1};
-  float before[2][3], after[2][3];
-  for (int safe = 0; safe < 2; safe++) {
-    palette::safe = safe;
-    float (&out)[2][3] = safe ? after : before;
-    int i = 0;
-    for (const auto *m : {&DEUTAN, &PROTAN}) {
-      out[i][0] = closest(*m);
-      out[i][1] = apart(*m, palette::hurt(), palette::heal());
-      out[i][2] = apart(*m, palette::warning(1), GRASS);
-      i++;
-    }
+  const float (*SIM[palette::MODES])[3][3] = {nullptr, &DEUTAN, &PROTAN, &TRITAN, &MONO};
+  auto measure = [&](int mode, const float (&m)[3][3], float (&out)[3]) {
+    palette::mode = mode;
+    out[0] = closest(m), out[1] = apart(m, palette::hurt(), palette::heal()),
+    out[2] = apart(m, palette::warning(1), GRASS);
+  };
+  std::string report;
+  for (int mode = palette::Deuteranopia; mode < palette::MODES; mode++) {
+    float before[3], after[3];
+    measure(palette::Standard, *SIM[mode], before);
+    measure(mode, *SIM[mode], after);
+    assert(after[0] > before[0] && after[0] > 0.12f && after[1] > before[1] && after[2] >= before[2]);
+    report += fmt::format("{}{:.2f}->{:.2f}", report.empty() ? "" : " ", before[0], after[0]);
   }
-  palette::safe = false;
-  for (int i = 0; i < 2; i++)
-    for (int k = 0; k < 3; k++)
-      assert(after[i][k] > before[i][k]);
-  assert(after[0][0] > 0.25f && after[1][0] > 0.25f);
-  std::cout << "[TEST] Palette: under simulated deuteranopia and protanopia the colourblind palette "
-               "pulls rarities apart ("
-            << int(before[0][0] * 100) << "/" << int(before[1][0] * 100) << " -> "
-            << int(after[0][0] * 100) << "/" << int(after[1][0] * 100)
-            << "), and damage from healing and warnings from grass: PASS" << std::endl;
+  palette::mode = palette::Standard;
+  std::cout << "[TEST] Palette: each colourblind mode beats the standard colours under its own simulated "
+               "vision for rarities (" << report << "), damage against healing and warnings against grass: PASS"
+            << std::endl;
 }

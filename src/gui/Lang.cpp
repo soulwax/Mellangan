@@ -14,8 +14,8 @@ const LangKey LANG_KEYS[] = {
 
     K(settings), K(settingsHint), K(settingsPadHint), K(masterVolume), K(music), K(effects), K(ambience),
     K(screenShake), K(flashes), K(particles), K(damageNumbers), K(colours), K(fullscreen), K(scaling),
-    K(vsync), K(controls), K(off), K(on), K(full), K(reduced), K(standard), K(colourblind), K(fill),
-    K(pixelPerfect),
+    K(vsync), K(controls), K(off), K(on), K(full), K(reduced), K(standard), K(deuteranopia), K(protanopia),
+    K(tritanopia), K(monochrome), K(fill), K(pixelPerfect),
 
     K(gamepad), K(resetDefaults), K(pressButton), K(pressKey), K(newButton), K(padControlsHint), K(newKey),
     K(keyControlsHint),

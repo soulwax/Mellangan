@@ -18,7 +18,8 @@ struct Lang {
              *flashes = "FLASHES", *particles = "PARTICLES", *damageNumbers = "DAMAGE NUMBERS",
              *colours = "COLOURS", *fullscreen = "FULLSCREEN", *scaling = "SCALING", *vsync = "VSYNC",
              *controls = "CONTROLS", *off = "OFF", *on = "ON", *full = "FULL", *reduced = "REDUCED",
-             *standard = "STANDARD", *colourblind = "COLOURBLIND", *fill = "FILL",
+             *standard = "STANDARD", *deuteranopia = "DEUTERANOPIA",
+             *protanopia = "PROTANOPIA", *tritanopia = "TRITANOPIA", *monochrome = "MONOCHROME", *fill = "FILL",
              *pixelPerfect = "PIXEL PERFECT";
 
   const char *gamepad = "GAMEPAD", *resetDefaults = "RESET TO DEFAULTS", *pressButton = "PRESS A BUTTON",

@@ -179,28 +179,8 @@ std::string Item::name() const {
 }
 
 Color Item::color() const {
-  if (palette::safe) {
-    constexpr Color SAFE[] = {{1, 1, 1, 1},           {0.72f, 0.72f, 0.74f, 1},
-                              {0.34f, 0.71f, 0.91f, 1}, {0.94f, 0.89f, 0.26f, 1},
-                              {0.2f, 0.8f, 0.6f, 1},    {0.9f, 0.62f, 0, 1}};
-    return night() ? Color{0.75f, 0.35f, 0.7f, 1} : SAFE[int(rarity)];
-  }
-  if (night())
-    return {0.72f, 0.45f, 1, 1};
-  switch (rarity) {
-  case Rarity::Superior:
-    return {0.72f, 0.72f, 0.74f, 1};
-  case Rarity::Magic:
-    return {0.45f, 0.55f, 1, 1};
-  case Rarity::Rare:
-    return {1, 0.92f, 0.35f, 1};
-  case Rarity::Unique:
-    return {0.82f, 0.68f, 0.38f, 1};
-  case Rarity::Crafted:
-    return {1, 0.62f, 0.2f, 1};
-  default:
-    return {1, 1, 1, 1};
-  }
+  const palette::Scheme &s = palette::now();
+  return night() ? s.night : s.rarity[int(rarity)];
 }
 
 int Item::value() const {
