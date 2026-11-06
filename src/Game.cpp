@@ -6,11 +6,15 @@
 #include <cstdio>
 
 #include "Crash.hpp"
+#include "meta/Feats.hpp"
+#include "meta/Heat.hpp"
+#include "meta/RunLog.hpp"
 #include "gfx/Palette.hpp"
 #include "audio/Sound.hpp"
 #include "entity/Merchant.hpp"
 #include "entity/Workbench.hpp"
 #include "entity/Player.hpp"
+#include "level/World.hpp"
 #include "gfx/StatusVisual.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "hero/Hero.hpp"
@@ -249,7 +253,10 @@ void Game::play() {
     level->player->cast();
   if (campaign)
     gather();
+  float was = level->time;
   level->tick(), stepped = true;
+  if (int(level->time) != int(was))
+    observe();
   if (campaign)
     keep();
   if (dev && start.stripsLevels())
@@ -317,7 +324,12 @@ void Game::build() {
       saves.dir().empty()
           ? ""
           : saves.dir() + (code.empty() ? "chart.bin" : "chart-" + code + ".bin");
-  level = std::make_unique<Level>(*this, rules);
+  RunRules heated = rules;
+  if (!campaign && heated.endsAtDawn) {
+    Balance unused;
+    applyHeat(heat, unused, heated);
+  }
+  level = std::make_unique<Level>(*this, heated);
   if (!bench.enabled)
     level->chart.load(chartPath);
   snapCamera();
@@ -347,6 +359,7 @@ void Game::reseed() {
 }
 
 void Game::newGame(bool reroll) {
+  earned.clear();
   if (worldMode == WorldMode::Random && reroll)
     seedCode.clear();
   reseed();
@@ -388,6 +401,10 @@ void Game::loadBalance() {
   balance.load(Saves::slurp(base + "res/balance.ini"), difficulty);
   if (!saves.dir().empty())
     balance.load(saves.read("balance.ini"), difficulty);
+  if (!campaign && rules.endsAtDawn) {
+    RunRules unused;
+    applyHeat(heat, balance, unused);
+  }
 }
 
 void Game::setDifficulty(Difficulty d) {
@@ -413,10 +430,19 @@ void Game::remember(bool dawn) {
   codex.runs++, codex.dawns += dawn;
   codex.bestTime = std::max(codex.bestTime, level->time);
   codex.bestStreak = std::max(codex.bestStreak, level->bestStreak);
+  if (dawn && !campaign)
+    codex.heat = std::max(codex.heat, std::min(HEAT_MAX, heat + 1));
+  earned = unlockFeats(*this, dawn);
+  for (int f : earned)
+    spdlog::info("achievement: {}", FEATS[f].title);
   if (!writes())
     return;
   codex.save(saves.dir() + "codex.txt");
   saves.record(worldName(), level->time, dawn);
+  std::string log = saves.read("runs.csv");
+  size_t rows = log.find('\n');
+  log = std::string(RUN_HEADER) + (rows == std::string::npos ? "" : log.substr(rows + 1));
+  saves.write("runs.csv", log + runRow(*this, dawn));
 }
 
 void Game::saveWorld() const {
@@ -446,6 +472,14 @@ void Game::applySettings() {
   VK2DScreenMode mode = settings.vsync ? VK2D_SCREEN_MODE_VSYNC : VK2D_SCREEN_MODE_TRIPLE_BUFFER;
   if (VK2DRendererConfig config = vk2dRendererGetConfig(); window && config.screenMode != mode)
     config.screenMode = mode, vk2dRendererSetConfig(config);
+}
+
+void Game::observe() {
+  Level::Trace &t = level->trace;
+  Player &p = *level->player;
+  t.biomes[world::biomeUnder(p.x, p.y)] += 1;
+  if (int(level->time) % 60 == 0)
+    t.levels.push_back(p.lvl);
 }
 
 void Game::saveKeys() {

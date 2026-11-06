@@ -45,6 +45,7 @@ public:
   RunRules rules;
   Balance balance;
   Difficulty difficulty = Difficulty::HurtMePlenty;
+  int heat = 0;
   std::string base;
   Saves saves;
   Hud hud{*this};
@@ -72,6 +73,8 @@ public:
   void applySettings();
   void saveSettings();
   void saveKeys();
+  void observe();
+  std::vector<int> earned;
   void onPlayerHurt() { hurt = 1, camera.shake = 4; }
   void onExplosion() { camera.jolt(2.5f); }
   void hitStop(float seconds);

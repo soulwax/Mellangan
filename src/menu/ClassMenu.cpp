@@ -6,6 +6,7 @@
 #include "item/Upgrade.hpp"
 #include "menu/HeroCard.hpp"
 #include "menu/TitleMenu.hpp"
+#include "meta/Heat.hpp"
 
 ClassMenu::ClassMenu(Game &game) : Menu(game) {
   pick = game.codex.start;
@@ -57,6 +58,13 @@ void ClassMenu::tick() {
   if (campaign && in.restart.clicked) {
     game.hardcoreNext = !game.hardcoreNext;
     return Sound::select.play(0.5f, 0, game.hardcoreNext ? 0.7f : 1.2f);
+  }
+  if (!campaign && (in.up.clicked || in.down.clicked)) {
+    int h = std::clamp(game.heat + (in.up.clicked ? 1 : -1), 0, std::min(HEAT_MAX, game.codex.heat));
+    if (h == game.heat)
+      return Sound::hurt.play(0.3f, 0);
+    game.heat = h;
+    return Sound::select.play(0.5f, 0, 1 + 0.05f * h);
   }
   if (in.left.clicked)
     return choose(pick - 1);
@@ -174,8 +182,20 @@ void ClassMenu::render(Screen &s) {
   for (int i = 0; i < HERO_COUNT; i++)
     renderHero(s, i, p, in);
   HeroCard(game, s, pick, t, in).render(s);
-  s.textCenter(game.input.prompt("Left/Right choose   Enter begin   Esc back"), s.w * 0.69f,
+  s.textCenter(game.input.prompt(!campaign && game.codex.heat > 0
+                                     ? "Left/Right choose   Up/Down heat   Enter begin   Esc back"
+                                     : "Left/Right choose   Enter begin   Esc back"),
+               s.w * 0.69f,
                s.h - 22 * u, u, col::muted.alpha(in));
+  if (!campaign) {
+    Color hot = Color{1, 0.82f - 0.06f * game.heat, 0.32f - 0.03f * game.heat, 1};
+    std::string line = game.codex.heat == 0 ? std::string("HEAT unlocks at your first dawn")
+                       : game.heat == 0
+                           ? game.input.prompt("HEAT 0   Up/Down to raise the stakes")
+                           : fmt::format("HEAT {}   {}", game.heat, heatNames(game.heat));
+    s.textCenter(Screen::fit(line, s.w * 0.6f, small), s.w * 0.69f, s.h - 44 * u, small,
+                 (game.heat ? hot : col::muted).alpha(in));
+  }
   if (campaign)
     s.textCenter(game.hardcoreNext ? game.input.prompt("R  HARDCORE: one life, death deletes the hero")
                                    : game.input.prompt("R  HARDCORE: off"),

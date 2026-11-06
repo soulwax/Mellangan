@@ -42,7 +42,7 @@ void testSaves() {
 
   std::string cf = (dir / "codex.txt").string();
   Codex c;
-  c.runs = 2, c.slain[3] = 7, c.hints = 5;
+  c.runs = 2, c.slain[3] = 7, c.hints = 5, c.feats = 0x8000000000000005ull;
   c.save(cf);
   c.slain[3] = 8;
   c.save(cf);
@@ -58,7 +58,7 @@ void testSaves() {
   scribble(cf, whole);
   Codex fresh;
   fresh.load(cf);
-  assert(fresh.slain[3] == 8 && fresh.hints == 5);
+  assert(fresh.slain[3] == 8 && fresh.hints == 5 && fresh.feats == 0x8000000000000005ull);
   assert(whole.find("\nversion 2\n") != std::string::npos);
   scribble(cf, whole.substr(0, whole.find("version")));
   Codex legacy;

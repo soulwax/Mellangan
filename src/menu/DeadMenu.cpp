@@ -37,6 +37,7 @@ void DeadMenu::render(Screen &s) {
   s.textCenter(Screen::fit(fmt::format("TIP  {}", advice(l)), s.w - 32 * u, small), s.w / 2, end + 6 * u,
                small, col::gold.alpha(0.8f * std::min(1.0f, t)));
   end += 6 * u + 16 * small;
+  end = achievements(s, game, end, std::min(1.0f, t));
   if (t > 1 && std::fmod(t, 1.0f) < 0.65f)
     s.textCenter(game.input.prompt("R / Enter to rise again"), s.w / 2, end + 12 * u, u, col::gold);
   s.textCenter("world " + game.worldName(), s.w / 2, s.h - 18 * small, small,

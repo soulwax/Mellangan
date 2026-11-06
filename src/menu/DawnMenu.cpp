@@ -29,6 +29,7 @@ void DawnMenu::render(Screen &s) {
 
   float nextY = renderEndStats(s, l, subY + 22 * u, std::min(1.0f, t * 0.8f));
   float end = recap(s, l, nextY + 8 * u, std::min(1.0f, t * 0.5f));
+  end = achievements(s, game, end, std::min(1.0f, t * 0.5f));
   if (t > 2 && std::fmod(t, 1.0f) < 0.65f)
     s.textCenter(game.input.prompt("R / Enter for another night"), s.w / 2, end + 12 * u, u,
                  col::gold);

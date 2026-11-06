@@ -13,10 +13,30 @@
 #include "level/Chart.hpp"
 #include "menu/PauseMenu.hpp"
 #include "menu/TitleMenu.hpp"
+#include "meta/Feats.hpp"
 
 namespace {
 constexpr int LIST_ROWS = 13, RELIC_ROWS = 7,
-              PAGE_COUNT = (Codex::KINDS + LIST_ROWS - 1) / LIST_ROWS;
+              PAGE_COUNT = (Codex::KINDS + LIST_ROWS - 1) / LIST_ROWS, PAGES = PAGE_COUNT + 1;
+
+void feats(Screen &s, float x, float top, float w, float bottom, uint64_t got) {
+  float u = s.u, small = std::max(1.0f, u - 1), colW = w / 3;
+  int earned = 0;
+  for (int i = 0; i < FEAT_COUNT; i++)
+    earned += int(got >> i & 1);
+  s.text(fmt::format("ACHIEVEMENTS  {} / {}", earned, FEAT_COUNT), x, top, small, col::gold);
+  int rows = (FEAT_COUNT + 2) / 3;
+  float row = std::min(2 * 16 * small + 4 * u, (bottom - top - 24 * small) / rows);
+  for (int i = 0; i < FEAT_COUNT; i++) {
+    bool has = got >> i & 1;
+    float fx = x + (i / rows) * colW, fy = top + 24 * small + (i % rows) * row;
+    s.text(Screen::fit(FEATS[i].title, colW - 12 * u, small), fx, fy, small,
+           has ? col::gold : col::muted * 0.8f);
+    if (row >= 2 * 16 * small)
+      s.text(Screen::fit(FEATS[i].hint, colW - 12 * u, small), fx, fy + 15 * small, small,
+             has ? col::muted : col::muted * 0.55f);
+  }
+}
 
 SDL_FRect pageButton(const Screen &s, int direction) {
   float u = s.u, small = std::max(1.0f, u - 1), size = 22 * small;
@@ -119,7 +139,7 @@ CodexMenu::CodexMenu(Game &game, bool fromPause) : Menu(game), fromPause(fromPau
 CodexMenu::~CodexMenu() = default;
 
 void CodexMenu::turn(int direction) {
-  page = (page + direction + PAGE_COUNT) % PAGE_COUNT;
+  page = (page + direction + PAGES) % PAGES;
   Sound::select.play(0.35f, 0);
 }
 
@@ -163,19 +183,23 @@ void CodexMenu::render(Screen &s) {
   g.row = std::min(18 * g.small, (g.footer - g.start) / LIST_ROWS);
 
   float x = g.pad;
-  regions(s, g, c, x, page);
-  relics(s, g, c, x += g.colW, page,
-         catalogue.empty() ? game.level->player->upgrades : catalogue);
-  tally(s, g, x += g.colW, "BESTIARY", c.slain, Codex::KINDS, page * LIST_ROWS,
-        (page + 1) * LIST_ROWS, foeTitle);
-  int siteRows = (Codex::SITES + PAGE_COUNT - 1) / PAGE_COUNT;
-  tally(s, g, x += g.colW, "PLACES", c.entered, Codex::SITES, page * siteRows,
-        (page + 1) * siteRows, [](int k) {
-          return std::string(STRUCTURES[k].name ? STRUCTURES[k].name : "UNKNOWN SITE");
-        });
+  if (page == PAGE_COUNT)
+    feats(s, x, g.top, s.w - 2 * g.pad, g.footer, c.feats);
+  else {
+    regions(s, g, c, x, page);
+    relics(s, g, c, x += g.colW, page,
+           catalogue.empty() ? game.level->player->upgrades : catalogue);
+    tally(s, g, x += g.colW, "BESTIARY", c.slain, Codex::KINDS, page * LIST_ROWS,
+          (page + 1) * LIST_ROWS, foeTitle);
+    int siteRows = (Codex::SITES + PAGE_COUNT - 1) / PAGE_COUNT;
+    tally(s, g, x += g.colW, "PLACES", c.entered, Codex::SITES, page * siteRows,
+          (page + 1) * siteRows, [](int k) {
+            return std::string(STRUCTURES[k].name ? STRUCTURES[k].name : "UNKNOWN SITE");
+          });
+  }
 
   s.text(game.input.prompt("C / Esc back"), g.pad, s.h - g.pad - 16 * g.small, g.small, col::muted);
-  s.textCenter(fmt::format("PAGE {} / {}", page + 1, PAGE_COUNT), s.w * 0.5f,
+  s.textCenter(fmt::format("PAGE {} / {}", page + 1, PAGES), s.w * 0.5f,
                s.h - g.pad - 16 * g.small, g.small, col::white);
   for (int direction : {-1, 1}) {
     SDL_FRect button = pageButton(s, direction);

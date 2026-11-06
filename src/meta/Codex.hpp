@@ -13,8 +13,9 @@ struct Codex {
                        SITES = int(StructureKind::Count);
 
   uint32_t biomes = 0, relics = 0, hints = 0;
+  uint64_t feats = 0;
   int slain[KINDS]{}, entered[SITES]{};
-  int runs = 0, dawns = 0, bestStreak = 0, start = 0, shrines = 0;
+  int runs = 0, dawns = 0, bestStreak = 0, start = 0, shrines = 0, heat = 0;
   float bestTime = 0;
 
   int kills() const;

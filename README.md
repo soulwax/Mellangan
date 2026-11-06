@@ -269,6 +269,7 @@ effects scene without loading or saving player progress.
   `--biome-map` and `--capture-screenshots` (`Views.hpp`); `main.cpp` maps each flag to its view in one table
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
+- `tools/run_report.py [runs.csv] [--mode run|campaign] [--min-runs N]` – summarises the local run log the game appends to `runs.csv` in the save folder after every finished run: dawn rate and median time per class, weapon pick rate and median damage share (flagging any far below the median), the most picked upgrades, causes and times of death, the median level at each minute and time per biome
 - `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites
 - `tools/sprite_kit.py`, `tools/make_sprites.py` – procedural pixel painter and the sprite-kit band (trees, shrubs, rocks, tufts); `--preview` renders a catalogue
 - `tools/make_grounds.py` – carpet ground sets (straw, ash, crystal moss, mycelium, lava) for `Carpet` biomes

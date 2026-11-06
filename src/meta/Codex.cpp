@@ -40,6 +40,15 @@ bool Codex::parse(std::string_view text) {
   std::sscanf(at, "%d", &shrines);
   if (const char *h = std::strstr(at, "hints "))
     std::sscanf(h + 6, "%u", &hints);
+  if (const char *h = std::strstr(at, "heat "))
+    std::sscanf(h + 5, "%d", &heat);
+  else
+    heat = dawns > 0;
+  if (const char *f = std::strstr(at, "feats ")) {
+    unsigned long long bits = 0;
+    if (std::sscanf(f + 6, "%llu", &bits) == 1)
+      feats = bits;
+  }
   return true;
 }
 
@@ -60,6 +69,7 @@ void Codex::save(const std::string &path) const {
   out += "\n";
   for (int k : entered)
     out += fmt::format("{} ", k);
-  out += fmt::format("\n{}\nhints {}\nversion {}\n", shrines, hints, VERSION);
+  out += fmt::format("\n{}\nhints {}\nfeats {}\nheat {}\nversion {}\n", shrines, hints, feats,
+                     heat, VERSION);
   Saves::store(path, out);
 }

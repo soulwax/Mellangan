@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "Game.hpp"
+#include "meta/Feats.hpp"
 #include "gui/Widget.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
@@ -135,6 +136,8 @@ RunStats computeRunStats(const Level &l) {
   stats.classColor = h ? h->tint : col::white;
 
   stats.difficulty = difficultyTitle(l.game.difficulty);
+  if (l.game.heat > 0 && !l.game.campaign)
+    stats.difficulty += fmt::format("  HEAT {}", l.game.heat);
   stats.diffColor = {0.82f, 0.85f, 0.92f, 1.0f};
   if (l.omen >= 0 && l.omen < OMEN_COUNT)
     stats.omen = OMENS[l.omen].name, stats.omenColor = OMENS[l.omen].tint;
@@ -241,4 +244,16 @@ const char *advice(const Level &l) {
     if (tip.fits(l))
       return tip.text;
   return "";
+}
+
+float achievements(Screen &s, const Game &game, float y, float alpha) {
+  if (game.earned.empty())
+    return y;
+  float u = s.u, small = std::max(1.0f, u - 1);
+  std::string names;
+  for (int f : game.earned)
+    names += (names.empty() ? "" : "   ") + std::string(FEATS[f].title);
+  s.textCenter(Screen::fit("ACHIEVED  " + names, s.w - 32 * u, small), s.w / 2, y + 4 * u, small,
+               col::gold.alpha(alpha));
+  return y + 4 * u + 16 * small;
 }

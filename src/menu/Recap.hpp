@@ -4,6 +4,7 @@
 
 #include "gfx/Screen.hpp"
 
+class Game;
 class Level;
 
 struct RunStats {
@@ -26,3 +27,4 @@ RunStats computeRunStats(const Level &l);
 float renderEndStats(Screen &s, const Level &l, float y, float alpha);
 float recap(Screen &s, const Level &l, float y, float alpha);
 const char *advice(const Level &l);
+float achievements(Screen &s, const Game &game, float y, float alpha);

@@ -106,6 +106,7 @@ void LevelUpMenu::apply(int i) {
     spdlog::info("Level {}: evolved into {}", p.lvl, choice->name);
   } else if (choice) {
     choice->levelUp(p);
+    game.level->trace.picks.push_back(choice->name);
     int relic = 0;
     for (auto &up : p.upgrades)
       if (up->rare && up.get() != choice)

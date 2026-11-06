@@ -64,6 +64,11 @@ public:
   const Omen &portent() const;
   Color air;
   float distanceRan = 0, totalDamage = 0;
+  struct Trace {
+    std::vector<const char *> picks;
+    std::vector<int> levels;
+    float biomes[BIOME_COUNT]{};
+  } trace;
   int handicaps = 0;
   std::vector<entt::entity> bossIds;
   std::vector<Ally *> allies;
