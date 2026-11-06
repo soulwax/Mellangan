@@ -27,8 +27,8 @@ bool Hud::edge(double wx, double wy, Pin &pin) const {
   float xm = xo + s.vw * k * 0.5f, ym = yo + s.vh * k * 0.5f;
   float xd = xo + float(wx - xView) * k - xm, yd = yo + float(wy - yView) * k - ym,
         dd = std::max(1.0f, std::sqrt(xd * xd + yd * yd));
-  float xh = s.vw * k * 0.5f - 18 * u,
-        yh = s.vh * k * 0.5f - (yd < 0 ? 84 : game.level->bossIds.empty() ? 18 : 46) * u;
+  float xh = std::min(s.vw * k, s.w) * 0.5f - 18 * u,
+        yh = std::min(s.vh * k, s.h) * 0.5f - (yd < 0 ? 84 : game.level->bossIds.empty() ? 18 : 46) * u;
   float fit = std::min({1.0f, xd != 0 ? xh / std::abs(xd) : 1e9f,
                         yd != 0 ? yh / std::abs(yd) : 1e9f});
   pin = {xm + xd * fit, ym + yd * fit, xd / dd, yd / dd};

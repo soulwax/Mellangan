@@ -101,6 +101,9 @@ void testSaves() {
   Settings again;
   again.parse(set.save());
   assert(again.save() == set.save() && again.numbers == 1 && again.vsync == 1);
+  Settings crisp;
+  crisp.parse("pixel_perfect 1\n");
+  assert(crisp.pixel == 1 && set.pixel == 0);
   {
     TextParticle number(0, 0, 12, col::red);
     assert(showParticle(number, false, true) && showParticle(number, true, true) &&

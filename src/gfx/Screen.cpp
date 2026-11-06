@@ -115,8 +115,10 @@ void Screen::beginGui(SDL_Window *window, const PostFx &fx) {
   cam.w = w, cam.h = h, cam.zoom = 1;
   vk2dRendererSetCamera(cam);
 
-  scale = std::min(w / vw, h / vh);
-  u = std::max(1.0f, std::round(scale * 0.5f));
+  float fit = std::min(w / vw, h / vh);
+  float whole = std::ceil(fit - 0.001f);
+  scale = !crisp || fit < 1 ? fit : whole <= fit * 1.06f ? whole : std::floor(fit);
+  u = std::max(1.0f, std::round(fit * 0.5f));
   xOffset = yOffset = 0;
 
   color(col::black);

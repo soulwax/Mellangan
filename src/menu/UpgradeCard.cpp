@@ -118,6 +118,23 @@ void UpgradeCard::renderTag(Screen &s, float right, float y, float in) const {
            SILVER.alpha(in));
 }
 
+std::string UpgradeCard::synergy(bool &ready) const {
+  ready = false;
+  if (!up || evolving || up->evolved)
+    return "";
+  auto held = [&](const char *name) {
+    Upgrade *u = p.upgrade(name);
+    return u && u->level > 0;
+  };
+  for (const auto &e : evolutionTable()) {
+    if (up->weapon && std::strcmp(e[0], up->name) == 0)
+      return ready = held(e[1]), fmt::format("evolves with {}{}", e[1], ready ? ", which you hold" : "");
+    if (!up->weapon && std::strcmp(e[1], up->name) == 0 && held(e[0]))
+      return ready = true, fmt::format("evolves your {}", e[0]);
+  }
+  return "";
+}
+
 void UpgradeCard::render(Screen &s, SDL_FRect r, float in, bool selected, float t) const {
   float u = s.u, small = std::max(1.0f, u - 1);
   float x = r.x, y = r.y, w = r.w, h = r.h;
@@ -147,6 +164,10 @@ void UpgradeCard::render(Screen &s, SDL_FRect r, float in, bool selected, float 
                               : "Restore 40 health";
   s.text(name, tx, y + 5.0f * u, u, (selected ? col::white : tint).alpha(in));
   s.text(desc, tx, y + 25.0f * u, small, (selected ? col::white * 0.9f : col::muted).alpha(in));
+  bool ready = false;
+  if (std::string pair = synergy(ready); !pair.empty() && h >= 44 * u)
+    s.text(pair, tx, y + 25.0f * u + 15 * small, small,
+           (ready ? col::gold : col::muted * 0.75f).alpha(in));
 
   float kw = 18 * u, kh = 18 * u;
   float kx = x + w - kw - 8 * u, ky = y + (h - kh) * 0.5f;

@@ -8,7 +8,7 @@
 WraithBolts::WraithBolts()
     : Upgrade("Wraith Bolts", atlas::kit(atlas::kt::Skull),
               {"Restless souls hunt the nearest foes", "One more wraith",
-               "+6 damage", "Wraiths pierce, faster", "One more wraith"},
+               "+14 damage", "Wraiths pierce, faster", "One more wraith"},
               true) {
   owner = "REAPER";
 }
@@ -21,7 +21,7 @@ void WraithBolts::tick(Mob &p) {
   if (targets.empty())
     return void(cd = 0.2f);
   cd = (level >= 4 ? 1.8f : 2.4f) * p.haste * pace;
-  float dmg = (16.0f + 6 * at(level, 3)) * p.might * power;
+  float dmg = (36.0f + 14 * at(level, 3)) * p.might * power;
   for (Mob *e : targets) {
     double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x);
     p.level

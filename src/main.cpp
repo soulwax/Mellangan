@@ -15,6 +15,7 @@
 #include "Version.hpp"
 #include "item/loot/Loot.hpp"
 #include "item/loot/Vendor.hpp"
+#include "item/WeaponLab.hpp"
 #include "other/Ouroboros.hpp"
 
 static std::string initLogging(const std::string &base) {
@@ -102,6 +103,8 @@ static int runHeadless(int argc, char **argv) {
       return mapBiomes(argv[i + 1]);
     else if (std::string_view(argv[i]) == "--loot-sim" && i + 1 < argc)
       return lootSim(std::atoi(argv[i + 1]), i + 2 < argc ? std::atoi(argv[i + 2]) : 20);
+    else if (std::string_view(argv[i]) == "--weapon-lab")
+      return weaponLab(i + 1 < argc ? argv[i + 1] : nullptr);
     else if (std::string_view(argv[i]) == "--vendor-sim")
       return vendorSim(i + 1 < argc ? std::atoi(argv[i + 1]) : 30,
                        i + 2 < argc ? std::atoi(argv[i + 2]) : 0, true),

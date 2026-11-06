@@ -12,6 +12,7 @@
 #include "item/Upgrade.hpp"
 #include "level/Level.hpp"
 #include "menu/ClassMenu.hpp"
+#include "menu/UpgradeCard.hpp"
 #include "menu/Recap.hpp"
 #include "meta/Feats.hpp"
 #include "meta/Heat.hpp"
@@ -224,5 +225,47 @@ void testDaily() {
   rng = kept;
   std::cout << "[TEST] Daily: the date fixes the class and a heat of 0-3 for everyone, the arrows "
                "cannot change them, and different days differ: PASS"
+            << std::endl;
+}
+
+void testSynergy() {
+  Rng kept = rng;
+  Game game;
+  game.level = std::make_unique<Level>(game);
+  Player &p = *game.level->player;
+  auto staff = Upgrade::all();
+  const Upgrade *weapon = nullptr, *tonic = nullptr;
+  for (auto &u : staff)
+    if (std::strcmp(u->name, "Arcane Staff") == 0)
+      weapon = u.get();
+    else if (std::strcmp(u->name, "Hourglass Tonic") == 0)
+      tonic = u.get();
+  assert(weapon && tonic);
+  if (Upgrade *held = p.upgrade("Hourglass Tonic"))
+    held->level = 0;
+  bool ready = true;
+  assert(UpgradeCard(weapon, p, false, 0).synergy(ready) == "evolves with Hourglass Tonic" && !ready);
+  if (Upgrade *held = p.upgrade("Arcane Staff"))
+    held->level = 0;
+  assert(UpgradeCard(tonic, p, false, 0).synergy(ready).empty());
+  p.grant("Arcane Staff", 1);
+  assert(UpgradeCard(tonic, p, false, 0).synergy(ready) == "evolves your Arcane Staff" && ready);
+  p.grant("Hourglass Tonic", 1);
+  UpgradeCard(weapon, p, false, 0).synergy(ready);
+  assert(ready);
+  int lonely = 0;
+  for (auto &u : staff) {
+    if (!u->weapon || u->skill || u->rare)
+      continue;
+    bool pairs = false;
+    for (const auto &e : evolutionTable())
+      pairs |= std::strcmp(e[0], u->name) == 0;
+    lonely += !pairs && !u->evolvedName;
+  }
+  assert(lonely == 0);
+  game.level.reset();
+  rng = kept;
+  std::cout << "[TEST] Synergy: weapon cards name their evolution partner and say when you hold it, "
+               "partner cards name the weapon they would evolve, and every weapon has an evolution: PASS"
             << std::endl;
 }

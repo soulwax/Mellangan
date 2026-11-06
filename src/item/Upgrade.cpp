@@ -123,7 +123,23 @@ const char *const EVOLUTIONS[][3] = {
     {"Bramble Wall", "Deep Roots", "Thorn Rampart"},
     {"Clockwork Drone", "Fine Gearing", "Drone Swarm"},
     {"Fate Spiral", "Farsight", "Thread of Doom"},
-    {"Powder Crew", "Sea Legs", "Broadside Crew"}};
+    {"Powder Crew", "Sea Legs", "Broadside Crew"},
+    {"Frost Nova", "Arcane Mind", "Absolute Zero"},
+    {"Meteor", "Hourglass Tonic", "Cataclysm"},
+    {"Piercing Shot", "Fleet Foot", "Heartseeker"},
+    {"Scattershot", "Lodestone", "Hailstorm Volley"},
+    {"Judgement", "Oathbound", "Final Judgement"},
+    {"Crusader Strike", "Ogre Hammer", "Templar's Wrath"},
+    {"Acid Flask", "Distillation", "Corrosive Tide"},
+    {"Transmute", "Lucky Key", "Philosopher's Touch"},
+    {"Chain Lightning", "Conduit", "Storm Chain"},
+    {"Static Field", "Iron Buckler", "Tempest Mantle"},
+    {"Wraith Bolts", "Bloodlust", "Banshee Bolts"},
+    {"Soul Siphon", "Heartroot", "Soul Tithe"},
+    {"Radiance", "Grace", "Halo of Dawn"},
+    {"Aegis", "Troll Blood", "Sanctuary"},
+    {"Whirling Edge", "Keen Eye", "Tempest Waltz"},
+    {"Flurry", "Quicksilver", "Thousand Cuts"}};
 
 struct PassiveDef {
   const char *owner, *name;

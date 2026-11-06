@@ -8,8 +8,8 @@
 
 Staff::Staff()
     : Upgrade("Arcane Staff", atlas::tile(atlas::t::Staff),
-              {"Fires bolts at the nearest foe", "+4 damage, casts faster",
-               "Fires one more bolt", "Bolts pierce one more foe",
+              {"Fires bolts at the nearest foe", "+8 damage, casts faster",
+               "Fires one more bolt", "+8 damage, bolts pierce one more foe",
                "Fires one more bolt"},
               true) {}
 
@@ -27,7 +27,7 @@ void Staff::tick(Mob &p) {
     double dir = std::atan2(e->bodyY() - p.bodyY(), e->x - p.x) + spread;
     p.level
         ->add<Bolt>(p.x, p.bodyY(), std::cos(dir) * 230, std::sin(dir) * 230,
-                    (level >= 2 ? 14.0f : 10.0f) * p.might * power, 1 + at(level, 4),
+                    (10.0f + 8 * at(level, 2) + 8 * at(level, 4)) * p.might * power, 1 + at(level, 4),
                     e->id)
         ->source = this;
   }

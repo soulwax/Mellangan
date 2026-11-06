@@ -35,6 +35,7 @@ public:
 
   int xOffset = 0, yOffset = 0, vw = W, vh = H;
   float w = 1, h = 1, scale = 1, u = 1;
+  bool crisp = false;
 
   ~Screen() { unload(); }
   bool load(const std::string &base);

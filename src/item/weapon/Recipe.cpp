@@ -1,5 +1,7 @@
 #include "item/weapon/Recipe.hpp"
 
+#include <spdlog/fmt/fmt.h>
+
 #include "item/weapon/form/FormBehavior.hpp"
 
 #include "entity/Player.hpp"
@@ -10,7 +12,7 @@ const std::vector<Recipe> RECIPES = {
      0, Form::Bolt, pay::Burn | pay::Pierce, 14, 1.6f, 260, 330, 1,
      {1, 0.55f, 0.2f, 1}, atlas::pt::Ember},
     {"Hoarfrost Fan", "MAGE", "Fans out ice shards that chill foes", "shard", 1,
-     Form::Volley, pay::Chill, 8, 1.8f, 150, 260, 5, {0.6f, 0.85f, 1, 1},
+     Form::Volley, pay::Chill, 22, 1.8f, 150, 260, 5, {0.6f, 0.85f, 1, 1},
      atlas::pt::IceShard},
     {"Arcane Orbit", "MAGE", "Arcane orbs circle you and mark foes", "orb", 2,
      Form::Orbit, pay::Mark, 9, 4.0f, 34, 3.2f, 2, {0.78f, 0.55f, 1, 1},
@@ -22,7 +24,7 @@ const std::vector<Recipe> RECIPES = {
      Form::Field, pay::Pull, 5, 5.0f, 48, 0, 1, {0.55f, 0.3f, 0.95f, 1},
      atlas::pt::Wisp},
     {"Seeker Runes", "MAGE", "Runes hunt foes and split on impact", "rune", 5,
-     Form::Seeker, pay::Split, 11, 2.4f, 240, 150, 2, {0.5f, 0.9f, 1, 1},
+     Form::Seeker, pay::Split, 26, 2.4f, 240, 150, 2, {0.5f, 0.9f, 1, 1},
      atlas::pt::Rune},
     {"Flame Ring", "MAGE", "A ring of fire bursts outward", "ring", 6,
      Form::Nova, pay::Burn, 12, 3.0f, 90, 0, 1, {1, 0.45f, 0.15f, 1},
@@ -46,7 +48,7 @@ const std::vector<Recipe> RECIPES = {
      "phial", 12, Form::Lob, pay::Burn | pay::Mark, 14, 2.6f, 200, 0, 2,
      {0.95f, 0.45f, 0.9f, 1}, atlas::pt::Ember},
     {"Ball Lightning", "STORMCALLER", "Crackling orbs hunt foes and arc onward",
-     "orb", 13, Form::Seeker, pay::Chain, 10, 2.2f, 240, 140, 2,
+     "orb", 13, Form::Seeker, pay::Chain, 28, 2.2f, 240, 140, 2,
      {0.55f, 0.75f, 1, 1}, atlas::pt::Wisp},
     {"Arc Lance", "STORMCALLER", "A bolt lances a line of foes and leaps on",
      "lance", 14, Form::Beam, pay::Chain, 16, 1.8f, 180, 0, 1,
@@ -113,7 +115,7 @@ const std::vector<Recipe> RECIPES = {
     {"Grave Bell", nullptr, "A tolling bell sends nearby foes fleeing", "toll", 35, Form::Nova,
      pay::Fear, 14, 3.2f, 100, 0, 1, {0.8f, 0.82f, 0.9f, 1}, atlas::pt::Puff},
     {"Tidal Ring", nullptr, "Water spirals outward, dragging and chilling foes", "wave", 36,
-     Form::Spiral, pay::Pull | pay::Chill, 18, 2.4f, 110, 150, 4, {0.35f, 0.75f, 0.95f, 1},
+     Form::Spiral, pay::Pull | pay::Chill, 38, 2.4f, 110, 150, 4, {0.35f, 0.75f, 0.95f, 1},
      atlas::pt::Bubble},
     {"Ember Wall", nullptr, "Raises a burning wall that holds foes back", "wall", 37,
      Form::Wall, pay::Burn, 26, 3.6f, 90, 0, 2, {1, 0.5f, 0.2f, 1}, atlas::pt::Ember},
@@ -121,7 +123,7 @@ const std::vector<Recipe> RECIPES = {
      Form::Rain, pay::Explode | pay::Stagger, 14, 3.4f, 210, 0, 2, {0.75f, 0.9f, 1, 1},
      atlas::pt::FallingStar},
     {"Wolf Totem", nullptr, "A totem calls spirit wolves that bleed foes", "wolf", 39,
-     Form::Summon, pay::Bleed, 16, 6.0f, 0, 0, 2, {0.75f, 0.85f, 1, 1}, atlas::pt::Wisp},
+     Form::Summon, pay::Bleed, 16, 2.5f, 0, 0, 2, {0.75f, 0.85f, 1, 1}, atlas::pt::Wisp},
     {"Mirror Shards", nullptr, "Glass shards spiral out, pierce and split apart", "shard", 40,
      Form::Spiral, pay::Split | pay::Pierce, 6, 2.2f, 120, 160, 4, {0.9f, 0.95f, 1, 1},
      atlas::pt::IceShard},
@@ -129,7 +131,7 @@ const std::vector<Recipe> RECIPES = {
      Form::Wall, pay::Mark | pay::Chill, 24, 3.6f, 90, 0, 2, {0.7f, 0.55f, 1, 1},
      atlas::pt::Rune},
     {"Hawk Companion", "RANGER", "Hawks dive on foes and leave them bleeding", "hawk", 42,
-     Form::Summon, pay::Bleed, 8, 6.0f, 0, 0, 2, {0.95f, 0.85f, 0.6f, 1},
+     Form::Summon, pay::Bleed, 8, 2.5f, 0, 0, 2, {0.95f, 0.85f, 0.6f, 1},
      atlas::pt::Feather},
     {"Shield Wall", "KNIGHT", "A wall of shields batters foes back", "wall", 43, Form::Wall,
      pay::Stagger, 26, 3.6f, 90, 0, 2, {0.8f, 0.85f, 0.95f, 1}, atlas::pt::Coin},
@@ -139,7 +141,7 @@ const std::vector<Recipe> RECIPES = {
     {"Storm Whip", "STORMCALLER", "A crackling lash arcs on to nearby foes", "lash", 45,
      Form::Whip, pay::Chain, 10, 1.4f, 76, 0, 1, {0.55f, 0.75f, 1, 1}, atlas::pt::Wisp},
     {"Ghoul Pack", "REAPER", "Ghouls claw at foes and feed on them", "ghoul", 46,
-     Form::Summon, pay::Leech, 20, 6.0f, 0, 0, 2, {0.6f, 0.9f, 0.55f, 1}, atlas::pt::Bone},
+     Form::Summon, pay::Leech, 32, 2.5f, 0, 0, 2, {0.6f, 0.9f, 0.55f, 1}, atlas::pt::Bone},
     {"Sun Spiral", "PRIESTESS", "Motes of sunlight spiral out, burn and mark", "mote", 47,
      Form::Spiral, pay::Burn | pay::Mark, 14, 2.4f, 110, 150, 4, {1, 0.9f, 0.55f, 1},
      atlas::pt::HolyGlint},
@@ -150,12 +152,12 @@ const std::vector<Recipe> RECIPES = {
      Form::Wall, pay::Poison | pay::Stagger, 24, 3.6f, 90, 0, 2, {0.5f, 0.85f, 0.4f, 1},
      atlas::pt::Leaf},
     {"Clockwork Drone", "TINKERER", "Drones hover near you and fire at foes", "drone", 50,
-     Form::Summon, pay::Pierce, 14, 6.0f, 0, 0, 2, {1, 0.8f, 0.45f, 1}, atlas::pt::Coin},
+     Form::Summon, pay::Pierce, 14, 2.5f, 0, 0, 2, {1, 0.8f, 0.45f, 1}, atlas::pt::Coin},
     {"Fate Spiral", "ORACLE", "Runes of fate spiral out, mark and weaken", "rune", 51,
-     Form::Spiral, pay::Mark | pay::Weaken, 14, 2.4f, 110, 150, 4, {0.75f, 0.65f, 1, 1},
+     Form::Spiral, pay::Mark | pay::Weaken, 32, 2.4f, 110, 150, 4, {0.75f, 0.65f, 1, 1},
      atlas::pt::ArcaneStar},
     {"Powder Crew", "CORSAIR", "A powder crew brawls beside you and blows foes apart",
-     "sailor", 52, Form::Summon, pay::Explode, 16, 6.0f, 0, 0, 2, {0.9f, 0.75f, 0.6f, 1},
+     "sailor", 52, Form::Summon, pay::Explode, 16, 2.5f, 0, 0, 2, {0.9f, 0.75f, 0.6f, 1},
      atlas::pt::Puff},
 };
 
@@ -166,7 +168,8 @@ RecipeWeapon::RecipeWeapon(const Recipe &r)
   bool wide = FormBehavior::of(r.form).area();
   text = {r.pitch, fmt::format("+{} damage", add),
           wide ? std::string("+30% radius") : fmt::format("+1 {}", r.unit),
-          "25% faster",
+          r.form == Form::Summon ? std::string("Hardier, 25% faster attacks")
+                                 : std::string("25% faster"),
           wide ? fmt::format("+{} damage, +30% radius", add)
                : fmt::format("+{} damage, +1 {}", add, r.unit)};
   for (int i = 0; i < MAX_LEVEL; i++)

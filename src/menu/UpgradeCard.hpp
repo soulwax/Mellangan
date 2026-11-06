@@ -2,6 +2,8 @@
 
 #include <SDL3/SDL.h>
 
+#include <string>
+
 #include "gfx/Screen.hpp"
 
 class Player;
@@ -11,6 +13,7 @@ class UpgradeCard {
 public:
   UpgradeCard(const Upgrade *up, const Player &p, bool evolving, int index);
   void render(Screen &s, SDL_FRect r, float in, bool selected, float t) const;
+  std::string synergy(bool &ready) const;
 
 private:
   const Upgrade *up;

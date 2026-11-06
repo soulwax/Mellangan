@@ -71,7 +71,10 @@ void Sweep::tick() {
   x = cx + std::cos(angle) * reach;
   y = cy + std::sin(angle) * reach;
   auto cut = [&](Mob &e) {
-    double xd = e.x - x, yd = e.bodyY() - y;
+    double ux = std::cos(angle), uy = std::sin(angle);
+    double ex = e.x - cx, ey = e.bodyY() - cy;
+    double along = std::clamp(ex * ux + ey * uy, 0.0, double(reach));
+    double xd = ex - ux * along, yd = ey - uy * along;
     float r = 13 + e.radius;
     if (xd * xd + yd * yd >= r * r ||
         std::find(hits.begin(), hits.end(), e.id) != hits.end())
@@ -85,7 +88,7 @@ void Sweep::tick() {
   if (hostile)
     cut(*level->player);
   else
-    level->enemiesNear(x, y, 40, [&](Enemy &e) { cut(e); });
+    level->enemiesNear(cx, cy, reach + 40, [&](Enemy &e) { cut(e); });
   trail();
   if (t >= 1)
     remove();

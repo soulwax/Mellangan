@@ -50,6 +50,7 @@ void testFeats();
 void testHeat();
 void testEndless();
 void testDaily();
+void testSynergy();
 void testBlend();
 void testShapeForms();
 void testChampionTraits();

@@ -147,7 +147,7 @@ and fire pools leave a short burn when enemies move away. Afflictions clear on d
 | C (title, pause) | Codex |
 | Gamepad | Left stick or D-pad move (the stick also walks slower when pushed part way), A confirm and class skill, B back, Start pause, Back map (quit to title while paused), X gather or retry, Y inventory or codex, LB show loot, RB settings, LT skill tree or campaign, RT build, L3 drop an item. Hints name pad buttons while you play on the pad |
 | Settings, CONTROLS | Rebind the main keys (saved in `keys.txt`); the arrows, Enter, Esc, 1-4 and Q stay fixed |
-| O (title, pause) | Settings: master, music, effects and ambience volume, screen shake, flashes, particles, damage numbers, a colourblind palette, fullscreen and vsync, kept in `settings.txt` in the save folder |
+| O (title, pause) | Settings: master, music, effects and ambience volume, screen shake, flashes, particles, damage numbers, a colourblind palette, fullscreen, pixel-perfect scaling and vsync, kept in `settings.txt` in the save folder |
 | Esc / P | Pause |
 | F11 | Fullscreen |
 | F3 | FPS counter and frame-time graph |
@@ -269,6 +269,7 @@ effects scene without loading or saving player progress.
   `--biome-map` and `--capture-screenshots` (`Views.hpp`); `main.cpp` maps each flag to its view in one table
 - `src/gfx` – `Screen`, the thin layer over Vulkan2D
 - `res/shaders` – `post.slang` (lighting composite, bloom, tonemap, damage feedback) and `flash.slang` (hit flash)
+- `MellanganApp --weapon-lab [out.csv]` – headless: every weapon at levels 1 to 5 and evolved, alone, for 30 s each in two scenes, 42 standing dummies in four rings and a crowd of 40 knights walking in (about 40 s in Release), printing damage per second per level with notes for levels that add under 5%, weapons far from the median and weak evolutions. It ends with each weapon's level-5 damage against both scenes' medians: standing dummies favour auras and walls, the crowd favours chaining and sweeping weapons. Read it as a relative audit, not final balance
 - `tools/run_report.py [runs.csv] [--mode run|campaign] [--min-runs N]` – summarises the local run log the game appends to `runs.csv` in the save folder after every finished run: dawn rate and median time per class, weapon pick rate and median damage share (flagging any far below the median), the most picked upgrades, causes and times of death, the median level at each minute and time per biome
 - `tools/make_assets.py` – rebuilds `res/atlas.png` from the Kenney sheet plus generated FX sprites
 - `tools/sprite_kit.py`, `tools/make_sprites.py` – procedural pixel painter and the sprite-kit band (trees, shrubs, rocks, tufts); `--preview` renders a catalogue
