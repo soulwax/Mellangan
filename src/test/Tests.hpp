@@ -48,7 +48,6 @@ void testPadRebind();
 void testPalette();
 void testLang();
 void testAdvice();
-void testHints();
 void testRunLog();
 void testFeats();
 void testHeat();

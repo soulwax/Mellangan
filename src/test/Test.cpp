@@ -70,7 +70,6 @@ int runTests() {
   testPalette();
   testLang();
   testAdvice();
-  testHints();
   testRunLog();
   testFeats();
   testHeat();

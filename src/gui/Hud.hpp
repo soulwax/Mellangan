@@ -21,7 +21,6 @@ public:
   void clear();
   void tick(bool running);
   void render(float now, int xv, int yv);
-  const std::string &lesson() const { return hint; }
 
 private:
   struct Pin {
@@ -31,13 +30,10 @@ private:
   Game &game;
   std::deque<std::string> banners;
   std::vector<SDL_FRect> tags;
-  float time = 0, hintTime = 0;
+  float time = 0;
   int xView = 0, yView = 0;
-  std::string hint;
 
   void draw();
-  void teach();
-  void tutor();
   void lootLabels();
   void experience();
   void stats(float top);

@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+
+- The first-run hints. The game no longer explains moving, gems, upgrades, the class skill, dawn, shrines or the map; players find them on their own.
+
 ## [0.6.5] - 2026-11-06
 
 ### Added
