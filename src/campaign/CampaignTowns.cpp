@@ -1,4 +1,7 @@
 #include "campaign/Campaign.hpp"
+#include "hero/Mutation.hpp"
+#include "hero/Affliction.hpp"
+#include "level/Noise.h"
 
 #include <spdlog/fmt/fmt.h>
 
@@ -184,6 +187,13 @@ bool Campaign::founding(int tx, int ty) const {
 void Campaign::restore(Level &level) {
   Player &p = *level.player;
   p.x = x, p.y = y;
+  p.changeling = lineage == 1;
+  for (int m = 0; m < int(Mutation::Count); m++)
+    if (mutations >> m & 1)
+      mutation::grant(p, Mutation(m));
+  for (int a = 0; a < int(Affliction::Count); a++)
+    if (afflictions >> a & 1)
+      affliction::grant(p, Affliction(a));
   p.lvl = lvl, p.exp = exp, p.expNext = expNext, p.gold = gold;
   for (int m = 0; m < MATS; m++)
     p.materials[m] = materials[m];

@@ -3,6 +3,8 @@
 #include "campaign/Quests.hpp"
 #include "hero/Hero.hpp"
 #include "level/Level.hpp"
+#include "hero/Mutation.hpp"
+#include "hero/Affliction.hpp"
 
 #include <spdlog/fmt/fmt.h>
 
@@ -64,6 +66,12 @@ std::string Campaign::save() const {
       out += fmt::format(" {}", v);
     out += "\n";
   }
+  if (lineage)
+    out += fmt::format("lineage {}\n", lineage);
+  if (mutations)
+    out += fmt::format("mutations {}\n", mutations);
+  if (afflictions)
+    out += fmt::format("afflictions {}\n", afflictions);
   if (scrutiny > 0)
     out += fmt::format("scrutiny {:.1f}\n", scrutiny);
   if (dread > 0)
@@ -162,6 +170,12 @@ bool Campaign::load(std::string_view text, Campaign &out) {
       for (int &v : out.rep)
         if (!(words >> v))
           break;
+    } else if (key == "lineage") {
+      words >> out.lineage;
+    } else if (key == "mutations") {
+      words >> out.mutations;
+    } else if (key == "afflictions") {
+      words >> out.afflictions;
     } else if (key == "scrutiny") {
       words >> out.scrutiny;
     } else if (key == "dread")
@@ -173,6 +187,9 @@ bool Campaign::load(std::string_view text, Campaign &out) {
     }
   }
   out.layer = std::clamp(out.layer, 0, 2);
+  out.lineage = std::clamp(out.lineage, 0, 1);
+  out.mutations &= (1u << int(Mutation::Count)) - 1;
+  out.afflictions &= (1 << int(Affliction::Count)) - 1;
   for (int &v : out.rep)
     v = std::clamp(v, -Level::REP_MAX, Level::REP_MAX);
   out.scrutiny = std::isfinite(out.scrutiny) ? std::clamp(out.scrutiny, 0.0f, Level::SCRUTINY_MAX) : 0;

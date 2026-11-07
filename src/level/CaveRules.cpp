@@ -220,7 +220,14 @@ void Level::haunt() {
 }
 
 void Level::guard() {
-  std::erase_if(keepers, [&](const auto &k) { return !get<Enemy>(k.first) && (felled.insert(k.second), true); });
+  std::erase_if(keepers, [&](const auto &k) {
+    if (get<Enemy>(k.first))
+      return false;
+    felled.insert(k.second);
+    if (world::DeepCell d; world::deepCell(int(int32_t(k.second >> 32)), int(int32_t(k.second & 0xFFFFFFFFu)), d))
+      surgeFrom(d.biome);
+    return true;
+  });
   int cx = int(std::floor(double(world::tileOf(player->x)) / world::CAVE_CELL)),
       cy = int(std::floor(double(world::tileOf(player->y)) / world::CAVE_CELL));
   world::DeepCell d;

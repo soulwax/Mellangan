@@ -1,4 +1,6 @@
 #include "entity/Player.hpp"
+#include "hero/Mutation.hpp"
+#include "hero/Affliction.hpp"
 
 #include "gui/Lang.hpp"
 #include "gfx/Palette.hpp"
@@ -58,6 +60,8 @@ void Player::tick() {
     hurt(damage, true);
     return !dead();
   });
+  mutation::tick(*this);
+  affliction::tick(*this);
   if (dead())
     return;
 
@@ -70,9 +74,10 @@ void Player::tick() {
     xd /= dd, yd /= dd;
   int surface = level->surfaceAt(x, y);
   double k = damp(surface == 1 ? 6 : surface == 2 ? 2.5f : 18, DT);
-  float v = speed * level->step * status.movement() *
+  float v = speed * pace * level->step * status.movement() *
             (surface == 1 ? 0.55f : surface == 2 ? 1.05f : 1) *
-            level->climb(x, y, xd, yd) * traits.speed() * level->footing(x, y);
+            level->climb(x, y, xd, yd) * traits.speed() *
+            std::max(level->footing(x, y), mutation::has(*this, Mutation::Gills) ? 1.0f : 0.0f);
   xa += (xd * v - xa) * k;
   ya += (yd * v - ya) * k;
   double px = x, py = y;

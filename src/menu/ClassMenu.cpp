@@ -68,6 +68,10 @@ void ClassMenu::tick() {
     Sound::select.play(0.5f, 0);
     return game.setMenu(std::make_unique<TitleMenu>(game));
   }
+  if (campaign && in.gather.clicked) {
+    game.changelingNext = !game.changelingNext;
+    return Sound::select.play(0.5f, 0, game.changelingNext ? 0.85f : 1.1f);
+  }
   if (campaign && in.restart.clicked) {
     game.hardcoreNext = !game.hardcoreNext;
     return Sound::select.play(0.5f, 0, game.hardcoreNext ? 0.7f : 1.2f);
@@ -226,6 +230,10 @@ void ClassMenu::render(Screen &s) {
     s.textCenter(Screen::fit(line, s.w * 0.6f, small), s.w * 0.69f, s.h - 44 * u, small,
                  (game.heat ? hot : col::muted).alpha(in));
   }
+  if (campaign)
+    s.textCenter(game.input.prompt(game.changelingNext ? lang.lineageChangeling : lang.lineageHale), s.w * 0.69f,
+                 s.h - 56 * u, small,
+                 (game.changelingNext ? Color{0.72f, 0.5f, 1, 1} : col::muted).alpha(in));
   if (campaign)
     s.textCenter(game.hardcoreNext ? game.input.prompt(lang.hardcoreOn)
                                    : game.input.prompt(lang.hardcoreOff),

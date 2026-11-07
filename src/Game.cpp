@@ -51,6 +51,7 @@
 #include "particle/Shockwave.hpp"
 #include "entity/pickup/Chest.hpp"
 #include "particle/Spark.hpp"
+#include "hero/Affliction.hpp"
 
 
 bool Game::init(SDL_Window *w, const std::string &root) {
@@ -240,8 +241,17 @@ bool Game::route() {
 }
 
 std::unique_ptr<Menu> Game::nearby() {
-  if (Elder::near(*level))
+  if (Elder::near(*level)) {
+    Player &p = *level->player;
+    for (int i = 0; i < int(Affliction::Count) && p.gold >= affliction::CURE_GOLD; i++)
+      if (affliction::has(p, Affliction(i))) {
+        affliction::cure(p, Affliction(i));
+        p.gold -= int(affliction::CURE_GOLD);
+        announce(say(lang.afflictCured, tr(AFFLICTIONS[i].name), int(affliction::CURE_GOLD)));
+        break;
+      }
     return std::make_unique<QuestMenu>(*this);
+  }
   if (Waypoint::near(*level) && campaign->towns().size() > 1)
     return std::make_unique<TravelMenu>(*this);
   if (Merchant::near(*level))
@@ -258,10 +268,17 @@ void Game::play() {
     place();
   else if (input.confirm.clicked)
     level->player->cast();
-  if (bool broke = crack(); campaign && !broke)
-    gather();
-  else if (!campaign && !broke)
-    stairs();
+  bool chose = false;
+  if (Level::Offer &o = level->offer; o.tier == 1 && input.gather.clicked)
+    level->accept(0), chose = true;
+  else if (o.tier == 2 && (input.one.clicked || input.two.clicked))
+    level->accept(input.two.clicked ? 1 : 0), chose = true;
+  if (!chose) {
+    if (bool broke = crack(); campaign && !broke)
+      gather();
+    else if (!campaign && !broke)
+      stairs();
+  }
   fall();
   float was = level->time;
   level->tick(), stepped = true;
@@ -329,6 +346,7 @@ void Game::fall() {
   Player &q = *level->player;
   if (float cut = std::min(q.maxHp * FALL, q.hp - 1); cut > 0)
     q.hurt(cut, true);
+  level->upheaval();
   level->quake(q.x, q.y, 70, 0, 8);
   Spark::burst(*level, q.x, q.y - 4, Color{0.55f, 0.5f, 0.45f, 1}, 14, 70, false);
   spdlog::info("run: fell into the deep at tile ({}, {})", world::tileOf(x), world::tileOf(y));
@@ -362,15 +380,6 @@ void Game::devTick() {
   }
 }
 
-namespace {
-uint32_t saltOf(const std::string &code) {
-  uint32_t h = 2166136261u;
-  for (char c : code)
-    h = (h ^ uint8_t(c)) * 16777619u;
-  return code.empty() ? 0 : h | 1;
-}
-} // namespace
-
 std::string Game::worldName() const {
   return worldMode == WorldMode::Classic || seedCode.empty()
              ? std::string("CLASSIC")
@@ -381,7 +390,7 @@ void Game::build() {
   if (level && writes())
     level->surfaceChart().save(chartPath);
   std::string code = worldMode == WorldMode::Classic ? "" : seedCode;
-  noise_reseed(saltOf(code));
+  noise_reseed(seedSalt(code));
   static const char *const DEPTH[] = {"", "-caves", "-deep"};
   std::string depth = DEPTH[int(world::layer())];
   chartPath = saves.dir().empty()

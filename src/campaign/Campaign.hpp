@@ -66,6 +66,9 @@ struct Campaign {
   Edits edits, below[2];
   int layer = 0;
   float dread = 0, scrutiny = 0;
+  int lineage = 0;
+  uint32_t mutations = 0;
+  int afflictions = 0;
   std::array<int, 9> rep{};
   std::set<uint64_t> slain;
   std::vector<entt::entity> waypoints, chests;

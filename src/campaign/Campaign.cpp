@@ -73,7 +73,7 @@ RunRules Campaign::rules() const {
   r.nightLength = NIGHT, r.dayLength = DAY, r.endsAtDawn = false;
   r.loot = true, r.bosses = false, r.town = true, r.omen = -1, r.dayRate = DAY_RATE;
   r.safe.push_back({xTown, yTown, SAFE});
-  r.threat = areaThreat, r.warded = torchlit, r.feuds = true, r.matter = true, r.synod = true, r.sieged = besieged;
+  r.threat = areaThreat, r.warded = torchlit, r.feuds = true, r.matter = true, r.synod = true, r.mutate = true, r.sieged = besieged;
   r.route = bastion::route, r.wall = bastion::wall;
   if (layer) {
     r.sky = false, r.waves = false, r.nightLength = 1e9f, r.dayLength = 0, r.dayRate = 0;
@@ -89,7 +89,8 @@ void Campaign::capture(const Level &level) {
     materials[m] = p.materials[m];
   bag = p.bag, gear = p.gear, worn = p.worn;
   x = p.x, y = p.y, day = level.night.nights, layer = int(world::layer());
-  dread = level.dread, scrutiny = level.scrutiny;
+  dread = level.dread, scrutiny = level.scrutiny, mutations = level.player->mutations,
+  afflictions = level.player->afflictions;
   std::copy(level.rep.begin(), level.rep.end(), rep.begin());
   slain.insert(level.felled.begin(), level.felled.end());
   active = p.skill ? p.skill->name : "";

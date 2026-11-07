@@ -1,4 +1,6 @@
 #include "entity/Faction.hpp"
+#include "hero/Affliction.hpp"
+#include "entity/Player.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "gui/Lang.hpp"
 #include "entity/enemy/Boss.hpp"
@@ -333,7 +335,10 @@ void Enemy::die() {
     level->suspect(Level::SUSPECT_KILL);
   if (level->rules.matter && !garrison) {
     int tx = int(std::floor(x / 16)), ty = int(std::floor((y - 2) / 16));
-    if (factionOf(*this) == Faction::Mycel)
+    bool crowned = affliction::has(*level->player, Affliction::SporeCrown);
+    if (crowned)
+      level->suspect(affliction::SPREAD_SCRUTINY);
+    if (factionOf(*this) == Faction::Mycel || crowned)
       for (int dy = -1; dy <= 1; dy++)
         for (int dx = -1; dx <= 1; dx++)
           level->react(tx + dx, ty + dy, Cause::Spore);

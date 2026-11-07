@@ -62,6 +62,7 @@ private:
   void stairs();
   void passage(const world::Passage &w);
   bool crack();
+  bool offer();
   void arrow(const Pin &pin, float length, float wing, Color c);
   void diamond(const Pin &pin, Color c);
   void tag(const std::string &text, const Pin &pin, float back, Color c);

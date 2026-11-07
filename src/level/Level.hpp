@@ -21,6 +21,7 @@
 #include "level/Chart.hpp"
 #include "level/Edits.hpp"
 #include "level/Matter.hpp"
+#include "hero/Mutation.hpp"
 #include "entity/Faction.hpp"
 #include "level/LightField.hpp"
 #include "level/Night.hpp"
@@ -136,6 +137,19 @@ public:
   void watch();
   void suspect(float by);
   void host(int count);
+  struct Offer {
+    Mutation a = Mutation::Count, b = Mutation::Count;
+    int tier = 0;
+    float time = 0;
+    double x = 0, y = 0;
+  };
+  Offer offer;
+  float linger = 0, whisperCool = 0;
+  void whispers();
+  void surgeFrom(CaveBiome biome);
+  bool upheaval();
+  void accept(int choice);
+  void exposure();
   static bool flares(int rx, int ry, int night, int slot);
   int ignite();
   void feuds();

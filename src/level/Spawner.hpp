@@ -19,7 +19,7 @@ public:
   void horde(float t);
   Enemy *champion(double x, double y);
   static constexpr int WAVES = 6;
-  static constexpr float MINI_GAP = 150, WARD = 0.7f;
+  static constexpr float MINI_GAP = 150, WARD = 0.7f, LEARN_TWICE = 600, ARMS_MASTERY = 1200;
 
 private:
   Level &level;

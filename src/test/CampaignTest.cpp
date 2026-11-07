@@ -27,6 +27,8 @@
 #include "entity/Faction.hpp"
 #include "particle/Arc.hpp"
 #include "entity/enemy/SynodFoe.hpp"
+#include "hero/Mutation.hpp"
+#include "hero/Affliction.hpp"
 #include "level/Noise.h"
 
 namespace {
@@ -1410,4 +1412,276 @@ void testSynod() {
                "scrutiny saves and clamps, a slain member raises it by "
             << Level::SUSPECT_KILL << ", at 50 a patrol of " << patrol << " seeks the hero and at 75 an inquisition of "
             << host << " replaces the horde; the dawn run keeps no scrutiny: PASS" << std::endl;
+}
+
+void testFoeLore() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules rules;
+  rules.spawnRate = 0, rules.waves = false, rules.bosses = false;
+  game.level = std::make_unique<Level>(game, rules);
+  Level &level = *game.level;
+  struct Expect {
+    EnemyKind kind;
+    std::initializer_list<int> skills;
+    std::initializer_list<const char *> arms;
+  };
+  const Expect EXPECT[] = {
+      {EnemyKind::Wolf, {0, 3, 9, 5, 1}, {"Hurled Axe", "Hunter's Bow", "Orbiting Knives"}},
+      {EnemyKind::Skeleton, {10, 12, 14, 19, 16}, {"Arcane Staff", "Frost Nova", "Warding Halo"}},
+      {EnemyKind::Sporeling, {7, 11, 6, 13}, {"Warding Halo", "Arcane Staff"}},
+      {EnemyKind::Thief, {0, 8, 6, 13, 18, 3}, {"Hunter's Bow", "Hurled Axe", "Orbiting Knives"}},
+      {EnemyKind::Penitent, {8, 6, 13, 4, 17}, {"Warding Halo", "Arcane Staff", "Storm Rod"}},
+  };
+  int learned = 0, twice = 0, seen[20]{};
+  for (const Expect &x : EXPECT)
+    for (int i = 0; i < 40; i++) {
+      auto e = Enemy::create(x.kind, 1, 1);
+      e->seed = uint32_t(i * 2654435761u) | 1;
+      assert(e->castCount == 0);
+      e->learn(i % 2 ? 2 : 1);
+      assert(e->castCount == (i % 2 ? 2 : 1));
+      for (int s = 0; s < e->castCount; s++) {
+        int k = e->skill(s);
+        bool fits = false;
+        for (int want : x.skills)
+          fits |= want == k;
+        assert(fits);
+        seen[k]++, learned++;
+      }
+      if (e->castCount == 2) {
+        assert(e->skill(0) != e->skill(1));
+        twice++;
+      }
+      bool armed = false;
+      for (const char *a : x.arms)
+        armed |= std::string_view(a) == e->arms(float(i) / 40);
+      assert(armed);
+    }
+  int varied = 0;
+  for (int k : seen)
+    varied += k > 0;
+  for (int i = 0; i < 60; i++) {
+    auto bat = Enemy::create(EnemyKind::Bat, 1, 1);
+    bat->seed = uint32_t(i * 40503u) | 1;
+    bat->learn(2);
+    for (int s = 0; s < bat->castCount; s++)
+      assert(bat->skill(s) != 1 && bat->skill(s) != 4 && bat->skill(s) != 11 && bat->skill(s) != 17);
+  }
+  level.time = 1300;
+  Player &p = *level.player;
+  Enemy *champ = level.spawner.champion(p.x + 200, p.y);
+  assert(champ);
+  int armLevel = 0;
+  for (auto &u : champ->upgrades)
+    armLevel = std::max(armLevel, u->level);
+  bool family = false;
+  for (float pick : {0.0f, 0.4f, 0.7f, 0.99f})
+    for (auto &u : champ->upgrades)
+      family |= u->level > 0 && std::string_view(u->name) == champ->arms(pick);
+  assert(armLevel == 4 && family && champ->castCount >= 1);
+  game.level.reset();
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Foe lore: " << learned << " skills learned by wolves, skeletons, sporelings, thieves and "
+            << "penitents all come from their family's lore (" << varied << " different skills, " << twice
+            << " foes with two distinct ones); flying bats never take a ground skill; a champion at threat 1300 "
+            << "wields its family's weapon at level " << armLevel << ": PASS" << std::endl;
+}
+
+void testMutations() {
+  Campaign probe;
+  probe.world = "CLASSIC", probe.lineage = 1, probe.mutations = (1u << int(Mutation::Chitin)) | (1u << int(Mutation::Frail));
+  Campaign back;
+  assert(Campaign::load(probe.save(), back) && back.lineage == 1 && back.mutations == probe.mutations);
+  assert(Campaign::load(probe.save() + "lineage 7\nmutations 4294967295\n", back) && back.lineage == 1 &&
+         back.mutations == (1u << int(Mutation::Count)) - 1);
+  uint32_t start = mutation::starting(1234);
+  int body = 0, defects = 0;
+  for (int i = 0; i < int(Mutation::Count); i++)
+    if (start >> i & 1) {
+      assert(!MUTATIONS[i].mind);
+      (MUTATIONS[i].defect ? defects : body)++;
+    }
+  assert(body == 2 && defects == 1 && mutation::starting(1234) == start);
+
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules rules;
+  rules.mutate = true, rules.matter = true, rules.synod = true, rules.spawnRate = 0, rules.waves = false;
+  rules.bosses = false;
+  game.level = std::make_unique<Level>(game, rules);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  for (auto &u : p.upgrades)
+    u->level = 0;
+  float speed = p.speed, hp = p.maxHp, armor = p.armor;
+  mutation::grant(p, Mutation::Chitin);
+  mutation::grant(p, Mutation::HollowBones);
+  mutation::grant(p, Mutation::Quills);
+  mutation::grant(p, Mutation::Chitin);
+  assert(p.armor == armor + 4 && p.maxHp < hp && p.traits.has(Trait::Thorned) &&
+         std::abs(p.speed - speed * 0.92f * 1.12f) < 0.01f);
+
+  mutation::grant(p, Mutation::Kindle);
+  Enemy *rat = level.spawner.spawn(EnemyKind::Rat, p.x + 60, p.y);
+  level.tick();
+  for (int i = 0; i < 60 * 7; i++)
+    level.tick();
+  assert(rat->removed || rat->status.effect(StatusKind::Burn).time > 0 ||
+         level.stuffAt(world::tileOf(rat->x), world::tileOf(rat->y - 2)) == Stuff::Burning);
+  level.each<Enemy>([](Enemy &e) { e.remove(); });
+  Enemy *censer = level.spawner.spawn(EnemyKind::Censer, p.x + 20, p.y);
+  level.tick();
+  float scrutinyBefore = level.scrutiny;
+  int burning = 0;
+  p.mutationTime[int(Mutation::Kindle)] = 0;
+  Enemy *target = level.spawner.spawn(EnemyKind::Rat, p.x + 50, p.y);
+  level.tick();
+  burning = target->status.effect(StatusKind::Burn).time > 0;
+  assert(!burning && level.scrutiny == scrutinyBefore);
+  censer->remove(), target->remove();
+  level.tick();
+
+  p.changeling = true;
+  world::enter(world::Layer::Surface);
+  int bx = 0, by = 0;
+  assert(world::findBiome(BIOME_FUNGAL, bx, by));
+  double fx = bx * 16 + 8.0, fy = by * 16 + 12.0;
+  assert(world::biomeUnder(fx, fy) == BIOME_FUNGAL);
+  p.x = fx, p.y = fy;
+  for (int i = 0; i < 60 * 9; i++)
+    level.tick(), p.x = fx, p.y = fy;
+  assert(level.offer.tier == 1 && level.offer.a == Mutation::SporeSacs);
+  p.x = fx + 400;
+  for (int i = 0; i < 3; i++)
+    level.tick();
+  assert(level.offer.tier == 0 && !mutation::has(p, Mutation::SporeSacs));
+  level.whisperCool = 0, p.x = fx, p.y = fy;
+  for (int i = 0; i < 60 * 9; i++)
+    level.tick(), p.x = fx, p.y = fy;
+  assert(level.offer.tier == 1);
+  level.accept(0);
+  assert(mutation::has(p, Mutation::SporeSacs) && (p.status.immune >> int(StatusKind::Poison) & 1));
+
+  float before = level.scrutiny;
+  level.surgeFrom(CaveBiome::Magma);
+  assert(level.offer.tier == 2 && level.offer.a == Mutation::EmberGlands && level.offer.b == Mutation::Count);
+  level.accept(0);
+  assert(mutation::has(p, Mutation::EmberGlands) && level.scrutiny >= before + mutation::FORCED_SCRUTINY - 0.01f);
+  level.surgeFrom(CaveBiome::Abyss);
+  assert(level.offer.tier == 2);
+  level.offer.time = 0.001f;
+  level.tick();
+  assert(level.offer.tier == 0 &&
+         (mutation::has(p, Mutation::Stormcall) || mutation::has(p, Mutation::Stillness)));
+  int upheavals = 0;
+  for (int i = 0; i < 40; i++)
+    upheavals += level.upheaval();
+  assert(upheavals > 0);
+
+  p.changeling = false;
+  uint32_t had = p.mutations;
+  level.surgeFrom(CaveBiome::Glowcap);
+  for (int i = 0; i < 20; i++)
+    level.upheaval();
+  assert(level.offer.tier == 0 && p.mutations == had);
+  game.level.reset();
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Mutations: lineage and mutations save and clamp; a changeling starts with two body changes and "
+               "a defect; chitin, hollow bones and quills change the body once; kindle burns a foe but censer smoke "
+               "smothers it; lingering in the fungal wood whispers spore sacs, walking off refuses, accepting grants "
+               "poison immunity; a magma surge forces ember glands (kindle, already owned, drops out) and draws the synod's eye, an ignored "
+               "surge chooses itself; the deep's upheavals change a changeling "
+            << upheavals << " times in 40 tries; a hale hero resists them all: PASS" << std::endl;
+}
+
+void testAfflictions() {
+  Campaign probe;
+  probe.world = "CLASSIC", probe.afflictions = (1 << int(Affliction::GlassSkin)) | (1 << int(Affliction::AshLung));
+  Campaign back;
+  assert(Campaign::load(probe.save(), back) && back.afflictions == probe.afflictions);
+  assert(Campaign::load(probe.save() + "afflictions 255\n", back) && back.afflictions == (1 << int(Affliction::Count)) - 1);
+
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules rules;
+  rules.mutate = true, rules.matter = true, rules.synod = true, rules.spawnRate = 0, rules.waves = false;
+  rules.bosses = false;
+  game.level = std::make_unique<Level>(game, rules);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+
+  float armor = p.armor;
+  affliction::grant(p, Affliction::GlassSkin);
+  affliction::grant(p, Affliction::GlassSkin);
+  assert(p.armor == armor + 5 && affliction::ground(p, Stuff::Charged) == 2 && affliction::ground(p, Stuff::Burning) == 1);
+  affliction::cure(p, Affliction::GlassSkin);
+  assert(p.armor == armor && !affliction::has(p, Affliction::GlassSkin));
+  affliction::grant(p, Affliction::FrostBlood);
+  assert((p.status.immune >> int(StatusKind::Chill) & 1) && affliction::ground(p, Stuff::Burning) == 2);
+  mutation::grant(p, Mutation::SporeSacs);
+  affliction::grant(p, Affliction::SporeCrown);
+  affliction::cure(p, Affliction::SporeCrown);
+  assert(p.status.immune >> int(StatusKind::Poison) & 1);
+  affliction::cure(p, Affliction::FrostBlood);
+  assert(!(p.status.immune >> int(StatusKind::Chill) & 1));
+  affliction::grant(p, Affliction::MoonTouched);
+  level.night.dawn = true;
+  level.tick();
+  float day = p.vigor;
+  level.night.dawn = false;
+  level.tick();
+  assert(day < 1 && p.vigor > 1);
+  affliction::cure(p, Affliction::MoonTouched);
+
+  int bx = 0, by = 0;
+  assert(world::findBiome(BIOME_ASHLANDS, bx, by));
+  double ax = bx * 16 + 8.0, ay = by * 16 + 12.0;
+  float before = level.scrutiny;
+  bool warned = false;
+  for (int i = 0; i < 60 * 80 && !affliction::has(p, Affliction::AshLung); i++) {
+    level.tick(), p.x = ax, p.y = ay;
+    warned |= (p.warned >> int(Affliction::AshLung) & 1) != 0;
+  }
+  assert(warned && affliction::has(p, Affliction::AshLung) && level.scrutiny >= before + affliction::CAUGHT_SCRUTINY);
+  assert(p.status.resist[int(StatusKind::Burn)] >= 0.5f && p.pace < 1);
+
+  affliction::grant(p, Affliction::SporeCrown);
+  Enemy *rat = level.spawner.spawn(EnemyKind::Rat, p.x + 80, p.y);
+  level.tick();
+  int rx = world::tileOf(rat->x), ry = world::tileOf(rat->y - 2);
+  rat->strike(1e9f, 0, 1, 0);
+  level.tick();
+  assert(level.stuffAt(rx, ry) == Stuff::Spored);
+
+  p.changeling = false;
+  uint32_t had = p.mutations;
+  int caught = 0;
+  for (int i = 0; i < 80; i++) {
+    uint8_t was = p.afflictions;
+    caught += level.upheaval() && p.afflictions != was;
+  }
+  assert(caught > 0 && p.mutations == had);
+  game.level.reset();
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Afflictions: the save line round-trips and clamps; glass skin armours and doubles shocks and "
+               "cures cleanly; frost blood blocks chill and doubles fire; immunities survive a cure when a mutation "
+               "also grants them; the moon-touched are weaker by day and stronger by night; lingering in the ashlands "
+               "warns, then afflicts with ash lung and draws the synod's eye; a spore-crowned hero's kills seed "
+               "spores; the deep afflicts a hale hero "
+            << caught << " times in 80 falls instead of changing them: PASS" << std::endl;
 }

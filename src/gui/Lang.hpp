@@ -82,6 +82,13 @@ struct Lang {
              *synodPatrols = "THE LANTERN SYNOD SENDS PATROLS AFTER YOU",
              *synodInquisition = "THE SYNOD CALLS AN INQUISITION", *synodBounty = "A PRICE IS ON YOUR HEAD",
              *inquisitionComes = "THE INQUISITION COMES FOR YOU", *scrutinyLine = "SCRUTINY {}",
+             *lineageHale = "E  LINEAGE: HALE, untouched by change",
+             *lineageChangeling = "E  LINEAGE: CHANGELING, the land reshapes you",
+             *whisperFelt = "THE LAND WHISPERS: {}", *whisperPrompt = "E  ACCEPT THE CHANGE: {}",
+             *surgeFelt = "A SURGE OF CHANGE TEARS THROUGH YOU", *surgePrompt = "1  {}     2  {}",
+             *upheavalFelt = "THE DEEP CHANGES YOU: {}", *changed = "YOU CHANGE: {}",
+             *afflictWarn = "SOMETHING STIRS IN YOUR BLOOD: {}", *afflictCaught = "YOU ARE AFFLICTED: {}",
+             *afflictCured = "THE ELDER CURES YOUR {}  -{} GOLD",
              *relight = "E  RELIGHT  {} wood", *takeDown = "E  TAKE DOWN", *gather = "E  {}",
              *bridgeHolds = "THE BRIDGE HOLDS  {} FALLEN", *questLine = "QUEST  {}", *talk = "I  TALK",
              *help = "HELP!", *helpAt = "HELP {:.0f}", *questAt = "QUEST {:.0f}";

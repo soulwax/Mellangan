@@ -174,12 +174,15 @@ public:
   float castTime = 5, wind = 0;
   const Cast *casts = nullptr, *winding = nullptr;
   int castCount = 0;
+  Cast learned[2]{};
   const char *title = nullptr;
   const BossDef *def = nullptr;
   const NamedPack *pack = nullptr;
   int phase = 0;
   void makeBoss(float health, float damage);
-  void learn();
+  void learn(int count = 1);
+  const char *arms(float pick) const;
+  int skill(int slot) const;
   void crown(const char *name);
   void rule(const BossDef &d);
   void enrage();

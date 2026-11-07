@@ -10,6 +10,7 @@
 #include "particle/Spark.hpp"
 #include "Math.hpp"
 #include "entity/Faction.hpp"
+#include "hero/Affliction.hpp"
 
 namespace {
 
@@ -140,12 +141,12 @@ float Level::footing(double x, double y) const {
 void Level::tread(Mob &m, bool boss) {
   Stuff s = stuffAt(world::tileOf(m.x), world::tileOf(m.y - 2));
   if (s == Stuff::Burning) {
-    float power = m.asPlayer() ? game.balance.enemyDamage * HEAT : HEAT * 1.5f;
+    float power = m.asPlayer() ? game.balance.enemyDamage * HEAT * affliction::ground(*m.asPlayer(), s) : HEAT * 1.5f;
     m.afflict(StatusKind::Burn, 1.0f, boss ? power / 2 : power);
   } else if (s == Stuff::Wet && m.status.effect(StatusKind::Burn).time > 0) {
     m.status.end(StatusKind::Burn);
   } else if (s == Stuff::Charged) {
-    float power = m.asPlayer() ? game.balance.enemyDamage * HEAT * 2 : HEAT * 3;
+    float power = m.asPlayer() ? game.balance.enemyDamage * HEAT * 2 * affliction::ground(*m.asPlayer(), s) : HEAT * 3;
     m.status.apply(StatusKind::Burn, 0.5f, boss ? power / 2 : power);
   } else if (s == Stuff::Spored && !mycel(m)) {
     m.status.apply(StatusKind::Poison, 1.0f, m.asPlayer() ? game.balance.enemyDamage * 2 : 3);

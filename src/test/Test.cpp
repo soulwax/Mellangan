@@ -151,6 +151,9 @@ int runTests() {
   testMatter();
   testMatterTable();
   testSynod();
+  testFoeLore();
+  testMutations();
+  testAfflictions();
   testNewFoes();
   testGreenwoodFoes();
   testMarchesFoes();

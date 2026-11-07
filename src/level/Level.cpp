@@ -140,6 +140,8 @@ void Level::tick() {
   caveRules();
   feuds();
   matterTick();
+  whispers();
+  exposure();
   climate();
   weather();
   ambience();

@@ -6,6 +6,7 @@
 
 #include "gui/Lang.hpp"
 #include "campaign/Campaign.hpp"
+#include "hero/Mutation.hpp"
 #include "campaign/Delve.hpp"
 #include "campaign/Harvest.hpp"
 #include "campaign/Quests.hpp"
@@ -24,6 +25,11 @@ void Game::beginCampaign() {
     *campaign = Campaign{};
     campaign->hero = start.hero >= 0 && start.hero < HERO_COUNT ? start.hero : codex.start;
     campaign->hardcore = hardcoreNext;
+    campaign->lineage = changelingNext;
+    uint32_t code = 2166136261u;
+    for (char ch : campaign->world)
+      code = (code ^ uint8_t(ch)) * 16777619u;
+    campaign->mutations = changelingNext ? mutation::starting(code) : 0;
     for (int i = 0; i < 8; i++)
       campaign->world += CODE_CHARS[rng.next() % (sizeof CODE_CHARS - 1)];
   }

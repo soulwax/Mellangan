@@ -33,9 +33,6 @@ const char *const EPITHETS[] = {"THE HOLLOW",   "IRONHIDE",     "BONEGNAW",
                                 "THE UNBOWED",  "OF THE MIRE",  "ASHEN",
                                 "THE PALE",     "STORMBORN",    "THE GLUTTON",
                                 "NIGHTSTRIDER", "THE CROWNED",  "OF MANY SCARS"};
-const char *const ARMS[] = {"Arcane Staff",   "Orbiting Knives", "Frost Nova",
-                            "Chain Lightning", "Hurled Axe",      "Hunter's Bow",
-                            "Warding Halo",   "Storm Rod"};
 bool crownable(EnemyKind k) {
   return k < EnemyKind::Mimic && k != EnemyKind::Cyclops && k != EnemyKind::Thief &&
          k != EnemyKind::Skeleton && k != EnemyKind::Alpha;
@@ -314,7 +311,8 @@ Enemy *Spawner::champion(double x, double y) {
                                      EPITHETS[rng.irange(0, int(std::size(EPITHETS)) - 1)]));
   e->crown(level.titles.back().c_str());
   e->might = 0.5f, e->haste = 1.6f;
-  e->grant(ARMS[rng.irange(0, int(std::size(ARMS)) - 1)], 2);
+  float t = level.threatAt(x, y);
+  e->grant(e->arms(rng.range(0, 1)), 2 + (t >= LEARN_TWICE) + (t >= ARMS_MASTERY));
   level.bossIds.push_back(e->id);
   return e;
 }
@@ -361,7 +359,7 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
       rng.chance((b.eliteBase + t / b.eliteRamp) * level.eliteMul)) {
     e->makeElite(b.eliteHp);
     if (rng.chance(o.skilled))
-      e->learn();
+      e->learn(t >= LEARN_TWICE ? 2 : 1);
   }
   Enemy *made = e.get();
   Entity *added = level.add(std::move(e));

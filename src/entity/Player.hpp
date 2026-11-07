@@ -24,6 +24,12 @@ public:
   std::array<bool, GEAR> worn{};
   std::array<int, GEAR> gearLevels{};
   int lvl = 1, pendingLevels = 0, pendingTreasures = 0, revives = 0;
+  uint32_t mutations = 0;
+  float mutationTime[32]{};
+  bool changeling = false;
+  uint8_t afflictions = 0, warned = 0;
+  float exposure[8]{}, pace = 1, vigor = 1;
+  float power() const override { return Mob::power() * vigor; }
   const char *felledBy = nullptr;
   float exp = 0, expNext = 5, xpBase = 6, xpGrowth = 1.08f;
   bool god = false;

@@ -28,6 +28,13 @@ inline std::string clockText(float t) {
 
 inline constexpr char CODE_CHARS[] = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+inline uint32_t seedSalt(std::string_view code) {
+  uint32_t h = 2166136261u;
+  for (char c : code)
+    h = (h ^ uint8_t(c)) * 16777619u;
+  return code.empty() ? 0 : h | 1;
+}
+
 namespace world {
 enum class Layer : uint8_t;
 } // namespace world
@@ -58,7 +65,7 @@ public:
   Hud hud{*this};
   Codex codex;
   float best = 0;
-  bool beatBest = false, wantsCampaign = false, hardcoreNext = false, readOnly = false;
+  bool beatBest = false, wantsCampaign = false, hardcoreNext = false, changelingNext = false, readOnly = false;
   std::unique_ptr<Campaign> campaign;
 
   bool init(SDL_Window *window, const std::string &base);

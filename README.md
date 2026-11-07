@@ -293,12 +293,19 @@ effects scene without loading or saving player progress.
 - `tools/make_winter.py` – adds the frosted winter band to `res/atlas.png` (also run by `make_assets.py`)
 - `tools/make_masonry.py` – adds the masonry band: Tiny Town building rows recoloured as sandstone, frost, moss and ash for biome-themed structures (also run by `make_assets.py`)
 - `tools/make_arsenal.py` – paints recipe weapon and skill icons into the arsenal band (chained by `make_expansion.py` and `make_assets.py`); `--preview out.png` writes them at 8x
-- `tools/biome_viewer` – standalone `BiomeViewer` window showing the whole generated world (biome colours shaded by
-  height, water, structure sites) for a seed. Build it on demand with `cmake --build build --target BiomeViewer`
-  (Release is about six times faster). Refresh or R rolls a new seed, 0 shows the classic world, +/- or the wheel
-  zoom from 1 to 32 tiles per pixel, C copies the map to the clipboard as PNG, S saves `biomes-<seed>-x<zoom>.png`,
-  T toggles structure dots, and hovering shows the biome and height under the cursor.
-  `BiomeViewer [--seed HEX] --png out.png` writes one map without a window
+- `tools/biome_viewer` – standalone `BiomeViewer` window showing any world seed on all three layers. The surface
+  shows biomes shaded by height with cliff relief, water, ice, stairs, sites coloured by kind and cave mouths. The
+  caves show cave biomes, rock, pools, lava, chasms, vaults, guardians' hearts, mouths and stairs down. The deep
+  shows its biomes, lairs, landings and the ways back up. Build it on demand with
+  `cmake --build build --config Release --target BiomeViewer` or `scons mode=release viewer` (Release is about six
+  times faster). Maps sharpen in coarse-to-fine passes, because world generation sampled sparsely is slow, so expect
+  under 2 s for a full rough map and up to a minute for full detail. Seeds are the game's codes: R or Refresh rolls
+  a random 8-character code, D or Daily the daily seed, 0 or Classic the classic world, Enter types a code.
+  1/2/3 or Tab switch the layer, +/- or the wheel zoom (1–32 tiles per pixel on the surface, up to 8 underground,
+  sites from 8), drag or the arrows pan, Home returns to spawn, C copies the map as PNG, S saves
+  `world-<seed>-<layer>-x<zoom>.png`, T toggles markers, and hovering names the tile, biome, terrain or marker.
+  `BiomeViewer [--seed CODE] [--layer surface|caves|deep] [--at X,Y] [--zoom N] --png out.png` writes one map without
+  a window
 - `tools/footprint_preview.py` – composes a dumped structure footprint (ground and props) into a preview PNG
 - `tools/building_preview.py` – composes Tiny Town tile rows into a preview PNG, used to design buildings outside the game
 

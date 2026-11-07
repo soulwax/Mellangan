@@ -34,6 +34,22 @@ void Hud::passage(const world::Passage &w) {
         Color{0.75f, 0.8f, 0.95f, 1});
 }
 
+bool Hud::offer() {
+  const Level::Offer &o = game.level->offer;
+  if (!o.tier || game.menu)
+    return false;
+  Color tone{0.78f, 0.6f, 1, 1};
+  if (o.tier == 1) {
+    plate(game.level->player->x, game.level->player->y - 30,
+          game.input.prompt(say(lang.whisperPrompt, tr(MUTATIONS[int(o.a)].name))), tone);
+    return true;
+  }
+  std::string b = o.b == Mutation::Count ? std::string() : tr(MUTATIONS[int(o.b)].name);
+  plate(game.level->player->x, game.level->player->y - 30,
+        say(lang.surgePrompt, tr(MUTATIONS[int(o.a)].name), b), tone);
+  return true;
+}
+
 bool Hud::crack() {
   int tx, ty;
   if (!world::edits || !world::crackNear(game.level->player->x, game.level->player->y, tx, ty))
@@ -44,7 +60,7 @@ bool Hud::crack() {
 
 void Hud::stairs() {
   world::Passage w;
-  if (game.campaign || game.menu || crack())
+  if (game.campaign || game.menu || offer() || crack())
     return;
   if (world::passageNear(game.level->player->x, game.level->player->y, w))
     passage(w);
@@ -81,7 +97,7 @@ void Hud::handwork() {
                             ? say(lang.caveIn, c->delve.inside(l))
                             : say(lang.delveFloor, c->delve.floor, Delve::FLOORS, c->delve.inside(l));
     s.textCenter(depth, s.w / 2, 70 * u, small, Color{0.9f, 0.75f, 0.5f, 0.9f});
-  } else if (crack()) {
+  } else if (offer() || crack()) {
     return;
   } else if (world::Passage w; world::passageNear(l.player->x, l.player->y, w)) {
     return passage(w);

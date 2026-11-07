@@ -163,6 +163,14 @@ for shader in sorted(glob.glob('res/shaders/*.slang')):
                           f'"{SLANGC}" $SOURCE -target spirv -profile glsl_450 -entry PixelShader '
                           '-stage fragment -o $TARGET')
 
+base.VariantDir(f'{OUT}/obj/tools', 'tools', duplicate=0)
+viewer_objects = [o for p, o in zip(cpp_files, objects) if p != 'src/main.cpp'] + objects[len(cpp_files):]
+viewer_main = app.Object(f'{OUT}/obj/tools/biome_viewer/main.cpp')
+app.Requires(viewer_main, sdl)
+viewer = app.Program(f'{BIN}/BiomeViewer', viewer_objects + [viewer_main], PDB=f'{BIN}/BiomeViewer.pdb',
+                     LINKFLAGS=[f for f in app['LINKFLAGS'] if not f.startswith('/SUBSYSTEM')] + ['/SUBSYSTEM:CONSOLE'])
+Alias('viewer', viewer)
+
 game = Alias('mellangan', [exe, assets])
 Default(game)
 run_tests = Alias('test', game, f'"{BIN}/MellanganApp.exe" --test')
