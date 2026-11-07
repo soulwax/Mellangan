@@ -221,12 +221,13 @@ private:
   int solidX = 0, solidY = 0;
   std::unordered_set<uint64_t> visits;
 
-  float burnTime = 0, bountyTime = 0;
+  float burnTime = 0, bountyTime = 0, ventTime = 3, raiseTime = 10;
 
   void flush();
   void explore();
   void climate();
   void hunt();
+  void caveRules();
   void weather();
   void ambience();
   void buildGrid();

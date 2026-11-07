@@ -1,0 +1,59 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "ninja",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/cmake-build-${presetName}",
+      "architecture": { "value": "x64", "strategy": "external" },
+      "toolset": { "value": "host=x64", "strategy": "external" },
+      "vendor": { "jetbrains.com/clion": { "toolchain": "Visual Studio" } }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "inherits": "ninja",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "ninja",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "RelWithDebInfo",
+      "inherits": "ninja",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "asan",
+      "displayName": "Debug + ASan",
+      "inherits": "ninja",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "MELLANGAN_ASAN": "ON" }
+    },
+    {
+      "name": "vs",
+      "displayName": "Visual Studio 2026 (build/, used by the scripts)",
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/build",
+      "architecture": "x64",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" },
+    { "name": "asan", "configurePreset": "asan" },
+    { "name": "vs-debug", "displayName": "Visual Studio Debug", "configurePreset": "vs", "configuration": "Debug" },
+    { "name": "vs-release", "displayName": "Visual Studio Release", "configurePreset": "vs", "configuration": "Release" }
+  ],
+  "testPresets": [
+    { "name": "debug", "configurePreset": "debug", "output": { "outputOnFailure": true } },
+    { "name": "vs-debug", "configurePreset": "vs", "configuration": "Debug", "output": { "outputOnFailure": true } }
+  ]
+}

@@ -220,3 +220,6 @@ else ()
             COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:Mellangan>/res
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADER_BINARIES} $<TARGET_FILE_DIR:Mellangan>/res/shaders)
 endif ()
+
+enable_testing()
+add_test(NAME tests COMMAND Mellangan --test)

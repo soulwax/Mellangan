@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Mellangan (dev)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${command:cmake.launchTargetPath}",
+      "args": ["--dev"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "osx": { "type": "lldb" },
+      "linux": { "type": "lldb" }
+    },
+    {
+      "name": "Mellangan tests",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${command:cmake.launchTargetPath}",
+      "args": ["--test"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "osx": { "type": "lldb" },
+      "linux": { "type": "lldb" }
+    }
+  ]
+}

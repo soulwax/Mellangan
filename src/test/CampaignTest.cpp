@@ -14,6 +14,7 @@
 #include "entity/Player.hpp"
 #include "entity/Workbench.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "entity/enemy/Hazard.hpp"
 #include "item/Upgrade.hpp"
 #include "item/loot/Loot.hpp"
 #include "level/Edits.hpp"
@@ -324,4 +325,103 @@ void testCaveTravel() {
             << steps / 60.0 << " s, all " << blockedTiles
             << " tiles whose straight line meets rock steer downhill, the hero keeps level " << lvl
             << ", and climbs back out with the cave's edits kept: PASS" << std::endl;
+}
+
+namespace {
+
+bool caveOf(CaveBiome want, world::CaveCell &out) {
+  for (int r = 0; r < 40; r++)
+    for (int cy = -r; cy <= r; cy++)
+      for (int cx = -r; cx <= r; cx++)
+        if ((std::abs(cx) == r || std::abs(cy) == r) && world::caveCell(cx, cy, out) &&
+            out.biome == want)
+          return true;
+  return false;
+}
+
+} // namespace
+
+void testCaveRules() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  Game game;
+  game.campaign = std::make_unique<Campaign>();
+  Campaign &c = *game.campaign;
+  c.world = "CLASSIC", c.hero = 0;
+  game.worldMode = WorldMode::Classic, game.seedCode.clear();
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Surface);
+  game.level = std::make_unique<Level>(game, c.rules());
+  c.enter(*game.level);
+  world::CaveCell vents{}, crypt{};
+  assert(caveOf(CaveBiome::Vents, vents) && caveOf(CaveBiome::Catacombs, crypt));
+
+  game.travel(world::Layer::Caves, vents.mx[0] * 16 + 8.0, vents.my[0] * 16 + 12.0);
+  int lx = 0, ly = 0;
+  bool hot = false;
+  for (int y = vents.cy * world::CAVE_CELL; y < (vents.cy + 1) * world::CAVE_CELL && !hot; y++)
+    for (int x = vents.cx * world::CAVE_CELL; x < (vents.cx + 1) * world::CAVE_CELL && !hot; x++)
+      if (world::isLava(x, y))
+        lx = x, ly = y, hot = true;
+  assert(hot);
+  Level *below = game.level.get();
+  below->rules.spawnRate = 0;
+  Player *p = below->player;
+  p->god = true;
+  for (auto &u : p->upgrades)
+    u->level = 0;
+  int blasts = 0, near = 0;
+  for (int i = 0; i < 60 * 20; i++) {
+    p->x = lx * 16 + 8.0, p->y = ly * 16 + 40.0;
+    size_t before = below->particles.size();
+    below->tick();
+    for (size_t k = before; k < below->particles.size(); k++)
+      if (auto *b = dynamic_cast<Blast *>(below->particles[k].get()); b && b->by &&
+          std::string_view(b->by) == "an erupting vent") {
+        blasts++;
+        int bx = world::tileOf(b->x), by = world::tileOf(b->y);
+        assert(world::isLava(bx, by));
+        near += std::abs(bx - lx) <= 10 && std::abs(by - ly) <= 10;
+      }
+  }
+  assert(blasts >= 4 && blasts <= 9 && near == blasts);
+
+  game.travel(world::Layer::Surface, vents.mx[0] * 16 + 8.0, vents.my[0] * 16 + 12.0);
+  game.travel(world::Layer::Caves, crypt.mx[0] * 16 + 8.0, crypt.my[0] * 16 + 12.0);
+  below = game.level.get();
+  below->rules.spawnRate = 0;
+  p = below->player;
+  p->god = true;
+  for (auto &u : p->upgrades)
+    u->level = 0;
+  int risen = 0, quiet = 0;
+  for (int i = 0; i < 60 * 30; i++) {
+    p->x = crypt.hx * 16 + 8.0, p->y = crypt.hy * 16 + 8.0;
+    int skeletons = 0;
+    below->each<Enemy>([&](Enemy &e) { skeletons += e.is(EnemyKind::Skeleton); });
+    below->tick();
+    int after = 0;
+    below->each<Enemy>([&](Enemy &e) { after += e.is(EnemyKind::Skeleton); });
+    risen += std::max(0, after - skeletons);
+  }
+  game.travel(world::Layer::Surface, crypt.mx[0] * 16 + 8.0, crypt.my[0] * 16 + 12.0);
+  for (int i = 0; i < 60 * 20; i++) {
+    size_t before = game.level->particles.size();
+    game.level->tick();
+    for (size_t k = before; k < game.level->particles.size(); k++)
+      if (auto *b = dynamic_cast<Blast *>(game.level->particles[k].get()); b && b->by &&
+          std::string_view(b->by) == "an erupting vent")
+        quiet++;
+  }
+  assert(risen >= 2 && risen <= 8 && quiet == 0);
+  c.leave();
+  game.campaign.reset();
+  game.level.reset();
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Cave rules: " << blasts << " vent eruptions in 20 s, all on lava within reach, and "
+            << risen << " skeletons rose from the catacomb graves in 30 s: PASS" << std::endl;
 }

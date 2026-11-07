@@ -135,6 +135,7 @@ void Level::tick() {
     Merchant::visit(*this);
   if (!player->dead() && (!night.dawn || rules.dayRate > 0))
     spawner.tick(), explore(), hunt();
+  caveRules();
   climate();
   weather();
   ambience();
