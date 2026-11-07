@@ -1,5 +1,12 @@
 # Mellangan
 
+[![CI](https://github.com/soulwax/Mellangan/actions/workflows/ci.yml/badge.svg)](https://github.com/soulwax/Mellangan/actions/workflows/ci.yml)
+[![C99](https://img.shields.io/badge/C-99-blue.svg)](https://en.cppreference.com/w/cpp/20)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+[![Vulkan 1.3](https://img.shields.io/badge/Vulkan-1.3-orange.svg)](https://www.khronos.org/vulkan/)
+[![SDL 3.4](https://img.shields.io/badge/SDL3.4-lightgrey.svg)](https://www.libsdl.org/)
+![EnTT 3.11](https://img.shields.io/badge/EnTT-3.11-lightgrey.svg)
+
 Linux support is coming. macOS on Apple Silicon builds as a native app.
 
 The programming paradigm is "C with classes": that means the game is written in C++20 and might feel like C++ but the code is structured to use C idioms.
