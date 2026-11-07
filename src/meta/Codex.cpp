@@ -1,10 +1,14 @@
 #include "meta/Codex.hpp"
 
+#include "hero/Hero.hpp"
+#include "meta/Heat.hpp"
 #include "meta/Saves.hpp"
 
 #include <spdlog/fmt/fmt.h>
 
+#include <algorithm>
 #include <bit>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 
@@ -51,6 +55,11 @@ bool Codex::parse(std::string_view text) {
     if (std::sscanf(f + 6, "%llu", &bits) == 1)
       feats = bits;
   }
+  start = std::clamp(start, 0, HERO_COUNT - 1), heat = std::clamp(heat, 0, HEAT_MAX);
+  runs = std::max(runs, 0), dawns = std::max(dawns, 0), bestStreak = std::max(bestStreak, 0);
+  shrines = std::max(shrines, 0);
+  for (float *t : {&bestTime, &bestEndless})
+    *t = std::isfinite(*t) ? std::max(*t, 0.0f) : 0.0f;
   return true;
 }
 

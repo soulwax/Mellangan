@@ -48,6 +48,7 @@ void testRebind();
 void testPadRebind();
 void testPalette();
 void testLang();
+void testSaveFuzz();
 void testAdvice();
 void testRunLog();
 void testFeats();

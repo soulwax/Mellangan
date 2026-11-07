@@ -65,6 +65,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Fixed
 
+- A damaged save can no longer crash the game: an out-of-range class or heat in the codex, act, quest, hero, level or negative counts in a campaign save, and an unknown site kind in a world chart are clamped or dropped on load instead of indexing past the end of a table.
 - Bastion sentries no longer walk through the town walls, and their shoulder-barge can no longer push a foe hugging the outside of a wall in through it. A wolf could slip inside that way.
 - Reaper's Scythe, Whirling Edge, Riposte and the sweeping foe strikes cut along the whole blade instead of only at its tip, so foes pressed against you are no longer missed and the "Longer reach" levels no longer lower their damage against a crowd.
 - The death and dawn screens no longer draw the HUD behind them, where the night clock ran into "YOU HAVE FALLEN".

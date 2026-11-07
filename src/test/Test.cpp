@@ -69,6 +69,7 @@ int runTests() {
   testPadRebind();
   testPalette();
   testLang();
+  testSaveFuzz();
   testAdvice();
   testRunLog();
   testFeats();
