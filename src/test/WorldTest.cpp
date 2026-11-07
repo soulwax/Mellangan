@@ -452,7 +452,7 @@ void testCaveBiomes() {
             assert(!world::isIce(x, y) || d.pool == CavePool::Ice);
             lava += hot, ice += world::isIce(x, y);
             Sprite g = world::groundTile(x, y);
-            if (!hot && !wet) {
+            if (!hot && !wet && !world::isChasm(x, y)) {
               bool own = false;
               for (const Sprite &f : d.floor)
                 own |= f.x == g.x && f.y == g.y;
@@ -466,12 +466,124 @@ void testCaveBiomes() {
     world::enter(world::Layer::Surface);
   }
   noise_reseed(salt);
-  for (int b = 0; b < int(CaveBiome::Count); b++)
+  for (int b = 0; b < CAVE_SHALLOW; b++)
     assert(seen[b] > 0 && props[b] > 0 && CAVES[b].foes);
   assert(lava > 0 && ice > 0);
   std::cout << "[TEST] Cave biomes:";
-  for (int b = 0; b < int(CaveBiome::Count); b++)
+  for (int b = 0; b < CAVE_SHALLOW; b++)
     std::cout << " " << CAVES[b].name << " " << seen[b];
   std::cout << "; " << lava << " lava and " << ice
             << " ice tiles; every floor tile, pool and prop belongs to its own cave: PASS" << std::endl;
+}
+
+void testDeep() {
+  uint32_t salt = noise_salt;
+  constexpr int R = 4, C = world::CAVE_CELL, W = 2 * R * C;
+  int biomes[int(CaveBiome::Count)]{}, ways[6]{}, landings = 0, falls = 0;
+  long floor = 0;
+  for (uint32_t seed : {0u, 17u, 8675309u}) {
+    noise_reseed(seed);
+    int x0 = -R * C, y0 = -R * C;
+    struct Spot {
+      int x, y;
+    };
+    std::vector<Spot> chasm;
+    world::enter(world::Layer::Caves);
+    for (int cy = -R; cy < R; cy++)
+      for (int cx = -R; cx < R; cx++)
+        if (world::CaveCell c; world::caveCell(cx, cy, c) && c.kind == world::CaveKind::Descent) {
+          assert(world::isChasm(c.px, c.py));
+          for (int y = c.py - 3; y <= c.py + 3; y++)
+            for (int x = c.px - 3; x <= c.px + 3; x++)
+              if (world::isChasm(x, y))
+                chasm.push_back({x, y});
+        }
+    world::enter(world::Layer::Deep);
+    world::DeepCell first, again;
+    world::deepCell(0, 0, first);
+    std::vector<uint8_t> open(W * W), seen(W * W);
+    long total = 0;
+    for (int y = 0; y < W; y++)
+      for (int x = 0; x < W; x++)
+        total += open[y * W + x] = !world::isRock(x0 + x, y0 + y);
+    world::deepCell(0, 0, again);
+    assert(again.size == first.size && again.hx == first.hx && again.hy == first.hy && again.way == first.way &&
+           again.biome == first.biome && again.size > 0);
+    int start = (first.hy - y0) * W + first.hx - x0;
+    std::vector<int> queue{start};
+    seen[start] = 1;
+    for (size_t q = 0; q < queue.size(); q++) {
+      int i = queue[q] % W, j = queue[q] / W;
+      constexpr int D[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+      for (const auto &d : D) {
+        int ni = i + d[0], nj = j + d[1];
+        if (ni >= 0 && nj >= 0 && ni < W && nj < W && open[nj * W + ni] && !world::isLava(x0 + ni, y0 + nj) &&
+            !seen[nj * W + ni])
+          seen[nj * W + ni] = 1, queue.push_back(nj * W + ni);
+      }
+    }
+    long dry = 0;
+    for (int k = 0; k < W * W; k++)
+      dry += open[k] && !world::isLava(x0 + k % W, y0 + k / W);
+    floor += total;
+    std::cout << "[TEST]   deep seed " << seed << ": " << total << " open, " << dry << " off lava, " << queue.size()
+              << " reached from the heart" << std::endl;
+    for (const Spot &s : chasm) {
+      assert(!world::isRock(s.x, s.y) && !world::isLava(s.x, s.y) && !world::isWater(s.x, s.y) &&
+             seen[(s.y - y0) * W + s.x - x0]);
+      falls++;
+    }
+    std::vector<world::DeepCell> up;
+    for (int cy = -R; cy < R; cy++)
+      for (int cx = -R; cx < R; cx++) {
+        world::DeepCell d;
+        assert(world::deepCell(cx, cy, d));
+        assert(world::caveBiomeAt(d.hx, d.hy) == d.biome && int(d.biome) >= CAVE_SHALLOW);
+        assert(seen[(d.hy - y0) * W + d.hx - x0]);
+        biomes[int(d.biome)]++;
+        landings += d.landing;
+        if (d.way == world::Way::None)
+          continue;
+        ways[int(d.way)]++;
+        assert(!world::isRock(d.wx, d.wy) && !world::isLava(d.wx, d.wy) && !world::isWater(d.wx, d.wy) &&
+               seen[(d.wy - y0) * W + d.wx - x0]);
+        world::Passage w;
+        assert(world::passageNear(d.wx * 16 + 8.0, d.wy * 16 + 12.0, w) && w.way == d.way &&
+               w.to == (d.way == world::Way::Sinkhole ? world::Layer::Surface : world::Layer::Caves));
+        up.push_back(d);
+      }
+    assert(long(queue.size()) == dry);
+    world::enter(world::Layer::Caves);
+    for (const world::DeepCell &d : up)
+      if (d.way != world::Way::Sinkhole) {
+        assert(!world::isRock(d.wx, d.wy) && !world::isWater(d.wx, d.wy) && !world::isLava(d.wx, d.wy));
+        world::Passage w;
+        bool stair = world::passageNear(d.wx * 16 + 8.0, d.wy * 16 + 12.0, w) && w.to == world::Layer::Deep;
+        assert(stair == (d.way == world::Way::Stair));
+      }
+    world::enter(world::Layer::Surface);
+    for (const world::DeepCell &d : up)
+      if (d.way == world::Way::Sinkhole)
+        assert(!world::isWater(d.wx, d.wy));
+  }
+  world::enter(world::Layer::Deep);
+  for (int cy = -14; cy < 14; cy++)
+    for (int cx = -14; cx < 14; cx++)
+      if (world::DeepCell d; world::deepCell(cx, cy, d))
+        biomes[int(d.biome)]++, ways[int(d.way)]++;
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  std::cout << "[TEST] The Sundark: " << floor << " open tiles over three seeds, one connected dark in each; " << falls
+            << " chasm tiles all land on open dry floor; ways up: stair " << ways[int(world::Way::Stair)] << ", roots "
+            << ways[int(world::Way::Roots)] << ", chimney " << ways[int(world::Way::Chimney)] << ", sinkhole "
+            << ways[int(world::Way::Sinkhole)] << ";";
+  for (int b = CAVE_SHALLOW; b < int(CaveBiome::Count); b++)
+    std::cout << " " << CAVES[b].name << " " << biomes[b];
+  std::cout << std::endl;
+  for (int b = CAVE_SHALLOW; b < int(CaveBiome::Count); b++)
+    assert(biomes[b] > 0 && CAVES[b].foes);
+  for (world::Way w : {world::Way::Stair, world::Way::Roots, world::Way::Chimney, world::Way::Sinkhole})
+    assert(ways[int(w)] > 0);
+  assert(landings > 0 && falls > 0);
+  std::cout << "[TEST] The Sundark: PASS" << std::endl;
 }

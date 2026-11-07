@@ -137,6 +137,9 @@ int runTests() {
   testChartCorner();
   testCaveBiomes();
   testCaveRules();
+  testDawnCaves();
+  testDeep();
+  testDeepFall();
   testNewFoes();
   testGreenwoodFoes();
   testMarchesFoes();

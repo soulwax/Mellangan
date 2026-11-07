@@ -92,7 +92,7 @@ void Chart::reveal(int cx, int cy) {
       uint8_t &c = p->cell[(y & (PAGE - 1)) * PAGE + (x & (PAGE - 1))];
       if (c & NOW)
         continue;
-      if (world::layer() == world::Layer::Caves && solid(x, y))
+      if (world::layer() != world::Layer::Surface && solid(x, y))
         continue;
       BiomeId b = c ? BiomeId((c & BIOME) - 1)
                     : world::biomeAt(x * CELL + CELL / 2, y * CELL + CELL / 2);

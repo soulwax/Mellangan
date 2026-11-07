@@ -168,8 +168,11 @@ void Spawner::champions() {
 void Spawner::barrel() {
   nextBarrel += 20;
   auto b = std::make_unique<SupplyBarrel>();
-  ring(rng.range(270, 300), b->x, b->y);
-  level.add(std::move(b));
+  for (int tries = 0; tries < 8; tries++) {
+    ring(rng.range(270, 300), b->x, b->y);
+    if (!level.lost(b->x, b->y))
+      return void(level.add(std::move(b)));
+  }
 }
 
 void Spawner::boss() {
@@ -315,7 +318,7 @@ Enemy *Spawner::champion(double x, double y) {
 Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
                       bool boss) {
   std::lock_guard<std::mutex> lock(spawnMutex);
-  if (level.rules.safeAt(x, y) || level.rockAt(x, y))
+  if (level.rules.safeAt(x, y) || level.lost(x, y))
     return nullptr;
   if (!boss && kind != EnemyKind::Shade && level.rules.warded && level.rules.warded(x, y) &&
       rng.chance(WARD))

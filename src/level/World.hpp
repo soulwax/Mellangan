@@ -33,6 +33,24 @@ bool isLava(int x, int y);
 CaveBiome caveBiomeAt(int x, int y);
 bool caveMouth(int x, int y);
 bool caveMouthNear(double x, double y, int &tx, int &ty);
+bool isChasm(int x, int y);
+
+enum class Way : uint8_t { None, Mouth, Stair, Roots, Chimney, Sinkhole };
+struct DeepCell {
+  int cx, cy, size, hx, hy;
+  CaveBiome biome;
+  bool landing;
+  int lx, ly;
+  Way way;
+  int wx, wy;
+};
+bool deepCell(int cx, int cy, DeepCell &out);
+struct Passage {
+  int x, y;
+  Layer to;
+  Way way;
+};
+bool passageNear(double x, double y, Passage &out);
 void openCaves(bool open);
 
 // Floor division: bias negatives by REGION - 1 (sign mask & 19) so truncation

@@ -152,7 +152,7 @@ void Hud::champions() {
 void Hud::merchant() {
   Level &l = *game.level;
   Merchant *m = l.get<Merchant>(l.vendor.merchant);
-  if (!m || game.menu)
+  if (!m || game.menu || l.below())
     return;
   Player &p = *l.player;
   double xs = m->x - p.x, ys = m->y - p.y, tiles = std::sqrt(xs * xs + ys * ys) / 16;

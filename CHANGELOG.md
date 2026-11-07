@@ -8,7 +8,9 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
-- Some caves fight back: the ember vents erupt around you after a brief warning, and in the catacombs the dead climb out of their graves when you linger.
+- The Sundark: a vast, connected dark beneath the caves, with eight regions of its own (the Glowcap Forest, the Black Mere, the Magma Halls, the Crystal Cathedral, the Ossuary Plains, the Lost Halls, the Chasm and the Chitin Hive), each with its own floor, light and foes. Some caves end in a chasm glowing faintly violet: step in and you drop into the Sundark, losing a quarter of your health but never your life, and foes knocked in fall too. The way back is never fixed: old stairs under the catacombs go both ways, roots climb up under the forests, chimneys rise under the ember vents, and sinkholes below the lakes and valleys open straight to the sky. A first visit to each part of the Sundark keeps a chest at its heart.
+- Caves in every run: stone stairs now appear in dawn worlds too. Press E to go down without leaving your run; the night clock keeps ticking, the foes above stay above, your gems follow you, and each cave keeps one chest at its heart for whoever reaches it first. There are no shrines below, so time spent in the dark is time not spent lighting them.
+- Every cave has its own temper: roots erupt across your path in the hollows, loose rock falls in the warrens (more often when the fighting is loud), mushrooms puff poison spores in the spore halls, the ember vents erupt after a brief warning, the dead climb out of the catacomb graves, and the crystal geodes slowly mend you while you stand beside a crystal.
 - Each cave now takes after the land above it: root hollows under the meadows and woods, dripping grottos under the mires, frozen caves with walkable ice under the snow, sandstone warrens under the deserts, glowing spore halls under the fungal wood, ember vents with lava under the ashlands, crystal geodes and catacombs. Each has its own floor, rock, plants and creatures, and the map and banner name it.
 
 ## [0.6.7] - 2026-11-07

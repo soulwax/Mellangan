@@ -101,7 +101,7 @@ void Game::shutdown() {
   if (campaign)
     campaign->leave();
   if (level && writes())
-    level->chart.save(chartPath);
+    level->surfaceChart().save(chartPath);
   if (writes())
     codex.save(saves.dir() + "codex.txt");
   level.reset();
@@ -259,6 +259,9 @@ void Game::play() {
     level->player->cast();
   if (campaign)
     gather();
+  else
+    stairs();
+  fall();
   float was = level->time;
   level->tick(), stepped = true;
   if (int(level->time) != int(was))
@@ -277,6 +280,42 @@ void Game::play() {
     else if ((levelBeat -= DT) <= 0)
       levelBeat = -1, setMenu(LevelUpMenu::open(*this));
   }
+}
+
+std::string Game::placeName() const {
+  if (world::layer() == world::Layer::Surface)
+    return lang.caveSurface;
+  return tr(CAVES[int(world::caveBiomeAt(world::tileOf(level->player->x), world::tileOf(level->player->y)))].name);
+}
+
+void Game::stairs() {
+  world::Passage w;
+  if (!input.gather.clicked || !world::passageNear(level->player->x, level->player->y, w))
+    return;
+  level->shift(w.to, w.x * 16 + 8.0, w.y * 16 + 12.0);
+  snapCamera();
+  spdlog::info("run: to layer {} at tile ({}, {}) at {}", int(w.to), w.x, w.y, clockText(level->time));
+  announce(placeName());
+}
+
+void Game::fall() {
+  Player &p = *level->player;
+  if (p.dead() || !world::isChasm(world::tileOf(p.x), world::tileOf(p.y - 2)))
+    return;
+  double x = p.x, y = p.y;
+  if (campaign) {
+    travel(world::Layer::Deep, x, y);
+  } else {
+    level->shift(world::Layer::Deep, x, y);
+    snapCamera();
+  }
+  Player &q = *level->player;
+  if (float cut = std::min(q.maxHp * FALL, q.hp - 1); cut > 0)
+    q.hurt(cut, true);
+  level->quake(q.x, q.y, 70, 0, 8);
+  Spark::burst(*level, q.x, q.y - 4, Color{0.55f, 0.5f, 0.45f, 1}, 14, 70, false);
+  spdlog::info("run: fell into the deep at tile ({}, {})", world::tileOf(x), world::tileOf(y));
+  announce(lang.chasmFall);
 }
 
 void Game::devTick() {
@@ -323,7 +362,7 @@ std::string Game::worldName() const {
 
 void Game::build() {
   if (level && writes())
-    level->chart.save(chartPath);
+    level->surfaceChart().save(chartPath);
   std::string code = worldMode == WorldMode::Classic ? "" : seedCode;
   noise_reseed(saltOf(code));
   static const char *const DEPTH[] = {"", "-caves", "-deep"};
@@ -362,7 +401,7 @@ void Game::reseed() {
     seedCode = fmt::format("D{:04}{:02}{:02}", d.year, d.month, d.day);
   }
   loadBalance();
-  world::openCaves(false);
+  world::openCaves(true);
   world::enter(world::Layer::Surface);
   build();
   saveWorld();

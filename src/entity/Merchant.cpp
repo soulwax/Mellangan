@@ -21,6 +21,8 @@ int stockLevel(Level &level, double x, double y) {
 void Merchant::onAdded() { level->tag(this); }
 
 void Merchant::tick() {
+  if (level->below())
+    return;
   t += DT;
   Player &p = *level->player;
   if (std::abs(p.x - x) > 2)
@@ -28,6 +30,8 @@ void Merchant::tick() {
 }
 
 void Merchant::render(Screen &s) {
+  if (level->below())
+    return;
   float bob = 1 + 0.03f * std::sin(t * 2.2f);
   s.sprite(atlas::tile(BARREL), xp - facing * 11, yp, 8, 16, 0.8f, 0.8f);
   s.sprite(atlas::tile(TRADER), xp, yp, 8, 16, facing, bob);
@@ -37,10 +41,14 @@ void Merchant::render(Screen &s) {
 }
 
 void Merchant::renderShadow(Screen &s) {
+  if (level->below())
+    return;
   s.sprite(atlas::Shadow, xp, yp + 1, 8, 4, 0.9f, 0.7f);
 }
 
 void Merchant::renderLight(Screen &s) {
+  if (level->below())
+    return;
   float f = flicker(t, 7);
   s.glow(xp + facing * 9, yp - 14, 64 * (0.95f + 0.05f * f), LAMP * 0.35f);
   level->lights.add(x, y, 56, 0.6f * f);
@@ -71,7 +79,7 @@ Merchant *Merchant::camp(Level &level, double x, double y) {
 void Merchant::visit(Level &level) {
   Vendor &v = level.vendor;
   Night &n = level.night;
-  if (const Structure *s = n.lastLit(); s && n.lit != v.camp && !level.rules.town) {
+  if (const Structure *s = n.lastLit(); s && n.lit != v.camp && !level.rules.town && !level.below()) {
     v.camp = n.lit;
     camp(level, s->centerX() + 28, s->centerY() + 12);
     level.game.announce(lang.merchantCamps);
@@ -87,7 +95,7 @@ void Merchant::visit(Level &level) {
 Merchant *Merchant::near(Level &level) {
   Merchant *m = level.get<Merchant>(level.vendor.merchant);
   Player &p = *level.player;
-  if (!m || p.dead())
+  if (!m || p.dead() || level.below())
     return nullptr;
   double xd = m->x - p.x, yd = m->y - p.y, d2 = xd * xd + yd * yd;
   if (Workbench *b = level.get<Workbench>(level.vendor.bench)) {

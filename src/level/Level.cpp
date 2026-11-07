@@ -140,7 +140,7 @@ void Level::tick() {
   weather();
   ambience();
   buildGrid();
-  if (!player->dead() && !night.dawn)
+  if (!player->dead() && !night.dawn && rules.sky)
     events.tick(*this);
   prof_end(PROF_HOUSEKEEP);
   prof_begin(PROF_THINK);

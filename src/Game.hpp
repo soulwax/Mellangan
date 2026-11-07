@@ -71,6 +71,7 @@ public:
   }
   void newGame(bool reroll = true);
   void travel(world::Layer to, double x, double y);
+  void fall();
   void toTitle();
   void reseed();
   void snapCamera();
@@ -102,7 +103,7 @@ private:
   bool menuChanged = false, showFps = false, worldDebug = false;
   float time = 0, hurt = 0, fps = 0, freeze = 0,
         lastStop = -1, levelBeat = -1, autosave = Campaign::AUTOSAVE, gatherTime = 0;
-  static constexpr float GATHER_REPEAT = 0.3f;
+  static constexpr float GATHER_REPEAT = 0.3f, FALL = 0.25f;
   RunRules dawnRules;
   std::string chartPath;
   Camera camera;
@@ -122,6 +123,8 @@ private:
   void play();
   void place();
   void gather();
+  void stairs();
+  std::string placeName() const;
   void keep();
   void bankLevels();
   void build();

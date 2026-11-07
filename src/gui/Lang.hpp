@@ -71,6 +71,9 @@ struct Lang {
              *delveFloor = "DELVE  FLOOR {}/{}  {} FOES", *delveMine = "E  DELVE INTO THE MINE",
              *caveDown = "E  CLIMB DOWN INTO THE CAVE", *caveUp = "E  CLIMB BACK UP",
              *caveDepths = "THE CAVES", *caveSurface = "BACK UNDER THE SKY",
+             *deepDepths = "THE SUNDARK", *stairDown = "E  DESCEND THE OLD STAIR",
+             *climbRoots = "E  CLIMB THE ROOTS", *rideChimney = "E  RIDE THE CHIMNEY UP",
+             *climbLight = "E  CLIMB TOWARD THE DAYLIGHT", *chasmFall = "YOU FALL INTO THE SUNDARK",
              *relight = "E  RELIGHT  {} wood", *takeDown = "E  TAKE DOWN", *gather = "E  {}",
              *bridgeHolds = "THE BRIDGE HOLDS  {} FALLEN", *questLine = "QUEST  {}", *talk = "I  TALK",
              *help = "HELP!", *helpAt = "HELP {:.0f}", *questAt = "QUEST {:.0f}";

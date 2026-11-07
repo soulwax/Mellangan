@@ -14,6 +14,9 @@
 #include "entity/Player.hpp"
 #include "entity/Workbench.hpp"
 #include "entity/enemy/Enemy.hpp"
+#include "entity/pickup/Chest.hpp"
+#include "entity/pickup/Gem.hpp"
+#include "particle/Particle.hpp"
 #include "entity/enemy/Hazard.hpp"
 #include "item/Upgrade.hpp"
 #include "item/loot/Loot.hpp"
@@ -329,6 +332,8 @@ void testCaveTravel() {
 
 namespace {
 
+bool fresh(const Particle *p) { return p->maxLife - p->life <= DT * 1.01f; }
+
 bool caveOf(CaveBiome want, world::CaveCell &out) {
   for (int r = 0; r < 40; r++)
     for (int cy = -r; cy <= r; cy++)
@@ -374,10 +379,9 @@ void testCaveRules() {
   int blasts = 0, near = 0;
   for (int i = 0; i < 60 * 20; i++) {
     p->x = lx * 16 + 8.0, p->y = ly * 16 + 40.0;
-    size_t before = below->particles.size();
     below->tick();
-    for (size_t k = before; k < below->particles.size(); k++)
-      if (auto *b = dynamic_cast<Blast *>(below->particles[k].get()); b && b->by &&
+    for (size_t k = 0; k < below->particles.size(); k++)
+      if (auto *b = dynamic_cast<Blast *>(below->particles[k].get()); b && fresh(b) && b->by &&
           std::string_view(b->by) == "an erupting vent") {
         blasts++;
         int bx = world::tileOf(b->x), by = world::tileOf(b->y);
@@ -406,11 +410,58 @@ void testCaveRules() {
     risen += std::max(0, after - skeletons);
   }
   game.travel(world::Layer::Surface, crypt.mx[0] * 16 + 8.0, crypt.my[0] * 16 + 12.0);
+  int made[int(CaveBiome::Count)]{}, healed = 0;
+  for (CaveBiome want : {CaveBiome::Roots, CaveBiome::Warrens, CaveBiome::Spores, CaveBiome::Geodes}) {
+    world::CaveCell cell{};
+    assert(caveOf(want, cell));
+    game.travel(world::Layer::Caves, cell.mx[0] * 16 + 8.0, cell.my[0] * 16 + 12.0);
+    Level &l = *game.level;
+    l.rules.spawnRate = 0;
+    Player &h = *l.player;
+    h.god = true;
+    for (auto &u : h.upgrades)
+      u->level = 0;
+    int sx = cell.hx, sy = cell.hy;
+    Prop pp;
+    for (int y = cell.cy * 64; y < cell.cy * 64 + 64; y++)
+      for (int x = cell.cx * 64; x < cell.cx * 64 + 64; x++)
+        if (world::propAt(x, y, pp) && pp.kind &&
+            (want == CaveBiome::Spores ? std::string_view(pp.kind) == "glowshrooms" || std::string_view(pp.kind) == "toadstools"
+             : want == CaveBiome::Geodes ? std::string_view(pp.kind) == "crystal" || std::string_view(pp.kind) == "amethyst"
+                                         : false) &&
+            !world::isRock(x, y + 1))
+          sx = x, sy = y + 1;
+    for (int i = 0; i < 60 * 20; i++) {
+      h.x = sx * 16 + 8.0, h.y = sy * 16 + 8.0, h.xa = 60, h.ya = 0;
+      if (want == CaveBiome::Geodes)
+        h.hp = h.maxHp - 30;
+      float hp = h.hp;
+      l.tick();
+      healed += want == CaveBiome::Geodes && h.hp > hp;
+      for (size_t k = 0; k < l.particles.size(); k++) {
+        SpriteObject *o = l.particles[k].get();
+        if (auto *pt = dynamic_cast<Particle *>(o); !pt || !fresh(pt))
+          continue;
+        if (auto *br = dynamic_cast<Bramble *>(o)) {
+          assert(want == CaveBiome::Roots && br->x > h.x + 30 && std::abs(br->y - h.y) < 40);
+          made[int(want)]++;
+        } else if (auto *f = dynamic_cast<FrostPatch *>(o); f && f->kind == StatusKind::Poison) {
+          assert(want == CaveBiome::Spores);
+          made[int(want)]++;
+        } else if (auto *b = dynamic_cast<Blast *>(o); b && b->by && std::string_view(b->by) == "falling rock") {
+          assert(want == CaveBiome::Warrens && std::hypot(b->x - h.x, b->y - h.y) < 72);
+          made[int(want)]++;
+        }
+      }
+    }
+    game.travel(world::Layer::Surface, cell.mx[0] * 16 + 8.0, cell.my[0] * 16 + 12.0);
+  }
+  assert(made[int(CaveBiome::Roots)] >= 5 && made[int(CaveBiome::Warrens)] >= 2 &&
+         made[int(CaveBiome::Spores)] >= 7 && healed >= 5);
   for (int i = 0; i < 60 * 20; i++) {
-    size_t before = game.level->particles.size();
     game.level->tick();
-    for (size_t k = before; k < game.level->particles.size(); k++)
-      if (auto *b = dynamic_cast<Blast *>(game.level->particles[k].get()); b && b->by &&
+    for (size_t k = 0; k < game.level->particles.size(); k++)
+      if (auto *b = dynamic_cast<Blast *>(game.level->particles[k].get()); b && fresh(b) && b->by &&
           std::string_view(b->by) == "an erupting vent")
         quiet++;
   }
@@ -423,5 +474,168 @@ void testCaveRules() {
   noise_reseed(salt);
   rng = kept;
   std::cout << "[TEST] Cave rules: " << blasts << " vent eruptions in 20 s, all on lava within reach, and "
-            << risen << " skeletons rose from the catacomb graves in 30 s: PASS" << std::endl;
+            << risen << " skeletons rose from the catacomb graves in 30 s; roots " << made[int(CaveBiome::Roots)]
+            << " thorns, warrens " << made[int(CaveBiome::Warrens)] << " rockfalls, spores " << made[int(CaveBiome::Spores)]
+            << " clouds, geodes healed " << healed << " times: PASS" << std::endl;
+}
+
+namespace {
+
+int chestsIn(Level &level) {
+  int n = 0;
+  for (auto [id, o] : level.reg.view<Owned>().each())
+    n += !o.self->removed && dynamic_cast<Chest *>(o.self.get()) != nullptr;
+  return n;
+}
+
+} // namespace
+
+void testDawnCaves() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Surface);
+  Game game;
+  game.level = std::make_unique<Level>(game, RunRules{});
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  world::CaveCell cell{};
+  assert(caveOf(CaveBiome::Roots, cell));
+  int mx = cell.mx[0], my = cell.my[0];
+  Prop prop;
+  assert(world::propAt(mx, my, prop));
+  for (int i = 0; i < 30; i++)
+    level.spawner.spawn(EnemyKind::Rat, p.x + 200 + i, p.y);
+  level.add<Gem>(float(p.x + 300), float(p.y), 5);
+  level.tick();
+  int foes = int(level.count<Enemy>());
+  level.time = 200;
+  int lit = level.night.lit, kills = level.kills = 37, lvl = p.lvl = 6;
+  level.chart.unveil(p.x, p.y, 12);
+  int surfaceCells = level.chart.charted;
+  assert(foes >= 30 && surfaceCells > 0);
+
+  level.shift(world::Layer::Caves, mx * 16 + 8.0, my * 16 + 12.0);
+  assert(world::layer() == world::Layer::Caves && level.depth == world::Layer::Caves && !level.rules.sky);
+  int alive = 0;
+  level.each<Enemy>([&](Enemy &e) { alive += !e.removed; });
+  assert(alive == 0);
+  assert(level.time == 200 && level.kills == kills && p.lvl == lvl && level.night.lit == lit);
+  assert(std::abs(p.x - (mx * 16 + 8.0)) < 1 && !level.rockAt(p.x, p.y));
+  assert(level.chart.charted == 0 && level.surfaceChart().charted == surfaceCells);
+  int magnet = 0;
+  level.each<Gem>([&](Gem &g) { magnet += g.magnet; });
+  assert(magnet >= 1);
+  level.tick();
+  assert(chestsIn(level) == 1 && level.chart.charted > 0);
+
+  for (int i = 0; i < 60 * 10; i++)
+    level.tick();
+  int walkers = 0;
+  level.each<Enemy>([&](Enemy &e) {
+    assert(e.type.floats || !world::isRock(world::tileOf(e.x), world::tileOf(e.y - 2)));
+    walkers += !e.type.floats;
+  });
+  float clock = level.time;
+  assert(clock > 200 + 9);
+
+  level.shift(world::Layer::Surface, mx * 16 + 8.0, my * 16 + 12.0);
+  assert(world::layer() == world::Layer::Surface && level.rules.sky && level.chart.charted == surfaceCells);
+  level.tick();
+  assert(chestsIn(level) == 0);
+  level.shift(world::Layer::Caves, mx * 16 + 8.0, my * 16 + 12.0);
+  level.tick();
+  assert(chestsIn(level) == 1);
+  for (auto [id, o] : level.reg.view<Owned>().each())
+    if (dynamic_cast<Chest *>(o.self.get()))
+      o.self->remove();
+  level.tick();
+  level.shift(world::Layer::Surface, mx * 16 + 8.0, my * 16 + 12.0);
+  level.shift(world::Layer::Caves, mx * 16 + 8.0, my * 16 + 12.0);
+  level.tick();
+  assert(chestsIn(level) == 0);
+  level.shift(world::Layer::Surface, mx * 16 + 8.0, my * 16 + 12.0);
+
+  game.level.reset();
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Dawn-run caves: the hero goes down at (" << mx << ", " << my
+            << ") inside the same run (clock, kills, level and shrines kept), the surface foes stay behind, gems follow, "
+               "one chest waits at the heart (left below while unopened, never twice once taken), and the surface map comes back: PASS"
+            << std::endl;
+}
+
+void testDeepFall() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Surface);
+  world::CaveCell pit{};
+  bool found = false;
+  for (int r = 0; r < 12 && !found; r++)
+    for (int cy = -r; cy <= r && !found; cy++)
+      for (int cx = -r; cx <= r && !found; cx++)
+        found = world::caveCell(cx, cy, pit) && pit.kind == world::CaveKind::Descent;
+  assert(found);
+  Game game;
+  game.level = std::make_unique<Level>(game, RunRules{});
+  Level &level = *game.level;
+  Player &p = *level.player;
+  level.shift(world::Layer::Caves, pit.mx[0] * 16 + 8.0, pit.my[0] * 16 + 12.0);
+  level.rules.spawnRate = 0;
+  level.tick();
+  assert(level.chasmAt(pit.px * 16 + 8.0, pit.py * 16 + 8.0) && level.lost(pit.px * 16 + 8.0, pit.py * 16 + 10.0));
+  auto rat = Enemy::create(EnemyKind::Rat, 1, 1);
+  rat->x = pit.px * 16 + 8.0, rat->y = pit.py * 16 + 10.0;
+  level.add(std::move(rat));
+  level.tick();
+  level.tick();
+  int rats = 0;
+  level.each<Enemy>([&](Enemy &e) { rats += !e.removed; });
+  assert(rats == 0);
+
+  float full = p.maxHp;
+  p.hp = full;
+  p.x = pit.px * 16 + 8.0, p.y = pit.py * 16 + 10.0;
+  game.fall();
+  assert(world::layer() == world::Layer::Deep && level.depth == world::Layer::Deep && !level.rules.sky);
+  assert(p.hp < full && p.hp >= full * 0.7f && !level.rockAt(p.x, p.y - 2));
+  level.tick();
+  assert(chestsIn(level) == 1);
+
+  level.shift(world::Layer::Caves, pit.mx[0] * 16 + 8.0, pit.my[0] * 16 + 12.0);
+  p.hp = 3;
+  p.x = pit.px * 16 + 8.0, p.y = pit.py * 16 + 10.0;
+  game.fall();
+  assert(world::layer() == world::Layer::Deep && p.hp >= 1 && !p.dead());
+  game.fall();
+  assert(world::layer() == world::Layer::Deep);
+
+  world::DeepCell d{};
+  found = false;
+  for (int r = 0; r < 12 && !found; r++)
+    for (int cy = pit.cy - r; cy <= pit.cy + r && !found; cy++)
+      for (int cx = pit.cx - r; cx <= pit.cx + r && !found; cx++)
+        found = world::deepCell(cx, cy, d) && d.way != world::Way::None;
+  assert(found);
+  world::Passage w;
+  assert(world::passageNear(d.wx * 16 + 8.0, d.wy * 16 + 12.0, w));
+  level.shift(w.to, w.x * 16 + 8.0, w.y * 16 + 12.0);
+  assert(world::layer() == w.to && !level.rockAt(p.x, p.y - 2));
+  level.shift(world::Layer::Surface, pit.mx[0] * 16 + 8.0, pit.my[0] * 16 + 12.0);
+
+  game.level.reset();
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Falling into the Sundark: a rat on the chasm at (" << pit.px << ", " << pit.py
+            << ") tumbles in, the hero drops to open deep floor for a quarter of their health and never below 1, "
+               "a chest waits below, and a way up (kind "
+            << int(w.way) << ") leads out: PASS" << std::endl;
 }

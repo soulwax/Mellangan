@@ -128,22 +128,33 @@ void Level::collide(double &x, double &y, float radius) const {
 bool Level::rockAt(double x, double y) const {
   int gx = int(std::floor(x / 16)) - rockX, gy = int(std::floor(y / 16)) - rockY;
   return !rock.empty() && gx >= 0 && gy >= 0 && gx < ROCK_SPAN && gy < ROCK_SPAN &&
-         rock[gy * ROCK_SPAN + gx];
+         rock[gy * ROCK_SPAN + gx] == 1;
+}
+
+bool Level::chasmAt(double x, double y) const {
+  int gx = int(std::floor(x / 16)) - rockX, gy = int(std::floor(y / 16)) - rockY;
+  return chasmy && gx >= 0 && gy >= 0 && gx < ROCK_SPAN && gy < ROCK_SPAN && rock[gy * ROCK_SPAN + gx] == 2;
 }
 
 void Level::quarry() {
-  if (world::layer() != world::Layer::Caves) {
+  if (world::layer() == world::Layer::Surface) {
     rock.clear(), flow.clear();
     return;
   }
   int tx = int(std::floor(player->x / 16)), ty = int(std::floor(player->y / 16));
-  if (rock.empty() || std::abs(tx - rockX - ROCK_SPAN / 2) >= ROCK_SPAN / 4 ||
-      std::abs(ty - rockY - ROCK_SPAN / 2) >= ROCK_SPAN / 4) {
+  if (rock.empty() || std::abs(tx - rockX - ROCK_SPAN / 2) >= ROCK_SPAN / 8 ||
+      std::abs(ty - rockY - ROCK_SPAN / 2) >= ROCK_SPAN / 8) {
     rockX = tx - ROCK_SPAN / 2, rockY = ty - ROCK_SPAN / 2;
     rock.assign(ROCK_SPAN * ROCK_SPAN, 0);
+    chasmy = false;
     for (int y = 0; y < ROCK_SPAN; y++)
-      for (int x = 0; x < ROCK_SPAN; x++)
-        rock[y * ROCK_SPAN + x] = world::isRock(rockX + x, rockY + y) || world::isLava(rockX + x, rockY + y);
+      for (int x = 0; x < ROCK_SPAN; x++) {
+        uint8_t &r = rock[y * ROCK_SPAN + x];
+        r = world::isRock(rockX + x, rockY + y) || world::isLava(rockX + x, rockY + y) ? 1
+            : world::isChasm(rockX + x, rockY + y)                                     ? 2
+                                                                                       : 0;
+        chasmy = chasmy || r == 2;
+      }
     flowTime = 0;
   }
   if ((flowTime -= DT) > 0)

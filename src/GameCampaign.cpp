@@ -167,16 +167,13 @@ void Game::travel(world::Layer to, double x, double y) {
   saveCampaign();
   spdlog::info("campaign: {} at tile ({}, {})", to == world::Layer::Surface ? "climbed out" : "went below",
                int(std::floor(x / 16)), int(std::floor(y / 16)));
-  announce(to == world::Layer::Surface
-               ? std::string(lang.caveSurface)
-               : tr(CAVES[int(world::caveBiomeAt(world::tileOf(x), world::tileOf(y)))].name));
+  announce(placeName());
 }
 
 void Game::gather() {
-  if (int mx, my; input.gather.clicked && !campaign->delve.active &&
-                  world::caveMouthNear(level->player->x, level->player->y, mx, my))
-    travel(world::layer() == world::Layer::Surface ? world::Layer::Caves : world::Layer::Surface,
-           mx * 16 + 8.0, my * 16 + 12.0);
+  if (world::Passage w; input.gather.clicked && !campaign->delve.active &&
+                        world::passageNear(level->player->x, level->player->y, w))
+    travel(w.to, w.x * 16 + 8.0, w.y * 16 + 12.0);
   else if (Structure mine; input.gather.clicked && !campaign->delve.active &&
                       Delve::entrance(*level, *campaign, mine))
     campaign->delve.start(*level, *campaign, mine);

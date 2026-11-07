@@ -10,6 +10,9 @@
 #include "gfx/Screen.hpp"
 
 class Game;
+namespace world {
+struct Passage;
+} // namespace world
 
 class Hud {
 public:
@@ -56,6 +59,8 @@ private:
   bool inView(double wx, double wy, float margin) const;
   SDL_FPoint gui(double wx, double wy) const;
   void plate(double wx, double wy, std::string_view text, Color ink);
+  void stairs();
+  void passage(const world::Passage &w);
   void arrow(const Pin &pin, float length, float wing, Color c);
   void diamond(const Pin &pin, Color c);
   void tag(const std::string &text, const Pin &pin, float back, Color c);

@@ -92,8 +92,8 @@ void Hud::night(float top) {
   Night &n = l.night;
   float u = s.u, small = std::max(1.0f, u - 1);
   bool cycle = !l.rules.endsAtDawn;
-  if (!l.rules.sky) {
-    s.textCenter(lang.caveDepths, s.w / 2, top, std::round(u * 1.5f), Color{0.75f, 0.8f, 0.95f, 1});
+  if (!l.rules.sky && cycle) {
+    s.textCenter(world::layer() == world::Layer::Deep ? lang.deepDepths : lang.caveDepths, s.w / 2, top, std::round(u * 1.5f), Color{0.75f, 0.8f, 0.95f, 1});
     return;
   }
   std::string clock = cycle && n.dawn
@@ -260,6 +260,7 @@ void Hud::draw() {
   champions();
   merchant();
   handwork();
+  stairs();
   questLog();
   compass();
   minimap();

@@ -20,6 +20,26 @@
 #include "level/Flavour.hpp"
 #include "level/World.hpp"
 
+namespace {
+
+constexpr const char *Lang::*UP[] = {nullptr,         &Lang::caveUp,      &Lang::caveUp,
+                                     &Lang::climbRoots, &Lang::rideChimney, &Lang::climbLight};
+
+} // namespace
+
+void Hud::passage(const world::Passage &w) {
+  bool down = w.to > world::layer();
+  plate(w.x * 16 + 8.0, w.y * 16 - 14.0,
+        game.input.prompt(down ? (w.way == world::Way::Stair ? lang.stairDown : lang.caveDown) : lang.*UP[int(w.way)]),
+        Color{0.75f, 0.8f, 0.95f, 1});
+}
+
+void Hud::stairs() {
+  world::Passage w;
+  if (!game.campaign && !game.menu && world::passageNear(game.level->player->x, game.level->player->y, w))
+    passage(w);
+}
+
 void Hud::handwork() {
   Campaign *c = game.campaign.get();
   if (!c || game.menu)
@@ -51,10 +71,8 @@ void Hud::handwork() {
                             ? say(lang.caveIn, c->delve.inside(l))
                             : say(lang.delveFloor, c->delve.floor, Delve::FLOORS, c->delve.inside(l));
     s.textCenter(depth, s.w / 2, 70 * u, small, Color{0.9f, 0.75f, 0.5f, 0.9f});
-  } else if (int mx, my; world::caveMouthNear(l.player->x, l.player->y, mx, my)) {
-    return plate(mx * 16 + 8.0, my * 16 - 14.0,
-                 game.input.prompt(world::layer() == world::Layer::Surface ? lang.caveDown : lang.caveUp),
-                 Color{0.75f, 0.8f, 0.95f, 1});
+  } else if (world::Passage w; world::passageNear(l.player->x, l.player->y, w)) {
+    return passage(w);
   } else if (Structure mine; Delve::entrance(l, *c, mine)) {
     return plate(mine.centerX(), mine.centerY() - 26, game.input.prompt(lang.delveMine),
                  Color{0.9f, 0.75f, 0.5f, 1});

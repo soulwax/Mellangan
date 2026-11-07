@@ -77,7 +77,14 @@ public:
   Spawner spawner{*this};
   Night night{*this};
   LightField lights;
-  Chart chart;
+  Chart chart, charts[3];
+  void shift(world::Layer to, double x, double y);
+  Chart &surfaceChart() { return depth == world::Layer::Surface ? chart : charts[0]; }
+  world::Layer depth = world::Layer::Surface;
+  std::unordered_set<uint64_t> looted;
+  entt::entity hoard = entt::null;
+  uint64_t hoardKey = 0;
+  bool below() const { return depth != world::Layer::Surface; }
   BiomeEvents events;
   Sky sky;
   explicit Level(Game &game, RunRules rules = {});
@@ -163,10 +170,14 @@ public:
   void renderLight(Screen &s);
   void collide(double &x, double &y, float radius) const;
   bool rockAt(double x, double y) const;
+  bool chasmAt(double x, double y) const;
   void quarry();
   void steer(double x, double y, float speed, double &xw, double &yw) const;
   void slide(double ox, double oy, double &x, double &y) const;
-  bool lost(double x, double y) const { return !rock.empty() && (rockAt(x, y - 2) || flowAt(x, y) == UINT16_MAX); }
+  bool lost(double x, double y) const {
+    int f = flowAt(x, y);
+    return !rock.empty() && (rockAt(x, y - 2) || f < 0 || f == UINT16_MAX);
+  }
   int flowAt(double x, double y) const;
   void scatter(Screen &s);
   const std::vector<Prop> &visibleProps() const { return props; }
@@ -216,12 +227,13 @@ private:
   std::vector<uint8_t> rock;
   std::vector<uint16_t> flow;
   int rockX = 0, rockY = 0;
+  bool chasmy = false;
   float flowTime = 0;
   bool waterInView = false;
   int solidX = 0, solidY = 0;
   std::unordered_set<uint64_t> visits;
 
-  float burnTime = 0, bountyTime = 0, ventTime = 3, raiseTime = 10;
+  float burnTime = 0, bountyTime = 0, caveTime = 3;
 
   void flush();
   void explore();
