@@ -6,6 +6,7 @@
 #include "level/Prop.hpp"
 #include "level/Structure.hpp"
 #include "level/biome/Biome.hpp"
+#include "level/biome/CaveBiome.hpp"
 
 
 namespace world {
@@ -24,9 +25,12 @@ struct CaveCell {
   int size, hx, hy, mouths;
   int mx[3], my[3];
   int px, py;
+  CaveBiome biome;
 };
 bool caveCell(int cx, int cy, CaveCell &out);
 bool isRock(int x, int y);
+bool isLava(int x, int y);
+CaveBiome caveBiomeAt(int x, int y);
 bool caveMouth(int x, int y);
 bool caveMouthNear(double x, double y, int &tx, int &ty);
 void openCaves(bool open);

@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Each cave now takes after the land above it: root hollows under the meadows and woods, dripping grottos under the mires, frozen caves with walkable ice under the snow, sandstone warrens under the deserts, glowing spore halls under the fungal wood, ember vents with lava under the ashlands, crystal geodes and catacombs. Each has its own floor, rock, plants and creatures, and the map and banner name it.
+
 ## [0.6.7] - 2026-11-07
 
 ### Added

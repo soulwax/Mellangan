@@ -122,14 +122,18 @@ bool dryAbove(int x, int y) {
 void build(Cell *c, int cx, int cy) {
   uint32_t h = hash2(cx * 73 + 11, cy * 151 - 7);
   CaveCell &k = c->info;
-  k = {cx, cy, kindOf(h), 0, 0, 0, 0, {}, {}, 0, 0};
+  k = {cx, cy, kindOf(h), 0, 0, 0, 0, {}, {}, 0, 0, CaveBiome::Roots};
   std::fill(std::begin(c->open), std::end(c->open), 0ull);
   int x0 = cx * CAVE_CELL, y0 = cy * CAVE_CELL;
-  if (k.kind == CaveKind::Solid)
-    return;
   Plan shape = plan(k.kind, h, x0, y0);
   k.hx = std::clamp(int(shape.room[0].x), x0 + MARGIN + 2, x0 + CAVE_CELL - MARGIN - 3);
   k.hy = std::clamp(int(shape.room[0].y), y0 + MARGIN + 2, y0 + CAVE_CELL - MARGIN - 3);
+  {
+    Surfaced up;
+    k.biome = caveBelow(world::biomeAt(k.hx, k.hy));
+  }
+  if (k.kind == CaveKind::Solid)
+    return;
   static bool raw[CAVE_CELL][CAVE_CELL];
   for (int j = 0; j < CAVE_CELL; j++)
     for (int i = 0; i < CAVE_CELL; i++)
@@ -295,6 +299,15 @@ bool caveCell(int cx, int cy, CaveCell &out) {
 
 bool isRock(int x, int y) { return active == Layer::Caves && !openAt(x, y); }
 
+CaveBiome caveBiomeAt(int x, int y) {
+  return cellOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info.biome;
+}
+
+bool isLava(int x, int y) {
+  return active == Layer::Caves && under::pool(x, y) &&
+         CAVES[int(caveBiomeAt(x, y))].pool == CavePool::Lava;
+}
+
 void openCaves(bool open) {
   if (open != mouthsOpen)
     mouthsOpen = open, noise_epoch++;
@@ -355,13 +368,13 @@ int heightAt(int x, int y) {
 
 bool isDirt(int, int) { return false; }
 
-bool isWater(int x, int y) {
+bool pool(int x, int y) {
   if (deep() || heightAt(x, y) != 0)
     return false;
   CaveMemo *m = memoOf(x, y);
   if (!(m->has & 4)) {
     CaveCell c = cellOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info;
-    bool wet = noise_fbm(x * 0.05f - 21.7f, y * 0.05f + 14.2f, 3, 3031) < -0.38f;
+    bool wet = noise_fbm(x * 0.05f - 21.7f, y * 0.05f + 14.2f, 3, 3031) < CAVES[int(c.biome)].pools;
     for (int i = -1; i < c.mouths && wet; i++) {
       int dx = x - (i < 0 ? c.hx : c.mx[i]), dy = y - (i < 0 ? c.hy : c.my[i]);
       wet = dx * dx + dy * dy > 16;
@@ -370,6 +383,10 @@ bool isWater(int x, int y) {
     m->wet = wet, m->has |= 4;
   }
   return m->wet;
+}
+
+bool isWater(int x, int y) {
+  return pool(x, y) && CAVES[int(caveBiomeAt(x, y))].pool != CavePool::Lava;
 }
 
 bool isRamp(int x, int y) {
@@ -389,18 +406,48 @@ bool isRamp(int x, int y) {
 bool structureIn(int, int, Structure &) { return false; }
 
 Sprite groundTile(int x, int y) {
-  return isRock(x, y) ? atlas::tile(0) : atlas::town(atlas::tt::DirtTopLeft + 13);
+  if (isRock(x, y))
+    return atlas::tile(0);
+  if (isLava(x, y))
+    return atlas::carpet(atlas::cp::Lava, 0);
+  int r = int(hash2(x * 5 + 1, y * 11 - 3) % 100);
+  return CAVES[int(caveBiomeAt(x, y))].floor[r < 80 ? 0 : r < 92 ? 1 : 2];
 }
 
 bool propAt(int x, int y, Prop &p) {
   if (edits)
     if (const Edits::Change *c = edits->at(x, y))
       return c->placed && pieceProp(c->piece, x, y, p);
-  return mouthProp(x, y, p);
+  if (mouthProp(x, y, p))
+    return true;
+  if (isLava(x, y)) {
+    if ((x + y * 3) % 5 == 0)
+      p.fire({0.6f, 0.24f, 0.06f, 1}, 70, -4);
+    return (x + y * 3) % 5 == 0;
+  }
+  if (isRock(x, y) || pool(x, y) || isRamp(x, y) || isRamp(x, y - 1))
+    return false;
+  const CaveCell &c = cellOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info;
+  for (int i = -1; i < c.mouths; i++) {
+    int dx = x - (i < 0 ? c.hx : c.mx[i]), dy = y - (i < 0 ? c.hy : c.my[i]);
+    if (dx * dx + dy * dy < 10)
+      return false;
+  }
+  uint32_t h = hash2(x * 7 + 3, y * 13 + 1);
+  int r = int((h >> 4) % 1000);
+  for (const CaveSpawn &s : CAVES[int(c.biome)].spawns) {
+    if (r < s.per)
+      return s.feature->place(s.feature, h >> 16, &p);
+    r -= s.per;
+  }
+  return false;
 }
 
 Color groundTint(int x, int y) {
-  return isRock(x, y) ? Color{0.16f, 0.15f, 0.19f, 1} : Color{0.6f, 0.56f, 0.6f, 1};
+  if (isLava(x, y))
+    return {1, 1, 1, 1};
+  const CaveDef &d = CAVES[int(caveBiomeAt(x, y))];
+  return isRock(x, y) ? d.wallTint * 0.25f : d.floorTint;
 }
 
 } // namespace under

@@ -419,3 +419,59 @@ void testChartCorner() {
   assert((back.at(-1, -1) & Chart::BIOME) == (chart.at(-1, -1) & Chart::BIOME) && back.at(-1, -1));
   std::cout << "[TEST] The chart finds the page just north-west of the origin on its first lookup: PASS" << std::endl;
 }
+
+void testCaveBiomes() {
+  uint32_t salt = noise_salt;
+  int seen[int(CaveBiome::Count)]{}, lava = 0, ice = 0, props[int(CaveBiome::Count)]{};
+  world::CaveCell where[int(CaveBiome::Count)]{};
+  for (uint32_t seed : {0u, 17u}) {
+    noise_reseed(seed);
+    world::enter(world::Layer::Caves);
+    for (int cy = -16; cy < 16; cy++)
+      for (int cx = -16; cx < 16; cx++) {
+        world::CaveCell c;
+        if (!world::caveCell(cx, cy, c))
+          continue;
+        world::enter(world::Layer::Surface);
+        CaveBiome want = caveBelow(world::biomeAt(c.hx, c.hy));
+        world::enter(world::Layer::Caves);
+        assert(c.biome == want && world::caveBiomeAt(c.hx, c.hy) == want);
+        int b = int(c.biome);
+        if (!seen[b]++)
+          where[b] = c;
+        bool needs = (c.biome == CaveBiome::Vents && !lava) || (c.biome == CaveBiome::Rime && !ice);
+        if (seen[b] > 3 && !needs)
+          continue;
+        const CaveDef &d = CAVES[b];
+        for (int y = cy * world::CAVE_CELL; y < (cy + 1) * world::CAVE_CELL; y++)
+          for (int x = cx * world::CAVE_CELL; x < (cx + 1) * world::CAVE_CELL; x++) {
+            if (world::isRock(x, y))
+              continue;
+            bool hot = world::isLava(x, y), wet = world::isWater(x, y);
+            assert(!(hot && wet) && (!hot || d.pool == CavePool::Lava));
+            assert(!world::isIce(x, y) || d.pool == CavePool::Ice);
+            lava += hot, ice += world::isIce(x, y);
+            Sprite g = world::groundTile(x, y);
+            if (!hot && !wet) {
+              bool own = false;
+              for (const Sprite &f : d.floor)
+                own |= f.x == g.x && f.y == g.y;
+              assert(own);
+            }
+            Prop p;
+            if (!hot && world::propAt(x, y, p) && p.count)
+              props[b]++;
+          }
+      }
+    world::enter(world::Layer::Surface);
+  }
+  noise_reseed(salt);
+  for (int b = 0; b < int(CaveBiome::Count); b++)
+    assert(seen[b] > 0 && props[b] > 0 && CAVES[b].foes);
+  assert(lava > 0 && ice > 0);
+  std::cout << "[TEST] Cave biomes:";
+  for (int b = 0; b < int(CaveBiome::Count); b++)
+    std::cout << " " << CAVES[b].name << " " << seen[b];
+  std::cout << "; " << lava << " lava and " << ice
+            << " ice tiles; every floor tile, pool and prop belongs to its own cave: PASS" << std::endl;
+}

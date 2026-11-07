@@ -26,6 +26,7 @@ void testLayerSaves();
 void testCaves();
 void testCaveTravel();
 void testChartCorner();
+void testCaveBiomes();
 void testLevelLifecycleAndSimulation();
 void testNewFoes();
 void testNewPayloads();

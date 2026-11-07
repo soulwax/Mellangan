@@ -196,6 +196,10 @@ void FloorPainter::cliff(int x, int y, int level, float shade) {
              top(x - 1, y) << 2 | top(x + 1, y) << 3;
   int biome = world::biomeAt(blockCentre(x), blockCentre(y)), material = MATERIALS[biome];
   Color t = material ? Color{1, 1, 1, 1} : BIOMES[biome]->tint;
+  if (world::layer() != world::Layer::Surface) {
+    const CaveDef &d = CAVES[int(world::caveBiomeAt(x, y))];
+    material = d.wall, t = d.wallTint;
+  }
   s.color({shade * t.r * 0.92f, shade * t.g * 0.9f, shade * t.b * 0.9f, 1});
   if (ramp) {
     int part = !world::isRamp(x - 1, y) ? 0 : !world::isRamp(x + 1, y) ? 2 : 1;

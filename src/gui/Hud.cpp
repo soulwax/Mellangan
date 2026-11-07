@@ -52,6 +52,11 @@ void Hud::minimap() {
   auto right = [&](std::string_view text, float ty, Color c) {
     s.text(text, s.w - Screen::textWidth(text, small) - 4 * u, ty, small, c);
   };
+  if (world::layer() != world::Layer::Surface) {
+    const CaveDef &d = CAVES[int(world::caveBiomeAt(world::tileOf(p.x), world::tileOf(p.y)))];
+    right(tr(d.name), y - 2 * u - 16 * small, d.debug);
+    return;
+  }
   right(FLAVOURS[b].note, y - 4 * u - 32 * small, col::gold * 0.8f);
   right(tr(Chart::title(b)), y - 2 * u - 16 * small, col::muted);
   right(game.level->sky.name(), y - 6 * u - 48 * small, Color{0.62f, 0.72f, 0.9f, 0.85f});

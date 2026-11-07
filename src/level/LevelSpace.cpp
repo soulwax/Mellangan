@@ -143,7 +143,7 @@ void Level::quarry() {
     rock.assign(ROCK_SPAN * ROCK_SPAN, 0);
     for (int y = 0; y < ROCK_SPAN; y++)
       for (int x = 0; x < ROCK_SPAN; x++)
-        rock[y * ROCK_SPAN + x] = world::isRock(rockX + x, rockY + y);
+        rock[y * ROCK_SPAN + x] = world::isRock(rockX + x, rockY + y) || world::isLava(rockX + x, rockY + y);
     flowTime = 0;
   }
   if ((flowTime -= DT) > 0)

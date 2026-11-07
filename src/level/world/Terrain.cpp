@@ -149,6 +149,8 @@ bool isWater(int x, int y) {
 }
 
 bool isIce(int x, int y) {
+  if (active != Layer::Surface)
+    return isWater(x, y) && CAVES[int(caveBiomeAt(x, y))].pool == CavePool::Ice;
   return isWater(x, y) && BIOMES[biomeAt(x, y)]->winter();
 }
 

@@ -73,7 +73,7 @@ int Chart::tick(double x, double y) {
   if (cx != xLast || cy != yLast)
     reveal(cx, cy), survey(cx, cy), xLast = cx, yLast = cy;
   BiomeId b = world::biomeUnder(x, y);
-  if (knows(b))
+  if (world::layer() != world::Layer::Surface || knows(b))
     return -1;
   seen |= 1u << b, discovered++;
   return b;
@@ -183,7 +183,7 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
         BiomeId b = BiomeId((cc & BIOME) - 1);
         Color t = (cc & WATER ? BIOMES[b]->winter() ? Color{0.66f, 0.8f, 0.9f, 1}
                                                     : Color{0.2f, 0.42f, 0.72f, 1}
-                   : below    ? Color{0.46f, 0.39f, 0.32f, 1}
+                   : below    ? CAVES[int(world::caveBiomeAt(from * CELL + CELL / 2, cy * CELL + CELL / 2))].debug * 0.7f
                               : tone(b)) *
                   (run & 1 ? 0.7f : 1.0f);
         if (!(cc & NOW))

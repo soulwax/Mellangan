@@ -77,7 +77,9 @@ EnemyKind Spawner::pick(const Roster &r, double x, double y) const {
       world::structureAt(int(std::floor(x / 16)), int(std::floor(y / 16)), site, 4) &&
       site.kind == StructureKind::Graveyard && rng.chance(0.3f))
     return EnemyKind::GraveRobber;
-  FoeMask foes = localFoes(world::biomeUnder(x, y));
+  FoeMask foes = world::layer() == world::Layer::Surface
+                     ? localFoes(world::biomeUnder(x, y))
+                     : CAVES[int(world::caveBiomeAt(int(std::floor(x / 16)), int(std::floor(y / 16))))].foes;
   EnemyKind local[int(EnemyKind::Count)];
   int m = 0, n = int(r.common.size());
   for (EnemyKind k : r.pool)

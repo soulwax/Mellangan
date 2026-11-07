@@ -167,7 +167,9 @@ void Game::travel(world::Layer to, double x, double y) {
   saveCampaign();
   spdlog::info("campaign: {} at tile ({}, {})", to == world::Layer::Surface ? "climbed out" : "went below",
                int(std::floor(x / 16)), int(std::floor(y / 16)));
-  announce(to == world::Layer::Surface ? lang.caveSurface : lang.caveDepths);
+  announce(to == world::Layer::Surface
+               ? std::string(lang.caveSurface)
+               : tr(CAVES[int(world::caveBiomeAt(world::tileOf(x), world::tileOf(y)))].name));
 }
 
 void Game::gather() {
