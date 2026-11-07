@@ -83,6 +83,7 @@ public:
   void saveSettings();
   void saveKeys();
   void observe();
+  void checkFeats();
   std::vector<int> earned;
   void onPlayerHurt() { hurt = 1, camera.shake = 4; }
   void onExplosion() { camera.jolt(2.5f); }

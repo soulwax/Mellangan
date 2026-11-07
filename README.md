@@ -8,7 +8,7 @@ It went from survivals to a campaign with a skill tree until enough was enough a
 
 ## When the code reaches certain maturity it will split into a private repository for the game and a public repository for the engine. The engine is already public proving the game around it conceptually.
 
-## Wanna contribute or get the big picture? Contact me on discord: soulwa.x or just fork it! Alternatively: soulwax@cock.li
+## Wanna contribute or get the big picture? The [WIKI at https://mel.bluesix.dev](https://mel.bluesix.dev) should give clarity. If it still doesn't help, contact me on discord: soulwa.x or just fork it! Alternatively: soulwax@cock.li
 
 ## All asset are my own or zlib licensed, except for the Kenney assets which are public domain. See `res/CREDITS.md` for details. Kenney assets were initially used as a basis for getting something on the screen, but have grown substantially which I claim as my own work.
 

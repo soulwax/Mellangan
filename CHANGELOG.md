@@ -16,6 +16,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 - The minimap no longer skips or mixes up the patch of map just north-west of where the world starts.
 
+### Added
+
+- Ten campaign achievements: clear each of the five acts, begin a Nightmare campaign, clear an act with a hardcore hero, raise a watchtower, shelter five sanctuary seekers and clear three mines. They unlock the moment they happen, with a banner, and are listed on the codex achievements page (now 60).
+
 ## [0.6.6] - 2026-11-07
 
 ### Added
@@ -38,7 +42,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Added
 
-- Level-up cards show exact numbers. A weapon you hold shows what the level changes, before and after ("damage 24 > 34   every 2.8s > 2.0s"); a new weapon shows its first-level numbers; an evolution shows its doubled damage and shorter interval. Damage includes your might, intervals your haste, so the numbers match what the weapon does. All 89 weapons report them, and every level changes at least one.
+- Level-up cards show exact numbers. A weapon you hold shows what the level changes, before and after ("damage 24 > 34 every 2.8s > 2.0s"); a new weapon shows its first-level numbers; an evolution shows its doubled damage and shorter interval. Damage includes your might, intervals your haste, so the numbers match what the weapon does. All 89 weapons report them, and every level changes at least one.
 - The minimap and the world map show lakes and rivers in blue, and frozen water in pale ice blue. Rain puddles are not shown. Charts saved before this show water once you pass by again.
 - CI packages its Windows Release build and keeps it as the `Mellangan-windows` artifact. `ci-artifact.ps1 [ref]` downloads the package for a commit whose CI run passed, so a release can ship the clean-checkout build instead of a local one. Packaging moved from `dist.ps1` to `package.ps1`, which both use.
 - Gamepad support through SDL3: the left stick moves at any angle, at partial speed when pushed part way, and steps through menus with a dead zone and a gap between press and release so it never chatters; the D-pad works as the arrow keys. A confirms and casts the class skill, B goes back, Start pauses, Back opens the map (and quits to the title while paused), X gathers or retries, Y opens the inventory or codex, LB shows loot labels, RB opens settings, and the triggers open the skill tree or start a campaign (LT) and build (RT). Every menu hint and on-screen prompt (title, pause, settings, class picker, level-up, shrine, inventory, vendor, stash, crafting, map, codex, skill tree, quests, travel, building, and the TRADE, CRAFT, TALK, gather and delve labels) names pad buttons once the pad is used, and keys again after the next key press. Clicking the left stick drops an item in the inventory, like Backspace.
@@ -167,12 +171,10 @@ All notable changes to Mellangan are documented here. The format follows
 - Talent badges are bevelled medallions with a lit rim and a dark face, so their symbols stand out.
 - The moth wisp has clean wings with eyespots, and the shade is easier to see at night.
 - Sharper foe sprites: every bestiary foe is shaded through hue-shifted colour ramps that match the Kenney art, with a rim light and a base shadow. Nine foes are repainted: the cutthroat shows a face and a red mask, the snapjaw has jaws, teeth and back scutes, the boar a bristled back and a separate head, the sand wyrm a toothed maw, and the spore puffer, magma slug, rock crawler, kobold miner and nest have clearer shapes.
-- The bastion's honour: foes slain by the knights drop no gems or loot and don't count toward your kills. At night a counter above the town tallies the fallen at the bridge, and at dawn the town pays you for it: "THE BASTION HELD  N FELL AT THE BRIDGE", 1 gold and a little experience per foe.
+- The bastion's honour: foes slain by the knights drop no gems or loot and don't count toward your kills. At night a counter above the town tallies the fallen at the bridge, and at dawn the town pays you for it: "THE BASTION HELD N FELL AT THE BRIDGE", 1 gold and a little experience per foe.
 - The campaign's towns now read as bastions their people refuse to let fall. The townsfolk speak defiantly, and nightfall and dawn are announced as "HOLD THE BRIDGE" and "THE BASTION STILL STANDS".
 
-
 ## [0.6.0] - 2026-11-02
-
 
 - The mire leech is a segmented, arching leech with a toothed red mouth instead of a small lozenge.
 - Foes take steps: every walking foe from the later acts alternates its idle pose with a step frame (a lifted foot, or a squash for the legless) in time with its sway.
@@ -182,7 +184,7 @@ All notable changes to Mellangan are documented here. The format follows
 - Watchtowers: press B while talking to an act's elder to raise a stone watchtower in that town for 300 gold, 12 stone and 8 wood. It shoots arrows at any foe that comes near, growing stronger with your level, and stands for good.
 - Lost sanctuary seekers: by day in the campaign, someone cries for help out in the wilds, and an arrow points the way. Walk up and they follow you; leave them too far behind and they stop and wait. Foes can hurt them on the way. Bring them inside any town and they join its sanctuary seekers, thank you with three materials and make the merchant 5% cheaper, up to a quarter off. Hearthwick grows with each rescue.
 - Every campaign town shelters three sanctuary seekers. By day they wander inside the fence; at night they huddle by the fire and shiver. Walk up to one and they speak a line about their act's troubles in a speech bubble.
-- The title screen shows a summary of the saved campaign under "K  CONTINUE THE CAMPAIGN": class, level, act and day, plus Hardcore and Nightmare when they apply.
+- The title screen shows a summary of the saved campaign under "K CONTINUE THE CAMPAIGN": class, level, act and day, plus Hardcore and Nightmare when they apply.
 - In the campaign, the world map (Tab) marks your towns by name, with a dot on the current act's town. It also shows the current quest site or the road to the next town as a pulsing ring, your campfires, and the mines you have cleared. A Campaign legend lists the current quest.
 - Campaign quests now reward an item as well as gold. Ordinary quests give a magic item, act bosses a rare and the Cinder King a unique. Each act's elder favours a kind of gear: weapons in Hearthwick, off-hands in Saltmoor, armour in Frosthold, charms in Dunewatch and weapons again in Last Ember. The quest dialog names the reward before you accept.
 - Clearing an act now ends in a burst of gold rings and sparks.
@@ -332,6 +334,7 @@ All notable changes to Mellangan are documented here. The format follows
   - Siege Battery, Worldvine Lash, Spectrum Lance and Ancestor Host.
 
   Each evolved form has its own twist: bursting bounces, a rune that rides with you, a lash that cracks both ways, a fan of three beams and more.
+
 - Boomerang marks what it hits and bursts where it turns, hitting marked foes harder.
 - Spirit Swarm spirits drag the foes they marked together when they fade.
 - Mortar shells stagger instead of burning and leave a crater that slows foes.
@@ -454,6 +457,7 @@ All notable changes to Mellangan are documented here. The format follows
     - the **Deserter** wears a warding halo and rallies with a sweeping cut behind a ward.
 
     Renegades often drop a potion.
+
 - Eleven new class skills, one more for every class that had only one. They appear on level-up from level 4, like the Mage's extra skills:
   - Ranger, **Arrow Storm**: sixteen arrows in every direction;
   - Knight, **Shield Charge**: charge ahead, battering every foe in your path;
@@ -503,6 +507,7 @@ All notable changes to Mellangan are documented here. The format follows
   - its name on the boss bar, and a gold arrow with its name and distance when it is off screen.
 
   Only one walks at a time. Each always drops a chest, and your death screen names it if it fells you.
+
 - A new omen, **Champion's Hour**: champions come far more often.
 - Six new bosses, one for each family of lands. A boss now usually matches the land you stand in, and the classic three still turn up anywhere:
   - **The Frost Colossus** (snow, taiga): slams, nets and icy comets, with frost wisps;
@@ -550,6 +555,7 @@ All notable changes to Mellangan are documented here. The format follows
   - **The Frozen Giant**, a figure sealed in ice in the snowfields and taiga. The cold hardens your skin (+0.5 armour) and freezes nearby foes in place.
 
   Each land favours its own kind, but any landmark can turn up anywhere.
+
 - Landmarks can be spotted from afar. The nearest landmark you have not yet visited, within about 70 tiles, shows a small marker at the edge of the screen with its name and distance, in its own colour and brighter as you approach. The marker disappears once the landmark is on screen, and markers stay clear of the top display.
 - Elite foes now carry a trait instead of a plain gold tint. Each shows as a coloured ring and a matching glow, and each has a counter:
   - **Hasted** (pale yellow): 40% faster. Keep your distance.
@@ -577,6 +583,7 @@ All notable changes to Mellangan are documented here. The format follows
   - grey stone in barrows, heaths and ruins.
 
   Meadows keep their earthen walls. Each material has a lit west side, a shaded east side and a striated south face. A stretch of cliff keeps one material even where two lands meet.
+
 - Ramps are now real stairs. Every few blocks along a plateau's south face, a flight of steps three tiles wide climbs to the top, built from the cliff's own stone (or timber in the meadows), with side walls at its ends. Walk up them at full speed, while scrambling up a bare cliff stays slow. Trees and rocks never block a stairway.
 - Dev: `--cliff` combined with `--biome N` starts below a cliff inside that biome, and `--ramp` starts at the foot of the nearest stairs.
 
@@ -618,6 +625,7 @@ All notable changes to Mellangan are documented here. The format follows
   - Wolves encircle you in the Taiga.
 
   Events start after the first 40 seconds, and the older regions have them less often than the newer ones.
+
 - Every region has its own ambient life:
   - butterflies in the Meadows;
   - falling leaves in the Greenwood;
@@ -676,6 +684,7 @@ All notable changes to Mellangan are documented here. The format follows
   - Thunder follows the flash: a near strike cracks almost at once, a far one rumbles later and lower, and distant sheet lightning brings a low roll.
   - Rain softens the distance with a light haze.
   - Rain and wind can now be heard: a soft rain bed that swells under showers and storms, and a low wind that rises with gales and sandstorms. Both stay well under the music and the fight. Each region has its own odds of each front: the Storm Steppe is almost always stormy, the Desert is mostly clear with the odd sandstorm, and the Hollow Caverns are usually fogged in. The cloud, fog and splash sprites are pixelated from the NS1 weather VFX packs.
+
 - Each region has its own light: a warm glare in the Desert, a blue hush in the Moonlit Grove, a dim dusk in the Hollow Caverns and a red cast in the Ashlands. The light shifts gradually as you cross a border.
 - Seven new particle icons: maple leaf, raindrop, gust, seed fluff, falling star, butterfly and spore.
 - Dev: `--biome N` starts a `--dev` run inside biome N, F10 cycles the weather, and `--biome-map <file.ppm>` writes a map of the world's biomes.
@@ -920,7 +929,6 @@ All notable changes to Mellangan are documented here. The format follows
 
 - Resolved false-positive antivirus heuristic triggers by omitting debug stream tables from Release builds, disabling Windows unhandled exception filters, and embedding application UAC manifest.
 
-
 ## [0.4.5] - 2026-10-28
 
 ### Added
@@ -1083,7 +1091,6 @@ All notable changes to Mellangan are documented here. The format follows
 - Passive upgrades (Heartroot, Ogre Hammer, Hourglass Tonic and the rest, and the class passives) could apply no
   bonus at all, or scramble a stat, in Windows builds: MSVC laid out their stat pointer differently depending on
   whether the player type was complete, so two parts of the game disagreed about where the bonus was stored.
-
 
 ## [0.3.1] - 2026-10-28
 

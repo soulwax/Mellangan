@@ -12,4 +12,4 @@ struct Feat {
 extern const Feat FEATS[];
 extern const int FEAT_COUNT;
 
-std::vector<int> unlockFeats(Game &g, bool dawn);
+std::vector<int> unlockFeats(Game &g, bool dawn, bool campaignOnly = false);

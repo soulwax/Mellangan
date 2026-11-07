@@ -514,6 +514,16 @@ void Game::observe() {
   }
   if (int(level->time) % 60 == 0)
     t.levels.push_back(p.lvl);
+  if (campaign)
+    checkFeats();
+}
+
+void Game::checkFeats() {
+  std::vector<int> fresh = unlockFeats(*this, false, true);
+  for (int f : fresh)
+    announce(say(lang.achieved, tr(FEATS[f].title)));
+  if (!fresh.empty() && writes())
+    codex.save(saves.dir() + "codex.txt");
 }
 
 void Game::saveKeys() {

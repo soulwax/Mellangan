@@ -15,6 +15,8 @@
 #include "menu/UpgradeCard.hpp"
 #include "menu/Recap.hpp"
 #include "meta/Feats.hpp"
+#include "campaign/Campaign.hpp"
+#include "campaign/Quests.hpp"
 #include "meta/Heat.hpp"
 #include "level/RunRules.hpp"
 #include <cmath>
@@ -105,11 +107,25 @@ void testFeats() {
     unlockFeats(game, true);
   }
   assert(has("dawn_all") && has("dawn_corsair"));
+  assert(unlockFeats(game, false, true).empty() && !has("camp_act1"));
+  game.campaign = std::make_unique<Campaign>();
+  game.campaign->quest = QUESTS_PER_ACT, game.campaign->hardcore = true;
+  l.player->lvl = 40;
+  fresh = unlockFeats(game, false, true);
+  assert(fresh.size() == 2 && has("camp_act1") && has("camp_hardcore") && !has("camp_act2") && !has("level_40"));
+  game.campaign->quest = QUEST_COUNT, game.campaign->nightmare = 1, game.campaign->rescued = 5;
+  game.campaign->towers = {0}, game.campaign->delves = {{1, 1}, {2, 2}, {3, 3}};
+  unlockFeats(game, false, true);
+  for (const char *id : {"camp_act2", "camp_act3", "camp_act4", "camp_act5", "camp_nightmare", "camp_tower",
+                         "camp_shelter", "camp_delve"})
+    assert(has(id));
+  assert(!has("level_40") && unlockFeats(game, false, true).empty());
+  game.campaign.reset();
   game.level.reset();
   rng = kept;
   std::cout << "[TEST] Achievements: " << FEAT_COUNT
-            << " with unique ids, each unlocks once when its moment comes, and dawn with all twelve "
-               "classes follows the twelve: PASS"
+            << " with unique ids, each unlocks once when its moment comes, dawn with all twelve "
+               "classes follows the twelve, and campaign milestones unlock without run feats: PASS"
             << std::endl;
 }
 
