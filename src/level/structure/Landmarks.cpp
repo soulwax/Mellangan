@@ -42,7 +42,7 @@ bool landmarkGround(Site s, int lx, int ly, Sprite *out) {
        s->kind != StructureKind::AncientGate) ||
       lx < 2 || lx > 4 || ly < 3 || ly > 5)
     return false;
-  *out = atlas::town(atlas::tt::PlazaTopLeft + (ly - 3) * 12 + (lx - 2));
+  *out = masonry(s, atlas::tt::PlazaTopLeft + (ly - 3) * 12 + (lx - 2));
   return true;
 }
 

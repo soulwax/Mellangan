@@ -20,6 +20,7 @@ void testLodestones();
 void testGeneralSkills();
 void testGuiChoices();
 void testHills();
+void testMasonry();
 void testLevelLifecycleAndSimulation();
 void testNewFoes();
 void testNewPayloads();

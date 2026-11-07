@@ -20,7 +20,7 @@ int edge(int v, int last) { return v == 0 ? 0 : v == last ? 2 : 1; }
 void sizeSquare(uint32_t, int *w, int *h) { *w = 5, *h = 5; }
 
 bool shrineGround(Site s, int lx, int ly, Sprite *out) {
-  *out = atlas::town(tt::PlazaTopLeft + edge(ly, s->h - 1) * 12 + edge(lx, s->w - 1));
+  *out = masonry(s, tt::PlazaTopLeft + edge(ly, s->h - 1) * 12 + edge(lx, s->w - 1));
   return true;
 }
 
@@ -53,12 +53,12 @@ bool ruin(Site s, int lx, int ly, uint32_t r, Prop *p) {
   int arch = 1 + int(s->seed % uint32_t(s->w - 3));
   if (ly == 1) {
     if (lx == arch || lx == arch + 1) {
-      p->add(atlas::town(lx == arch ? tt::ArchLeft : tt::ArchRight));
-      p->add(atlas::town(tt::Bricks), -16);
+      p->add(masonry(s, lx == arch ? tt::ArchLeft : tt::ArchRight));
+      p->add(masonry(s, tt::Bricks), -16);
     } else if (r % 10 < 7) {
-      p->add(atlas::town(tt::Bricks)), p->solid = 8;
+      p->add(masonry(s, tt::Bricks)), p->solid = 8;
       if (r % 10 < 3)
-        p->add(atlas::town(tt::Bricks), -16);
+        p->add(masonry(s, tt::Bricks), -16);
     } else {
       return false;
     }
@@ -68,9 +68,9 @@ bool ruin(Site s, int lx, int ly, uint32_t r, Prop *p) {
   if (ly < 2)
     return false;
   if (r % 11 == 0)
-    return p->piece(atlas::town(tt::Bricks), 1.0f, 7);
+    return p->piece(masonry(s, tt::Bricks), 1.0f, 7);
   if (r % 13 == 0)
-    return p->add(atlas::town(tt::Mushrooms)), p->lamp({0.03f, 0.12f, 0.10f, 1}), true;
+    return p->add(masonry(s, tt::Mushrooms)), p->lamp({0.03f, 0.12f, 0.10f, 1}), true;
   return false;
 }
 

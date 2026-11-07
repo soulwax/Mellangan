@@ -173,3 +173,56 @@ void testHills() {
             << " cliff tiles in straight runs, " << tarns << " tarn tiles, woods "
             << int(low * 100) << "% low and " << int(high * 100) << "% high: PASS" << std::endl;
 }
+
+void testMasonry() {
+  uint32_t salt = noise_salt;
+  int seen[5]{}, parts = 0;
+  for (int m = 0; m < 4; m++) {
+    Sprite s = atlas::masonry(m, 36);
+    assert(s.x == (m % 2) * 216 + 1 && s.y == 1488 + (m / 2) * 144 + 1);
+    assert(atlas::masonry(m, 131).y + 16 <= 1776);
+  }
+  auto plainTown = [](Sprite s) { return s.x >= 216 && s.y >= 54 && s.y < 198; };
+  for (uint32_t seed = 0; seed < 3; seed++) {
+    noise_reseed(seed);
+    for (int ry = -16; ry < 16; ry++)
+      for (int rx = -16; rx < 16; rx++) {
+        Structure st;
+        if (!world::structureIn(rx, ry, st))
+          continue;
+        BiomeId b = world::biomeAt(rx * world::REGION + world::REGION / 2,
+                                   ry * world::REGION + world::REGION / 2);
+        assert(st.masonry >= 0 && st.masonry <= 4);
+        if (b == BIOME_DESERT || b == BIOME_SAVANNA || b == BIOME_BADLANDS)
+          assert(st.masonry == 1);
+        if (b == BIOME_SNOW || b == BIOME_TAIGA)
+          assert(st.masonry == 2);
+        if (b == BIOME_ASHLANDS || b == BIOME_EMBER)
+          assert(st.masonry == 4);
+        if (b == BIOME_MEADOW || b == BIOME_FOREST)
+          assert(st.masonry == 0);
+        seen[st.masonry]++;
+        for (int ly = 0; ly < st.h; ly++)
+          for (int lx = 0; lx < st.w; lx++) {
+            Prop p;
+            Sprite g;
+            if (structureGround(&st, lx, ly, &g))
+              assert(!st.masonry || !plainTown(g));
+            if (!structureProp(&st, lx, ly, &p))
+              continue;
+            for (int i = 0; i < p.count; i++, parts++) {
+              Sprite s = p.parts[i].sprite;
+              assert(s.x >= 0 && s.y >= 0 && s.x + s.w <= 432 && s.y + s.h <= 1776);
+              assert(!st.masonry || !plainTown(s));
+            }
+          }
+      }
+  }
+  noise_reseed(salt);
+  for (int m = 0; m < 5; m++)
+    assert(seen[m] > 0);
+  std::cout << "[TEST] Structures take their biome's masonry: plain " << seen[0]
+            << ", sandstone " << seen[1] << ", frost " << seen[2] << ", moss "
+            << seen[3] << ", ash " << seen[4] << ", " << parts
+            << " parts checked: PASS" << std::endl;
+}

@@ -128,6 +128,7 @@ int runTests() {
   testClassKits();
   testSpawnShore();
   testHills();
+  testMasonry();
   testNewFoes();
   testGreenwoodFoes();
   testMarchesFoes();

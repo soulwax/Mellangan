@@ -54,5 +54,10 @@ bool structureProp(const Structure *s, int lx, int ly, Prop *p) {
   return inside(s, lx, ly) && def(s)->prop(s, lx, ly, r, p);
 }
 
+Sprite masonry(const Structure *s, int index) {
+  return s->masonry && index >= 36 ? atlas::masonry(s->masonry - 1, index)
+                                   : atlas::town(index);
+}
+
 const char *Structure::name() const { return STRUCTURES[int(kind)].name; }
 Color Structure::debugColor() const { return STRUCTURES[int(kind)].debug; }

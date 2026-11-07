@@ -7,6 +7,8 @@ namespace {
 const int LANDMARKS[BIOME_COUNT] = {0, 0, 5, 7, 2, 9, 0, 5, 6, 0, 2, 8, 4,
                                     5, 8, 9, 6, 6, 7, 3, 8, 0, 3, 4, 4, 1};
 constexpr int LANDMARK_KINDS = 10;
+const int MASONRY[BIOME_COUNT] = {0, 0, 0, 0, 3, 2, 0, 3, 1, 3, 1, 4, 0,
+                                  3, 1, 2, 1, 3, 0, 3, 4, 0, 0, 1, 4, 4};
 
 int floorDiv(int v, int d) { return (v - (v < 0 ? d - 1 : 0)) / d; }
 
@@ -63,7 +65,7 @@ bool rollStructure(int rx, int ry, Structure *out) {
   if (x - 1 < 6 && x + w + 1 > -6 && y - 1 < 6 && y + ht + 1 > -6)
     return false;
 
-  *out = {kind, x, y, w, ht, rx, ry, hash2(int(h), rx ^ (ry << 8))};
+  *out = {kind, x, y, w, ht, rx, ry, hash2(int(h), rx ^ (ry << 8)), MASONRY[id]};
   return true;
 }
 

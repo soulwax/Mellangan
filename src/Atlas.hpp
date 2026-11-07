@@ -198,6 +198,12 @@ constexpr Sprite stairs(int material, int part) {
   int i = 45 + material * 3 + part;
   return {float((i % 24) * 18 + 1), float(1326 + (i / 24) * 18 + 1), 16, 16};
 }
+constexpr Sprite masonry(int material, int index) {
+  Sprite s = town(index);
+  s.x += float((material % 2) * 216 - 216);
+  s.y += float(1488 + (material / 2) * 144 - 54);
+  return s;
+}
 constexpr Sprite beast(int index) {
   return {float((index % 24) * 18 + 1), float(1380 + (index / 24) * 18 + 1), 16, 16};
 }

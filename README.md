@@ -15,10 +15,10 @@ Enemies can have their own type of attacks, upgrades, passives and abilities.
 -
 ## Screenshots
 
-| Title screen | Class selection |
+| Title screen | 1 |
 | --- | --- |
-| [![Mellangan title screen and world selection](static/screenshots/01-title.png)](static/screenshots/01-title.png) | [![Choosing the Mage class](static/screenshots/02-classes.png)](static/screenshots/02-classes.png) |
-| Combat and exploration | Upgrades |
+| [![Mellangan title screen and world selection](static/screenshots/01-title.png)](static/screenshots/masonry-0.png) | [![Choosing the Mage class](static/screenshots/masonry-1.png)](static/screenshots/masonry-2.png) |
+| 2 | 3 |
 | [![Surviving enemies in the savanna](static/screenshots/03-combat.png)](static/screenshots/03-combat.png) | [![Choosing a level-up upgrade during a run](static/screenshots/04-upgrades.png)](static/screenshots/04-upgrades.png) |
 
 ## System requirements
@@ -277,6 +277,7 @@ effects scene without loading or saving player progress.
 - `tools/make_grounds.py` – carpet ground sets (straw, ash, crystal moss, mycelium, lava) for `Carpet` biomes
 - `tools/make_flora.py`, `tools/make_desert.py` – add the recoloured and hand-drawn plants, mud, sand and water tiles to `res/atlas.png`
 - `tools/make_winter.py` – adds the frosted winter band to `res/atlas.png` (also run by `make_assets.py`)
+- `tools/make_masonry.py` – adds the masonry band: Tiny Town building rows recoloured as sandstone, frost, moss and ash for biome-themed structures (also run by `make_assets.py`)
 - `tools/make_arsenal.py` – paints recipe weapon and skill icons into the arsenal band (chained by `make_expansion.py` and `make_assets.py`); `--preview out.png` writes them at 8x
 - `tools/biome_viewer` – standalone `BiomeViewer` window showing the whole generated world (biome colours shaded by
   height, water, structure sites) for a seed. Build it on demand with `cmake --build build --target BiomeViewer`

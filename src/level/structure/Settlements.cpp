@@ -47,7 +47,7 @@ void sizeCottage(uint32_t r, int *w, int *h) {
 bool cottageGround(Site s, int lx, int ly, Sprite *out) {
   if (ly < 3 || lx != houseOf(s).door + 1)
     return false;
-  *out = atlas::town(tt::Path);
+  *out = masonry(s, tt::Path);
   return true;
 }
 
@@ -63,14 +63,14 @@ bool cottage(Site s, int lx, int ly, uint32_t r, Prop *p) {
     int window = h.stone ? tt::StoneWindow : tt::WoodWindow,
         doorTile = h.stone ? tt::StoneDoor : tt::WoodDoor;
     bool inside = side == 1, door = c == h.door;
-    p->add(atlas::town(!inside ? wall[side] : door ? doorTile : window));
+    p->add(masonry(s, !inside ? wall[side] : door ? doorTile : window));
     int yo = -16;
     if (h.storeys == 2)
-      p->add(atlas::town(inside && c % 2 ? window : wall[side]), yo), yo -= 16;
-    p->add(atlas::town(h.gable && door ? roof + tt::RoofGable
+      p->add(masonry(s, inside && c % 2 ? window : wall[side]), yo), yo -= 16;
+    p->add(masonry(s, h.gable && door ? roof + tt::RoofGable
                                        : roof + tt::RoofEaves + side),
            yo);
-    p->add(atlas::town(c == h.chimney ? roof + tt::RoofChimney : roof + side),
+    p->add(masonry(s, c == h.chimney ? roof + tt::RoofChimney : roof + side),
            yo - 16);
     p->body(1.4f, 8);
     if (inside && !door && h.lit)
@@ -81,12 +81,12 @@ bool cottage(Site s, int lx, int ly, uint32_t r, Prop *p) {
     return p->piece(atlas::tile(r & 1 ? t::Barrel : t::Crate), 0.8f, 5);
   if (lx == s->w - 1 && ly == 3) {
     if (s->seed & 8)
-      return p->piece(atlas::town(tt::Beehive), 0.8f, 4);
-    p->add(atlas::town(tt::Well)), p->add(atlas::town(tt::WellRoof), -16);
+      return p->piece(masonry(s, tt::Beehive), 0.8f, 4);
+    p->add(masonry(s, tt::Well)), p->add(masonry(s, tt::WellRoof), -16);
     return p->body(1.0f, 6);
   }
   if (lx == 1 && ly == 4 && (s->seed & 16))
-    return p->piece(atlas::town(tt::Sign), 0.6f, 3);
+    return p->piece(masonry(s, tt::Sign), 0.6f, 3);
   return false;
 }
 
@@ -98,7 +98,7 @@ bool graveyard(Site s, int lx, int ly, uint32_t r, Prop *p) {
   int right = s->w - 1, bottom = s->h - 1, gate = s->w / 2;
   p->solid = 6;
   if (ly == 0)
-    return p->add(atlas::town(lx == 0       ? tt::FenceTopLeft
+    return p->add(masonry(s, lx == 0       ? tt::FenceTopLeft
                               : lx == right ? tt::FenceTopRight
                                             : tt::FenceTop)),
            true;
@@ -110,10 +110,10 @@ bool graveyard(Site s, int lx, int ly, uint32_t r, Prop *p) {
             : lx == gate - 1 ? tt::FenceEndRight
             : lx == gate + 1 ? tt::FenceEndLeft
                              : tt::FenceRail;
-    return p->add(atlas::town(f)), true;
+    return p->add(masonry(s, f)), true;
   }
   if (lx == 0 || lx == right)
-    return p->add(atlas::town(lx == 0 ? tt::FenceLeft : tt::FenceRight)), true;
+    return p->add(masonry(s, lx == 0 ? tt::FenceLeft : tt::FenceRight)), true;
   if (lx % 2 == 1 && ly % 2 == 0 && r % 5 != 0) {
     p->add(atlas::tile(r % 3 == 0 ? t::GraveCross : t::GraveStone));
     if (r % 4 == 0)
@@ -134,16 +134,16 @@ bool camp(Site s, int lx, int ly, uint32_t r, Prop *p) {
   int c = s->w / 2;
   p->solid = 5;
   if (lx == c && ly == c) {
-    p->add(atlas::town(tt::Log));
+    p->add(masonry(s, tt::Log));
     p->fire({0.55f, 0.27f, 0.07f, 1}, 150, -6);
     return true;
   }
   if ((lx == c - 2 || lx == c + 2) && ly == c)
-    return p->piece(atlas::town(tt::Log), 0.9f, 5);
+    return p->piece(masonry(s, tt::Log), 0.9f, 5);
   if (lx == c && ly == c + 2 && (s->seed & 1))
-    return p->piece(atlas::town(tt::Log), 0.9f, 5);
+    return p->piece(masonry(s, tt::Log), 0.9f, 5);
   if ((lx == 1 && ly == 1) || (lx == 1 && ly == 2 && (r & 1)))
-    return p->piece(atlas::town(tt::Sack), 0.6f, 5);
+    return p->piece(masonry(s, tt::Sack), 0.6f, 5);
   if ((lx == s->w - 2 && ly == 1) || (lx == s->w - 1 && ly == 2 && (r & 1)))
     return p->piece(atlas::tile(r & 2 ? t::Crate : t::Barrel), 0.8f, 5);
   return false;
@@ -158,7 +158,7 @@ bool castleGround(Site s, int lx, int ly, Sprite *out) {
   if (!castleCourt(s, lx, ly) &&
       !(ly == s->h - 1 && (lx == gate || lx == gate + 1)))
     return false;
-  *out = atlas::town(tt::Path);
+  *out = masonry(s, tt::Path);
   return true;
 }
 
@@ -173,16 +173,16 @@ bool castle(Site s, int lx, int ly, uint32_t, Prop *p) {
          lit = slit && ((s->seed >> (lx + ly)) & 2);
     int yo = 0;
     if (ly == front)
-      p->add(atlas::town(gateHere ? (arch ? tt::OpenGate : tt::Portcullis) +
+      p->add(masonry(s, gateHere ? (arch ? tt::OpenGate : tt::Portcullis) +
                                         (lx - gate)
                                   : tt::Bricks)),
           yo = -16;
-    p->add(atlas::town(slit ? tt::ArrowSlit : tt::Bricks), yo);
+    p->add(masonry(s, slit ? tt::ArrowSlit : tt::Bricks), yo);
     if (side >= 0)
-      p->add(atlas::town(tt::TowerTop + 24 + side), yo - 16),
-          p->add(atlas::town(tt::TowerTop + side), yo - 32);
+      p->add(masonry(s, tt::TowerTop + 24 + side), yo - 16),
+          p->add(masonry(s, tt::TowerTop + side), yo - 32);
     else
-      p->add(atlas::town(tt::WallTop + (lx == 3 ? 0 : lx == w - 4 ? 2 : 1)),
+      p->add(masonry(s, tt::WallTop + (lx == 3 ? 0 : lx == w - 4 ? 2 : 1)),
              yo - 16);
     if (gateHere)
       p->fire({0.55f, 0.27f, 0.07f, 1}, 90, -6);
@@ -194,7 +194,7 @@ bool castle(Site s, int lx, int ly, uint32_t, Prop *p) {
   }
   if (side < 0 || ly <= back || ly >= front - 3)
     return false;
-  p->add(atlas::town(tt::TowerTop + 12 + side));
+  p->add(masonry(s, tt::TowerTop + 12 + side));
   p->shadow = 0;
   return true;
 }

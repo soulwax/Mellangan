@@ -10,6 +10,8 @@ All notable changes to Mellangan are documented here. The format follows
 
 - The Moth Studios intro plays when the game starts: about nine seconds, and for its last half second the picture darkens and the sound fades before the title fades in. Any key, click or button skips it with the same half-second fade, Settings has an INTRO switch to turn it off, and it never plays in dev, bench, soak, campaign-start or screenshot runs. The video is 1.1 MB of MPEG-1 and the sound 84 KB of Ogg Vorbis, smaller together than the original MP4.
 
+- Buildings are built from their biome's material: sandstone in the deserts, savanna, badlands, salt flats and glass desert; frosted walls and snow-capped roofs in the snowfields and taiga; moss-grown stone in the barrow, mire, jungle, fungal wood, floodplain and sunken ruins; dark basalt with smouldering roofs in the ashlands, ember fen, hollow caverns and starfall basin. Cottages, castles, graveyard fences, shrine and monolith slabs and ruin arches all follow it.
+
 ### Changed
 
 - Text can carry accented letters: the font's Latin-1 half (French, German, Spanish, Portuguese, Italian and Nordic letters) is now reached from UTF-8 text, and widths and trimming count letters, not bytes. A `language <name>` line in `settings.txt` loads `res/lang/<name>.txt`; `--lang-template <file>` writes every interface string as a starting point for a translation.
