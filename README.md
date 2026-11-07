@@ -4,22 +4,29 @@ Linux support is coming. macOS on Apple Silicon builds as a native app.
 
 The programming paradigm is "C with classes": that means the game is written in C++20 and might feel like C++ but the code is structured to use C idioms.
 
-The name was a random headbash against the keyboard and stands for: nothing
+It went from survivals to a campaign with a skill tree until enough was enough and it's basically a bit of caves of qud, a bit of risk of rain, a bit of enter the gungeon, and a bit of the binding of isaac. The game is still in early access and is not balanced yet obviously, but the core gameplay is there and the game is playable. The game is not yet on Steam, but it will be eventually.
 
+## When the code reaches certain maturity it will split into a private repository for the game and a public repository for the engine. The engine is already public proving the game around it conceptually.
+
+## Wanna contribute or get the big picture? Contact me on discord: soulwa.x or just fork it! Alternatively: soulwax@cock.li
+
+## All asset are my own or zlib licensed, except for the Kenney assets which are public domain. See `res/CREDITS.md` for details. Kenney assets were initially used as a basis for getting something on the screen, but have grown substantially which I claim as my own work.
 
 A yet small top-down "v-survivors"-like game built with C++20 on the [Vulkan2D](https://github.com/soulwax/Vulkan2D) renderer,
 using [EnTT](https://github.com/skypjack/entt) for entity storage and [spdlog](https://github.com/gabime/spdlog) for logging.
 
-Survive the night against a horde of enemies blabla, but with the catch that you need to traverse the biomes to find shrines to light and kindle them to win the run. The enemies are a mix of melee and ranged, and the player can pick up upgrades to help them survive.
+Survive the night against a horde of enemies blabla, but with the catch that you need to traverse the biomes to find shrines to light and kindle them to win the run. The enemies are a mix of melee and ranged, and the player can pick up upgrades to help them survive. And the other catch being it's Caves of Qud meets Risk of Rain meets Enter the Gungeon meets The Binding of Isaac. The player can pick up weapons, relics, and upgrades to help them survive.
 Enemies can have their own type of attacks, upgrades, passives and abilities.
+
 -
+
 ## Screenshots
 
-| Title screen | 1 |
-| --- | --- |
-| [![Mellangan title screen and world selection](static/screenshots/01-title.png)](static/screenshots/masonry-0.png) | [![Choosing the Mage class](static/screenshots/masonry-1.png)](static/screenshots/masonry-2.png) |
-| 2 | 3 |
-| [![Surviving enemies in the savanna](static/screenshots/03-combat.png)](static/screenshots/03-combat.png) | [![Choosing a level-up upgrade during a run](static/screenshots/04-upgrades.png)](static/screenshots/04-upgrades.png) |
+| Title screen                                                                                                       | 1                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| [![Mellangan title screen and world selection](static/screenshots/01-title.png)](static/screenshots/masonry-0.png) | [![Choosing the Mage class](static/screenshots/masonry-1.png)](static/screenshots/masonry-2.png)                      |
+| 2                                                                                                                  | 3                                                                                                                     |
+| [![Surviving enemies in the savanna](static/screenshots/03-combat.png)](static/screenshots/03-combat.png)          | [![Choosing a level-up upgrade during a run](static/screenshots/04-upgrades.png)](static/screenshots/04-upgrades.png) |
 
 ## System requirements
 
@@ -136,29 +143,29 @@ marked increases damage from direct hits. Reapplying a status keeps its stronges
 remaining duration when the new application lasts longer. Frost Nova chills enemies by 35% for two seconds,
 and fire pools leave a short burn when enemies move away. Afflictions clear on death or revival.
 
-| Key | Action |
-| --- | --- |
-| WASD / Arrows | Move |
-| Space | Class skill |
-| 1-4, Arrows + Enter, Mouse | Pick an upgrade (4 for a relic) |
-| Tab | World map (arrows pan, 1-3 zoom); on the title, switch world mode |
-| Up / Down (title) | Recall a past world |
-| Left / Right (class screen) | Choose a class |
-| C (title, pause) | Codex |
-| Gamepad | Left stick or D-pad move (the stick also walks slower when pushed part way), A confirm and class skill, B back, Start pause, Back map (quit to title while paused), X gather or retry, Y inventory or codex, LB show loot, RB settings, LT skill tree or campaign, RT build, L3 drop an item. Hints name pad buttons while you play on the pad |
-| Settings, CONTROLS | Rebind the main keys (saved in `keys.txt`); the arrows, Enter, Esc, 1-4 and Q stay fixed. Opened from a gamepad it lists the pad buttons instead: X, Y, Back, the shoulders, the triggers, the stick clicks and any paddles can take any of the eight pad actions, while A, B, Start and the D-pad stay fixed |
-| O (title, pause) | Settings: master, music, effects and ambience volume, screen shake, flashes, particles, damage numbers, a colourblind palette, fullscreen, pixel-perfect scaling, vsync and the intro, kept in `settings.txt` in the save folder |
-| Esc / P | Pause |
-| F11 | Fullscreen |
-| F3 | FPS counter and frame-time graph |
-| V | Toggle full or reduced cosmetic particles (also available while paused) |
-| I | Inventory; beside a merchant, workbench, stash, elder or waypoint it opens theirs instead |
-| Alt (hold) | Show the names of items on the ground |
-| K (title) | Begin or continue the campaign |
-| K (campaign) | Skill tree |
-| R (campaign class screen) | Toggle Hardcore |
-| E (campaign) | Strike a tree, rock or crystal (hold to keep striking), relight a dead torch, take down something you built, or delve into a mine |
-| B (campaign) | Build a campfire, torch, fence, stone wall or workbench |
+| Key                         | Action                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WASD / Arrows               | Move                                                                                                                                                                                                                                                                                                                                           |
+| Space                       | Class skill                                                                                                                                                                                                                                                                                                                                    |
+| 1-4, Arrows + Enter, Mouse  | Pick an upgrade (4 for a relic)                                                                                                                                                                                                                                                                                                                |
+| Tab                         | World map (arrows pan, 1-3 zoom); on the title, switch world mode                                                                                                                                                                                                                                                                              |
+| Up / Down (title)           | Recall a past world                                                                                                                                                                                                                                                                                                                            |
+| Left / Right (class screen) | Choose a class                                                                                                                                                                                                                                                                                                                                 |
+| C (title, pause)            | Codex                                                                                                                                                                                                                                                                                                                                          |
+| Gamepad                     | Left stick or D-pad move (the stick also walks slower when pushed part way), A confirm and class skill, B back, Start pause, Back map (quit to title while paused), X gather or retry, Y inventory or codex, LB show loot, RB settings, LT skill tree or campaign, RT build, L3 drop an item. Hints name pad buttons while you play on the pad |
+| Settings, CONTROLS          | Rebind the main keys (saved in `keys.txt`); the arrows, Enter, Esc, 1-4 and Q stay fixed. Opened from a gamepad it lists the pad buttons instead: X, Y, Back, the shoulders, the triggers, the stick clicks and any paddles can take any of the eight pad actions, while A, B, Start and the D-pad stay fixed                                  |
+| O (title, pause)            | Settings: master, music, effects and ambience volume, screen shake, flashes, particles, damage numbers, a colourblind palette, fullscreen, pixel-perfect scaling, vsync and the intro, kept in `settings.txt` in the save folder                                                                                                               |
+| Esc / P                     | Pause                                                                                                                                                                                                                                                                                                                                          |
+| F11                         | Fullscreen                                                                                                                                                                                                                                                                                                                                     |
+| F3                          | FPS counter and frame-time graph                                                                                                                                                                                                                                                                                                               |
+| V                           | Toggle full or reduced cosmetic particles (also available while paused)                                                                                                                                                                                                                                                                        |
+| I                           | Inventory; beside a merchant, workbench, stash, elder or waypoint it opens theirs instead                                                                                                                                                                                                                                                      |
+| Alt (hold)                  | Show the names of items on the ground                                                                                                                                                                                                                                                                                                          |
+| K (title)                   | Begin or continue the campaign                                                                                                                                                                                                                                                                                                                 |
+| K (campaign)                | Skill tree                                                                                                                                                                                                                                                                                                                                     |
+| R (campaign class screen)   | Toggle Hardcore                                                                                                                                                                                                                                                                                                                                |
+| E (campaign)                | Strike a tree, rock or crystal (hold to keep striking), relight a dead torch, take down something you built, or delve into a mine                                                                                                                                                                                                              |
+| B (campaign)                | Build a campfire, torch, fence, stone wall or workbench                                                                                                                                                                                                                                                                                        |
 
 Enemy attack warnings use red markers, including directional melee windups and hostile projectiles.
 Burn, chill, poison, and marked effects have distinct icons and player HUD timers. Reduced particles hides
