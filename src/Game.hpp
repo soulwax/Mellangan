@@ -28,6 +28,10 @@ inline std::string clockText(float t) {
 
 inline constexpr char CODE_CHARS[] = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+namespace world {
+enum class Layer : uint8_t;
+} // namespace world
+
 class Game {
 public:
   SDL_Window *window = nullptr;
@@ -66,6 +70,7 @@ public:
     nextMenu = std::move(m), menuChanged = true;
   }
   void newGame(bool reroll = true);
+  void travel(world::Layer to, double x, double y);
   void toTitle();
   void reseed();
   void snapCamera();

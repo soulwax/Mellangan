@@ -59,7 +59,7 @@ struct Edits {
     auto it = changes.find(key(x, y));
     return it == changes.end() ? nullptr : &it->second;
   }
-  std::string save() const;
+  std::string save(const char *key = "edit") const;
   bool load(std::string_view line);
 };
 

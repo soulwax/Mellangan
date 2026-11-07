@@ -6,6 +6,16 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.7] - 2026-11-07
+
+### Added
+
+- Caves under the campaign world: stone stairs lead down from the surface into caves that lie directly beneath it, tile for tile. Some are a single chamber, some run under a hill to a second way out, and some are chains of rooms. Below there is no sky and no day: only your light, the stair's shaft of daylight, rock walls that stop everyone, and a thinner trickle of foes. Press E on a stair to go down or to climb back up; what you build below is remembered. Foes find their way to you around cave walls, and the minimap draws the caves you have explored.
+
+### Fixed
+
+- The minimap no longer skips or mixes up the patch of map just north-west of where the world starts.
+
 ## [0.6.6] - 2026-11-07
 
 ### Added

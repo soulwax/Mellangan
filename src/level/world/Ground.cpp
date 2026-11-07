@@ -26,6 +26,8 @@ template <class F> int sides(int x, int y, F at) {
 int rim(int mask) { return RIM[mask & 15]; }
 
 Sprite groundTile(int x, int y) {
+  if (active != Layer::Surface)
+    return under::groundTile(x, y);
   Structure st;
   Sprite out;
   const Biome *b = BIOMES[biomeAt(x, y)];
@@ -54,6 +56,8 @@ float groundShade(int x, int y) {
 }
 
 Color groundTint(int x, int y) {
+  if (active != Layer::Surface)
+    return under::groundTint(x, y);
   GroundBlend blend = groundBlend(x, y);
   Color out{0, 0, 0, 1};
   for (int i = 0; i < blend.count; i++) {

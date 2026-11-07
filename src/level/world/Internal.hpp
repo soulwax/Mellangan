@@ -47,6 +47,22 @@ float memo(int x, int y, uint32_t has, float TileMemo::*field, F compute) {
   return m->*field;
 }
 
+extern Layer active;
+bool mouthProp(int x, int y, Prop &p);
+
+namespace under {
+BiomeId biomeAt(int x, int y);
+GroundBlend groundBlend(int x, int y);
+int heightAt(int x, int y);
+bool isDirt(int x, int y);
+bool isWater(int x, int y);
+bool isRamp(int x, int y);
+bool structureIn(int rx, int ry, Structure &out);
+Sprite groundTile(int x, int y);
+Color groundTint(int x, int y);
+bool propAt(int x, int y, Prop &p);
+} // namespace under
+
 extern const float LAKES[BIOME_COUNT];
 bool lake(int x, int y, float margin);
 const Biome *blendPick(int x, int y, uint32_t roll);

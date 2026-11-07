@@ -130,6 +130,11 @@ int runTests() {
   testSpawnShore();
   testHills();
   testMasonry();
+  testLayers();
+  testLayerSaves();
+  testCaves();
+  testCaveTravel();
+  testChartCorner();
   testNewFoes();
   testGreenwoodFoes();
   testMarchesFoes();

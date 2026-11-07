@@ -88,3 +88,52 @@ int mapBiomes(const char *path) {
   std::fclose(f);
   return 0;
 }
+
+int mapCaves(const char *path) {
+  constexpr int SIDE = 1024;
+  world::enter(world::Layer::Caves);
+  std::vector<unsigned char> rgb(SIDE * SIDE * 3);
+  auto put = [&](int i, int j, Color c) {
+    if (i < 0 || j < 0 || i >= SIDE || j >= SIDE)
+      return;
+    unsigned char *o = &rgb[(j * SIDE + i) * 3];
+    o[0] = (unsigned char)(clampf(c.r, 0, 1) * 255), o[1] = (unsigned char)(clampf(c.g, 0, 1) * 255),
+    o[2] = (unsigned char)(clampf(c.b, 0, 1) * 255);
+  };
+  for (int j = 0; j < SIDE; j++)
+    for (int i = 0; i < SIDE; i++) {
+      int x = i - SIDE / 2, y = j - SIDE / 2, h = world::heightAt(x, y);
+      Color c = world::isRock(x, y)   ? Color{0.07f, 0.06f, 0.09f, 1}
+                : world::isWater(x, y) ? Color{0.15f, 0.3f, 0.75f, 1}
+                : world::isRamp(x, y)  ? Color{0.9f, 0.55f, 0.2f, 1}
+                                       : Color{0.42f, 0.36f, 0.3f, 1} * (0.8f + 0.25f * h);
+      put(i, j, c);
+    }
+  int kinds[5]{}, size = 0, mouths = 0;
+  const char *names[5] = {"solid", "pocket", "through", "warren", "descent"};
+  for (int cy = -40; cy < 40; cy++)
+    for (int cx = -40; cx < 40; cx++) {
+      world::CaveCell c;
+      if (world::caveCell(cx, cy, c))
+        size += c.size, mouths += c.mouths;
+      kinds[int(c.kind)]++;
+      for (int m = -1; m < c.mouths + (c.kind == world::CaveKind::Descent); m++) {
+        int x = m < 0 ? c.hx : m == c.mouths ? c.px : c.mx[m], y = m < 0 ? c.hy : m == c.mouths ? c.py : c.my[m];
+        Color tone = m < 0 ? Color{0.9f, 0.2f, 0.2f, 1} : m == c.mouths ? Color{0.75f, 0.3f, 0.95f, 1}
+                                                                       : Color{1, 0.9f, 0.3f, 1};
+        if (c.kind != world::CaveKind::Solid)
+          for (int d = -1; d <= 1; d++)
+            put(x + SIDE / 2 + d, y + SIDE / 2, tone), put(x + SIDE / 2, y + SIDE / 2 + d, tone);
+      }
+    }
+  world::enter(world::Layer::Surface);
+  std::printf("caves in 6400 cells:");
+  for (int k = 0; k < 5; k++)
+    std::printf(" %s %d", names[k], kinds[k]);
+  int caves = 6400 - kinds[0];
+  std::printf("; mean size %d tiles, %d mouths\n", caves ? size / caves : 0, mouths);
+  std::ofstream out(path, std::ios::binary);
+  out << "P6\n" << SIDE << " " << SIDE << "\n255\n";
+  out.write(reinterpret_cast<const char *>(rgb.data()), std::streamsize(rgb.size()));
+  return out ? 0 : 1;
+}

@@ -20,6 +20,7 @@
 #include "level/Level.hpp"
 #include "level/Prop.hpp"
 #include "level/World.hpp"
+#include "level/Noise.h"
 
 namespace {
 
@@ -194,4 +195,133 @@ void testCampaign() {
                "prop survive a save and reload; falling wakes you by the waypoint for a tenth "
                "of your gold: PASS"
             << std::endl;
+}
+
+void testCaveTravel() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  Game game;
+  game.campaign = std::make_unique<Campaign>();
+  Campaign &c = *game.campaign;
+  c.world = "CLASSIC", c.hero = 0;
+  game.worldMode = WorldMode::Classic, game.seedCode.clear();
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Surface);
+  game.level = std::make_unique<Level>(game, c.rules());
+  c.enter(*game.level);
+  world::CaveCell cell{};
+  bool found = false;
+  for (int r = 0; r < 12 && !found; r++)
+    for (int cy = -r; cy <= r && !found; cy++)
+      for (int cx = -r; cx <= r && !found; cx++)
+        found = (std::abs(cx) == r || std::abs(cy) == r) && world::caveCell(cx, cy, cell) &&
+                cell.kind == world::CaveKind::Through;
+  assert(found);
+  int mx = cell.mx[0], my = cell.my[0];
+  Prop prop;
+  assert(world::propAt(mx, my, prop) && prop.count == 1);
+  Player *p = game.level->player;
+  p->x = mx * 16 + 8.0, p->y = my * 16 + 12.0;
+  int tx = 0, ty = 0;
+  assert(world::caveMouthNear(p->x, p->y, tx, ty) && tx == mx && ty == my);
+  int lvl = p->lvl = 7;
+  c.capture(*game.level);
+  game.travel(world::Layer::Caves, mx * 16 + 8.0, my * 16 + 12.0);
+  Level &below = *game.level;
+  p = below.player;
+  assert(world::layer() == world::Layer::Caves && c.layer == 1 && world::edits == &c.below[0]);
+  assert(!below.rules.sky && !below.rules.endsAtDawn && !below.night.dawn && p->lvl == lvl);
+  assert(std::abs(p->x - (mx * 16 + 8.0)) < 1 && !below.rockAt(p->x, p->y));
+  assert(world::propAt(mx, my, prop) && prop.light.r > 0);
+  below.tick();
+  assert(below.chart.charted > 0 && below.chart.at(Chart::cellOf(p->x), Chart::cellOf(p->y)));
+  int bx = cell.mx[1], by = cell.my[1];
+  below.quarry();
+  for (int i = 0; i < 60 * 30 && !(world::caveMouthNear(p->x, p->y, tx, ty) && tx == bx && ty == by); i++) {
+    double dx = bx * 16 + 8.0 - p->x, dy = by * 16 + 12.0 - p->y, d = std::sqrt(dx * dx + dy * dy);
+    p->x += dx / d * 3, p->y += dy / d * 3;
+    below.collide(p->x, p->y, p->radius);
+    below.quarry();
+  }
+  int far = 0;
+  for (int y = -40; y <= 40; y++)
+    for (int x = -40; x <= 40; x++)
+      far += below.rockAt(p->x + x * 16, p->y + y * 16) == world::isRock(int(std::floor(p->x / 16)) + x,
+                                                                         int(std::floor(p->y / 16)) + y);
+  assert(far == 81 * 81);
+  double wx = p->x, wy = p->y;
+  for (int i = 0; i < 120; i++) {
+    p->x += 4;
+    below.collide(p->x, p->y, p->radius);
+  }
+  assert(!world::isRock(int(std::floor(p->x / 16)), int(std::floor(p->y / 16))));
+  p->x = wx, p->y = wy;
+  Enemy *in = below.spawner.spawn(EnemyKind::Rat, cell.hx * 16 + 8.0, cell.hy * 16 + 8.0);
+  double rx = 0, ry = 0;
+  for (int y = 0; y < 64 && !rx; y++)
+    for (int x = 0; x < 64 && !rx; x++)
+      if (world::isRock(cell.cx * 64 + x, cell.cy * 64 + y))
+        rx = (cell.cx * 64 + x) * 16 + 8.0, ry = (cell.cy * 64 + y) * 16 + 8.0;
+  p->x = rx, p->y = ry;
+  below.quarry();
+  assert(below.rockAt(rx, ry) && !below.spawner.spawn(EnemyKind::Rat, rx, ry));
+  p->x = wx, p->y = wy;
+  below.quarry();
+  assert(in);
+  p->god = true;
+  for (auto &u : p->upgrades)
+    u->level = 0;
+  p->x = mx * 16 + 8.0, p->y = my * 16 + 12.0;
+  below.quarry();
+  Enemy *rat = below.spawner.spawn(EnemyKind::Rat, cell.mx[1] * 16 + 8.0, cell.my[1] * 16 + 12.0);
+  entt::entity ratId = rat->id;
+  double gap = 1e9;
+  int steps = 0;
+  for (; steps < 60 * 40 && gap > 40; steps++) {
+    p->x = mx * 16 + 8.0, p->y = my * 16 + 12.0;
+    below.tick();
+    Mob *m = below.mob(ratId);
+    assert(m && !below.lost(m->x, m->y));
+    gap = std::hypot(m->x - p->x, m->y - p->y);
+  }
+  assert(gap <= 40);
+  below.quarry();
+  int blockedTiles = 0, routed = 0;
+  for (int dy = -30; dy <= 30; dy++)
+    for (int dx = -30; dx <= 30; dx++) {
+      double qx = std::floor(p->x / 16 + dx) * 16 + 8, qy = std::floor(p->y / 16 + dy) * 16 + 10;
+      int here = below.flowAt(qx, qy);
+      if (here < 3 || here == UINT16_MAX)
+        continue;
+      double xw = p->x - qx, yw = p->y - qy, len = std::hypot(xw, yw);
+      xw = xw / len * 40, yw = yw / len * 40;
+      if (!below.rockAt(qx + xw / 40 * 12, qy + yw / 40 * 12 - 2))
+        continue;
+      blockedTiles++;
+      below.steer(qx, qy, 40, xw, yw);
+      double nx = qx + xw / 40 * 12, ny = qy + yw / 40 * 12;
+      int next = below.flowAt(nx, ny);
+      routed += !below.rockAt(nx, ny - 2) && next >= 0 && next < here && std::abs(std::hypot(xw, yw) - 40) < 0.01;
+    }
+  assert(blockedTiles >= 5 && routed == blockedTiles);
+  c.below[0].place(cell.hx, cell.hy, Piece::Torch);
+  game.travel(world::Layer::Surface, mx * 16 + 8.0, my * 16 + 12.0);
+  assert(world::layer() == world::Layer::Surface && c.layer == 0 && world::edits == &c.edits);
+  assert(game.level->rules.sky && game.level->player->lvl == lvl && !game.level->rockAt(rx, ry));
+  std::string text = c.save();
+  Campaign back;
+  assert(Campaign::load(text, back) && back.layer == 0 && back.below[0].at(cell.hx, cell.hy));
+  c.leave();
+  game.campaign.reset();
+  game.level.reset();
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Cave travel: down through a mouth at (" << mx << ", " << my
+            << "), rock blocks and refuses spawns, a rat finds the hero through the cave in "
+            << steps / 60.0 << " s, all " << blockedTiles
+            << " tiles whose straight line meets rock steer downhill, the hero keeps level " << lvl
+            << ", and climbs back out with the cave's edits kept: PASS" << std::endl;
 }

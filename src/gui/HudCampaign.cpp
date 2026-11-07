@@ -51,6 +51,10 @@ void Hud::handwork() {
                             ? say(lang.caveIn, c->delve.inside(l))
                             : say(lang.delveFloor, c->delve.floor, Delve::FLOORS, c->delve.inside(l));
     s.textCenter(depth, s.w / 2, 70 * u, small, Color{0.9f, 0.75f, 0.5f, 0.9f});
+  } else if (int mx, my; world::caveMouthNear(l.player->x, l.player->y, mx, my)) {
+    return plate(mx * 16 + 8.0, my * 16 - 14.0,
+                 game.input.prompt(world::layer() == world::Layer::Surface ? lang.caveDown : lang.caveUp),
+                 Color{0.75f, 0.8f, 0.95f, 1});
   } else if (Structure mine; Delve::entrance(l, *c, mine)) {
     return plate(mine.centerX(), mine.centerY() - 26, game.input.prompt(lang.delveMine),
                  Color{0.9f, 0.75f, 0.5f, 1});

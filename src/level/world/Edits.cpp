@@ -119,12 +119,12 @@ bool pieceProp(Piece piece, int x, int y, Prop &p) {
 
 } // namespace world
 
-std::string Edits::save() const {
+std::string Edits::save(const char *key) const {
   std::string out;
   for (const auto &[k, c] : changes) {
     int x = int(int32_t(k >> 32)), y = int(int32_t(k & 0xFFFFFFFFu));
-    out += c.placed ? fmt::format("edit p {} {} {}\n", x, y, int(c.piece))
-                    : fmt::format("edit h {} {} {:.1f}\n", x, y, c.regrow);
+    out += c.placed ? fmt::format("{} p {} {} {}\n", key, x, y, int(c.piece))
+                    : fmt::format("{} h {} {} {:.1f}\n", key, x, y, c.regrow);
   }
   return out;
 }
@@ -134,7 +134,7 @@ bool Edits::load(std::string_view line) {
   int x = 0, y = 0;
   float v = 0;
   std::string s(line);
-  if (std::sscanf(s.c_str(), "edit %c %d %d %f", &kind, &x, &y, &v) != 4)
+  if (std::sscanf(s.c_str(), "%*s %c %d %d %f", &kind, &x, &y, &v) != 4)
     return false;
   if (kind == 'p' && v >= 0 && v < float(Piece::Count))
     place(x, y, Piece(int(v)));

@@ -199,6 +199,8 @@ void Enemy::move() {
   }
   if (level->rules.route)
     level->rules.route(x, y, p.x, p.y, type.speed, xWant, yWant);
+  if (!type.floats)
+    level->steer(x, y, type.speed, xWant, yWant);
   spdMul *= traits.speed();
   if (!type.floats && level->surfaceAt(x, y) == 1)
     spdMul *= is(EnemyKind::MireLeech) ? 1.2f : 0.5f;
@@ -220,11 +222,15 @@ void Enemy::move() {
     facing = xd < 0 ? -1.0f : 1.0f;
   if (xd * xd + yd * yd > 560 * 560) {
     bool running = p.xa * p.xa + p.ya * p.ya > 100;
-    double dir = (running ? std::atan2(p.ya, p.xa) : roll() * TAU) +
-                 roll() * 2 - 1,
-           r = 290 + 30 * roll();
-    x = p.x + std::cos(dir) * r;
-    y = p.y + std::sin(dir) * r;
+    for (int k = 0; k < 8; k++) {
+      double dir = (running ? std::atan2(p.ya, p.xa) : roll() * TAU) +
+                   roll() * 2 - 1,
+             r = 290 + 30 * roll(), nx = p.x + std::cos(dir) * r, ny = p.y + std::sin(dir) * r;
+      if (!level->lost(nx, ny)) {
+        x = nx, y = ny;
+        break;
+      }
+    }
   }
 }
 
@@ -258,7 +264,7 @@ void Enemy::settle() {
     return;
   x += xPush, y += yPush;
   if (!type.floats)
-    level->collide(x, y, radius);
+    level->collide(x, y, radius), level->slide(xOld, yOld, x, y);
   if (level->rules.wall && !is(EnemyKind::Shade))
     level->rules.wall(xOld, yOld, x, y);
   xOld = x, yOld = y;

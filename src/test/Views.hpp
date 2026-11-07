@@ -15,3 +15,4 @@ void viewArsenal(SDL_Window *window, const std::string &base,
                  const char *cls = nullptr);
 void captureScreenshotSuite(SDL_Window *window, const std::string &base);
 int mapBiomes(const char *path);
+int mapCaves(const char *path);

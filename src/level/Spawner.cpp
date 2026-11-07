@@ -313,7 +313,7 @@ Enemy *Spawner::champion(double x, double y) {
 Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
                       bool boss) {
   std::lock_guard<std::mutex> lock(spawnMutex);
-  if (level.rules.safeAt(x, y))
+  if (level.rules.safeAt(x, y) || level.rockAt(x, y))
     return nullptr;
   if (!boss && kind != EnemyKind::Shade && level.rules.warded && level.rules.warded(x, y) &&
       rng.chance(WARD))

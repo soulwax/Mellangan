@@ -1,3 +1,4 @@
+#include "level/World.hpp"
 #include "level/Level.hpp"
 #include "item/Upgrade.hpp"
 #include <spdlog/spdlog.h>
@@ -96,6 +97,117 @@ void Level::collide(double &x, double &y, float radius) const {
       else
         x = xc, y = yc + min;
     }
+  if (rock.empty())
+    return;
+  for (int yt = ty - 1; yt <= ty + 1; yt++)
+    for (int xt = tx - 1; xt <= tx + 1; xt++) {
+      if (!rockAt(xt * 16 + 8.0, yt * 16 + 8.0))
+        continue;
+      double l = xt * 16.0, t = yt * 16.0, cx = std::clamp(x, l, l + 16), cy = std::clamp(y, t, t + 16);
+      double xd = x - cx, yd = y - cy, d2 = xd * xd + yd * yd;
+      if (d2 >= double(radius) * radius)
+        continue;
+      if (d2 > 1e-6) {
+        double len = std::sqrt(d2);
+        x = cx + xd / len * radius, y = cy + yd / len * radius;
+        continue;
+      }
+      double out[4] = {x - l, l + 16 - x, y - t, t + 16 - y};
+      int side = int(std::min_element(out, out + 4) - out);
+      if (side == 0)
+        x = l - radius;
+      else if (side == 1)
+        x = l + 16 + radius;
+      else if (side == 2)
+        y = t - radius;
+      else
+        y = t + 16 + radius;
+    }
+}
+
+bool Level::rockAt(double x, double y) const {
+  int gx = int(std::floor(x / 16)) - rockX, gy = int(std::floor(y / 16)) - rockY;
+  return !rock.empty() && gx >= 0 && gy >= 0 && gx < ROCK_SPAN && gy < ROCK_SPAN &&
+         rock[gy * ROCK_SPAN + gx];
+}
+
+void Level::quarry() {
+  if (world::layer() != world::Layer::Caves) {
+    rock.clear(), flow.clear();
+    return;
+  }
+  int tx = int(std::floor(player->x / 16)), ty = int(std::floor(player->y / 16));
+  if (rock.empty() || std::abs(tx - rockX - ROCK_SPAN / 2) >= ROCK_SPAN / 4 ||
+      std::abs(ty - rockY - ROCK_SPAN / 2) >= ROCK_SPAN / 4) {
+    rockX = tx - ROCK_SPAN / 2, rockY = ty - ROCK_SPAN / 2;
+    rock.assign(ROCK_SPAN * ROCK_SPAN, 0);
+    for (int y = 0; y < ROCK_SPAN; y++)
+      for (int x = 0; x < ROCK_SPAN; x++)
+        rock[y * ROCK_SPAN + x] = world::isRock(rockX + x, rockY + y);
+    flowTime = 0;
+  }
+  if ((flowTime -= DT) > 0)
+    return;
+  flowTime = 0.25f;
+  flow.assign(ROCK_SPAN * ROCK_SPAN, UINT16_MAX);
+  int start = (ty - rockY) * ROCK_SPAN + tx - rockX;
+  if (rock[start])
+    return;
+  std::vector<int> queue{start};
+  flow[start] = 0;
+  for (size_t q = 0; q < queue.size(); q++) {
+    int i = queue[q] % ROCK_SPAN, j = queue[q] / ROCK_SPAN;
+    for (int d = 0; d < 4; d++) {
+      int ni = i + (d == 0) - (d == 1), nj = j + (d == 2) - (d == 3), n = nj * ROCK_SPAN + ni;
+      if (ni < 0 || nj < 0 || ni >= ROCK_SPAN || nj >= ROCK_SPAN || rock[n] || flow[n] != UINT16_MAX)
+        continue;
+      flow[n] = uint16_t(flow[queue[q]] + 1);
+      queue.push_back(n);
+    }
+  }
+}
+
+int Level::flowAt(double x, double y) const {
+  int i = int(std::floor(x / 16)) - rockX, j = int(std::floor((y - 2) / 16)) - rockY;
+  return flow.empty() || i < 0 || j < 0 || i >= ROCK_SPAN || j >= ROCK_SPAN ? -1 : flow[j * ROCK_SPAN + i];
+}
+
+void Level::slide(double ox, double oy, double &x, double &y) const {
+  if (rock.empty() || std::isnan(ox) || std::isnan(oy) || !rockAt(x, y - 2) || rockAt(ox, oy - 2))
+    return;
+  if (!rockAt(x, oy - 2))
+    y = oy;
+  else if (!rockAt(ox, y - 2))
+    x = ox;
+  else
+    x = ox, y = oy;
+}
+
+void Level::steer(double x, double y, float speed, double &xw, double &yw) const {
+  int i = int(std::floor(x / 16)) - rockX, j = int(std::floor((y - 2) / 16)) - rockY;
+  if (flow.empty() || i < 1 || j < 1 || i >= ROCK_SPAN - 1 || j >= ROCK_SPAN - 1)
+    return;
+  double px = player->x - x, py = player->y - y;
+  uint16_t here = flow[j * ROCK_SPAN + i];
+  if (here == UINT16_MAX || here < 2 || px * xw + py * yw <= 0)
+    return;
+  auto open = [&](int a, int b) { return !rock[b * ROCK_SPAN + a]; };
+  int bx = 0, by = 0;
+  uint16_t best = here;
+  for (int dy = -1; dy <= 1; dy++)
+    for (int dx = -1; dx <= 1; dx++) {
+      if ((!dx && !dy) || (dx && dy && (!open(i + dx, j) || !open(i, j + dy))))
+        continue;
+      uint16_t f = flow[(j + dy) * ROCK_SPAN + i + dx];
+      if (f < best || (f == best && f < here && dx && dy))
+        best = f, bx = dx, by = dy;
+    }
+  if (best >= here)
+    return;
+  double tx = (i + bx + rockX) * 16 + 8.0 - x, ty = (j + by + rockY) * 16 + 10.0 - y;
+  double d = std::sqrt(tx * tx + ty * ty);
+  if (d > 1e-3)
+    xw = tx / d * speed, yw = ty / d * speed;
 }
 
 int Level::surfaceAt(double x, double y) const {

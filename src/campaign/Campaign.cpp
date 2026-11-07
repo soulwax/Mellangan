@@ -62,6 +62,10 @@ RunRules Campaign::rules() const {
   r.safe.push_back({xTown, yTown, SAFE});
   r.threat = areaThreat, r.warded = torchlit;
   r.route = bastion::route, r.wall = bastion::wall;
+  if (layer) {
+    r.sky = false, r.waves = false, r.nightLength = 1e9f, r.dayLength = 0, r.dayRate = 0;
+    r.spawnRate = 0.6f, r.safe.clear(), r.route = nullptr, r.wall = nullptr;
+  }
   return r;
 }
 
@@ -71,7 +75,7 @@ void Campaign::capture(const Level &level) {
   for (int m = 0; m < MATS; m++)
     materials[m] = p.materials[m];
   bag = p.bag, gear = p.gear, worn = p.worn;
-  x = p.x, y = p.y, day = level.night.nights;
+  x = p.x, y = p.y, day = level.night.nights, layer = int(world::layer());
   active = p.skill ? p.skill->name : "";
   upgrades.clear();
   for (const auto &up : p.upgrades) {
@@ -85,7 +89,9 @@ void Campaign::capture(const Level &level) {
 }
 
 void Campaign::enter(Level &level) {
-  world::edits = &edits;
+  world::edits = &editsOf(int(world::layer()));
+  if (world::layer() != world::Layer::Surface)
+    return underground(level);
   if (!founded)
     found(level);
   Delve::unseal(edits);
@@ -291,7 +297,23 @@ void Campaign::honour(Level &level) {
   level.game.announce(say(lang.bastionHeld, fell, reward));
 }
 
+void Campaign::underground(Level &level) {
+  delve = Delve{};
+  companion = entt::null;
+  threatScale = float(1 + nightmare);
+  townX = xTown, townY = yTown;
+  level.rules.safe.clear();
+  for (const auto &[k, e] : editsOf(layer).changes)
+    if (e.placed && e.piece == Piece::Campfire)
+      level.rules.safe.push_back({int(int32_t(k >> 32)) * 16 + 8.0,
+                                  int(int32_t(k & 0xFFFFFFFFu)) * 16 + 16.0, harvest::CAMPFIRE_SAFE});
+  level.night.dawn = false, level.night.nights = day;
+  restore(level);
+}
+
 void Campaign::tick(Level &level) {
+  if (world::layer() != world::Layer::Surface)
+    return smoulder(level);
   bool dawn = level.night.dawn;
   if (dawn && !wasDay) {
     regrow(level.night.nights);
@@ -310,6 +332,6 @@ void Campaign::tick(Level &level) {
 
 void Campaign::leave() {
   bastion::clear();
-  if (world::edits == &edits)
+  if (world::edits == &edits || world::edits == &below[0] || world::edits == &below[1])
     world::edits = nullptr;
 }

@@ -162,6 +162,12 @@ public:
   void render(Screen &s);
   void renderLight(Screen &s);
   void collide(double &x, double &y, float radius) const;
+  bool rockAt(double x, double y) const;
+  void quarry();
+  void steer(double x, double y, float speed, double &xw, double &yw) const;
+  void slide(double ox, double oy, double &x, double &y) const;
+  bool lost(double x, double y) const { return !rock.empty() && (rockAt(x, y - 2) || flowAt(x, y) == UINT16_MAX); }
+  int flowAt(double x, double y) const;
   void scatter(Screen &s);
   const std::vector<Prop> &visibleProps() const { return props; }
   int monsterLevel(double x, double y) const {
@@ -206,6 +212,11 @@ private:
   double xGrid = 0, yGrid = 0;
   float solids[SOLID_H * SOLID_W]{};
   uint8_t surfaces[SOLID_W * SOLID_H]{};
+  static constexpr int ROCK_SPAN = 128;
+  std::vector<uint8_t> rock;
+  std::vector<uint16_t> flow;
+  int rockX = 0, rockY = 0;
+  float flowTime = 0;
   bool waterInView = false;
   int solidX = 0, solidY = 0;
   std::unordered_set<uint64_t> visits;

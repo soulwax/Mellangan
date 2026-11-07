@@ -31,6 +31,8 @@ void Game::beginCampaign() {
   worldMode = WorldMode::Custom, seedCode = campaign->world;
   rules = campaign->rules();
   loadBalance();
+  world::openCaves(true);
+  world::enter(world::Layer(campaign->layer));
   build();
   campaign->enter(*level);
   if (dev) {
@@ -62,6 +64,16 @@ void Game::beginCampaign() {
                                                 return s->kind == StructureKind::Mine;
                                               }))
     level->player->x = mine.centerX(), level->player->y = mine.centerY() + 24;
+  world::CaveCell cell{};
+  bool caved = false;
+  int ox = int(std::floor(level->player->x / 16 / world::CAVE_CELL)),
+      oy = int(std::floor(level->player->y / 16 / world::CAVE_CELL));
+  for (int r = 0; dev && start.cave && world::layer() == world::Layer::Surface && r < 12 && !caved; r++)
+    for (int cy = oy - r; cy <= oy + r && !caved; cy++)
+      for (int cx = ox - r; cx <= ox + r && !caved; cx++)
+        caved = (std::abs(cx - ox) == r || std::abs(cy - oy) == r) && world::caveCell(cx, cy, cell);
+  if (caved)
+    travel(world::Layer::Caves, cell.mx[0] * 16 + 8.0, cell.my[0] * 16 + 12.0);
   snapCamera();
   setMenu(nullptr);
   autosave = Campaign::AUTOSAVE;
@@ -126,6 +138,8 @@ void Game::endCampaign() {
   campaign->leave();
   campaign.reset();
   rules = dawnRules;
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
 }
 
 void Game::place() {
@@ -141,8 +155,27 @@ void Game::place() {
   }
 }
 
+void Game::travel(world::Layer to, double x, double y) {
+  campaign->capture(*level);
+  campaign->x = x, campaign->y = y, campaign->layer = int(to);
+  campaign->leave();
+  rules = campaign->rules();
+  world::enter(to);
+  build();
+  campaign->enter(*level);
+  snapCamera();
+  saveCampaign();
+  spdlog::info("campaign: {} at tile ({}, {})", to == world::Layer::Surface ? "climbed out" : "went below",
+               int(std::floor(x / 16)), int(std::floor(y / 16)));
+  announce(to == world::Layer::Surface ? lang.caveSurface : lang.caveDepths);
+}
+
 void Game::gather() {
-  if (Structure mine; input.gather.clicked && !campaign->delve.active &&
+  if (int mx, my; input.gather.clicked && !campaign->delve.active &&
+                  world::caveMouthNear(level->player->x, level->player->y, mx, my))
+    travel(world::layer() == world::Layer::Surface ? world::Layer::Caves : world::Layer::Surface,
+           mx * 16 + 8.0, my * 16 + 12.0);
+  else if (Structure mine; input.gather.clicked && !campaign->delve.active &&
                       Delve::entrance(*level, *campaign, mine))
     campaign->delve.start(*level, *campaign, mine);
   else if (input.gather.clicked || (input.gather.down && (gatherTime -= DT) <= 0)) {

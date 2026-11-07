@@ -63,6 +63,16 @@ void FloorPainter::tile(int x, int y) {
   float n = world::groundShade(x, y),
         shade = (0.8f + 0.2f * n) * (0.94f + 0.08f * world::heightAt(x, y));
   int own = int(world::biomeAt(x, y));
+  if (world::layer() != world::Layer::Surface) {
+    bool pool = world::isWater(x, y);
+    s.color(world::groundTint(x, y) * (shade * (pool ? 0.82f : 1)));
+    if (pool)
+      edge(x, y, own, true);
+    else
+      s.sprite(world::groundTile(x, y), x * 16, y * 16, 0, 0);
+    wall(x, y, shade);
+    return;
+  }
   dry = BIOMES[own]->winter() ? 0.5f
                               : noise_unit(noise_fbm(x * 0.065f + 7.3f, y * 0.065f + 1.9f, 2, 707) * 1.6f);
   Structure st;

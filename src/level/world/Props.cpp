@@ -59,9 +59,13 @@ bool propAt(int x, int y, Prop &p) {
   p = Prop{};
   p.x = x * 16 + 8.0;
   p.y = y * 16 + 16.0;
+  if (active != Layer::Surface)
+    return under::propAt(x, y, p);
   if (edits)
     if (const Edits::Change *c = edits->at(x, y))
       return c->placed && pieceProp(c->piece, x, y, p);
+  if (mouthProp(x, y, p))
+    return true;
 
   Structure st;
   if (structureAt(x, y, st, 1))

@@ -88,6 +88,8 @@ TileMemo *memoAt(int x, int y) {
 }
 
 BiomeId biomeAt(int x, int y) {
+  if (active != Layer::Surface)
+    return under::biomeAt(x, y);
   return BiomeId(memo(x, y, slot::biome, [&] {
     uint8_t votes[BIOME_COUNT]{};
     BiomeId own = rawBiome(x, y), best = own;
@@ -102,6 +104,8 @@ BiomeId biomeAt(int x, int y) {
 }
 
 GroundBlend groundBlend(int x, int y) {
+  if (active != Layer::Surface)
+    return under::groundBlend(x, y);
   int gx = floor2(x), gy = floor2(y), x0 = gx * 2, y0 = gy * 2;
   float fx = (x - x0) * 0.5f, fy = (y - y0) * 0.5f;
   fx = fx * fx * (3 - 2 * fx);

@@ -72,6 +72,8 @@ bool rollStructure(int rx, int ry, Structure *out) {
 } // namespace
 
 bool structureIn(int rx, int ry, Structure &s) {
+  if (active != Layer::Surface)
+    return under::structureIn(rx, ry, s);
   struct Slot {
     int rx, ry;
     uint32_t epoch;

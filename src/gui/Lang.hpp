@@ -69,6 +69,8 @@ struct Lang {
 
   const char *buildPrompt = "{}  Enter build  Esc cancel", *caveIn = "THE CAVE-IN SETTLES  {} FOES",
              *delveFloor = "DELVE  FLOOR {}/{}  {} FOES", *delveMine = "E  DELVE INTO THE MINE",
+             *caveDown = "E  CLIMB DOWN INTO THE CAVE", *caveUp = "E  CLIMB BACK UP",
+             *caveDepths = "THE CAVES", *caveSurface = "BACK UNDER THE SKY",
              *relight = "E  RELIGHT  {} wood", *takeDown = "E  TAKE DOWN", *gather = "E  {}",
              *bridgeHolds = "THE BRIDGE HOLDS  {} FALLEN", *questLine = "QUEST  {}", *talk = "I  TALK",
              *help = "HELP!", *helpAt = "HELP {:.0f}", *questAt = "QUEST {:.0f}";

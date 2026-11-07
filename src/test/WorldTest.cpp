@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -40,6 +41,8 @@
 #include "level/Level.hpp"
 #include "level/Noise.h"
 #include "level/World.hpp"
+#include "level/Chart.hpp"
+#include "campaign/Campaign.hpp"
 #include "level/Prop.hpp"
 #include "level/Structure.hpp"
 #include "item/Upgrade.hpp"
@@ -235,4 +238,184 @@ void testMasonry() {
             << ", sandstone " << seen[1] << ", frost " << seen[2] << ", moss "
             << seen[3] << ", ash " << seen[4] << ", " << parts
             << " parts checked: PASS" << std::endl;
+}
+
+namespace {
+
+uint64_t worldPrint(int x0, int y0, int span) {
+  uint64_t h = 1469598103934665603ull;
+  auto mix = [&](uint64_t v) { h = (h ^ v) * 1099511628211ull; };
+  Prop p;
+  for (int y = y0; y < y0 + span; y++)
+    for (int x = x0; x < x0 + span; x++) {
+      Sprite g = world::groundTile(x, y);
+      mix(uint64_t(world::biomeAt(x, y)) | uint64_t(world::heightAt(x, y)) << 8 |
+          uint64_t(world::isWater(x, y)) << 12 | uint64_t(world::isDirt(x, y)) << 13 |
+          uint64_t(world::isRamp(x, y)) << 14);
+      mix(uint64_t(g.x) << 16 | uint64_t(g.y));
+      if (world::propAt(x, y, p))
+        for (int i = 0; i < p.count; i++)
+          mix(uint64_t(p.parts[i].sprite.x) << 20 ^ uint64_t(p.parts[i].sprite.y) << 4 ^
+              uint64_t(p.parts[i].yo + 64));
+    }
+  return h;
+}
+
+} // namespace
+
+void testLayers() {
+  uint32_t salt = noise_salt;
+  world::openCaves(false);
+  noise_reseed(7);
+  assert(world::layer() == world::Layer::Surface);
+  uint64_t before = worldPrint(-96, -64, 160);
+  std::vector<BiomeId> above;
+  for (int y = -64; y < 64; y += 8)
+    for (int x = -96; x < 64; x += 8)
+      above.push_back(world::biomeAt(x, y));
+  world::enter(world::Layer::Caves);
+  assert(world::layer() == world::Layer::Caves);
+  size_t i = 0;
+  Structure st;
+  Prop p;
+  for (int y = -64; y < 64; y += 8)
+    for (int x = -96; x < 64; x += 8, i++) {
+      assert(world::biomeAt(x, y) == above[i]);
+      int h = world::heightAt(x, y);
+      assert(h >= 0 && h <= 3 && (h == 3) == world::isRock(x, y));
+      assert(!world::structureAt(x, y, st, 2) && !world::propAt(x, y, p));
+      world::GroundBlend g = world::groundBlend(x, y);
+      assert(g.count == 1 && g.biome[0] == above[i] && g.weight[0] == 1);
+    }
+  assert(!world::nearestStructure(0, 0, 3, st));
+  uint64_t below = worldPrint(-96, -64, 160);
+  world::enter(world::Layer::Surface);
+  uint64_t after = worldPrint(-96, -64, 160);
+  world::enter(world::Layer::Caves);
+  world::enter(world::Layer::Surface);
+  uint64_t again = worldPrint(-96, -64, 160);
+  noise_reseed(salt);
+  assert(before == after && after == again && below != before);
+  std::cout << "[TEST] World layers: surface print " << std::hex << before << std::dec
+            << " survives two trips below; the caves layer echoes the biome above: PASS"
+            << std::endl;
+}
+
+void testLayerSaves() {
+  Campaign c;
+  c.world = "TESTSEED";
+  c.layer = 1;
+  c.edits.place(3, 4, Piece::Torch);
+  c.below[0].place(-7, 9, Piece::Campfire);
+  c.below[0].harvest(5, -2, 30);
+  c.below[1].place(100, -200, Piece::Wall);
+  std::string text = c.save();
+  assert(text.find("cave p -7 9") != std::string::npos && text.find("deep p 100 -200") != std::string::npos);
+  Campaign back;
+  assert(Campaign::load(text, back));
+  assert(back.layer == 1 && back.edits.changes.size() == 1 && back.below[0].changes.size() == 2 &&
+         back.below[1].changes.size() == 1);
+  assert(back.editsOf(1).at(-7, 9)->placed && !back.editsOf(1).at(5, -2)->placed);
+  assert(back.editsOf(2).at(100, -200)->piece == Piece::Wall && back.editsOf(0).at(3, 4));
+  assert(!back.editsOf(0).at(-7, 9) && !back.editsOf(2).at(3, 4));
+  std::string old = text.substr(0, text.find("layer "));
+  Campaign before;
+  assert(Campaign::load(old, before) && before.layer == 0 && before.below[0].changes.empty());
+  Campaign wild;
+  assert(Campaign::load(text + "layer 9\n", wild) && wild.layer == 2);
+  std::cout << "[TEST] Campaign keeps one edit overlay per layer and the hero's layer: PASS" << std::endl;
+}
+
+void testCaves() {
+  uint32_t salt = noise_salt;
+  int kinds[5]{}, mouths = 0, ramps = 0, pools = 0, levels[4]{};
+  long open = 0;
+  for (uint32_t seed : {0u, 17u, 8675309u}) {
+    noise_reseed(seed);
+    world::enter(world::Layer::Caves);
+    for (int cy = -6; cy < 6; cy++)
+      for (int cx = -6; cx < 6; cx++) {
+        world::CaveCell c, again;
+        bool has = world::caveCell(cx, cy, c);
+        world::caveCell(cx + 1, cy, again);
+        world::caveCell(cx, cy, again);
+        assert(again.kind == c.kind && again.size == c.size && again.mouths == c.mouths &&
+               again.hx == c.hx && again.hy == c.hy);
+        kinds[int(c.kind)]++;
+        int x0 = cx * world::CAVE_CELL, y0 = cy * world::CAVE_CELL;
+        if (!has) {
+          for (int j = 0; j < world::CAVE_CELL; j += 5)
+            for (int i = 0; i < world::CAVE_CELL; i += 5)
+              assert(world::isRock(x0 + i, y0 + j));
+          continue;
+        }
+        assert(c.size >= 200 && c.mouths >= 1 && !world::isRock(c.hx, c.hy));
+        for (int k = 0; k < world::CAVE_CELL; k++)
+          assert(world::isRock(x0 + k, y0) && world::isRock(x0, y0 + k) &&
+                 world::isRock(x0 + k, y0 + world::CAVE_CELL - 1) &&
+                 world::isRock(x0 + world::CAVE_CELL - 1, y0 + k));
+        std::vector<char> seen(world::CAVE_CELL * world::CAVE_CELL, 0);
+        std::vector<int> queue{(c.my[0] - y0) * world::CAVE_CELL + c.mx[0] - x0};
+        seen[queue[0]] = 1;
+        for (size_t q = 0; q < queue.size(); q++) {
+          int i = queue[q] % world::CAVE_CELL, j = queue[q] / world::CAVE_CELL;
+          for (int d = 0; d < 4; d++) {
+            int ni = i + (d == 0) - (d == 1), nj = j + (d == 2) - (d == 3);
+            int n = nj * world::CAVE_CELL + ni;
+            if (!seen[n] && !world::isRock(x0 + ni, y0 + nj))
+              seen[n] = 1, queue.push_back(n);
+          }
+        }
+        assert(int(queue.size()) == c.size);
+        int count = 0;
+        for (int j = 0; j < world::CAVE_CELL; j++)
+          for (int i = 0; i < world::CAVE_CELL; i++)
+            if (!world::isRock(x0 + i, y0 + j)) {
+              count++;
+              levels[world::heightAt(x0 + i, y0 + j)]++;
+              ramps += world::isRamp(x0 + i, y0 + j);
+              pools += world::isWater(x0 + i, y0 + j);
+            }
+        assert(count == c.size);
+        open += count;
+        for (int m = 0; m < c.mouths; m++) {
+          int x = c.mx[m], y = c.my[m];
+          assert(!world::isRock(x, y) && !world::isWater(x, y) && seen[(y - y0) * world::CAVE_CELL + x - x0]);
+          world::enter(world::Layer::Surface);
+          Structure st;
+          assert(!world::isWater(x, y) && !world::structureAt(x, y, st, 2));
+          world::enter(world::Layer::Caves);
+          mouths++;
+        }
+        if (c.kind == world::CaveKind::Through) {
+          double dx = c.mx[1] - c.mx[0], dy = c.my[1] - c.my[0];
+          assert(c.mouths == 2 && dx * dx + dy * dy >= 144);
+        }
+        if (c.kind == world::CaveKind::Descent)
+          assert(!world::isRock(c.px, c.py));
+      }
+    world::enter(world::Layer::Surface);
+  }
+  noise_reseed(salt);
+  for (int k = 1; k < 5; k++)
+    assert(kinds[k] > 0);
+  assert(levels[1] > 0 && levels[2] > 0 && ramps > 0 && pools > 0);
+  std::cout << "[TEST] Caves: solid " << kinds[0] << ", pocket " << kinds[1] << ", through " << kinds[2]
+            << ", warren " << kinds[3] << ", descent " << kinds[4] << " over 432 cells; " << mouths
+            << " mouths all dry above and joined to their cave; " << open << " open tiles (levels "
+            << levels[0] << "/" << levels[1] << "/" << levels[2] << ", " << ramps << " ramp tiles, "
+            << pools << " pool tiles): PASS" << std::endl;
+}
+
+void testChartCorner() {
+  Chart chart;
+  chart.unveil(-24, -24, 0);
+  assert(chart.at(-1, -1) != 0);
+  std::string path = (std::filesystem::temp_directory_path() / "mellangan-chart-corner.bin").string();
+  chart.save(path);
+  Chart back;
+  back.load(path);
+  std::filesystem::remove(path);
+  assert((back.at(-1, -1) & Chart::BIOME) == (chart.at(-1, -1) & Chart::BIOME) && back.at(-1, -1));
+  std::cout << "[TEST] The chart finds the page just north-west of the origin on its first lookup: PASS" << std::endl;
 }

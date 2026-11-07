@@ -25,6 +25,8 @@
 
 namespace {
 
+constexpr Color DEPTH_GRADE{0.78f, 0.8f, 0.92f, 1};
+
 template <void (Enemy::*Step)()>
 void pass(Workers &workers, std::vector<Enemy *> &list) {
   workers.run(
@@ -123,6 +125,7 @@ void Level::unblend() {
 }
 
 void Level::tick() {
+  quarry();
   remember();
   time += DT, ticks++;
   prof_begin(PROF_HOUSEKEEP);
@@ -199,7 +202,7 @@ void Level::ambience() {
 void Level::climate() {
   BiomeId here = world::biomeUnder(player->x, player->y);
   const Flavour &f = FLAVOURS[here];
-  const Color &g = AIRS[here].grade;
+  const Color &g = rules.sky ? AIRS[here].grade : DEPTH_GRADE;
   float k = 1 - std::exp(-0.9f * DT);
   air = {lerpf(air.r, g.r, k), lerpf(air.g, g.g, k), lerpf(air.b, g.b, k), 1};
   const Omen *o = omen >= 0 ? &OMENS[omen] : nullptr;
@@ -235,6 +238,8 @@ void Level::hunt() {
 }
 
 void Level::weather() {
+  if (!rules.sky)
+    return;
   BiomeId here = world::biomeUnder(player->x, player->y);
   BIOMES[here]->weather(*this, player->x, player->y);
   const Air &a = AIRS[here];

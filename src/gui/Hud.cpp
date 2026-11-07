@@ -87,6 +87,10 @@ void Hud::night(float top) {
   Night &n = l.night;
   float u = s.u, small = std::max(1.0f, u - 1);
   bool cycle = !l.rules.endsAtDawn;
+  if (!l.rules.sky) {
+    s.textCenter(lang.caveDepths, s.w / 2, top, std::round(u * 1.5f), Color{0.75f, 0.8f, 0.95f, 1});
+    return;
+  }
   std::string clock = cycle && n.dawn
                           ? say(lang.dayClock, n.nights, clockText(std::max(0.0f, n.dayEnds - l.time)))
                       : cycle        ? say(lang.nightClock, n.nights, clockText(n.left()))

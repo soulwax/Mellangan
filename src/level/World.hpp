@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 
 #include "level/Prop.hpp"
 #include "level/Structure.hpp"
@@ -10,6 +11,25 @@
 namespace world {
 
 constexpr int REGION = 20;
+
+enum class Layer : uint8_t { Surface, Caves, Deep };
+Layer layer();
+void enter(Layer to);
+
+enum class CaveKind : uint8_t { Solid, Pocket, Through, Warren, Descent };
+constexpr int CAVE_CELL = 64;
+struct CaveCell {
+  int cx, cy;
+  CaveKind kind;
+  int size, hx, hy, mouths;
+  int mx[3], my[3];
+  int px, py;
+};
+bool caveCell(int cx, int cy, CaveCell &out);
+bool isRock(int x, int y);
+bool caveMouth(int x, int y);
+bool caveMouthNear(double x, double y, int &tx, int &ty);
+void openCaves(bool open);
 
 // Floor division: bias negatives by REGION - 1 (sign mask & 19) so truncation
 // rounds down.

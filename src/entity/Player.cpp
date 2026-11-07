@@ -79,6 +79,7 @@ void Player::tick() {
   x += xa * DT;
   y += ya * DT;
   level->collide(x, y, radius);
+  level->slide(px, py, x, y);
   double mx = x - px, my = y - py;
   level->distanceRan += float(std::sqrt(mx * mx + my * my));
   if (xd != 0)

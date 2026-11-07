@@ -62,13 +62,15 @@ struct Campaign {
   bool hound = false, houndDown = false;
   entt::entity companion = entt::null;
   Delve delve;
-  Edits edits;
+  Edits edits, below[2];
+  int layer = 0;
   std::vector<entt::entity> waypoints, chests;
   std::unordered_map<uint64_t, int> chops;
   int building = -1;
   bool wasDay = true;
   float smoke = 0, shadeTime = 8;
 
+  Edits &editsOf(int depth) { return depth > 0 ? below[std::min(depth, 2) - 1] : edits; }
   std::string save() const;
   static bool load(std::string_view text, Campaign &out);
   static bool valid(std::string_view text);
@@ -108,6 +110,7 @@ struct Campaign {
 private:
   void found(Level &level);
   void restore(Level &level);
+  void underground(Level &level);
   void raise(Level &level);
   void post(Level &level, const Town &t);
   void smoulder(Level &level);

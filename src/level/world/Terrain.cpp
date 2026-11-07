@@ -132,6 +132,8 @@ bool smoothPatch(PatchTest test, const void *ctx, int x, int y) {
 }
 
 bool isDirt(int x, int y) {
+  if (active != Layer::Surface)
+    return under::isDirt(x, y);
   return memo(x, y, slot::dirt, [&] {
     Structure s;
     return structureAt(x, y, s, 1) ? structureDirt(&s, x - s.x, y - s.y)
@@ -140,6 +142,8 @@ bool isDirt(int x, int y) {
 }
 
 bool isWater(int x, int y) {
+  if (active != Layer::Surface)
+    return under::isWater(x, y);
   return memo(x, y, slot::water,
               [&] { return smoothPatch(rawWaterAt, nullptr, x, y); });
 }
@@ -149,6 +153,8 @@ bool isIce(int x, int y) {
 }
 
 int heightAt(int x, int y) {
+  if (active != Layer::Surface)
+    return under::heightAt(x, y);
   return int(memo(x, y, slot::level, [&] {
     int level = 0;
     for (int k = 1; k <= 3 && smoothPatch(filledAbove, &k, x, y); k++)
@@ -158,6 +164,8 @@ int heightAt(int x, int y) {
 }
 
 bool isRamp(int x, int y) {
+  if (active != Layer::Surface)
+    return under::isRamp(x, y);
   int h = heightAt(x, y), b = block(x) * 3;
   if (hash2(block(x) * 13 + 7, y * 29 - 3) % 3 == 2)
     return false;

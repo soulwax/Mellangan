@@ -20,6 +20,14 @@ const char *const TITLES[BIOME_COUNT] = {
 
 static_assert(BIOME_COUNT < Chart::WATER);
 
+bool solid(int cx, int cy) {
+  int rock = 0;
+  for (int y = 0; y < Chart::CELL; y++)
+    for (int x = 0; x < Chart::CELL; x++)
+      rock += world::isRock(cx * Chart::CELL + x, cy * Chart::CELL + y);
+  return rock * 2 > Chart::CELL * Chart::CELL;
+}
+
 bool wet(int cx, int cy) {
   int water = 0;
   for (int y = 0; y < Chart::CELL; y++)
@@ -46,7 +54,7 @@ Color Chart::tone(BiomeId b) {
 
 const Chart::Page *Chart::page(int px, int py) const {
   uint64_t key = keyOf(px, py);
-  if (key == lastKey)
+  if (lastPage && key == lastKey)
     return lastPage;
   auto it = pages.find(key);
   if (it == pages.end())
@@ -80,9 +88,11 @@ void Chart::reveal(int cx, int cy) {
       int x = cx + dx, y = cy + dy;
       std::unique_ptr<Page> &p = pages[keyOf(x >> 5, y >> 5)];
       if (!p)
-        p = std::make_unique<Page>(), lastKey = ~0ull;
+        p = std::make_unique<Page>(), lastPage = nullptr;
       uint8_t &c = p->cell[(y & (PAGE - 1)) * PAGE + (x & (PAGE - 1))];
       if (c & NOW)
+        continue;
+      if (world::layer() == world::Layer::Caves && solid(x, y))
         continue;
       BiomeId b = c ? BiomeId((c & BIOME) - 1)
                     : world::biomeAt(x * CELL + CELL / 2, y * CELL + CELL / 2);
@@ -151,6 +161,7 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
   int x0 = int(std::floor(v.cx - half)), x1 = int(std::ceil(v.cx + half));
   int y0 = int(std::floor(v.cy - tall)), y1 = int(std::ceil(v.cy + tall));
   float right = v.x + v.w, bottom = v.y + v.h;
+  bool below = world::layer() != world::Layer::Surface;
   for (int cy = y0; cy <= y1; cy++) {
     float top = v.y + v.h * 0.5f + float(cy - v.cy) * v.cell;
     float ya = std::max(top, v.y), yb = std::min(top + v.cell, bottom);
@@ -172,6 +183,7 @@ void Chart::draw(Screen &s, const Level &level, const ChartView &v,
         BiomeId b = BiomeId((cc & BIOME) - 1);
         Color t = (cc & WATER ? BIOMES[b]->winter() ? Color{0.66f, 0.8f, 0.9f, 1}
                                                     : Color{0.2f, 0.42f, 0.72f, 1}
+                   : below    ? Color{0.46f, 0.39f, 0.32f, 1}
                               : tone(b)) *
                   (run & 1 ? 0.7f : 1.0f);
         if (!(cc & NOW))
@@ -263,7 +275,7 @@ void Chart::load(const std::string &path) {
     }
     sites.resize(count);
   }
-  lastKey = ~0ull;
+  lastPage = nullptr;
 }
 
 void Chart::save(const std::string &path) const {

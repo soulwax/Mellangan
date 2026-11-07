@@ -39,6 +39,8 @@ void DevStart::parse(int argc, char **argv) {
       act = std::atoi(argv[++i]);
     else if (a == "--delve")
       delve = true;
+    else if (a == "--cave")
+      cave = true;
     else if (a == "--quest" && more)
       quest = std::atoi(argv[++i]);
     else if (a == "--allies" && more)

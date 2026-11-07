@@ -326,10 +326,12 @@ void Game::build() {
     level->chart.save(chartPath);
   std::string code = worldMode == WorldMode::Classic ? "" : seedCode;
   noise_reseed(saltOf(code));
-  chartPath =
-      saves.dir().empty()
-          ? ""
-          : saves.dir() + (code.empty() ? "chart.bin" : "chart-" + code + ".bin");
+  static const char *const DEPTH[] = {"", "-caves", "-deep"};
+  std::string depth = DEPTH[int(world::layer())];
+  chartPath = saves.dir().empty()
+                  ? ""
+                  : saves.dir() + (code.empty() ? "chart" + depth + ".bin"
+                                                : "chart-" + code + depth + ".bin");
   RunRules heated = rules;
   if (!campaign && heated.endsAtDawn) {
     Balance unused;
@@ -360,6 +362,8 @@ void Game::reseed() {
     seedCode = fmt::format("D{:04}{:02}{:02}", d.year, d.month, d.day);
   }
   loadBalance();
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
   build();
   saveWorld();
 }
@@ -586,6 +590,8 @@ void Game::render() {
   level->blend(stepped ? alpha : 1, screen);
 
   float d = level->night.daylight(), g = campaign ? campaign->delve.gloom : 0;
+  if (!level->rules.sky)
+    g = std::max(g, 0.45f);
   const Color &air = level->air;
   Color sky = level->sky.shade();
   screen.beginLight({lerpf(lerpf(0.06f, 0.42f, d) * air.r * sky.r, 0.035f, g),

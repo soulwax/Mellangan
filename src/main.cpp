@@ -102,6 +102,8 @@ static int runHeadless(int argc, char **argv) {
       return runTests();
     else if (std::string_view(argv[i]) == "--biome-map" && i + 1 < argc)
       return mapBiomes(argv[i + 1]);
+    else if (std::string_view(argv[i]) == "--cave-map" && i + 1 < argc)
+      return mapCaves(argv[i + 1]);
     else if (std::string_view(argv[i]) == "--loot-sim" && i + 1 < argc)
       return lootSim(std::atoi(argv[i + 1]), i + 2 < argc ? std::atoi(argv[i + 2]) : 20);
     else if (std::string_view(argv[i]) == "--lang-template" && i + 1 < argc) {

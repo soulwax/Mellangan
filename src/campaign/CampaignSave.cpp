@@ -55,7 +55,9 @@ std::string Campaign::save() const {
     out += "bag " + item.save() + "\n";
   for (const Item &item : stash)
     out += "stash " + item.save() + "\n";
-  return out + edits.save();
+  if (layer)
+    out += fmt::format("layer {}\n", layer);
+  return out + edits.save() + below[0].save("cave") + below[1].save("deep");
 }
 
 bool Campaign::valid(std::string_view text) {
@@ -137,7 +139,14 @@ bool Campaign::load(std::string_view text, Campaign &out) {
       out.stash.push_back(item);
     else if (key == "edit")
       out.edits.load(line);
+    else if (key == "cave")
+      out.below[0].load(line);
+    else if (key == "deep")
+      out.below[1].load(line);
+    else if (key == "layer")
+      words >> out.layer;
   }
+  out.layer = std::clamp(out.layer, 0, 2);
   out.hero = std::clamp(out.hero, 0, HERO_COUNT - 1), out.act = std::clamp(out.act, 1, ACT_COUNT);
   out.quest = std::clamp(out.quest, 0, QUEST_COUNT), out.lvl = std::max(out.lvl, 1);
   for (int *n : {&out.gold, &out.day, &out.points, &out.rescued, &out.nightmare, &out.progress})
