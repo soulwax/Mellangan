@@ -49,4 +49,5 @@ NOTES.*.md
 page-2026*
 
 
-.playwright-mcp/**/*extern/notes/
+.playwright-mcp/**/*
+extern/notes/
