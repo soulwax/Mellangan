@@ -4,6 +4,8 @@
 #include <cstring>
 
 #include "Game.hpp"
+#include "campaign/Campaign.hpp"
+#include "campaign/Quests.hpp"
 #include "entity/Player.hpp"
 #include "hero/Hero.hpp"
 #include "item/Upgrade.hpp"
@@ -12,6 +14,10 @@
 namespace {
 const Codex &codex(const Game &g) { return g.codex; }
 const Level &run(const Game &g) { return *g.level; }
+
+template <int A> bool actCleared(const Game &g, bool) {
+  return g.campaign && g.campaign->quest >= A * QUESTS_PER_ACT;
+}
 
 template <int H> bool dawnAs(const Game &g, bool dawn) {
   return dawn && run(g).player->hero == HEROES[H];
@@ -93,7 +99,22 @@ const Feat FEATS[] = {
     {"dawn_heat5", "BLAZING", "Reach dawn at heat 5", [](const Game &g, bool dawn) { return dawn && g.heat >= 5; }},
     {"dawn_heat10", "INFERNO", "Reach dawn at heat 10", [](const Game &g, bool dawn) { return dawn && g.heat >= 10; }},
     {"endless_5", "STILL STANDING", "Last 5 minutes into the endless night", [](const Game &g, bool) { return codex(g).bestEndless >= 300; }},
-    {"endless_15", "NIGHT EVERLASTING", "Last 15 minutes into the endless night", [](const Game &g, bool) { return codex(g).bestEndless >= 900; }}};
+    {"endless_15", "NIGHT EVERLASTING", "Last 15 minutes into the endless night", [](const Game &g, bool) { return codex(g).bestEndless >= 900; }},
+    {"camp_act1", "HEARTHWICK HOLDS", "Clear Act I of the campaign", actCleared<1>},
+    {"camp_act2", "SALT AND STEEL", "Clear Act II of the campaign", actCleared<2>},
+    {"camp_act3", "THE THAW", "Clear Act III of the campaign", actCleared<3>},
+    {"camp_act4", "THE CARAVAN RETURNS", "Clear Act IV of the campaign", actCleared<4>},
+    {"camp_act5", "THE DARK IS BROKEN", "Clear Act V and end the campaign", actCleared<5>},
+    {"camp_nightmare", "INTO THE NIGHTMARE", "Begin the campaign again on Nightmare",
+     [](const Game &g, bool) { return g.campaign && g.campaign->nightmare > 0; }},
+    {"camp_hardcore", "ONE LIFE", "Clear an act with a hardcore hero",
+     [](const Game &g, bool) { return g.campaign && g.campaign->hardcore && g.campaign->quest >= QUESTS_PER_ACT; }},
+    {"camp_tower", "WATCHFUL", "Raise a watchtower over a town",
+     [](const Game &g, bool) { return g.campaign && !g.campaign->towers.empty(); }},
+    {"camp_shelter", "SANCTUARY", "Shelter five sanctuary seekers in a bastion",
+     [](const Game &g, bool) { return g.campaign && g.campaign->rescued >= 5; }},
+    {"camp_delve", "DEEP DELVER", "Clear three mines",
+     [](const Game &g, bool) { return g.campaign && g.campaign->delves.size() >= 3; }}};
 
 const int FEAT_COUNT = int(sizeof FEATS / sizeof *FEATS);
 static_assert(sizeof FEATS / sizeof *FEATS <= 64);
@@ -110,10 +131,12 @@ bool everyClass(const Game &g, bool) {
 }
 } // namespace
 
-std::vector<int> unlockFeats(Game &g, bool dawn) {
+std::vector<int> unlockFeats(Game &g, bool dawn, bool campaignOnly) {
   std::vector<int> fresh;
   for (int i = 0; i < FEAT_COUNT; i++) {
     uint64_t bit = uint64_t(1) << i;
+    if (campaignOnly && std::strncmp(FEATS[i].id, "camp_", 5) != 0)
+      continue;
     if (!(g.codex.feats & bit) && FEATS[i].met(g, dawn))
       g.codex.feats |= bit, fresh.push_back(i);
   }
