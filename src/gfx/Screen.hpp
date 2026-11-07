@@ -76,16 +76,40 @@ public:
   void number(int n, double x, double y, Color c);
   void text(std::string_view s, double x, double y, float size, Color c);
   void textCenter(std::string_view s, double cx, double y, float size, Color c);
+  static int glyph(std::string_view s, size_t &i) {
+    unsigned char b = (unsigned char)s[i++];
+    int extra = b >= 0xF0 && b <= 0xF4 ? 3 : b >= 0xE0 ? 2 : b >= 0xC2 && b <= 0xDF ? 1 : 0;
+    if (b < 0x80 || !extra || i + extra > s.size())
+      return b;
+    int cp = b & (0x3F >> extra);
+    for (int k = 0; k < extra; k++) {
+      unsigned char c = (unsigned char)s[i + k];
+      if ((c & 0xC0) != 0x80)
+        return b;
+      cp = cp << 6 | (c & 0x3F);
+    }
+    i += extra;
+    return cp < 0x100 ? cp : '?';
+  }
+  static int glyphCount(std::string_view s) {
+    int n = 0;
+    for (size_t i = 0; i < s.size(); n++)
+      glyph(s, i);
+    return n;
+  }
   static float textWidth(std::string_view s, float size) {
-    return float(s.size()) * 8 * size;
+    return float(glyphCount(s)) * 8 * size;
   }
   static std::string fit(std::string_view text, float width, float size) {
     int chars = std::max(0, int(width / (8 * size)));
-    if (int(text.size()) <= chars)
+    if (glyphCount(text) <= chars)
       return std::string(text);
     if (chars <= 3)
       return std::string(chars, '.');
-    return std::string(text.substr(0, chars - 3)) + "...";
+    size_t at = 0;
+    for (int n = 0; n < chars - 3; n++)
+      glyph(text, at);
+    return std::string(text.substr(0, at)) + "...";
   }
   bool visible(double x, double y, float margin) const;
 

@@ -229,6 +229,9 @@ struct Lang {
              *shareSlot = "the items must share a slot", *tooMany = "too many items picked",
              *recipeLine = "{}: {}";
 
+  const char *
+             languageHeader = "# Mellangan language file: \"key text\" lines for the interface, \"~English<TAB>Translation\" lines for content";
+
   int parse(std::string_view text);
 };
 
@@ -241,6 +244,8 @@ struct LangKey {
 
 extern const LangKey LANG_KEYS[];
 extern const int LANG_COUNT;
+
+std::string langTemplate();
 
 struct Glossary {
   struct Hash {

@@ -296,7 +296,8 @@ void Screen::number(int n, double x, double y, Color c) {
 }
 
 void Screen::glyphs(std::string_view s, double x, double y, float size) {
-  for (unsigned char ch : s) {
+  for (size_t i = 0; i < s.size();) {
+    int ch = glyph(s, i);
     if (ch != ' ')
       vk2dRendererDrawTexture(font, float(x - xOffset), float(y - yOffset),
                               size, size, 0, 0, 0, float(ch % 16 * 8),

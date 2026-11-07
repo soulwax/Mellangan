@@ -28,7 +28,11 @@ void Settings::parse(std::string_view text) {
   for (const char *at = s.c_str(); *at;) {
     char key[32] = {};
     int value = 0;
-    if (std::sscanf(at, "%31s %d", key, &value) == 2)
+    char word[32] = {};
+    if (std::sscanf(at, "language %31s", word) == 1 &&
+        std::all_of(word, word + std::strlen(word), [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-'; }))
+      language = word;
+    else if (std::sscanf(at, "%31s %d", key, &value) == 2)
       for (const Field &f : FIELDS)
         if (std::strcmp(key, f.key) == 0)
           this->*f.value = std::clamp(value, 0, f.hi);
@@ -41,5 +45,5 @@ std::string Settings::save() const {
   std::string out;
   for (const Field &f : FIELDS)
     out += fmt::format("{} {}\n", f.key, this->*f.value);
-  return out;
+  return out + fmt::format("language {}\n", language);
 }

@@ -104,7 +104,9 @@ const LangKey LANG_KEYS[] = {
 
     K(itemBase), K(itemRare), K(itemPrefix), K(itemSuffix), K(itemSuperior), K(itemNight),
 
-    K(pickOne), K(pickMore), K(noFit), K(pickDifferent), K(shareSlot), K(tooMany), K(recipeLine)};
+    K(pickOne), K(pickMore), K(noFit), K(pickDifferent), K(shareSlot), K(tooMany), K(recipeLine),
+
+    K(languageHeader)};
 #undef K
 const int LANG_COUNT = int(sizeof LANG_KEYS / sizeof *LANG_KEYS);
 static_assert(sizeof LANG_KEYS / sizeof *LANG_KEYS * sizeof(const char *) == sizeof(Lang));
@@ -167,4 +169,12 @@ int Glossary::parse(std::string_view text) {
     taken++;
   }
   return taken;
+}
+
+std::string langTemplate() {
+  static const Lang english;
+  std::string out = std::string(english.languageHeader) + "\n";
+  for (int i = 0; i < LANG_COUNT; i++)
+    out += std::string(LANG_KEYS[i].key) + " " + english.*LANG_KEYS[i].text + "\n";
+  return out;
 }

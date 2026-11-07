@@ -9,6 +9,7 @@
 
 #include "Crash.hpp"
 #include "Game.hpp"
+#include "gui/Lang.hpp"
 #include "test/Tests.hpp"
 #include "test/Views.hpp"
 #include "entity/Pool.h"
@@ -103,7 +104,12 @@ static int runHeadless(int argc, char **argv) {
       return mapBiomes(argv[i + 1]);
     else if (std::string_view(argv[i]) == "--loot-sim" && i + 1 < argc)
       return lootSim(std::atoi(argv[i + 1]), i + 2 < argc ? std::atoi(argv[i + 2]) : 20);
-    else if (std::string_view(argv[i]) == "--weapon-lab")
+    else if (std::string_view(argv[i]) == "--lang-template" && i + 1 < argc) {
+      std::string text = langTemplate();
+      bool saved = SDL_SaveFile(argv[i + 1], text.data(), text.size());
+      spdlog::info("Language template: {} {} keys to {}", saved ? "wrote" : "could not write", LANG_COUNT, argv[i + 1]);
+      return saved ? 0 : 1;
+    } else if (std::string_view(argv[i]) == "--weapon-lab")
       return weaponLab(i + 1 < argc ? argv[i + 1] : nullptr);
     else if (std::string_view(argv[i]) == "--vendor-sim")
       return vendorSim(i + 1 < argc ? std::atoi(argv[i + 1]) : 30,

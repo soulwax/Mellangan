@@ -12,6 +12,7 @@ All notable changes to Mellangan are documented here. The format follows
 
 ### Changed
 
+- Text can carry accented letters: the font's Latin-1 half (French, German, Spanish, Portuguese, Italian and Nordic letters) is now reached from UTF-8 text, and widths and trimming count letters, not bytes. A `language <name>` line in `settings.txt` loads `res/lang/<name>.txt`; `--lang-template <file>` writes every interface string as a starting point for a translation.
 - Every menu, the HUD, tooltips, level-up cards, announcements, quest and bounty lines now take their text from the string table, and names and descriptions of classes, weapons, relics, foes, feats, omens, biomes and difficulties can be translated through a glossary without touching the game data, and a translation line whose placeholders would not format is refused instead of crashing the screen.
 - Colourblind settings for each kind of colour vision: COLOURS now cycles STANDARD, DEUTERANOPIA, PROTANOPIA, TRITANOPIA and MONOCHROME. Each has its own colours for attack warnings, damage and healing numbers, better and worse stats, and loot rarities, chosen by simulating that vision: the closest two rarity colours (now counting plain white and superior grey) move from 0.07, 0.11, 0.17 and 0.00 apart under standard colours to 0.41, 0.47, 0.42 and 0.14. The old COLOURBLIND choice becomes DEUTERANOPIA.
 

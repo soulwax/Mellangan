@@ -74,6 +74,7 @@ public:
   std::string worldName() const;
   void announce(std::string text);
   void applySettings();
+  void loadLanguage();
   void saveSettings();
   void saveKeys();
   void observe();

@@ -467,7 +467,27 @@ void Game::announce(std::string text) {
   hud.announce(std::move(text));
 }
 
+void Game::loadLanguage() {
+  static std::string loaded = "english";
+  if (settings.language == loaded)
+    return;
+  loaded = settings.language;
+  lang = Lang{};
+  glossary.words.clear();
+  if (loaded == "english")
+    return;
+  size_t size = 0;
+  char *data = (char *)SDL_LoadFile((base + "res/lang/" + loaded + ".txt").c_str(), &size);
+  if (!data)
+    return spdlog::warn("Language {} not found, using English", loaded);
+  std::string_view text(data, size);
+  int strings = lang.parse(text), words = glossary.parse(text);
+  SDL_free(data);
+  spdlog::info("Language {}: {} of {} strings, {} content words", loaded, strings, LANG_COUNT, words);
+}
+
 void Game::applySettings() {
+  loadLanguage();
   Sound::mix(settings.master / 100.0f, settings.music / 100.0f, settings.effects / 100.0f,
              settings.ambience / 100.0f);
   camera.scale = settings.shake / 100.0f;
