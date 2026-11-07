@@ -39,5 +39,5 @@ extern const Feature mesa, hoodoo, juniper, taigaSpruce, larch, runeStone,
     ocotillo, redRocks, ribs, clayTuft, lingonberry, lichenRock, cottonGrass,
     needleTuft, shelfStump;
 extern const Feature grave, mushrooms, sprouts, log, beehive, sign, sack,
-    crystal, well, barrel, crate;
+    crystal, well, barrel, crate, oreVein;
 } // namespace feature

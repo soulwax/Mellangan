@@ -85,6 +85,15 @@ public:
   entt::entity hoard = entt::null;
   uint64_t hoardKey = 0;
   bool below() const { return depth != world::Layer::Surface; }
+  float gloom = 0, caveTime = 3, dread = 0;
+  int dreadSaid = 0;
+  static constexpr float DEPTH_THREAT[3] = {0, 90, 240}, DEPTH_XP[3] = {1, 1.15f, 1.35f};
+  static constexpr float DREAD_MAX = 600, DREAD_THREAT = 0.5f, DREAD_RATE = 300, SANCTUM = 96;
+  float threatAt(double x, double y) const;
+  float pressure() const { return 1 + dread / DREAD_RATE; }
+  bool sanctum(double x, double y) const;
+  void haunt();
+  double caveX = 0, caveY = 0;
   BiomeEvents events;
   Sky sky;
   explicit Level(Game &game, RunRules rules = {});
@@ -233,7 +242,7 @@ private:
   int solidX = 0, solidY = 0;
   std::unordered_set<uint64_t> visits;
 
-  float burnTime = 0, bountyTime = 0, caveTime = 3;
+  float burnTime = 0, bountyTime = 0;
 
   void flush();
   void explore();

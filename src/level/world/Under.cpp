@@ -433,8 +433,11 @@ void dig(Deep *d, int cx, int cy) {
   static bool hot[N], done[N];
   static int cost[N];
   for (int c = 0; c < N; c++) {
-    hot[c] = from[c] >= 0 && rawNoise(x0 + c % C, y0 + c / C, true) == 0 &&
-             poolNoise(x0 + c % C, y0 + c / C, true) < CAVES[int(k.biome)].pools;
+    int i = c % C, j = c / C;
+    bool padded = disc(k.hx, k.hy, i, j, 16) || (k.landing && disc(k.lx, k.ly, i, j, 16)) ||
+                  (k.way != Way::None && disc(k.wx, k.wy, i, j, 16));
+    hot[c] = from[c] >= 0 && !padded && rawNoise(x0 + i, y0 + j, true) == 0 &&
+             poolNoise(x0 + i, y0 + j, true) < CAVES[int(k.biome)].pools;
     cost[c] = 1 << 30, done[c] = false;
   }
   std::deque<int> todo{heart};
@@ -675,6 +678,13 @@ bool propAt(int x, int y, Prop &p) {
       return c->placed && pieceProp(c->piece, x, y, p);
   if (mouthProp(x, y, p))
     return true;
+  if (deep()) {
+    const DeepCell &d = deepOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info;
+    if (d.biome == CaveBiome::Halls && x == d.hx && y == d.hy - 1) {
+      p.fire({1, 0.78f, 0.42f, 1}, 150, -6);
+      return true;
+    }
+  }
   if (isChasm(x, y)) {
     const CaveCell &c = cellOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info;
     if (x == c.px && y == c.py)
@@ -689,6 +699,9 @@ bool propAt(int x, int y, Prop &p) {
   if (isRock(x, y) || pool(x, y) || isRamp(x, y) || isRamp(x, y - 1) || spared(x, y, 9))
     return false;
   uint32_t h = hash2(x * 7 + 3, y * 13 + 1);
+  if (hash2(x * 29 + 5, y * 31 - 7) % 1000 < (deep() ? 30u : 14u) &&
+      (isRock(x - 1, y) || isRock(x + 1, y) || isRock(x, y - 1)))
+    return feature::oreVein.place(&feature::oreVein, h >> 16, &p);
   int r = int((h >> 4) % 1000);
   for (const CaveSpawn &s : CAVES[int(caveBiomeAt(x, y))].spawns) {
     if (r < s.per)

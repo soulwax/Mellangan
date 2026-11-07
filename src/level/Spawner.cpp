@@ -99,9 +99,9 @@ void Spawner::trickle(float t) {
   if (level.rules.spawnRate <= 0)
     return void(timer = 1);
   timer += std::max(b.spawnFloor, b.spawnInterval - t * b.spawnRamp) * level.portent().rate /
-           (level.rules.spawnRate * (level.night.dawn ? level.rules.dayRate : 1));
+           (level.rules.spawnRate * level.pressure() * (level.night.dawn ? level.rules.dayRate : 1));
   Player &hero = *level.player;
-  Roster r = roster(level.rules.threat ? level.rules.threat(hero.x, hero.y) : t);
+  Roster r = roster(level.threatAt(hero.x, hero.y));
   for (int i = 0, batch = 1 + int(t / b.batchEvery);
        i < batch && int(level.count<Enemy>()) < int(b.enemyCap); i++) {
     double x, y;
@@ -318,7 +318,7 @@ Enemy *Spawner::champion(double x, double y) {
 Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
                       bool boss) {
   std::lock_guard<std::mutex> lock(spawnMutex);
-  if (level.rules.safeAt(x, y) || level.lost(x, y))
+  if (level.rules.safeAt(x, y) || level.lost(x, y) || level.sanctum(x, y))
     return nullptr;
   if (!boss && kind != EnemyKind::Shade && level.rules.warded && level.rules.warded(x, y) &&
       rng.chance(WARD))
@@ -331,7 +331,7 @@ Enemy *Spawner::spawn(EnemyKind kind, double x, double y, bool aware,
   }
   const Balance &b = level.game.balance;
   const Omen &o = level.portent();
-  float t = level.rules.threat ? level.rules.threat(x, y) : level.time;
+  float t = level.threatAt(x, y);
   float hpMul = b.enemyHp * (1 + t / b.enemyHpRamp) * o.hp;
   float dmgMul = b.enemyDamage * (1 + t / b.enemyDamageRamp);
   float bossHp = 1 + (bosses - 1) * b.bossHpStep;

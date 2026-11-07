@@ -43,6 +43,8 @@ struct CaveDef {
   FoeMask foes;
   float pools;
   CavePool pool;
+  Color grade{0.78f, 0.8f, 0.92f, 1};
+  float gloom = 0.45f;
 };
 
 extern const CaveDef CAVES[int(CaveBiome::Count)];

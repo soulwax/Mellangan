@@ -14,6 +14,7 @@
 #include "level/Level.hpp"
 #include "level/Prop.hpp"
 #include "level/World.hpp"
+#include "level/Noise.h"
 
 namespace {
 
@@ -163,4 +164,83 @@ void testGathering() {
                "down for a refund, a campfire guards its ground across a reload, a placed "
                "workbench is found, and the town's own pieces stay: PASS"
             << std::endl;
+}
+
+void testVeins() {
+  using harvest::yieldOf;
+  assert(yieldOf("ore vein")->mat == Mat::Ore && yieldOf("rockPile")->mat == Mat::Stone);
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Caves);
+  int veins = 0, vx = 0, vy = 0;
+  for (int cy = -3; cy < 3; cy++)
+    for (int cx = -3; cx < 3; cx++)
+      for (int y = cy * 64; y < cy * 64 + 64; y++)
+        for (int x = cx * 64; x < cx * 64 + 64; x++)
+          if (Prop v; world::propAt(x, y, v) && v.kind && std::strcmp(v.kind, "ore vein") == 0) {
+            assert(!world::isRock(x, y) && (world::isRock(x - 1, y) || world::isRock(x + 1, y) || world::isRock(x, y - 1)));
+            if (!veins++ || (std::abs(x) + std::abs(y) < std::abs(vx) + std::abs(vy)))
+              vx = x, vy = y;
+          }
+  assert(veins > 0);
+  world::enter(world::Layer::Surface);
+  Prop above;
+  bool had = world::propAt(vx, vy, above);
+
+  Game game;
+  Campaign c;
+  c.world = "CLASSIC", c.layer = 1;
+  world::enter(world::Layer::Caves);
+  game.level = std::make_unique<Level>(game, c.rules());
+  Level &level = *game.level;
+  c.enter(level);
+  Player &p = *level.player;
+  p.god = true;
+  p.x = vx * 16 + 8.0, p.y = vy * 16 + 12.0;
+  level.tick();
+  p.x = vx * 16 + 8.0, p.y = vy * 16 + 12.0;
+  look(game);
+  harvest::Target t;
+  assert(harvest::target(level, c, t) && t.yield && t.yield->mat == Mat::Ore && t.tx == vx && t.ty == vy);
+  int ore = drops(level, Mat::Ore);
+  for (int i = 0; i < t.yield->hits; i++)
+    assert(harvest::strike(level, c));
+  level.tick();
+  assert(drops(level, Mat::Ore) == ore + t.yield->amount);
+  assert(c.below[0].at(vx, vy) && !c.below[0].at(vx, vy)->placed && !c.edits.at(vx, vy));
+  Prop gone;
+  assert(!world::propAt(vx, vy, gone));
+
+  int tx = 0, ty = 0;
+  p.materials[int(Mat::Wood)] = 10;
+  bool spot = false;
+  for (int r = 1; r < 8 && !spot; r++)
+    for (int k = 0; k < 16 && !spot; k++) {
+      p.x = vx * 16 + 8.0 + std::cos(TAU * k / 16) * r * 16, p.y = vy * 16 + 12.0 + std::sin(TAU * k / 16) * r * 16;
+      harvest::aim(p, tx, ty);
+      spot = !world::isRock(tx, ty) && !world::isRock(tx, ty + 1) && harvest::blocked(level, c, 1, tx, ty).empty();
+    }
+  assert(spot && harvest::build(level, c, 1, tx, ty));
+  assert(c.below[0].at(tx, ty) && c.below[0].at(tx, ty)->placed && !c.edits.at(tx, ty));
+  p.x = tx * 16 + 8.0, p.y = ty * 16 + 30.0;
+  level.rules.spawnRate = 0, level.dread = 0;
+  for (int i = 0; i < 60 * 8; i++)
+    level.tick(), p.x = tx * 16 + 8.0, p.y = ty * 16 + 30.0;
+  float lit = level.dread;
+  assert(lit > 1.5f && lit < 2.5f);
+
+  world::enter(world::Layer::Surface);
+  world::edits = &c.edits;
+  Prop still;
+  assert(world::propAt(vx, vy, still) == had);
+  game.level.reset();
+  world::edits = nullptr;
+  world::openCaves(false);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Veins: " << veins << " ore veins line the walls of 36 cave cells; one yields " << t.yield->amount
+            << " ore in " << t.yield->hits << " strikes and the cut is kept below, not on the surface; a torch built "
+            << "below is kept below too and its light holds the dread to " << lit << " in 8 s: PASS" << std::endl;
 }

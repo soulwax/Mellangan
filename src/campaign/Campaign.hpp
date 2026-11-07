@@ -71,6 +71,7 @@ struct Campaign {
   float smoke = 0, shadeTime = 8;
 
   Edits &editsOf(int depth) { return depth > 0 ? below[std::min(depth, 2) - 1] : edits; }
+  const Edits &editsOf(int depth) const { return depth > 0 ? below[std::min(depth, 2) - 1] : edits; }
   std::string save() const;
   static bool load(std::string_view text, Campaign &out);
   static bool valid(std::string_view text);

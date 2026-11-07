@@ -140,6 +140,9 @@ int runTests() {
   testDawnCaves();
   testDeep();
   testDeepFall();
+  testDeepRules();
+  testDread();
+  testVeins();
   testNewFoes();
   testGreenwoodFoes();
   testMarchesFoes();

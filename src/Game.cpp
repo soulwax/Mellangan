@@ -640,12 +640,13 @@ void Game::render() {
 
   float d = level->night.daylight(), g = campaign ? campaign->delve.gloom : 0;
   if (!level->rules.sky)
-    g = std::max(g, 0.45f);
+    g = std::max(g, level->gloom);
   const Color &air = level->air;
   Color sky = level->sky.shade();
-  screen.beginLight({lerpf(lerpf(0.06f, 0.42f, d) * air.r * sky.r, 0.035f, g),
-                     lerpf(lerpf(0.07f, 0.34f, d) * air.g * sky.g, 0.028f, g),
-                     lerpf(lerpf(0.15f, 0.33f, d) * air.b * sky.b, 0.03f, g), 1});
+  float lift = level->rules.sky ? 0 : std::max(0.0f, 0.45f - level->gloom) * 0.4f;
+  screen.beginLight({lerpf(lerpf(0.06f, 0.42f, d) * air.r * sky.r, 0.035f, g) + air.r * lift,
+                     lerpf(lerpf(0.07f, 0.34f, d) * air.g * sky.g, 0.028f, g) + air.g * lift,
+                     lerpf(lerpf(0.15f, 0.33f, d) * air.b * sky.b, 0.03f, g) + air.b * lift, 1});
   level->renderLight(screen);
   screen.beginWorld({0.04f, 0.03f, 0.06f, 1});
   level->render(screen);

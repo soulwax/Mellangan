@@ -164,6 +164,7 @@ const Feature bracken = kit("bracken", kt::Bracken, -1, 0, 0);
 const Feature clover = kit("clover", kt::Clover, -1, 0, 0);
 const Feature menhir = kit("menhir", kt::Menhir, -1, 1.2f, 5);
 const Feature rockPile = kit("rockPile", kt::RockPile, -1, 1.0f, 6);
+const Feature oreVein = kit("ore vein", kt::RockPile, -1, 1.0f, 6, {0.4f, 0.26f, 0.1f, 1});
 const Feature amethyst = kit("amethyst", kt::Amethyst, -1, 0.7f, 4, {0.12f, 0.06f, 0.22f, 1});
 const Feature skull = kit("skull", kt::Skull, -1, 0, 0);
 const Feature driftwood = kit("driftwood", kt::Driftwood, -1, 0.6f, 0);

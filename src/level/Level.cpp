@@ -25,8 +25,6 @@
 
 namespace {
 
-constexpr Color DEPTH_GRADE{0.78f, 0.8f, 0.92f, 1};
-
 template <void (Enemy::*Step)()>
 void pass(Workers &workers, std::vector<Enemy *> &list) {
   workers.run(
@@ -48,6 +46,7 @@ Level::Level(Game &game, RunRules rules) : game(game), rules(std::move(rules)) {
   cellFill.assign(GRID * GRID, 0);
   player = add<Player>();
   flush();
+  gloom = this->rules.sky ? 0 : 0.45f;
   Bounty::roll(bounties, 3);
   if (this->rules.omen == RunRules::ROLL_OMEN ? rng.chance(0.85f) : this->rules.omen >= 0) {
     omen = this->rules.omen >= 0 ? this->rules.omen : rng.irange(0, OMEN_COUNT - 1);
@@ -203,13 +202,16 @@ void Level::ambience() {
 void Level::climate() {
   BiomeId here = world::biomeUnder(player->x, player->y);
   const Flavour &f = FLAVOURS[here];
-  const Color &g = rules.sky ? AIRS[here].grade : DEPTH_GRADE;
+  const CaveDef *cave = rules.sky ? nullptr
+                                   : &CAVES[int(world::caveBiomeAt(world::tileOf(player->x), world::tileOf(player->y)))];
+  const Color &g = cave ? cave->grade : AIRS[here].grade;
   float k = 1 - std::exp(-0.9f * DT);
   air = {lerpf(air.r, g.r, k), lerpf(air.g, g.g, k), lerpf(air.b, g.b, k), 1};
+  gloom = lerpf(gloom, cave ? cave->gloom : 0, k);
   const Omen *o = omen >= 0 ? &OMENS[omen] : nullptr;
   step = f.step * (o ? o->step : 1);
   pace = f.foes * (o ? o->foes : 1) * game.balance.enemySpeed;
-  xpMul = f.xp * (o ? o->xp : 1) * game.balance.xp;
+  xpMul = f.xp * (o ? o->xp : 1) * game.balance.xp * DEPTH_XP[int(world::layer())];
   eliteMul = o ? o->elite : 1;
   kindleRate = (o ? o->kindle : 1) * (player->hero ? player->hero->devotion() : 1) *
                (1 + player->bonus().kindling / 100);

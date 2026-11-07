@@ -639,3 +639,178 @@ void testDeepFall() {
                "a chest waits below, and a way up (kind "
             << int(w.way) << ") leads out: PASS" << std::endl;
 }
+
+bool deepSpot(CaveBiome want, std::initializer_list<const char *> kinds, int off, double &hx, double &hy) {
+  for (int r = 0; r < 30; r++)
+    for (int cy = -r; cy <= r; cy++)
+      for (int cx = -r; cx <= r; cx++) {
+        world::DeepCell d;
+        if ((std::abs(cx) != r && std::abs(cy) != r) || !world::deepCell(cx, cy, d) || d.biome != want)
+          continue;
+        if (!kinds.size())
+          return hx = d.hx * 16 + 8.0, hy = d.hy * 16 + 12.0, true;
+        for (int y = cy * 64 + 4; y < cy * 64 + 60; y++)
+          for (int x = cx * 64 + 4; x < cx * 64 + 60; x++) {
+            Prop p;
+            bool hit = false;
+            for (const char *k : kinds)
+              hit |= *k == '~'   ? world::isWater(x, y)
+                     : *k == '^' ? world::isLava(x, y)
+                                 : world::propAt(x, y, p) && p.kind && std::string_view(p.kind) == k;
+            int fy = y + off;
+            if (hit && !world::isRock(x, fy) && !world::isWater(x, fy) && !world::isLava(x, fy) &&
+                !world::isRock(x, fy - 1) && !world::isRock(x - 1, fy) && !world::isRock(x + 1, fy))
+              return hx = x * 16 + 8.0, hy = fy * 16 + 12.0, true;
+          }
+      }
+  return false;
+}
+
+void testDeepRules() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Deep);
+  Game game;
+  game.level = std::make_unique<Level>(game, RunRules{});
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  for (auto &u : p.upgrades)
+    u->level = 0;
+  double sx, sy;
+  assert(deepSpot(CaveBiome::Glowcap, {}, 0, sx, sy));
+  level.shift(world::Layer::Deep, sx, sy);
+  level.rules.spawnRate = 0;
+  auto stay = [&](CaveBiome b, std::initializer_list<const char *> kinds, int off, float seconds) {
+    assert(deepSpot(b, kinds, off, sx, sy));
+    level.each<Enemy>([](Enemy &e) { e.remove(); });
+    p.x = sx, p.y = sy, p.xa = p.ya = 0;
+    level.caveTime = 0.5f;
+    level.tick();
+    assert(world::caveBiomeAt(world::tileOf(p.x), world::tileOf(p.y)) == b);
+    int blasts = 0;
+    float most = 0;
+    for (int i = 0; i < int(seconds * 60); i++) {
+      level.tick();
+      most = std::max(most, float(std::abs(p.x - sx)));
+      for (const auto &q : level.particles)
+        if (auto *k = dynamic_cast<Blast *>(q.get()); k && fresh(k))
+          blasts++;
+    }
+    return std::pair{blasts, most};
+  };
+  auto foes = [&](EnemyKind k) {
+    int n = 0;
+    level.each<Enemy>([&](Enemy &e) { n += e.is(k); });
+    return n;
+  };
+  stay(CaveBiome::Glowcap, {}, 0, 5);
+  float glow = level.gloom;
+  assert(glow < 0.25f);
+  stay(CaveBiome::Mere, {"~"}, 3, 20);
+  int stirred = foes(EnemyKind::Drowned) + foes(EnemyKind::Snapjaw);
+  assert(stirred >= 1);
+  int vents = stay(CaveBiome::Magma, {"^"}, 3, 20).first;
+  assert(vents >= 3);
+  stay(CaveBiome::Ossuary, {"ribs", "skull"}, 5, 20);
+  int risen = foes(EnemyKind::Skeleton);
+  assert(risen >= 3);
+  stay(CaveBiome::Hive, {"beehive"}, 5, 20);
+  int brood = foes(EnemyKind::Spider);
+  assert(brood >= 3);
+  float blown = stay(CaveBiome::Abyss, {}, 0, 20).second;
+  assert(blown > 8);
+  float dark = level.gloom;
+  assert(dark > 0.5f);
+  assert(deepSpot(CaveBiome::Halls, {"rune stone"}, 1, sx, sy));
+  p.x = sx, p.y = sy;
+  level.tick();
+  for (int i = 0; i < 12; i++)
+    level.spawner.spawn(EnemyKind::Rat, sx + std::cos(i * 0.52) * 40, sy + std::sin(i * 0.52) * 40, true);
+  level.caveTime = 0.1f;
+  int feared = 0;
+  for (int i = 0; i < 60 * 4; i++) {
+    level.tick();
+    p.x = sx, p.y = sy;
+    int now = 0;
+    level.each<Enemy>([&](Enemy &e) { now += e.status.effect(StatusKind::Fear).time > 0; });
+    feared = std::max(feared, now);
+  }
+  assert(feared >= 1);
+  level.shift(world::Layer::Surface, sx, sy);
+  game.level.reset();
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Sundark rules: the Glowcap Forest lifts the gloom to " << glow << ", the Black Mere stirs up "
+            << stirred << " drowned and snapjaws, the Magma Halls erupt " << vents << " times, the Ossuary raises "
+            << risen << " skeletons round a lingering hero, the Hive hatches " << brood << " spiders, the Chasm's wind "
+            << "shoves the hero " << blown << " px and darkens to " << dark << ", and the Lost Halls ward frightens "
+            << feared << " rats: PASS" << std::endl;
+}
+
+void testDread() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules held;
+  held.endsAtDawn = false, held.spawnRate = 0;
+  game.level = std::make_unique<Level>(game, held);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  float up = level.threatAt(p.x, p.y), xpUp = (level.tick(), level.xpMul);
+  world::enter(world::Layer::Deep);
+  double sx, sy;
+  assert(deepSpot(CaveBiome::Glowcap, {}, 0, sx, sy));
+  level.shift(world::Layer::Deep, sx, sy);
+  level.rules.spawnRate = 0;
+  level.tick();
+  float down = level.threatAt(p.x, p.y), xpDown = level.xpMul;
+  assert(std::abs(down - up - Level::DEPTH_THREAT[2]) < 1 && xpDown > xpUp * 1.3f);
+  for (int i = 0; i < 60 * 30; i++)
+    level.tick();
+  float grown = level.dread;
+  assert(grown > 29 && grown < 31 && level.pressure() > 1.09f);
+  level.dread = Level::DREAD_MAX / 3 + 1;
+  level.tick();
+  assert(level.dreadSaid == 1 && level.threatAt(p.x, p.y) > down + 90);
+
+  assert(deepSpot(CaveBiome::Halls, {}, 0, sx, sy));
+  p.x = sx, p.y = sy;
+  assert(level.sanctum(p.x, p.y) && !level.sanctum(p.x + Level::SANCTUM + 40, p.y));
+  assert(!level.spawner.spawn(EnemyKind::Rat, sx + 20, sy, true));
+  Prop lamp;
+  assert(world::propAt(world::tileOf(sx), world::tileOf(sy) - 1, lamp) && lamp.light.a > 0);
+  p.hp = p.maxHp / 2;
+  float hurt = p.hp;
+  for (int i = 0; i < 60 * 4; i++)
+    level.tick(), p.x = sx, p.y = sy;
+  assert(level.dread == 0 && p.hp > hurt);
+
+  level.shift(world::Layer::Surface, sx, sy);
+  game.level = std::make_unique<Level>(game, RunRules{});
+  Level &dawn = *game.level;
+  dawn.shift(world::Layer::Deep, sx, sy);
+  dawn.rules.spawnRate = 0;
+  for (int i = 0; i < 60 * 5; i++)
+    dawn.tick();
+  assert(dawn.dread == 0);
+  dawn.shift(world::Layer::Surface, sx, sy);
+  game.level.reset();
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Dread: the Sundark adds " << down - up << " threat and pays " << xpDown / xpUp
+            << "x the xp; in a campaign the dark gathers " << grown << " dread in 30 s and speaks at a third; a Lost "
+            << "Halls sanctuary refuses spawns, burns a lamp, mends the hero and empties the dread; the dawn run "
+               "feels none: PASS"
+            << std::endl;
+}

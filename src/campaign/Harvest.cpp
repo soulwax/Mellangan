@@ -20,6 +20,7 @@
 namespace {
 
 const Yield YIELDS[] = {
+    {{"vein"}, Mat::Ore, 5, 3, 8},
     {{"rune"}, Mat::Rune, 6, 1, 3},
     {{"crystal", "amethyst", "iceChunk", "Spire"}, Mat::Shard, 4, 2, 2},
     {{"skull", "ribs"}, Mat::Bone, 2, 2, 2},
@@ -43,6 +44,9 @@ void spill(Level &level, double x, double y, Mat m, int amount) {
                         x + std::cos(a) * r, y + std::sin(a) * r * 0.7f);
   }
 }
+
+Edits &here(Campaign &c) { return c.editsOf(int(world::layer())); }
+const Edits &here(const Campaign &c) { return c.editsOf(int(world::layer())); }
 
 const PieceDef *defOf(Piece piece) {
   for (const PieceDef &d : PIECES)
@@ -82,7 +86,7 @@ bool target(const Level &level, const Campaign &c, Target &out) {
     if (d2 >= best)
       continue;
     int tx = int(std::floor(prop.x / 16)), ty = int(std::floor((prop.y - 1) / 16));
-    const Edits::Change *edit = c.edits.at(tx, ty);
+    const Edits::Change *edit = here(c).at(tx, ty);
     bool dark = edit && edit->placed && (edit->piece == Piece::Snuffed || edit->piece == Piece::Ashes);
     bool placed = edit && edit->placed && (dark || !c.founding(tx, ty));
     const Yield *y = edit ? nullptr : yieldOf(prop.kind);
@@ -99,8 +103,8 @@ bool strike(Level &level, Campaign &c) {
   if (!target(level, c, t))
     return false;
   uint64_t key = Edits::key(t.tx, t.ty);
-  if (t.placed && harvest::relight(c.edits.at(t.tx, t.ty)->piece) >= 0) {
-    Piece dark = c.edits.at(t.tx, t.ty)->piece;
+  if (t.placed && harvest::relight(here(c).at(t.tx, t.ty)->piece) >= 0) {
+    Piece dark = here(c).at(t.tx, t.ty)->piece;
     int &wood = level.player->materials[int(Mat::Wood)], cost = harvest::relight(dark);
     if (wood < cost) {
       level.game.announce(say(lang.relightNeeds, cost));
@@ -108,7 +112,7 @@ bool strike(Level &level, Campaign &c) {
     }
     wood -= cost;
     bool fire = dark == Piece::Ashes;
-    c.edits.place(t.tx, t.ty, fire ? Piece::Campfire : Piece::Torch);
+    here(c).place(t.tx, t.ty, fire ? Piece::Campfire : Piece::Torch);
     if (fire && !c.founding(t.tx, t.ty))
       level.rules.safe.push_back({t.x, t.y, CAMPFIRE_SAFE});
     level.add<Shockwave>(t.x, t.y - 8, 3, 26, 0.4f, Color{1, 0.6f, 0.2f, 1}, false);
@@ -116,10 +120,10 @@ bool strike(Level &level, Campaign &c) {
     return true;
   }
   if (t.placed) {
-    if (const PieceDef *d = defOf(c.edits.at(t.tx, t.ty)->piece))
+    if (const PieceDef *d = defOf(here(c).at(t.tx, t.ty)->piece))
       for (int m = 0; m < MATS; m++)
         spill(level, t.x, t.y, Mat(m), d->cost[m] / 2);
-    c.edits.harvest(t.tx, t.ty);
+    here(c).harvest(t.tx, t.ty);
     Spark::burst(level, t.x, t.y - 6, col::white, 8, 50, true);
     Sound::hurt.play(0.25f, 0.05f, 1.4f);
     return true;
@@ -132,7 +136,7 @@ bool strike(Level &level, Campaign &c) {
     return true;
   }
   c.chops.erase(key);
-  c.edits.harvest(t.tx, t.ty, float(level.night.nights + t.yield->days));
+  here(c).harvest(t.tx, t.ty, float(level.night.nights + t.yield->days));
   spill(level, t.x, t.y, t.yield->mat, t.yield->amount);
   level.add<Shockwave>(t.x, t.y - 4, 3, 18, 0.3f, tone, false);
   Sound::gem.play(0.3f, 0.05f, 0.8f);
@@ -157,7 +161,7 @@ std::string blocked(const Level &level, const Campaign &c, int piece, int tx, in
     return lang.buildWater;
   if (world::structureAt(tx, ty, site, 1))
     return lang.buildRuin;
-  if (c.edits.at(tx, ty) && c.edits.at(tx, ty)->placed)
+  if (here(c).at(tx, ty) && here(c).at(tx, ty)->placed)
     return lang.buildTaken;
   if (world::propAt(tx, ty, prop) && prop.count > 0)
     return lang.buildClear;
@@ -171,7 +175,7 @@ bool build(Level &level, Campaign &c, int piece, int tx, int ty) {
   const PieceDef &d = PIECES[piece];
   for (int m = 0; m < MATS; m++)
     p.materials[m] -= d.cost[m];
-  c.edits.place(tx, ty, d.piece);
+  here(c).place(tx, ty, d.piece);
   double x = tx * 16 + 8.0, y = ty * 16 + 16.0;
   if (d.piece == Piece::Campfire)
     level.rules.safe.push_back({x, y, CAMPFIRE_SAFE});
@@ -196,7 +200,7 @@ bool benchNear(const Level &level, const Campaign &c) {
   int px = int(std::floor(p.x / 16)), py = int(std::floor(p.y / 16));
   for (int ty = py - 2; ty <= py + 2; ty++)
     for (int tx = px - 2; tx <= px + 2; tx++)
-      if (const Edits::Change *e = c.edits.at(tx, ty); e && e->placed && e->piece == Piece::Bench) {
+      if (const Edits::Change *e = here(c).at(tx, ty); e && e->placed && e->piece == Piece::Bench) {
         double xd = tx * 16 + 8.0 - p.x, yd = ty * 16 + 16.0 - p.y;
         if (xd * xd + yd * yd < 30 * 30)
           return true;

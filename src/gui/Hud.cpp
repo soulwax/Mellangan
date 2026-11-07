@@ -94,6 +94,10 @@ void Hud::night(float top) {
   bool cycle = !l.rules.endsAtDawn;
   if (!l.rules.sky && cycle) {
     s.textCenter(world::layer() == world::Layer::Deep ? lang.deepDepths : lang.caveDepths, s.w / 2, top, std::round(u * 1.5f), Color{0.75f, 0.8f, 0.95f, 1});
+    if (l.dread >= 1)
+      s.textCenter(say(lang.dreadLine, int(l.dread * 100 / Level::DREAD_MAX)), s.w / 2, top + 16 * u, small,
+                   l.sanctum(l.player->x, l.player->y) ? Color{1, 0.85f, 0.5f, 0.9f}
+                                                       : Color{0.7f, 0.55f, 0.85f, 0.4f + 0.5f * l.dread / Level::DREAD_MAX});
     return;
   }
   std::string clock = cycle && n.dawn

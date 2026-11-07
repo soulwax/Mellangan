@@ -74,6 +74,8 @@ struct Lang {
              *deepDepths = "THE SUNDARK", *stairDown = "E  DESCEND THE OLD STAIR",
              *climbRoots = "E  CLIMB THE ROOTS", *rideChimney = "E  RIDE THE CHIMNEY UP",
              *climbLight = "E  CLIMB TOWARD THE DAYLIGHT", *chasmFall = "YOU FALL INTO THE SUNDARK",
+             *dreadStirs = "THE DARK STIRS", *dreadNotices = "THE DARK HAS NOTICED YOU",
+             *dreadHunts = "THE DARK IS HUNTING YOU", *dreadLine = "DREAD {}%",
              *relight = "E  RELIGHT  {} wood", *takeDown = "E  TAKE DOWN", *gather = "E  {}",
              *bridgeHolds = "THE BRIDGE HOLDS  {} FALLEN", *questLine = "QUEST  {}", *talk = "I  TALK",
              *help = "HELP!", *helpAt = "HELP {:.0f}", *questAt = "QUEST {:.0f}";
