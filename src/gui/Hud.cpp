@@ -110,6 +110,9 @@ void Hud::night(float top) {
     s.textCenter(tr(OMENS[l.omen].name), s.w / 2, top + 58 * u, small, OMENS[l.omen].tint);
   s.textCenter(say(n.lit == 1 ? lang.shrineLit : lang.shrinesLit, n.lit),
                s.w / 2, top + 26 * u, small, n.lit ? col::gold : col::muted);
+  if (l.rules.synod && l.scrutiny >= 1)
+    s.textCenter(say(lang.scrutinyLine, int(l.scrutiny)), s.w / 2, top + 66 * u, small,
+                 l.scrutiny >= Level::PATROLS ? Color{1, 0.86f, 0.55f, 0.95f} : Color{0.86f, 0.86f, 0.82f, 0.6f});
   if (game.campaign && game.campaign->points > 0)
     s.textCenter(game.input.prompt(say(game.campaign->points == 1 ? lang.skillPoint : lang.skillPoints,
                                        game.campaign->points)),

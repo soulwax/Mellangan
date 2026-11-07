@@ -205,6 +205,8 @@ void Enemy::move() {
   if (!type.floats && level->surfaceAt(x, y) == 1)
     spdMul *= is(EnemyKind::MireLeech) ? 1.2f : 0.5f;
   if (!type.floats)
+    spdMul *= level->footing(x, y);
+  if (!type.floats)
     spdMul *= level->climb(x, y, xWant, yWant);
   x += (xWant * level->pace * spdMul + xa) * DT;
   y += (yWant * level->pace * spdMul + ya) * DT;
@@ -278,6 +280,8 @@ void Enemy::tick() {
   });
   if (removed)
     return;
+  if (level->rules.matter && !type.floats)
+    level->tread(*this, boss);
   act();
   if (!type.floats)
     traits.tick(*this);

@@ -19,6 +19,9 @@
 #include "level/BiomeEvents.hpp"
 #include "level/Sky.hpp"
 #include "level/Chart.hpp"
+#include "level/Edits.hpp"
+#include "level/Matter.hpp"
+#include "entity/Faction.hpp"
 #include "level/LightField.hpp"
 #include "level/Night.hpp"
 #include "level/RunRules.hpp"
@@ -81,18 +84,62 @@ public:
   void shift(world::Layer to, double x, double y);
   Chart &surfaceChart() { return depth == world::Layer::Surface ? chart : charts[0]; }
   world::Layer depth = world::Layer::Surface;
-  std::unordered_set<uint64_t> looted;
+  std::unordered_set<uint64_t> looted, woken, felled;
+  std::vector<std::pair<entt::entity, uint64_t>> keepers;
   entt::entity hoard = entt::null;
   uint64_t hoardKey = 0;
   bool below() const { return depth != world::Layer::Surface; }
+  Edits breaks;
+  void reshape() { rock.clear(), flow.clear(); }
   float gloom = 0, caveTime = 3, dread = 0;
   int dreadSaid = 0;
   static constexpr float DEPTH_THREAT[3] = {0, 90, 240}, DEPTH_XP[3] = {1, 1.15f, 1.35f};
-  static constexpr float DREAD_MAX = 600, DREAD_THREAT = 0.5f, DREAD_RATE = 300, SANCTUM = 96;
+  static constexpr float LAIR = 150, DREAD_MAX = 600, DREAD_THREAT = 0.5f, DREAD_RATE = 300, SANCTUM = 96;
   float threatAt(double x, double y) const;
   float pressure() const { return 1 + dread / DREAD_RATE; }
   bool sanctum(double x, double y) const;
   void haunt();
+  void guard();
+  static constexpr unsigned FLARE_ODDS = 90;
+  static constexpr float FLARE_EVERY = 15, FLARE_REACH = 380, WILD = 600, RIVAL_REACH = 220, BRAWL_EVERY = 0.7f, BRAWL_DAMAGE = 1;
+  static constexpr int BRAWLERS = 8, GRACE = 2;
+  Grudges grudges;
+  bool grudged = false;
+  float flareTime = FLARE_EVERY;
+  std::vector<entt::entity> brawlers;
+  static constexpr int FRIENDLY = 500, HATED = -500, REP_MAX = 1000, REP_KILL = 2, REP_RIVAL = 1;
+  std::array<int, FAMILIES> rep{};
+  bool friendly(Faction f) const { return int(f) < FAMILIES && rep[int(f)] >= FRIENDLY; }
+  void repute(const Enemy &e);
+  static constexpr float BURN = 5, PUDDLE = 0.4f, HEAT = 6, WET_PACE = 0.85f, ICE_PACE = 1.1f;
+  static constexpr int SCORCH_DAYS = 3, TAR = 23, SPROUTS = 4;
+  static constexpr size_t CURRENT = 48;
+  static constexpr float OIL_PACE = 0.8f, SPROUT_DELAY = 6;
+  struct Sprout {
+    double x, y;
+    float due;
+  };
+  std::vector<Sprout> sprouts;
+  void current(int x, int y);
+  void sprout(double x, double y);
+  Matter matter;
+  Stuff stuffAt(int x, int y) const;
+  bool react(int x, int y, Cause c);
+  void scorch(int x, int y);
+  float footing(double x, double y) const;
+  void tread(Mob &m, bool boss);
+  void matterTick();
+  static constexpr float SCRUTINY_MAX = 100, PATROLS = 50, INQUISITION = 75, BOUNTY = 100, PATROL_EVERY = 90,
+                         SUSPECT_KILL = 4, SUSPECT_CHAOS = 0.05f, CHAOS_NEAR = 250, DAWN_PARDON = 10;
+  float scrutiny = 0, patrolTime = PATROL_EVERY;
+  int scrutinySaid = 0;
+  void watch();
+  void suspect(float by);
+  void host(int count);
+  static bool flares(int rx, int ry, int night, int slot);
+  int ignite();
+  void feuds();
+  void brawl();
   double caveX = 0, caveY = 0;
   BiomeEvents events;
   Sky sky;
@@ -190,10 +237,7 @@ public:
   int flowAt(double x, double y) const;
   void scatter(Screen &s);
   const std::vector<Prop> &visibleProps() const { return props; }
-  int monsterLevel(double x, double y) const {
-    float t = rules.threat ? rules.threat(x, y) : time;
-    return std::clamp(1 + int(t / 15), 1, 99);
-  }
+  int monsterLevel(double x, double y) const { return std::clamp(1 + int(threatAt(x, y) / 15), 1, 99); }
   bool blocks(double x, double y) const;
   void retire(entt::entity id) {
     std::lock_guard<std::mutex> lock(addMutex);

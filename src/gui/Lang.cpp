@@ -37,7 +37,7 @@ const LangKey LANG_KEYS[] = {
     K(level), K(kills), K(streak), K(dayClock), K(nightClock), K(endlessClock), K(dawnClock), K(shrineLit),
     K(shrinesLit), K(skillPoint), K(skillPoints), K(trade), K(merchant), K(merchantAt), K(craft), K(shrineAt),
 
-    K(buildPrompt), K(caveIn), K(delveFloor), K(delveMine), K(caveDown), K(caveUp), K(caveDepths), K(caveSurface), K(deepDepths), K(stairDown), K(climbRoots), K(rideChimney), K(climbLight), K(chasmFall), K(dreadStirs), K(dreadNotices), K(dreadHunts), K(dreadLine), K(relight), K(takeDown), K(gather), K(bridgeHolds),
+    K(buildPrompt), K(caveIn), K(delveFloor), K(delveMine), K(caveDown), K(caveUp), K(caveDepths), K(caveSurface), K(deepDepths), K(stairDown), K(climbRoots), K(rideChimney), K(climbLight), K(chasmFall), K(dreadStirs), K(dreadNotices), K(dreadHunts), K(dreadLine), K(crackPrompt), K(wallGives), K(feudFlares), K(repFriendly), K(repLost), K(synodPatrols), K(synodInquisition), K(synodBounty), K(inquisitionComes), K(scrutinyLine), K(relight), K(takeDown), K(gather), K(bridgeHolds),
     K(questLine), K(talk), K(help), K(helpAt), K(questAt),
 
     K(classTag), K(evolve), K(skillReplaces), K(none), K(relic), K(classTier), K(newTier), K(tierShort),

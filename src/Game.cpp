@@ -49,6 +49,7 @@
 #include "particle/debris/FlameDebris.hpp"
 #include "particle/Flourish.hpp"
 #include "particle/Shockwave.hpp"
+#include "entity/pickup/Chest.hpp"
 #include "particle/Spark.hpp"
 
 
@@ -257,9 +258,9 @@ void Game::play() {
     place();
   else if (input.confirm.clicked)
     level->player->cast();
-  if (campaign)
+  if (bool broke = crack(); campaign && !broke)
     gather();
-  else
+  else if (!campaign && !broke)
     stairs();
   fall();
   float was = level->time;
@@ -286,6 +287,22 @@ std::string Game::placeName() const {
   if (world::layer() == world::Layer::Surface)
     return lang.caveSurface;
   return tr(CAVES[int(world::caveBiomeAt(world::tileOf(level->player->x), world::tileOf(level->player->y)))].name);
+}
+
+bool Game::crack() {
+  int tx, ty;
+  if (!input.gather.clicked || !world::edits || !world::crackNear(level->player->x, level->player->y, tx, ty))
+    return false;
+  world::CaveCell c;
+  world::caveCell(int(std::floor(double(tx) / world::CAVE_CELL)), int(std::floor(double(ty) / world::CAVE_CELL)), c);
+  world::edits->harvest(tx, ty);
+  level->reshape();
+  level->add<Chest>(c.vx * 16 + 8.0, c.vy * 16 + 12.0);
+  level->quake(tx * 16 + 8.0, ty * 16 + 8.0, 50, 0, 6);
+  Spark::burst(*level, tx * 16 + 8.0, ty * 16 + 8.0, Color{0.6f, 0.55f, 0.48f, 1}, 16, 70, false);
+  spdlog::info("run: broke the cracked wall at tile ({}, {})", tx, ty);
+  announce(lang.wallGives);
+  return true;
 }
 
 void Game::stairs() {

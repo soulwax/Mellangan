@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 #include "test/Tests.hpp"
+#include "level/Noise.h"
 
 #include "Game.hpp"
 #include "campaign/Bastion.hpp"
@@ -32,11 +33,18 @@ bool solid(int tx, int ty) {
 
 } // namespace
 
+constexpr uint64_t BASTION_RNG = 6594983987815822447ull;
+constexpr uint32_t BASTION_SALT = 392921495u;
+
 void testBastion() {
+  rng.state = BASTION_RNG;
+  noise_reseed(BASTION_SALT);
   Game game;
   Campaign c;
   c.world = "BASTION1";
-  game.level = std::make_unique<Level>(game, c.rules());
+  RunRules siege = c.rules();
+  siege.matter = false, siege.feuds = false, siege.synod = false;
+  game.level = std::make_unique<Level>(game, siege);
   Level &level = *game.level;
   c.enter(level);
   level.tick();

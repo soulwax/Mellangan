@@ -180,7 +180,8 @@ void testVeins() {
       for (int y = cy * 64; y < cy * 64 + 64; y++)
         for (int x = cx * 64; x < cx * 64 + 64; x++)
           if (Prop v; world::propAt(x, y, v) && v.kind && std::strcmp(v.kind, "ore vein") == 0) {
-            assert(!world::isRock(x, y) && (world::isRock(x - 1, y) || world::isRock(x + 1, y) || world::isRock(x, y - 1)));
+            assert(!world::isRock(x, y) && (world::inVault(x, y) || world::isRock(x - 1, y) ||
+                                            world::isRock(x + 1, y) || world::isRock(x, y - 1)));
             if (!veins++ || (std::abs(x) + std::abs(y) < std::abs(vx) + std::abs(vy)))
               vx = x, vy = y;
           }

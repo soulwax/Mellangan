@@ -328,7 +328,7 @@ void testLayerSaves() {
 
 void testCaves() {
   uint32_t salt = noise_salt;
-  int kinds[5]{}, mouths = 0, ramps = 0, pools = 0, levels[4]{};
+  int kinds[5]{}, mouths = 0, ramps = 0, pools = 0, levels[4]{}, vaults = 0;
   long open = 0;
   for (uint32_t seed : {0u, 17u, 8675309u}) {
     noise_reseed(seed);
@@ -367,17 +367,21 @@ void testCaves() {
           }
         }
         assert(int(queue.size()) == c.size);
-        int count = 0;
+        int count = 0, sealed = 0;
         for (int j = 0; j < world::CAVE_CELL; j++)
           for (int i = 0; i < world::CAVE_CELL; i++)
             if (!world::isRock(x0 + i, y0 + j)) {
               count++;
+              if (world::inVault(x0 + i, y0 + j))
+                sealed++, assert(!seen[j * world::CAVE_CELL + i]);
               levels[world::heightAt(x0 + i, y0 + j)]++;
               ramps += world::isRamp(x0 + i, y0 + j);
               pools += world::isWater(x0 + i, y0 + j);
             }
-        assert(count == c.size);
-        open += count;
+        assert(count == c.size + sealed && sealed == (c.vault ? 21 : 0));
+        assert(!c.vault || (world::isRock(c.kx, c.ky) && world::crackAt(c.kx, c.ky)));
+        vaults += c.vault;
+        open += count - sealed;
         for (int m = 0; m < c.mouths; m++) {
           int x = c.mx[m], y = c.my[m];
           assert(!world::isRock(x, y) && !world::isWater(x, y) && seen[(y - y0) * world::CAVE_CELL + x - x0]);
@@ -400,9 +404,11 @@ void testCaves() {
   for (int k = 1; k < 5; k++)
     assert(kinds[k] > 0);
   assert(levels[1] > 0 && levels[2] > 0 && ramps > 0 && pools > 0);
+  assert(vaults > 0);
   std::cout << "[TEST] Caves: solid " << kinds[0] << ", pocket " << kinds[1] << ", through " << kinds[2]
             << ", warren " << kinds[3] << ", descent " << kinds[4] << " over 432 cells; " << mouths
-            << " mouths all dry above and joined to their cave; " << open << " open tiles (levels "
+            << " mouths all dry above and joined to their cave; " << vaults << " vaults sealed behind cracked walls; "
+            << open << " open tiles (levels "
             << levels[0] << "/" << levels[1] << "/" << levels[2] << ", " << ramps << " ramp tiles, "
             << pools << " pool tiles): PASS" << std::endl;
 }

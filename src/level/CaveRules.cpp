@@ -219,10 +219,34 @@ void Level::haunt() {
     game.announce(lang.*DREADS[stage - 1]), dreadSaid = stage;
 }
 
+void Level::guard() {
+  std::erase_if(keepers, [&](const auto &k) { return !get<Enemy>(k.first) && (felled.insert(k.second), true); });
+  int cx = int(std::floor(double(world::tileOf(player->x)) / world::CAVE_CELL)),
+      cy = int(std::floor(double(world::tileOf(player->y)) / world::CAVE_CELL));
+  world::DeepCell d;
+  if (world::layer() != world::Layer::Deep || !world::deepCell(cx, cy, d) || !d.lair)
+    return;
+  double hx = d.hx * 16 + 8.0, hy = d.hy * 16 + 12.0, dx = player->x - hx, dy = player->y - hy;
+  uint64_t key = uint64_t(uint32_t(cx)) << 32 | uint32_t(cy);
+  if (dx * dx + dy * dy > LAIR * LAIR || woken.count(key) || felled.count(key))
+    return;
+  const CaveDef &c = CAVES[int(d.biome)];
+  Enemy *g = spawner.guardian(c.keeper, hx, hy, c.guardian);
+  if (!g)
+    return;
+  woken.insert(key);
+  keepers.emplace_back(g->id, key);
+  quake(hx, hy, 80, 0, 10);
+  Spark::burst(*this, hx, hy - 8, c.debug, 24, 90, false);
+  game.announce(say(lang.stirsNearby, tr(c.guardian)));
+  spdlog::info("deep: {} woke at tile ({}, {})", c.guardian, d.hx, d.hy);
+}
+
 void Level::caveRules() {
   if (world::layer() == world::Layer::Surface || player->dead())
     return;
   haunt();
+  guard();
   if (chasmy)
     each<Enemy>([&](Enemy &e) {
       if (!e.type.floats && !e.boss && chasmAt(e.x, e.y - 2))
@@ -259,6 +283,8 @@ void Level::shift(world::Layer to, double x, double y) {
   chart = std::move(charts[int(to)]);
   depth = to;
   world::enter(to);
+  if (!world::edits || world::edits == &breaks)
+    world::edits = to == world::Layer::Surface ? nullptr : &breaks;
   rules.sky = to == world::Layer::Surface;
   gloom = rules.sky ? 0 : std::max(gloom, 0.45f);
   rock.clear(), flow.clear();

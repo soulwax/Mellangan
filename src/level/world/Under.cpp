@@ -27,7 +27,7 @@ struct Surfaced {
   ~Surfaced() { active = was; }
 };
 
-constexpr int MARGIN = 3, MIN_SIZE = 200, ROCK = 3;
+constexpr int MARGIN = 3, MIN_SIZE = 200, ROCK = 3, VAULT_ODDS = 60, VAULT_R2 = 5, LAIR_ODDS = 16;
 
 struct Cell {
   CaveCell info;
@@ -123,7 +123,7 @@ bool dryAbove(int x, int y) {
 void build(Cell *c, int cx, int cy) {
   uint32_t h = hash2(cx * 73 + 11, cy * 151 - 7);
   CaveCell &k = c->info;
-  k = {cx, cy, kindOf(h), 0, 0, 0, 0, {}, {}, 0, 0, CaveBiome::Roots};
+  k = {cx, cy, kindOf(h), 0, 0, 0, 0, {}, {}, 0, 0, CaveBiome::Roots, false, 0, 0, 0, 0};
   std::fill(std::begin(c->open), std::end(c->open), 0ull);
   int x0 = cx * CAVE_CELL, y0 = cy * CAVE_CELL;
   Plan shape = plan(k.kind, h, x0, y0);
@@ -252,6 +252,32 @@ void build(Cell *c, int cx, int cy) {
     k.kind = CaveKind::Pocket;
   if (k.kind == CaveKind::Descent)
     k.px = x0 + far % CAVE_CELL, k.py = y0 + far / CAVE_CELL;
+  if ((h >> 12) % 100 >= VAULT_ODDS)
+    return;
+  uint32_t best = 0;
+  for (int j = MARGIN; j < CAVE_CELL - MARGIN; j++)
+    for (int i = MARGIN; i < CAVE_CELL - MARGIN; i++) {
+      if (!openAt(i, j) || (x0 + i - k.hx) * (x0 + i - k.hx) + (y0 + j - k.hy) * (y0 + j - k.hy) <= 36)
+        continue;
+      constexpr int D[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+      for (int d = 0; d < 4; d++) {
+        int ci = i + 4 * D[d][0], cj = j + 4 * D[d][1];
+        bool sealed = !openAt(i + D[d][0], j + D[d][1]) && ci >= 3 && cj >= 3 && ci < CAVE_CELL - 3 &&
+                      cj < CAVE_CELL - 3;
+        for (int dj = -3; dj <= 3 && sealed; dj++)
+          for (int di = -3; di <= 3 && sealed; di++)
+            sealed = di * di + dj * dj > 10 || !openAt(ci + di, cj + dj);
+        if (uint32_t s = hash2(x0 + i * 4 + d, y0 + j * 7 + int(h & 1023)); sealed && s > best)
+          best = s, k.vault = true, k.kx = x0 + i + D[d][0], k.ky = y0 + j + D[d][1], k.vx = x0 + ci,
+          k.vy = y0 + cj;
+    }
+    }
+  if (!k.vault)
+    return;
+  for (int dj = -2; dj <= 2; dj++)
+    for (int di = -2; di <= 2; di++)
+      if (di * di + dj * dj <= VAULT_R2)
+        c->open[k.vy - y0 + dj] |= 1ull << (k.vx - x0 + di);
 }
 
 const Cell &cellOf(int cx, int cy) {
@@ -326,7 +352,8 @@ void dig(Deep *d, int cx, int cy) {
         age = noise_fbm(cx * 0.19f + 1.3f, cy * 0.19f + 9.4f, 2, 3105);
   k = {cx, cy, 0, std::clamp(int(shape.room[0].x), x0 + MARGIN + 2, x0 + C - MARGIN - 3),
        std::clamp(int(shape.room[0].y), y0 + MARGIN + 2, y0 + C - MARGIN - 3), deepClimate(heat, damp, age),
-       false, 0, 0, Way::None, 0, 0};
+       false, 0, 0, Way::None, 0, 0, false};
+  k.lair = CAVES[int(k.biome)].guardian && (h >> 9) % 100 < LAIR_ODDS;
   const CaveCell above = cellOf(cx, cy).info;
   if (above.kind == CaveKind::Descent)
     k.landing = true, k.lx = above.px, k.ly = above.py;
@@ -476,9 +503,17 @@ const Deep &deepOf(int cx, int cy) {
 
 bool deep() { return active == Layer::Deep; }
 
+bool broken(int x, int y) {
+  const Edits::Change *e = edits ? edits->at(x, y) : nullptr;
+  return e && !e->placed;
+}
+
 bool openAt(int x, int y) {
   int cx = floorDiv(x, CAVE_CELL), cy = floorDiv(y, CAVE_CELL), i = x - cx * CAVE_CELL, j = y - cy * CAVE_CELL;
-  return (deep() ? deepOf(cx, cy).open[j] : cellOf(cx, cy).open[j]) >> i & 1;
+  if (deep())
+    return deepOf(cx, cy).open[j] >> i & 1;
+  const Cell &c = cellOf(cx, cy);
+  return (c.open[j] >> i & 1) || (c.info.vault && x == c.info.kx && y == c.info.ky && broken(x, y));
 }
 
 bool spared(int x, int y, int r2) {
@@ -491,7 +526,7 @@ bool spared(int x, int y, int r2) {
            (k.landing && near(k.lx, k.ly)) || (k.way != Way::None && near(k.wx, k.wy));
   }
   const CaveCell &c = cellOf(cx, cy).info;
-  if (near(c.hx, c.hy) || isChasm(x, y))
+  if (near(c.hx, c.hy) || isChasm(x, y) || (c.vault && (near(c.vx, c.vy) || near(c.kx, c.ky))))
     return true;
   for (int m = 0; m < c.mouths; m++)
     if (near(c.mx[m], c.my[m]))
@@ -551,7 +586,31 @@ bool isChasm(int x, int y) {
   if (active != Layer::Caves)
     return false;
   const CaveCell &c = cellOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info;
-  return c.kind == CaveKind::Descent && (x - c.px) * (x - c.px) + (y - c.py) * (y - c.py) <= 5 && openAt(x, y);
+  return c.kind == CaveKind::Descent && (x - c.px) * (x - c.px) + (y - c.py) * (y - c.py) <= 5 && openAt(x, y) &&
+         !inVault(x, y);
+}
+
+bool crackAt(int x, int y) {
+  if (active != Layer::Caves)
+    return false;
+  const CaveCell &c = cellOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info;
+  return c.vault && x == c.kx && y == c.ky && !broken(x, y);
+}
+
+bool crackNear(double x, double y, int &tx, int &ty) {
+  int cx = int(std::floor(x / 16)), cy = int(std::floor((y - 4) / 16));
+  for (int dy = -1; dy <= 1; dy++)
+    for (int dx = -1; dx <= 1; dx++)
+      if (crackAt(cx + dx, cy + dy))
+        return tx = cx + dx, ty = cy + dy, true;
+  return false;
+}
+
+bool inVault(int x, int y) {
+  if (active != Layer::Caves)
+    return false;
+  const CaveCell &c = cellOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info;
+  return c.vault && (x - c.vx) * (x - c.vx) + (y - c.vy) * (y - c.vy) <= VAULT_R2;
 }
 
 CaveBiome caveBiomeAt(int x, int y) {
@@ -601,7 +660,9 @@ bool mouthProp(int x, int y, Prop &p) {
   Passage w;
   if (!wayAt(x, y, w))
     return false;
-  p.add(atlas::tile(39));
+  constexpr Sprite LOOK[] = {atlas::tile(39), atlas::tile(39), atlas::tile(39), atlas::under(atlas::ug::Roots),
+                             atlas::under(atlas::ug::Chimney), atlas::under(atlas::ug::Sinkhole)};
+  p.add(LOOK[int(w.way)]);
   if (active != Layer::Surface)
     p.fire(GLOW[int(w.way)], 120, -4);
   return true;
@@ -664,7 +725,9 @@ bool isRamp(int x, int y) {
 bool structureIn(int, int, Structure &) { return false; }
 
 Sprite groundTile(int x, int y) {
-  if (isRock(x, y) || isChasm(x, y))
+  if (isChasm(x, y))
+    return atlas::under(atlas::ug::Void);
+  if (isRock(x, y))
     return atlas::tile(0);
   if (isLava(x, y))
     return atlas::carpet(atlas::cp::Lava, 0);
@@ -684,6 +747,16 @@ bool propAt(int x, int y, Prop &p) {
       p.fire({1, 0.78f, 0.42f, 1}, 150, -6);
       return true;
     }
+  }
+  if (crackAt(x, y)) {
+    p.add(atlas::under(atlas::ug::Crack), 6);
+    p.fire({0.5f, 0.42f, 0.3f, 1}, 40, 2);
+    p.kind = "cracked wall";
+    return true;
+  }
+  if (inVault(x, y) && !pool(x, y)) {
+    uint32_t v = hash2(x * 17 - 3, y * 23 + 9);
+    return v % 100 < 34 && feature::oreVein.place(&feature::oreVein, v >> 16, &p);
   }
   if (isChasm(x, y)) {
     const CaveCell &c = cellOf(floorDiv(x, CAVE_CELL), floorDiv(y, CAVE_CELL)).info;
@@ -715,7 +788,7 @@ Color groundTint(int x, int y) {
   if (isLava(x, y))
     return {1, 1, 1, 1};
   if (isChasm(x, y))
-    return {0.03f, 0.03f, 0.04f, 1};
+    return {1, 1, 1, 1};
   const CaveDef &d = CAVES[int(caveBiomeAt(x, y))];
   return isRock(x, y) ? d.wallTint * 0.25f : d.floorTint;
 }

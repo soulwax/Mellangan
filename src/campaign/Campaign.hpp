@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <set>
 #include <unordered_map>
 #include <string>
 #include <string_view>
@@ -64,6 +65,9 @@ struct Campaign {
   Delve delve;
   Edits edits, below[2];
   int layer = 0;
+  float dread = 0, scrutiny = 0;
+  std::array<int, 9> rep{};
+  std::set<uint64_t> slain;
   std::vector<entt::entity> waypoints, chests;
   std::unordered_map<uint64_t, int> chops;
   int building = -1;

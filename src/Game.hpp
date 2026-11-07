@@ -72,6 +72,7 @@ public:
   void newGame(bool reroll = true);
   void travel(world::Layer to, double x, double y);
   void fall();
+  bool crack();
   void toTitle();
   void reseed();
   void snapCamera();

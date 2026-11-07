@@ -45,8 +45,12 @@ public:
   bool afflict(StatusKind kind, float duration, float power,
                Upgrade *src = nullptr) {
     temper(kind, duration, power);
-    return !removed && hp > 0 && status.apply(kind, duration, power, src);
+    bool hit = !removed && hp > 0 && status.apply(kind, duration, power, src);
+    if (hit && (kind == StatusKind::Burn || kind == StatusKind::Chill))
+      ground(kind);
+    return hit;
   }
+  void ground(StatusKind kind);
 
   double bodyY() const { return y - 7 * scale; }
   bool dead() const { return hp <= 0; }

@@ -39,7 +39,10 @@ void pass(Workers &workers, std::vector<Enemy *> &list) {
 
 } // namespace
 
-Level::~Level() = default;
+Level::~Level() {
+  if (world::edits == &breaks)
+    world::edits = nullptr;
+}
 
 Level::Level(Game &game, RunRules rules) : game(game), rules(std::move(rules)) {
   cellStart.assign(GRID * GRID + 1, 0);
@@ -135,6 +138,8 @@ void Level::tick() {
   if (!player->dead() && (!night.dawn || rules.dayRate > 0))
     spawner.tick(), explore(), hunt();
   caveRules();
+  feuds();
+  matterTick();
   climate();
   weather();
   ambience();
@@ -147,6 +152,7 @@ void Level::tick() {
   each<Enemy>([&](Enemy &e) { thinkers.push_back(&e); });
   Workers &workers = Workers::shared();
   pass<&Enemy::think>(workers, thinkers);
+  brawl();
   pass<&Enemy::move>(workers, thinkers);
   pass<&Enemy::push>(workers, thinkers);
   pass<&Enemy::settle>(workers, thinkers);

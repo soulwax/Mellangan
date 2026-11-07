@@ -1,5 +1,7 @@
 #include "particle/Arc.hpp"
 
+#include "level/Level.hpp"
+
 namespace {
 float jitter(uint32_t seed, int segment, int piece) {
   uint32_t h = seed ^ uint32_t(segment) * 0x9E3779B1u ^ uint32_t(piece) * 0x85EBCA6Bu;
@@ -13,6 +15,10 @@ Arc::Arc(std::vector<ArcNode> nodes, float life, Color color)
       color(color), seed(rng.next()) {}
 
 void Arc::tick() {
+  if (!grounded && level && level->rules.matter)
+    for (size_t i = 1; i < nodes.size(); i++)
+      level->react(int(std::floor(nodes[i].x / 16)), int(std::floor((nodes[i].y + 6) / 16)), Cause::Charge);
+  grounded = true;
   Particle::tick();
   if ((flicker -= DT) <= 0)
     flicker = 0.05f, seed = rng.next();

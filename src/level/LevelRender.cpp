@@ -102,6 +102,7 @@ void Level::render(Screen &s) {
   prof_begin(PROF_FLOOR);
   renderFloor(s);
   sky.renderGround(s);
+  matter.render(s, time);
   events.render(s, *this);
   prof_end(PROF_FLOOR);
   prof_begin(PROF_SORT);

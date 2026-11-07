@@ -22,6 +22,8 @@ from make_grounds import add_grounds
 from make_rims import add_rims
 from make_landmarks import add_landmarks
 from make_masonry import add_masonry
+from make_under import add_under
+from make_synod import add_synod
 from make_cliffs import add_cliffs
 from make_bestiary import add_bestiary
 from make_arsenal import add_arsenal
@@ -41,13 +43,15 @@ PIPELINE = (
     ("sprite kit", (432, 552), add_sprites),
     ("grounds", (432, 624), add_grounds),
     ("frontier", (432, 624), add_frontier),
-    ("expansion", (432, 1794), add_expansion),
-    ("dirt rims", (432, 1794), add_rims),
-    ("arsenal", (432, 1794), add_arsenal),
-    ("landmarks", (432, 1794), add_landmarks),
-    ("cliffs", (432, 1794), add_cliffs),
-    ("bestiary", (432, 1794), add_bestiary),
-    ("masonry", (432, 1794), add_masonry),
+    ("expansion", (432, 1830), add_expansion),
+    ("dirt rims", (432, 1830), add_rims),
+    ("arsenal", (432, 1830), add_arsenal),
+    ("landmarks", (432, 1830), add_landmarks),
+    ("cliffs", (432, 1830), add_cliffs),
+    ("bestiary", (432, 1830), add_bestiary),
+    ("masonry", (432, 1830), add_masonry),
+    ("under", (432, 1830), add_under),
+    ("synod", (432, 1830), add_synod),
 )
 
 

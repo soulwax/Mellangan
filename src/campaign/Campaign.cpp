@@ -48,6 +48,19 @@ bool torchlit(double x, double y) {
   return false;
 }
 
+static_assert(std::tuple_size_v<decltype(Campaign::rep)> == FAMILIES);
+
+constexpr float SIEGE = 400;
+
+bool besieged(double x, double y) {
+  for (int i = 0; i < bastion::count(); i++) {
+    const bastion::Field &f = bastion::field(i);
+    if (x > f.west - SIEGE && x < f.east + SIEGE && y > f.north - SIEGE && y < f.south + SIEGE)
+      return true;
+  }
+  return false;
+}
+
 float areaThreat(double x, double y) {
   double xd = x - townX, yd = y - townY;
   return float(std::sqrt(xd * xd + yd * yd) / 8) * threatScale + (threatScale - 1) * 300;
@@ -60,7 +73,7 @@ RunRules Campaign::rules() const {
   r.nightLength = NIGHT, r.dayLength = DAY, r.endsAtDawn = false;
   r.loot = true, r.bosses = false, r.town = true, r.omen = -1, r.dayRate = DAY_RATE;
   r.safe.push_back({xTown, yTown, SAFE});
-  r.threat = areaThreat, r.warded = torchlit;
+  r.threat = areaThreat, r.warded = torchlit, r.feuds = true, r.matter = true, r.synod = true, r.sieged = besieged;
   r.route = bastion::route, r.wall = bastion::wall;
   if (layer) {
     r.sky = false, r.waves = false, r.nightLength = 1e9f, r.dayLength = 0, r.dayRate = 0;
@@ -76,6 +89,9 @@ void Campaign::capture(const Level &level) {
     materials[m] = p.materials[m];
   bag = p.bag, gear = p.gear, worn = p.worn;
   x = p.x, y = p.y, day = level.night.nights, layer = int(world::layer());
+  dread = level.dread, scrutiny = level.scrutiny;
+  std::copy(level.rep.begin(), level.rep.end(), rep.begin());
+  slain.insert(level.felled.begin(), level.felled.end());
   active = p.skill ? p.skill->name : "";
   upgrades.clear();
   for (const auto &up : p.upgrades) {
@@ -90,8 +106,11 @@ void Campaign::capture(const Level &level) {
 
 void Campaign::enter(Level &level) {
   world::edits = &editsOf(int(world::layer()));
+  std::copy(rep.begin(), rep.end(), level.rep.begin());
+  level.scrutiny = scrutiny;
   if (world::layer() != world::Layer::Surface)
     return underground(level);
+  dread = 0;
   if (!founded)
     found(level);
   Delve::unseal(edits);
@@ -308,6 +327,8 @@ void Campaign::underground(Level &level) {
       level.rules.safe.push_back({int(int32_t(k >> 32)) * 16 + 8.0,
                                   int(int32_t(k & 0xFFFFFFFFu)) * 16 + 16.0, harvest::CAMPFIRE_SAFE});
   level.night.dawn = false, level.night.nights = day;
+  level.dread = dread;
+  level.felled.insert(slain.begin(), slain.end());
   restore(level);
 }
 
@@ -317,6 +338,7 @@ void Campaign::tick(Level &level) {
   bool dawn = level.night.dawn;
   if (dawn && !wasDay) {
     regrow(level.night.nights);
+    level.scrutiny = std::max(0.0f, level.scrutiny - Level::DAWN_PARDON);
     if (hound && houndDown)
       houndDown = false, level.game.announce(lang.houndBack);
     honour(level);

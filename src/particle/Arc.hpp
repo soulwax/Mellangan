@@ -21,4 +21,5 @@ public:
 private:
   uint32_t seed;
   float flicker = 0;
+  bool grounded = false;
 };

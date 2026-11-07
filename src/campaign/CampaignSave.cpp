@@ -2,6 +2,7 @@
 
 #include "campaign/Quests.hpp"
 #include "hero/Hero.hpp"
+#include "level/Level.hpp"
 
 #include <spdlog/fmt/fmt.h>
 
@@ -57,6 +58,18 @@ std::string Campaign::save() const {
     out += "stash " + item.save() + "\n";
   if (layer)
     out += fmt::format("layer {}\n", layer);
+  if (std::any_of(rep.begin(), rep.end(), [](int v) { return v != 0; })) {
+    out += "rep";
+    for (int v : rep)
+      out += fmt::format(" {}", v);
+    out += "\n";
+  }
+  if (scrutiny > 0)
+    out += fmt::format("scrutiny {:.1f}\n", scrutiny);
+  if (dread > 0)
+    out += fmt::format("dread {:.1f}\n", dread);
+  for (uint64_t k : slain)
+    out += fmt::format("slain {} {}\n", int32_t(k >> 32), int32_t(k & 0xFFFFFFFFu));
   return out + edits.save() + below[0].save("cave") + below[1].save("deep");
 }
 
@@ -145,8 +158,25 @@ bool Campaign::load(std::string_view text, Campaign &out) {
       out.below[1].load(line);
     else if (key == "layer")
       words >> out.layer;
+    else if (key == "rep") {
+      for (int &v : out.rep)
+        if (!(words >> v))
+          break;
+    } else if (key == "scrutiny") {
+      words >> out.scrutiny;
+    } else if (key == "dread")
+      words >> out.dread;
+    else if (key == "slain") {
+      int sx = 0, sy = 0;
+      if (words >> sx >> sy)
+        out.slain.insert(uint64_t(uint32_t(sx)) << 32 | uint32_t(sy));
+    }
   }
   out.layer = std::clamp(out.layer, 0, 2);
+  for (int &v : out.rep)
+    v = std::clamp(v, -Level::REP_MAX, Level::REP_MAX);
+  out.scrutiny = std::isfinite(out.scrutiny) ? std::clamp(out.scrutiny, 0.0f, Level::SCRUTINY_MAX) : 0;
+  out.dread = std::isfinite(out.dread) ? std::clamp(out.dread, 0.0f, Level::DREAD_MAX) : 0;
   out.hero = std::clamp(out.hero, 0, HERO_COUNT - 1), out.act = std::clamp(out.act, 1, ACT_COUNT);
   out.quest = std::clamp(out.quest, 0, QUEST_COUNT), out.lvl = std::max(out.lvl, 1);
   for (int *n : {&out.gold, &out.day, &out.points, &out.rescued, &out.nightmare, &out.progress})

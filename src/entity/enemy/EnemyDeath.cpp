@@ -1,3 +1,4 @@
+#include "entity/Faction.hpp"
 #include "entity/enemy/Enemy.hpp"
 #include "gui/Lang.hpp"
 #include "entity/enemy/Boss.hpp"
@@ -213,9 +214,10 @@ void bossFalls(Enemy &e) {
   Spark::burst(l, e.x, e.bodyY(), e.type.blood, 30, 150, true);
   l.game.hitStop(0.12f);
   l.game.onExplosion();
-  l.game.announce(e.def ? e.def->fall
-                  : e.is(EnemyKind::Alpha) ? "THE PACK LORD FALLS"
-                                           : "THE LICH CRUMBLES");
+  l.game.announce(e.def                    ? std::string(e.def->fall)
+                  : e.title                ? say(lang.isSlain, tr(e.title))
+                  : e.is(EnemyKind::Alpha) ? std::string("THE PACK LORD FALLS")
+                                           : std::string("THE LICH CRUMBLES"));
   for (int i = 0; i < 8; i++)
     Gem::drop(l, e.x + rng.range(-20, 20), e.y + rng.range(-14, 14), 30 * l.xpMul);
 }
@@ -325,6 +327,19 @@ void Enemy::die() {
   remove();
   if (!garrison)
     tally(*this);
+  if (level->rules.feuds && !garrison && !boss)
+    level->repute(*this);
+  if (factionOf(*this) == Faction::Synod)
+    level->suspect(Level::SUSPECT_KILL);
+  if (level->rules.matter && !garrison) {
+    int tx = int(std::floor(x / 16)), ty = int(std::floor((y - 2) / 16));
+    if (factionOf(*this) == Faction::Mycel)
+      for (int dy = -1; dy <= 1; dy++)
+        for (int dx = -1; dx <= 1; dx++)
+          level->react(tx + dx, ty + dy, Cause::Spore);
+    else
+      level->sprout(x, y);
+  }
   Sound::kill.play(0.35f, 0.12f);
   Player &killer = *level->player;
   onKill(*this, killer);
@@ -337,7 +352,7 @@ void Enemy::die() {
   traits.died(*this, type.damage * damageMul * 2);
   if (boss)
     bossFalls(*this);
-  if (title && !def)
+  if (title && !def && !boss)
     championFalls(*this);
   if (rng.chance(1 / 150.0f))
     level->add<Potion>(x, y);

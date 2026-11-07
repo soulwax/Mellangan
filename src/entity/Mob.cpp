@@ -4,6 +4,8 @@
 
 #include "item/Upgrade.hpp"
 #include "gfx/StatusVisual.hpp"
+#include "level/Level.hpp"
+#include "level/World.hpp"
 
 void Mob::drawBody(Screen &s, int px, int py, Sprite body, bool floats, float move,
                    Color tint, float flashAmount, Color flashColor) const {
@@ -82,4 +84,9 @@ Upgrade *Mob::grant(const char *name, int levels) {
   for (int i = 0; i < levels && !up->maxed(); i++)
     up->levelUp(*this);
   return up;
+}
+
+void Mob::ground(StatusKind kind) {
+  if (level && level->rules.matter)
+    level->react(world::tileOf(x), world::tileOf(y - 2), kind == StatusKind::Burn ? Cause::Fire : Cause::Chill);
 }

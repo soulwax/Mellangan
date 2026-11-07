@@ -5,6 +5,7 @@
 #include <spdlog/fmt/fmt.h>
 #include "audio/Sound.hpp"
 #include "entity/Player.hpp"
+#include "entity/Faction.hpp"
 #include "entity/enemy/SupplyBarrel.hpp"
 #include "level/Level.hpp"
 #include "level/World.hpp"
@@ -106,7 +107,8 @@ void Spawner::trickle(float t) {
        i < batch && int(level.count<Enemy>()) < int(b.enemyCap); i++) {
     double x, y;
     ring(rng.range(280, 320), x, y);
-    spawn(pick(r, x, y), x, y, false);
+    if (EnemyKind k = pick(r, x, y); !level.friendly(factionOf(k)))
+      spawn(k, x, y, false);
   }
 }
 
@@ -116,6 +118,8 @@ void Spawner::horde(float t) {
   nextWave += b.hordeEvery * o.waves;
   int count = int(std::min(b.hordeMax, b.hordeBase + t / b.hordeRamp) * o.horde *
                   level.rules.hordeScale);
+  if (level.rules.synod && level.scrutiny >= Level::INQUISITION && world::layer() == world::Layer::Surface)
+    return level.host(count);
   int open[WAVES], n = 0;
   for (int i = 0; i < WAVES; i++)
     if (WAVE_DEFS[i].from <= t && i != lastWave)
@@ -311,6 +315,18 @@ Enemy *Spawner::champion(double x, double y) {
   e->crown(level.titles.back().c_str());
   e->might = 0.5f, e->haste = 1.6f;
   e->grant(ARMS[rng.irange(0, int(std::size(ARMS)) - 1)], 2);
+  level.bossIds.push_back(e->id);
+  return e;
+}
+
+Enemy *Spawner::guardian(EnemyKind kind, double x, double y, const char *title) {
+  Enemy *e = spawn(kind, x, y, true);
+  if (!e)
+    return nullptr;
+  const Balance &b = level.game.balance;
+  float hpMul = b.enemyHp * (1 + level.threatAt(x, y) / b.enemyHpRamp) * level.portent().hp;
+  e->makeBoss(Enemy::typeOf(EnemyKind::Cyclops).hp * hpMul * GUARDIAN_HP, 1.6f);
+  e->title = title;
   level.bossIds.push_back(e->id);
   return e;
 }

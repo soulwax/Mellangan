@@ -13,7 +13,10 @@ public:
   void tick();
   Enemy *spawn(EnemyKind kind, double x, double y, bool aware = true,
                bool boss = false);
+  Enemy *guardian(EnemyKind kind, double x, double y, const char *title);
+  static constexpr float GUARDIAN_HP = 1.5f;
   void wave(int index, int count);
+  void horde(float t);
   Enemy *champion(double x, double y);
   static constexpr int WAVES = 6;
   static constexpr float MINI_GAP = 150, WARD = 0.7f;
@@ -31,7 +34,6 @@ private:
   Roster roster(float t) const;
   EnemyKind pick(const Roster &r, double x, double y) const;
   void trickle(float t);
-  void horde(float t);
   void mimics();
   void renegades(float t);
   void champions();

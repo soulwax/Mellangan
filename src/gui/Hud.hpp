@@ -61,6 +61,7 @@ private:
   void plate(double wx, double wy, std::string_view text, Color ink);
   void stairs();
   void passage(const world::Passage &w);
+  bool crack();
   void arrow(const Pin &pin, float length, float wing, Color c);
   void diamond(const Pin &pin, Color c);
   void tag(const std::string &text, const Pin &pin, float back, Color c);

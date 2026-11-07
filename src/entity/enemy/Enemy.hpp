@@ -86,6 +86,12 @@ enum class EnemyKind {
   KoboldMiner,
   Shade,
   Nest,
+  Lamplighter,
+  Penitent,
+  Censer,
+  Limer,
+  Confessor,
+  Prioress,
   Count
 };
 
@@ -119,7 +125,8 @@ public:
   float goalTime = 0, cooldown = 0, frenzy = 0, age = 0;
   double xMark = 0, yMark = 0, xWant = 0, yWant = 0, xPush = 0, yPush = 0,
          side = 1, xOld = NAN, yOld = NAN;
-  entt::entity leader = entt::null;
+  entt::entity leader = entt::null, rival = entt::null;
+  float feud = 0, brawl = 0;
   uint32_t seed;
   bool aware = true, wantsFire = false, wantsLeader = false, faltered = false,
        alarmed = false, buried = false, gilded = false, boss = false, pounced = false,

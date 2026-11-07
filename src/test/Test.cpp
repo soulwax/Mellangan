@@ -143,6 +143,14 @@ int runTests() {
   testDeepRules();
   testDread();
   testVeins();
+  testCracks();
+  testGuardians();
+  testDepthMemory();
+  testFeuds();
+  testReputation();
+  testMatter();
+  testMatterTable();
+  testSynod();
   testNewFoes();
   testGreenwoodFoes();
   testMarchesFoes();

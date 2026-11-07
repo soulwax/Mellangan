@@ -17,6 +17,7 @@
 #include "entity/enemy/Thief.hpp"
 #include "entity/enemy/ExpansionEnemy.hpp"
 #include "entity/enemy/WildFoe.hpp"
+#include "entity/enemy/SynodFoe.hpp"
 #include "entity/enemy/Wolf.hpp"
 #include "entity/enemy/ai/Plans.hpp"
 #include "entity/enemy/ai/Melee.hpp"
@@ -169,6 +170,12 @@ const EnemyType TYPES[] = {
     {bs::KoboldMiner, 14, 62, 5, 5, 0.9f, 2, 1, {0.8f, 0.4f, 0.2f, 1}, false, 60, atlas::beast},
     {bs::Shade, 30, 34, 0, 6, 1, 6, 0.9f, {0.35f, 0.25f, 0.5f, 1}, true, 1e9f, atlas::beast},
     {bs::Nest, 140, 0, 0, 10, 1.4f, 10, 0, {0.55f, 0.35f, 0.5f, 1}, false, 1e9f, atlas::beast},
+    {0, 46, 40, 9, 6, 1, 7, 0.7f, {0.62f, 0.12f, 0.14f, 1}, false, 1e9f, atlas::synod},
+    {1, 40, 56, 10, 6, 1, 7, 0.8f, {0.62f, 0.12f, 0.14f, 1}, false, 1e9f, atlas::synod},
+    {2, 36, 34, 7, 6, 1, 7, 0.8f, {0.62f, 0.12f, 0.14f, 1}, false, 1e9f, atlas::synod},
+    {3, 52, 34, 9, 6, 1, 8, 0.7f, {0.62f, 0.12f, 0.14f, 1}, false, 1e9f, atlas::synod},
+    {4, 150, 32, 14, 8, 1.25f, 18, 0.3f, {0.62f, 0.12f, 0.14f, 1}, false, 1e9f, atlas::synod},
+    {5, 900, 40, 24, 12, 1.8f, 60, 0.05f, {0.62f, 0.12f, 0.14f, 1}, false, 1e9f, atlas::synod},
 };
 static_assert(std::size(TYPES) == int(EnemyKind::Count));
 } // namespace
@@ -179,7 +186,9 @@ std::unique_ptr<Enemy> Enemy::create(EnemyKind kind, float hpMul,
                                      float damageMul) {
   const EnemyType &t = typeOf(kind);
   std::unique_ptr<Enemy> e;
-  if (kind >= WildFoe::FIRST && kind <= WildFoe::LAST)
+  if (kind >= EnemyKind::Lamplighter)
+    e = std::make_unique<SynodFoe>(t, hpMul, damageMul, int(kind) - int(EnemyKind::Lamplighter));
+  else if (kind >= WildFoe::FIRST && kind <= WildFoe::LAST)
     e = std::make_unique<WildFoe>(t, hpMul, damageMul, int(kind) - int(WildFoe::FIRST));
   else if (kind >= EnemyKind::Outlaw && kind <= EnemyKind::Deserter)
     e = std::make_unique<Renegade>(t, hpMul, damageMul,
@@ -232,7 +241,8 @@ const char *Enemy::nameOf(EnemyKind kind) {
       "a magma slug", "an ash wraith", "a cave horror", "a star spawn",
       "a starlet", "a flame cultist", "a hollow sentinel", "the ember drake",
       "a night stalker", "a grave robber", "a cave bat", "a rock crawler",
-      "an ore golem", "a kobold miner", "a shade", "a nest"
+      "an ore golem", "a kobold miner", "a shade", "a nest",
+      "a lamplighter", "a penitent", "a censer", "a limer", "a confessor", "the prioress"
   };
   static_assert(std::size(NAMES) == int(EnemyKind::Count));
   return NAMES[int(kind)];

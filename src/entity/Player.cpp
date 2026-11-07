@@ -72,7 +72,7 @@ void Player::tick() {
   double k = damp(surface == 1 ? 6 : surface == 2 ? 2.5f : 18, DT);
   float v = speed * level->step * status.movement() *
             (surface == 1 ? 0.55f : surface == 2 ? 1.05f : 1) *
-            level->climb(x, y, xd, yd) * traits.speed();
+            level->climb(x, y, xd, yd) * traits.speed() * level->footing(x, y);
   xa += (xd * v - xa) * k;
   ya += (yd * v - ya) * k;
   double px = x, py = y;

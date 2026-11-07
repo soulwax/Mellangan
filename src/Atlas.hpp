@@ -207,6 +207,11 @@ constexpr Sprite masonry(int material, int index) {
 constexpr Sprite masonryProp(int material, int slot) {
   return {float((material * 6 + slot) * 18 + 1), 1777, 16, 16};
 }
+constexpr Sprite under(int index) { return {float(index * 18 + 1), 1795, 16, 16}; }
+constexpr Sprite synod(int index) { return {float(index * 18 + 1), 1813, 16, 16}; }
+namespace ug {
+constexpr int Void = 0, Crack = 1, Roots = 2, Chimney = 3, Sinkhole = 4, Ore = 5;
+} // namespace ug
 constexpr Sprite beast(int index) {
   return {float((index % 24) * 18 + 1), float(1380 + (index / 24) * 18 + 1), 16, 16};
 }

@@ -34,9 +34,19 @@ void Hud::passage(const world::Passage &w) {
         Color{0.75f, 0.8f, 0.95f, 1});
 }
 
+bool Hud::crack() {
+  int tx, ty;
+  if (!world::edits || !world::crackNear(game.level->player->x, game.level->player->y, tx, ty))
+    return false;
+  plate(tx * 16 + 8.0, ty * 16 - 14.0, game.input.prompt(lang.crackPrompt), Color{0.9f, 0.8f, 0.6f, 1});
+  return true;
+}
+
 void Hud::stairs() {
   world::Passage w;
-  if (!game.campaign && !game.menu && world::passageNear(game.level->player->x, game.level->player->y, w))
+  if (game.campaign || game.menu || crack())
+    return;
+  if (world::passageNear(game.level->player->x, game.level->player->y, w))
     passage(w);
 }
 
@@ -71,6 +81,8 @@ void Hud::handwork() {
                             ? say(lang.caveIn, c->delve.inside(l))
                             : say(lang.delveFloor, c->delve.floor, Delve::FLOORS, c->delve.inside(l));
     s.textCenter(depth, s.w / 2, 70 * u, small, Color{0.9f, 0.75f, 0.5f, 0.9f});
+  } else if (crack()) {
+    return;
   } else if (world::Passage w; world::passageNear(l.player->x, l.player->y, w)) {
     return passage(w);
   } else if (Structure mine; Delve::entrance(l, *c, mine)) {

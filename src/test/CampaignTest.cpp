@@ -24,6 +24,9 @@
 #include "level/Level.hpp"
 #include "level/Prop.hpp"
 #include "level/World.hpp"
+#include "entity/Faction.hpp"
+#include "particle/Arc.hpp"
+#include "entity/enemy/SynodFoe.hpp"
 #include "level/Noise.h"
 
 namespace {
@@ -813,4 +816,598 @@ void testDread() {
             << "Halls sanctuary refuses spawns, burns a lamp, mends the hero and empties the dread; the dawn run "
                "feels none: PASS"
             << std::endl;
+}
+
+void testCracks() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Surface);
+  world::CaveCell cell{};
+  bool found = false;
+  for (int r = 0; r < 12 && !found; r++)
+    for (int cy = -r; cy <= r && !found; cy++)
+      for (int cx = -r; cx <= r && !found; cx++)
+        found = (std::abs(cx) == r || std::abs(cy) == r) && world::caveCell(cx, cy, cell) && cell.vault;
+  assert(found);
+  Game game;
+  game.level = std::make_unique<Level>(game, RunRules{});
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  level.shift(world::Layer::Caves, cell.mx[0] * 16 + 8.0, cell.my[0] * 16 + 12.0);
+  level.rules.spawnRate = 0;
+  assert(world::edits == &level.breaks && world::crackAt(cell.kx, cell.ky));
+  int fx = 0, fy = 0;
+  for (int d = 0; d < 4; d++) {
+    int x = cell.kx + (d == 0) - (d == 1), y = cell.ky + (d == 2) - (d == 3);
+    if (!world::isRock(x, y) && !world::inVault(x, y))
+      fx = x, fy = y;
+  }
+  p.x = fx * 16 + 8.0, p.y = fy * 16 + 12.0;
+  level.tick();
+  assert(level.rockAt(cell.kx * 16 + 8.0, cell.ky * 16 + 8.0) && level.lost(cell.vx * 16 + 8.0, cell.vy * 16 + 10.0));
+  Prop mark;
+  assert(world::propAt(cell.kx, cell.ky, mark) && mark.kind && std::string_view(mark.kind) == "cracked wall");
+  int chests = chestsIn(level);
+  game.input.gather.clicked = true;
+  assert(game.crack());
+  game.input.gather.clicked = false;
+  level.tick();
+  assert(!world::isRock(cell.kx, cell.ky) && !world::crackAt(cell.kx, cell.ky));
+  assert(!level.rockAt(cell.kx * 16 + 8.0, cell.ky * 16 + 8.0) && !level.lost(cell.vx * 16 + 8.0, cell.vy * 16 + 10.0));
+  assert(chestsIn(level) == chests + 1);
+  int veins = 0;
+  for (int y = cell.vy - 2; y <= cell.vy + 2; y++)
+    for (int x = cell.vx - 2; x <= cell.vx + 2; x++)
+      if (Prop v; world::inVault(x, y) && world::propAt(x, y, v) && v.kind && std::string_view(v.kind) == "ore vein")
+        veins++;
+  game.input.gather.clicked = true;
+  assert(!game.crack());
+  game.input.gather.clicked = false;
+
+  level.shift(world::Layer::Surface, cell.mx[0] * 16 + 8.0, cell.my[0] * 16 + 12.0);
+  assert(!world::edits);
+  level.shift(world::Layer::Caves, cell.mx[0] * 16 + 8.0, cell.my[0] * 16 + 12.0);
+  assert(!world::isRock(cell.kx, cell.ky));
+  level.shift(world::Layer::Surface, cell.mx[0] * 16 + 8.0, cell.my[0] * 16 + 12.0);
+  game.level.reset();
+  assert(!world::edits);
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Cracked walls: the wall at (" << cell.kx << ", " << cell.ky << ") is marked, blocks, and seals a "
+            << "vault no foe can reach; E breaks it once, the rock map opens, a chest waits inside beside " << veins
+            << " ore veins, and the break holds for the rest of the run: PASS" << std::endl;
+}
+
+void testGuardians() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Deep);
+  int lairs[int(CaveBiome::Count)]{};
+  world::DeepCell lair{};
+  bool found = false;
+  for (int cy = -14; cy < 14; cy++)
+    for (int cx = -14; cx < 14; cx++)
+      if (world::DeepCell d; world::deepCell(cx, cy, d) && d.lair) {
+        lairs[int(d.biome)]++;
+        assert(CAVES[int(d.biome)].guardian && d.biome != CaveBiome::Halls);
+        if (!found)
+          lair = d, found = true;
+      }
+  assert(found && !lairs[int(CaveBiome::Halls)]);
+  Game game;
+  game.level = std::make_unique<Level>(game, RunRules{});
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  double hx = lair.hx * 16 + 8.0, hy = lair.hy * 16 + 12.0;
+  level.shift(world::Layer::Deep, hx, hy + 200);
+  level.rules.spawnRate = 0;
+  auto guardians = [&] {
+    int n = 0;
+    level.each<Enemy>([&](Enemy &e) { n += e.boss && e.title && !e.def; });
+    return n;
+  };
+  for (int i = 0; i < 30; i++)
+    level.tick(), p.x = hx, p.y = hy + 200;
+  assert(guardians() == 0);
+  p.x = hx, p.y = hy + 32;
+  level.tick();
+  level.tick();
+  assert(guardians() == 1 && level.woken.size() == 1);
+  Enemy *g = nullptr;
+  level.each<Enemy>([&](Enemy &e) {
+    if (e.boss && e.title)
+      g = &e;
+  });
+  const CaveDef &def = CAVES[int(lair.biome)];
+  assert(g && std::string_view(g->title) == def.guardian && g->is(def.keeper) &&
+         g->maxHp > Enemy::typeOf(def.keeper).hp * 20);
+  bool barred = false;
+  for (entt::entity id : level.bossIds)
+    barred |= id == g->id;
+  assert(barred);
+  int chests = chestsIn(level);
+  g->strike(1e9f, 0, 1, 0);
+  level.tick();
+  assert(guardians() == 0 && chestsIn(level) == chests + 1);
+  for (int i = 0; i < 60; i++)
+    level.tick(), p.x = hx, p.y = hy + 40;
+  assert(guardians() == 0);
+  level.shift(world::Layer::Surface, hx, hy);
+  game.level.reset();
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Guardians:";
+  for (int b = CAVE_SHALLOW; b < int(CaveBiome::Count); b++)
+    std::cout << " " << CAVES[b].name << " " << lairs[b];
+  std::cout << " lairs in 784 deep cells; " << def.guardian << " wakes when the hero comes near its lair, carries the "
+            << "boss bar, falls with one chest and never wakes twice: PASS" << std::endl;
+}
+
+void testDepthMemory() {
+  Campaign probe;
+  probe.world = "CLASSIC", probe.layer = 2, probe.dread = 123.4f;
+  probe.slain = {uint64_t(uint32_t(3)) << 32 | uint32_t(-2), uint64_t(uint32_t(-7)) << 32 | uint32_t(11)};
+  Campaign back;
+  assert(Campaign::load(probe.save(), back) && back.layer == 2 && std::abs(back.dread - 123.4f) < 0.06f &&
+         back.slain == probe.slain);
+  assert(Campaign::load(probe.save() + "dread 99999\n", back) && back.dread == Level::DREAD_MAX);
+  assert(Campaign::load(probe.save() + "dread nan\n", back) && back.dread == 0);
+
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  Game game;
+  game.campaign = std::make_unique<Campaign>();
+  Campaign &c = *game.campaign;
+  c.world = "CLASSIC", c.hero = 0;
+  game.worldMode = WorldMode::Classic, game.seedCode.clear();
+  noise_reseed(0);
+  world::openCaves(true);
+  world::enter(world::Layer::Deep);
+  world::DeepCell lair{};
+  bool found = false;
+  for (int r = 0; r < 14 && !found; r++)
+    for (int cy = -r; cy <= r && !found; cy++)
+      for (int cx = -r; cx <= r && !found; cx++)
+        found = world::deepCell(cx, cy, lair) && lair.lair;
+  assert(found);
+  world::enter(world::Layer::Surface);
+  game.level = std::make_unique<Level>(game, c.rules());
+  c.enter(*game.level);
+  int surfaceLevel = game.level->monsterLevel(game.level->player->x, game.level->player->y);
+  double hx = lair.hx * 16 + 8.0, hy = lair.hy * 16 + 12.0;
+  game.travel(world::Layer::Deep, hx, hy + 32);
+  int deepLevel = game.level->monsterLevel(hx, hy + 32);
+  game.level->player->god = true;
+  game.level->rules.spawnRate = 0;
+  game.level->tick();
+  game.level->tick();
+  Enemy *g = nullptr;
+  game.level->each<Enemy>([&](Enemy &e) {
+    if (e.boss && e.title)
+      g = &e;
+  });
+  assert(g);
+  g->strike(1e9f, 0, 1, 0);
+  game.level->tick();
+  game.level->tick();
+  uint64_t key = uint64_t(uint32_t(lair.cx)) << 32 | uint32_t(lair.cy);
+  assert(game.level->felled.count(key));
+  game.level->dread = 200;
+  game.travel(world::Layer::Caves, lair.hx * 16 + 8.0, lair.hy * 16 + 12.0);
+  assert(c.slain.count(key) && std::abs(game.level->dread - 200) < 1);
+  game.travel(world::Layer::Deep, hx, hy + 32);
+  game.level->rules.spawnRate = 0;
+  for (int i = 0; i < 30; i++)
+    game.level->tick();
+  int again = 0;
+  game.level->each<Enemy>([&](Enemy &e) { again += e.boss && e.title; });
+  assert(again == 0 && game.level->felled.count(key));
+  Campaign reloaded;
+  c.capture(*game.level);
+  assert(Campaign::load(c.save(), reloaded) && reloaded.slain.count(key) && reloaded.dread > 199);
+  game.travel(world::Layer::Surface, hx, hy);
+  assert(game.level->dread == 0 && c.dread == 0 && c.slain.count(key));
+  game.level.reset();
+  game.campaign.reset();
+  world::edits = nullptr;
+  world::openCaves(false);
+  world::enter(world::Layer::Surface);
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Depth memory: dread and slain guardians round-trip the save (bad values clamp); monster level "
+            << surfaceLevel << " on the surface is " << deepLevel << " in the Sundark; a slain guardian stays slain "
+            << "across travel and reload, dread follows the hero between the layers below and daylight clears it: PASS"
+            << std::endl;
+}
+
+void testFeuds() {
+  assert(factionOf(EnemyKind::Wolf) == Faction::Wildkin && factionOf(EnemyKind::Sporeling) == Faction::Mycel &&
+         factionOf(EnemyKind::Skeleton) == Faction::BarrowHost && factionOf(EnemyKind(200)) == Faction::Wildkin);
+  int fired = 0, again = 0;
+  for (int slot = 0; slot < 2000; slot++)
+    fired += Level::flares(3, -2, 1, slot), again += Level::flares(3, -2, 1, slot);
+  assert(fired == again && fired > 2000 * 0.05 && fired < 2000 * 0.14);
+  Grudges g = Grudges::roll(1234), same = Grudges::roll(1234);
+  assert(g.count == Grudges::MAX && same.count == g.count);
+  bool differs = false;
+  for (int i = 0; i < g.count; i++) {
+    assert(g.pair[i][0] == same.pair[i][0] && g.pair[i][1] == same.pair[i][1] && g.pair[i][0] != g.pair[i][1]);
+    assert(int(g.pair[i][0]) < FAMILIES && int(g.pair[i][1]) < FAMILIES);
+  }
+  for (uint32_t s = 1; s < 8 && !differs; s++) {
+    Grudges o = Grudges::roll(s);
+    differs = o.pair[0][0] != g.pair[0][0] || o.pair[0][1] != g.pair[0][1];
+  }
+  assert(differs);
+
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules rules;
+  rules.feuds = true, rules.spawnRate = 0, rules.waves = false, rules.bosses = false;
+  game.level = std::make_unique<Level>(game, rules);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  for (auto &u : p.upgrades)
+    u->level = 0;
+  level.grudges.count = 1, level.grudges.pair[0][0] = Faction::Wildkin, level.grudges.pair[0][1] = Faction::Mycel;
+  level.grudged = true;
+  std::vector<entt::entity> wolves, spores;
+  for (int i = 0; i < 6; i++) {
+    if (Enemy *w = level.spawner.spawn(EnemyKind::Wolf, p.x + 160 + i * 6, p.y - 20 + i * 8))
+      wolves.push_back(w->id);
+    if (Enemy *s = level.spawner.spawn(EnemyKind::Sporeling, p.x + 220 + i * 6, p.y - 20 + i * 8))
+      spores.push_back(s->id);
+  }
+  level.tick();
+  assert(wolves.size() == 6 && spores.size() == 6);
+  assert(!RunRules{}.feuds);
+  level.tick();
+  int brawlers = level.ignite();
+  assert(brawlers == 12 && level.ignite() == 0);
+  for (int i = 0; i < 60 * 30; i++)
+    level.tick();
+  auto fallen = [&](const std::vector<entt::entity> &ids) {
+    int n = 0;
+    for (entt::entity id : ids)
+      n += !level.get<Enemy>(id);
+    return n;
+  };
+  int deadWolves = fallen(wolves), deadSpores = fallen(spores);
+  assert(deadWolves >= 1 && deadSpores >= 1);
+  level.brawlers.clear(), level.night.nights = 1;
+  for (int i = 0; i < 300; i++)
+    level.flareTime = 0, level.time += Level::FLARE_EVERY, level.feuds();
+  assert(level.brawlers.empty());
+  game.level.reset();
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Feuds: factions per kind, grudges rolled from the seed, flare-ups " << fired
+            << "/2000 and the same every time; a forced Wildkin-Mycel flare sets " << brawlers << " brawlers on each "
+            << "other and in 30 s " << deadWolves << " wolves and " << deadSpores
+            << " sporelings fall to the other side; the dawn run has no feuds: PASS" << std::endl;
+}
+
+void testReputation() {
+  Campaign probe;
+  probe.world = "CLASSIC";
+  probe.rep = {12, -40, 600, 0, 0, 0, 0, 0, -1000};
+  Campaign back;
+  assert(Campaign::load(probe.save(), back) && back.rep == probe.rep);
+  assert(Campaign::load(probe.save() + "rep 5000 -9000\n", back) && back.rep[0] == Level::REP_MAX &&
+         back.rep[1] == -Level::REP_MAX && back.rep[2] == 600);
+  Campaign blank;
+  blank.world = "CLASSIC";
+  assert(blank.save().find("\nrep") == std::string::npos);
+
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules rules;
+  rules.feuds = true, rules.spawnRate = 0, rules.waves = false, rules.bosses = false;
+  game.level = std::make_unique<Level>(game, rules);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  level.grudges.count = 1, level.grudges.pair[0][0] = Faction::Wildkin, level.grudges.pair[0][1] = Faction::Mycel;
+  level.grudged = true;
+  level.rep[int(Faction::Mycel)] = Level::FRIENDLY - 1;
+  Enemy *wolf = level.spawner.spawn(EnemyKind::Wolf, p.x + 120, p.y);
+  level.tick();
+  assert(wolf && !level.friendly(Faction::Mycel));
+  wolf->strike(1e9f, 0, 1, 0);
+  level.tick();
+  assert(level.rep[int(Faction::Wildkin)] == -Level::REP_KILL && level.friendly(Faction::Mycel));
+  Enemy *spore = level.spawner.spawn(EnemyKind::Sporeling, p.x + 120, p.y);
+  level.tick();
+  spore->strike(1e9f, 0, 1, 0);
+  level.tick();
+  assert(!level.friendly(Faction::Mycel) && level.rep[int(Faction::Wildkin)] == -Level::REP_KILL + Level::REP_RIVAL);
+  game.level.reset();
+
+  RunRules plain;
+  plain.spawnRate = 0;
+  game.level = std::make_unique<Level>(game, plain);
+  Level &dawn = *game.level;
+  Enemy *rat = dawn.spawner.spawn(EnemyKind::Rat, dawn.player->x + 120, dawn.player->y);
+  dawn.tick();
+  rat->strike(1e9f, 0, 1, 0);
+  dawn.tick();
+  assert(dawn.rep[int(Faction::Wildkin)] == 0);
+  game.level.reset();
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Reputation: the nine standings round-trip the save and clamp; a slain wolf costs the wildkin "
+            << Level::REP_KILL << " and earns their mycel rivals " << Level::REP_RIVAL
+            << ", tipping the mycel to friendly and back when a sporeling falls; the dawn run keeps no standing: PASS"
+            << std::endl;
+}
+
+namespace {
+
+constexpr int STRIP_Y = 4000, GAP = 10;
+
+bool strip(int x, int y) { return y == STRIP_Y && x >= 0 && x <= 20 && x != GAP; }
+
+} // namespace
+
+void testMatter() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules rules;
+  rules.matter = true, rules.spawnRate = 0, rules.waves = false, rules.bosses = false;
+  game.level = std::make_unique<Level>(game, rules);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  for (auto &u : p.upgrades)
+    u->level = 0;
+
+  int tx = world::tileOf(p.x), ty = world::tileOf(p.y - 2);
+  level.matter.set(tx + 1, ty, Stuff::Wet, 60);
+  assert(level.stuffAt(tx + 1, ty) == Stuff::Wet && level.matter.pageCount() == 1);
+  assert(level.react(tx + 1, ty, Cause::Chill) && level.stuffAt(tx + 1, ty) == Stuff::Frozen);
+  p.x = (tx + 1) * 16 + 8.0, p.y = ty * 16 + 10.0;
+  assert(level.footing(p.x, p.y) == Level::ICE_PACE);
+  float hp = p.hp;
+  for (int i = 0; i < 60 * 11; i++)
+    level.tick();
+  assert(level.stuffAt(tx + 1, ty) == Stuff::Frozen && p.hp == hp);
+  for (int i = 0; i < 60 * 2; i++)
+    level.tick();
+  assert(level.stuffAt(tx + 1, ty) == Stuff::Wet);
+  for (int i = 0; i < 60 * 7; i++)
+    level.tick();
+  assert(level.stuffAt(tx + 1, ty) == Stuff::None && level.matter.empty());
+
+  Enemy *rat = level.spawner.spawn(EnemyKind::Rat, p.x + 80, p.y);
+  level.tick();
+  int rx = world::tileOf(rat->x), ry = world::tileOf(rat->y - 2);
+  level.matter.set(rx, ry, Stuff::Wet, 30);
+  rat->afflict(StatusKind::Chill, 2, 1);
+  bool froze = level.stuffAt(rx, ry) == Stuff::Frozen;
+  rat->remove();
+
+  level.matter.fuel = strip;
+  assert(level.react(0, STRIP_Y, Cause::Fire) && level.stuffAt(0, STRIP_Y) == Stuff::Burning);
+  assert(!level.react(GAP, STRIP_Y + 5, Cause::Fire));
+  int reached = 0;
+  for (int i = 0; i < 60 * 30; i++) {
+    level.tick();
+    for (int x = 0; x <= 20; x++)
+      if (level.stuffAt(x, STRIP_Y) != Stuff::None)
+        reached = std::max(reached, x);
+  }
+  assert(reached == GAP - 1);
+  for (int x = GAP; x <= 20; x++)
+    assert(level.stuffAt(x, STRIP_Y) == Stuff::None);
+  level.matter.set(3, STRIP_Y, Stuff::Burning, 5);
+  p.x = 3 * 16 + 8.0, p.y = STRIP_Y * 16 + 10.0;
+  p.god = false, p.invuln = 0;
+  float before = p.hp;
+  level.matterTick();
+  assert(p.status.effect(StatusKind::Burn).time > 0);
+  level.matter.set(3, STRIP_Y, Stuff::Wet, 5);
+  level.matterTick();
+  assert(p.status.effect(StatusKind::Burn).time <= 0 && p.hp <= before);
+  p.god = true;
+  for (int i = 0; i < 60 * 40; i++)
+    level.tick();
+  assert(level.matter.empty());
+  game.level.reset();
+
+  RunRules plain;
+  game.level = std::make_unique<Level>(game, plain);
+  assert(!game.level->react(0, 0, Cause::Fire) && game.level->matter.empty());
+  game.level.reset();
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Matter: a wet tile freezes for 12 s, carries the hero at ice pace, thaws to wet and dries; "
+            << (froze ? "a chilled rat freezes the puddle under it; " : "")
+            << "fire runs along the fuel to tile " << reached
+            << " and stops at the gap; a burning tile sets the hero alight and water quenches it; every page is freed; "
+               "the dawn run has no matter: PASS"
+            << std::endl;
+  assert(froze);
+}
+
+void testMatterTable() {
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules rules;
+  rules.matter = true, rules.spawnRate = 0, rules.waves = false, rules.bosses = false;
+  game.level = std::make_unique<Level>(game, rules);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  for (auto &u : p.upgrades)
+    u->level = 0;
+  constexpr int X = 3000, Y = 3000;
+  level.matter.fuel = [](int, int) { return false; };
+  for (int y = 0; y < 5; y++)
+    for (int x = 0; x < 5; x++)
+      level.matter.set(X + x, Y + y, Stuff::Wet, 60);
+  level.add<Arc>(std::vector<ArcNode>{{X * 16.0 - 40, Y * 16.0}, {X * 16.0 + 40, Y * 16.0 + 34}}, 0.3f, Color{1, 1, 1, 1});
+  level.tick();
+  int charged = 0;
+  for (int y = -1; y < 6; y++)
+    for (int x = -1; x < 6; x++)
+      charged += level.stuffAt(X + x, Y + y) == Stuff::Charged;
+  assert(charged == 25);
+
+  level.matter.set(X + 20, Y, Stuff::Oiled, 60);
+  assert(level.react(X + 20, Y, Cause::Fire));
+  int lit = 0;
+  for (int y = -1; y <= 1; y++)
+    for (int x = 19; x <= 21; x++)
+      lit += level.stuffAt(X + x, Y + y) == Stuff::Burning;
+  assert(lit == 9);
+
+  level.matter.set(X + 30, Y, Stuff::Wet, 60);
+  assert(level.react(X + 30, Y, Cause::Fire) && level.stuffAt(X + 30, Y) == Stuff::None);
+  level.matter.set(X + 32, Y, Stuff::Limed, 60);
+  assert(!level.react(X + 32, Y, Cause::Fire) && !level.react(X + 32, Y, Cause::Spore));
+  p.x = (X + 32) * 16 + 8.0, p.y = Y * 16 + 10.0;
+  p.status.apply(StatusKind::Burn, 5, 3);
+  level.matterTick();
+  assert(p.status.effect(StatusKind::Burn).time <= 0);
+
+  p.x = (X + 60) * 16 + 8.0, p.y = Y * 16 + 10.0;
+  level.tick();
+  Enemy *spore = level.spawner.spawn(EnemyKind::Sporeling, p.x + 80, p.y);
+  level.tick();
+  int sx = world::tileOf(spore->x), sy = world::tileOf(spore->y - 2);
+  spore->strike(1e9f, 0, 1, 0);
+  level.tick();
+  assert(level.stuffAt(sx, sy) == Stuff::Spored && level.stuffAt(sx + 1, sy + 1) == Stuff::Spored);
+  Enemy *rat = level.spawner.spawn(EnemyKind::Rat, sx * 16 + 8.0, sy * 16 + 10.0);
+  level.tick();
+  rat->x = sx * 16 + 8.0, rat->y = sy * 16 + 10.0;
+  rat->strike(1e9f, 0, 1, 0);
+  level.tick();
+  assert(level.sprouts.size() == 1);
+  int before = 0, after = 0;
+  level.each<Enemy>([&](Enemy &e) { before += e.is(EnemyKind::Sporeling); });
+  for (int i = 0; i < 60 * 7; i++)
+    level.tick();
+  level.each<Enemy>([&](Enemy &e) { after += e.is(EnemyKind::Sporeling); });
+  assert(level.sprouts.empty() && after == before + 1);
+  game.level.reset();
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Matter table: a bolt over a wet pool charges all " << charged
+            << " tiles of it and nothing beyond; burning oil bursts into its 8 neighbours; fire steams a wet tile "
+               "dry; lime refuses fire and spores and cleanses a burning hero; a dying sporeling spreads spores and a "
+               "rat slain on them rises as a sporeling 6 s later: PASS"
+            << std::endl;
+}
+
+void testSynod() {
+  for (EnemyKind k : {EnemyKind::Lamplighter, EnemyKind::Penitent, EnemyKind::Censer, EnemyKind::Limer,
+                      EnemyKind::Confessor, EnemyKind::Prioress})
+    assert(factionOf(k) == Faction::Synod && Enemy::typeOf(k).unlockAt > 1e8f);
+  Grudges none;
+  assert(none.between(Faction::Synod, Faction::Mycel) && none.between(Faction::Starborn, Faction::Synod) &&
+         !none.between(Faction::Synod, Faction::Wildkin) && !none.between(Faction::Synod, Faction::Freeblades));
+  Campaign probe;
+  probe.world = "CLASSIC", probe.scrutiny = 42.5f;
+  Campaign back;
+  assert(Campaign::load(probe.save(), back) && std::abs(back.scrutiny - 42.5f) < 0.06f);
+  assert(Campaign::load(probe.save() + "scrutiny 900\n", back) && back.scrutiny == Level::SCRUTINY_MAX);
+
+  Rng kept = rng;
+  uint32_t salt = noise_salt;
+  noise_reseed(0);
+  world::enter(world::Layer::Surface);
+  Game game;
+  RunRules rules;
+  rules.synod = true, rules.matter = true, rules.feuds = true, rules.spawnRate = 0, rules.waves = false;
+  rules.bosses = false;
+  game.level = std::make_unique<Level>(game, rules);
+  Level &level = *game.level;
+  Player &p = *level.player;
+  p.god = true;
+  for (auto &u : p.upgrades)
+    u->level = 0;
+  auto synods = [&] {
+    int n = 0;
+    level.each<Enemy>([&](Enemy &e) { n += factionOf(e) == Faction::Synod; });
+    return n;
+  };
+
+  Enemy *limer = level.spawner.spawn(EnemyKind::Limer, p.x + 200, p.y);
+  Enemy *penitent = level.spawner.spawn(EnemyKind::Penitent, p.x + 210, p.y + 20);
+  Enemy *confessor = level.spawner.spawn(EnemyKind::Confessor, p.x + 190, p.y + 30);
+  Enemy *censer = level.spawner.spawn(EnemyKind::Censer, p.x + 30, p.y);
+  level.tick();
+  assert(dynamic_cast<SynodFoe *>(limer) && limer->name() == std::string("a limer"));
+  float sharp = penitent->damageMul;
+  penitent->hp = penitent->maxHp * 0.4f;
+  float wounded = penitent->hp;
+  for (int i = 0; i < 60 * 3; i++)
+    level.tick();
+  int limed = 0;
+  for (int dy = -8; dy <= 8; dy++)
+    for (int dx = -8; dx <= 8; dx++)
+      limed += level.stuffAt(world::tileOf(limer->x) + dx, world::tileOf(limer->y - 2) + dy) == Stuff::Limed;
+  assert(limed >= 9 && penitent->damageMul > sharp * 1.3f && penitent->hp > wounded && confessor->hp > 0);
+  assert(p.status.effect(StatusKind::Weaken).time > 0);
+  (void)censer;
+
+  float before = level.scrutiny;
+  limer->strike(1e9f, 0, 1, 0);
+  level.tick();
+  assert(std::abs(level.scrutiny - before - Level::SUSPECT_KILL) < 0.01f);
+  level.each<Enemy>([](Enemy &e) { e.remove(); });
+  level.tick();
+
+  level.scrutiny = Level::PATROLS + 1, level.patrolTime = 0;
+  level.feuds();
+  level.tick();
+  int patrol = synods();
+  assert(level.scrutinySaid == 1 && patrol >= 3);
+  level.each<Enemy>([](Enemy &e) { e.remove(); });
+  level.tick();
+  level.scrutiny = Level::INQUISITION + 1;
+  level.spawner.horde(level.time);
+  level.tick();
+  int host = synods(), confessors = 0;
+  level.each<Enemy>([&](Enemy &e) { confessors += e.is(EnemyKind::Confessor); });
+  assert(host >= 4 && confessors == 1);
+  game.level.reset();
+
+  RunRules plain;
+  plain.spawnRate = 0;
+  game.level = std::make_unique<Level>(game, plain);
+  game.level->suspect(50);
+  assert(game.level->scrutiny == 0);
+  game.level.reset();
+  noise_reseed(salt);
+  rng = kept;
+  std::cout << "[TEST] Synod: six members of their own family at war with the unclean; a limer limes " << limed
+            << " tiles, a wounded penitent hits harder and a confessor mends it, censer smoke weakens the hero; "
+               "scrutiny saves and clamps, a slain member raises it by "
+            << Level::SUSPECT_KILL << ", at 50 a patrol of " << patrol << " seeks the hero and at 75 an inquisition of "
+            << host << " replaces the horde; the dawn run keeps no scrutiny: PASS" << std::endl;
 }

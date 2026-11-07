@@ -26,6 +26,8 @@ struct CaveCell {
   int mx[3], my[3];
   int px, py;
   CaveBiome biome;
+  bool vault;
+  int kx, ky, vx, vy;
 };
 bool caveCell(int cx, int cy, CaveCell &out);
 bool isRock(int x, int y);
@@ -34,6 +36,9 @@ CaveBiome caveBiomeAt(int x, int y);
 bool caveMouth(int x, int y);
 bool caveMouthNear(double x, double y, int &tx, int &ty);
 bool isChasm(int x, int y);
+bool crackAt(int x, int y);
+bool crackNear(double x, double y, int &tx, int &ty);
+bool inVault(int x, int y);
 
 enum class Way : uint8_t { None, Mouth, Stair, Roots, Chimney, Sinkhole };
 struct DeepCell {
@@ -43,6 +48,7 @@ struct DeepCell {
   int lx, ly;
   Way way;
   int wx, wy;
+  bool lair;
 };
 bool deepCell(int cx, int cy, DeepCell &out);
 struct Passage {

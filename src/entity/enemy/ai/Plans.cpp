@@ -158,6 +158,12 @@ const Plan PLANS[] = {
     {{&SCUTTLE, &NIP}, {&FALTER}},
     {{&ROOT}, {}},
     {{&ROOT}, {}},
+    {{&MARCH, &CLEAVE}, {&FALTER}},
+    {{&CHARGE, &NIP}, {}},
+    {{&MARCH, &CLEAVE}, {&FALTER}},
+    {{&MARCH, &CLEAVE}, {&FALTER}},
+    {{&GUARD, &MARCH, &CLEAVE}, {}},
+    {{&GUARD, &MARCH, &CLEAVE}, {}},
 };
 static_assert(sizeof(PLANS) / sizeof(PLANS[0]) == int(EnemyKind::Count));
 

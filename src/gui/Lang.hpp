@@ -76,6 +76,12 @@ struct Lang {
              *climbLight = "E  CLIMB TOWARD THE DAYLIGHT", *chasmFall = "YOU FALL INTO THE SUNDARK",
              *dreadStirs = "THE DARK STIRS", *dreadNotices = "THE DARK HAS NOTICED YOU",
              *dreadHunts = "THE DARK IS HUNTING YOU", *dreadLine = "DREAD {}%",
+             *crackPrompt = "E  BREAK THE CRACKED WALL", *wallGives = "THE WALL GIVES WAY",
+             *feudFlares = "THE {} AND THE {} TURN ON EACH OTHER",
+             *repFriendly = "THE {} NOW LET YOU PASS", *repLost = "THE {} NO LONGER TRUST YOU",
+             *synodPatrols = "THE LANTERN SYNOD SENDS PATROLS AFTER YOU",
+             *synodInquisition = "THE SYNOD CALLS AN INQUISITION", *synodBounty = "A PRICE IS ON YOUR HEAD",
+             *inquisitionComes = "THE INQUISITION COMES FOR YOU", *scrutinyLine = "SCRUTINY {}",
              *relight = "E  RELIGHT  {} wood", *takeDown = "E  TAKE DOWN", *gather = "E  {}",
              *bridgeHolds = "THE BRIDGE HOLDS  {} FALLEN", *questLine = "QUEST  {}", *talk = "I  TALK",
              *help = "HELP!", *helpAt = "HELP {:.0f}", *questAt = "QUEST {:.0f}";
