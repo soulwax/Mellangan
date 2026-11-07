@@ -54,4 +54,5 @@ bool structureDirt(const Structure *s, int lx, int ly);
 bool structureGround(const Structure *s, int lx, int ly, Sprite *out);
 bool structureProp(const Structure *s, int lx, int ly, Prop *p);
 Sprite masonry(const Structure *s, int index);
+Sprite masonryTile(const Structure *s, int index);
 bool cottageChimney(const Structure *s, int *lx, int *height);

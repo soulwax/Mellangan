@@ -1,6 +1,7 @@
 """Adds the masonry band to res/atlas.png: Tiny Town building rows 3-10 recoloured in four biome materials.
 
 Materials, in order: sandstone, frost, moss, ash. Two materials share each 8-row band row.
+Below it, one row holds the same materials for the Tiny Dungeon pieces structures use (PROPS), six cells per material.
 Usage: uv run --with pillow tools/make_masonry.py
 make_assets.py calls add_masonry() too, so a full rebuild keeps the band. Layout must match atlas::masonry in src/Atlas.hpp.
 """
@@ -12,6 +13,8 @@ from atlas_layout import extend
 
 CELL, TOWN_X, FIRST_ROW, ROWS = 18, 12 * 18, 3, 8
 MASONRY_Y = 1488
+PROPS_Y = MASONRY_Y + 2 * ROWS * CELL
+PROPS = (58, 63, 64, 65, 82)
 OUTLINE = {(63, 38, 49), (61, 33, 45)}
 CAPS = set(range(44, 48)) | {56, 59, 80, 81, 82} | set(range(48, 56)) | {63, 67} | set(range(96, 102))
 
@@ -82,11 +85,8 @@ def remap(px, w, h, palette):
                 px[x, y] = (*palette[key], a)
 
 
-def snow_caps(px, cols):
-    for index in CAPS:
-        ox, oy = (index % 12) * CELL + 1, (index // 12 - FIRST_ROW) * CELL + 1
-        if not 0 <= index // 12 - FIRST_ROW < ROWS or index % 12 >= cols:
-            continue
+def snow_caps(px, cells):
+    for ox, oy in cells:
         for x in range(ox, ox + 16):
             y = oy
             while y < oy + 16 and not px[x, y][3]:
@@ -138,14 +138,21 @@ def material(base, palette, extra):
 def add_masonry(atlas):
     out = extend(atlas)
     base = atlas.crop((TOWN_X, FIRST_ROW * CELL, TOWN_X + 12 * CELL, (FIRST_ROW + ROWS) * CELL))
+    props = Image.new("RGBA", (6 * CELL, CELL), (0, 0, 0, 0))
+    for k, index in enumerate(PROPS):
+        x, y = index % 12 * CELL, index // 12 * CELL
+        props.paste(atlas.crop((x, y, x + CELL, y + CELL)), (k * CELL, 0))
+    roofs = [(i % 12 * CELL + 1, (i // 12 - FIRST_ROW) * CELL + 1) for i in sorted(CAPS)]
+    tops = [(k * CELL + 1, 1) for k in range(len(PROPS))]
     looks = (
-        (SANDSTONE, lambda px, w, h: None),
-        (FROST, lambda px, w, h: snow_caps(px, 12)),
-        (MOSS, moss),
-        (ASH, embers),
+        (SANDSTONE, lambda cells: lambda px, w, h: None),
+        (FROST, lambda cells: lambda px, w, h: snow_caps(px, cells)),
+        (MOSS, lambda cells: moss),
+        (ASH, lambda cells: embers),
     )
     for m, (palette, extra) in enumerate(looks):
-        out.paste(material(base, palette, extra), ((m % 2) * 12 * CELL, MASONRY_Y + (m // 2) * ROWS * CELL))
+        out.paste(material(base, palette, extra(roofs)), ((m % 2) * 12 * CELL, MASONRY_Y + (m // 2) * ROWS * CELL))
+        out.paste(material(props, palette, extra(tops)), (m * 6 * CELL, PROPS_Y))
     return out
 
 

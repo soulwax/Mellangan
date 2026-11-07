@@ -1,5 +1,7 @@
 #include "level/Structure.hpp"
 
+#include <iterator>
+
 #include "level/structure/Layouts.hpp"
 
 namespace {
@@ -57,6 +59,15 @@ bool structureProp(const Structure *s, int lx, int ly, Prop *p) {
 Sprite masonry(const Structure *s, int index) {
   return s->masonry && index >= 36 ? atlas::masonry(s->masonry - 1, index)
                                    : atlas::town(index);
+}
+
+Sprite masonryTile(const Structure *s, int index) {
+  namespace t = atlas::t;
+  constexpr int PROPS[] = {t::Pillar, t::Crate, t::GraveCross, t::GraveStone, t::Barrel};
+  for (int i = 0; s->masonry && i < int(std::size(PROPS)); i++)
+    if (PROPS[i] == index)
+      return atlas::masonryProp(s->masonry - 1, i);
+  return atlas::tile(index);
 }
 
 const char *Structure::name() const { return STRUCTURES[int(kind)].name; }

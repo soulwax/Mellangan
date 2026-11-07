@@ -6,11 +6,13 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.6] - 2026-11-07
+
 ### Added
 
 - The Moth Studios intro plays when the game starts: about nine seconds, and for its last half second the picture darkens and the sound fades before the title fades in. Any key, click or button skips it with the same half-second fade, Settings has an INTRO switch to turn it off, and it never plays in dev, bench, soak, campaign-start or screenshot runs. The video is 1.1 MB of MPEG-1 and the sound 84 KB of Ogg Vorbis, smaller together than the original MP4.
 
-- Buildings are built from their biome's material: sandstone in the deserts, savanna, badlands, salt flats and glass desert; frosted walls and snow-capped roofs in the snowfields and taiga; moss-grown stone in the barrow, mire, jungle, fungal wood, floodplain and sunken ruins; dark basalt with smouldering roofs in the ashlands, ember fen, hollow caverns and starfall basin. Cottages, castles, graveyard fences, shrine and monolith slabs and ruin arches all follow it.
+- Buildings are built from their biome's material: sandstone in the deserts, savanna, badlands, salt flats and glass desert; frosted walls and snow-capped roofs in the snowfields and taiga; moss-grown stone in the barrow, mire, jungle, fungal wood, floodplain and sunken ruins; dark basalt with smouldering roofs in the ashlands, ember fen, hollow caverns and starfall basin. Cottages, castles, graveyard fences and headstones, crates, barrels, shrine pillars and slabs, monolith slabs and ruin arches all follow it, and cottage yards grow their land's plants: agave and barrel cactus, snowy boulders and frozen shrubs, mossy logs and glowshrooms, obsidian and bleached skulls.
 
 ### Changed
 

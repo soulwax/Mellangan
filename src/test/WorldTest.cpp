@@ -182,7 +182,17 @@ void testMasonry() {
     assert(s.x == (m % 2) * 216 + 1 && s.y == 1488 + (m / 2) * 144 + 1);
     assert(atlas::masonry(m, 131).y + 16 <= 1776);
   }
-  auto plainTown = [](Sprite s) { return s.x >= 216 && s.y >= 54 && s.y < 198; };
+  for (int m = 0; m < 4; m++)
+    assert(atlas::masonryProp(m, 4).x + 16 < 432 && atlas::masonryProp(m, 0).y + 16 <= 1794);
+  auto plainTown = [](Sprite s) {
+    if (s.x >= 216 && s.y >= 54 && s.y < 198)
+      return true;
+    for (int i : {atlas::t::Pillar, atlas::t::Crate, atlas::t::GraveCross,
+                  atlas::t::GraveStone, atlas::t::Barrel})
+      if (s.x == atlas::tile(i).x && s.y == atlas::tile(i).y)
+        return true;
+    return false;
+  };
   for (uint32_t seed = 0; seed < 3; seed++) {
     noise_reseed(seed);
     for (int ry = -16; ry < 16; ry++)
@@ -212,7 +222,7 @@ void testMasonry() {
               continue;
             for (int i = 0; i < p.count; i++, parts++) {
               Sprite s = p.parts[i].sprite;
-              assert(s.x >= 0 && s.y >= 0 && s.x + s.w <= 432 && s.y + s.h <= 1776);
+              assert(s.x >= 0 && s.y >= 0 && s.x + s.w <= 432 && s.y + s.h <= 1794);
               assert(!st.masonry || !plainTown(s));
             }
           }

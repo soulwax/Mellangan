@@ -4,6 +4,16 @@ namespace {
 
 namespace tt = atlas::tt;
 namespace t = atlas::t;
+namespace kt = atlas::kt;
+namespace fl = atlas::fl;
+
+const Sprite YARD[][2] = {
+    {atlas::town(tt::Beehive), {}},
+    {atlas::kit(kt::Agave), atlas::flora(fl::BarrelCactus)},
+    {atlas::kit(kt::SnowyBoulder), atlas::kit(kt::FrozenShrub)},
+    {atlas::kit(kt::MossyLog), atlas::kit(kt::Glowshrooms)},
+    {atlas::kit(kt::Obsidian), atlas::kit(kt::Skull)},
+};
 
 struct House {
   int width, door, chimney, storeys;
@@ -78,13 +88,15 @@ bool cottage(Site s, int lx, int ly, uint32_t r, Prop *p) {
     return true;
   }
   if (lx == 0 && ly == 3)
-    return p->piece(atlas::tile(r & 1 ? t::Barrel : t::Crate), 0.8f, 5);
+    return p->piece(masonryTile(s, r & 1 ? t::Barrel : t::Crate), 0.8f, 5);
   if (lx == s->w - 1 && ly == 3) {
     if (s->seed & 8)
-      return p->piece(masonry(s, tt::Beehive), 0.8f, 4);
+      return p->piece(YARD[s->masonry][0], 0.8f, 4);
     p->add(masonry(s, tt::Well)), p->add(masonry(s, tt::WellRoof), -16);
     return p->body(1.0f, 6);
   }
+  if (lx == 0 && ly == 4 && (s->seed & 32) && YARD[s->masonry][1].w > 0)
+    return p->piece(YARD[s->masonry][1], 0.5f, 0);
   if (lx == 1 && ly == 4 && (s->seed & 16))
     return p->piece(masonry(s, tt::Sign), 0.6f, 3);
   return false;
@@ -115,7 +127,7 @@ bool graveyard(Site s, int lx, int ly, uint32_t r, Prop *p) {
   if (lx == 0 || lx == right)
     return p->add(masonry(s, lx == 0 ? tt::FenceLeft : tt::FenceRight)), true;
   if (lx % 2 == 1 && ly % 2 == 0 && r % 5 != 0) {
-    p->add(atlas::tile(r % 3 == 0 ? t::GraveCross : t::GraveStone));
+    p->add(masonryTile(s, r % 3 == 0 ? t::GraveCross : t::GraveStone));
     if (r % 4 == 0)
       p->lamp({0.07f, 0.15f, 0.32f, 1});
     return true;
@@ -145,7 +157,7 @@ bool camp(Site s, int lx, int ly, uint32_t r, Prop *p) {
   if ((lx == 1 && ly == 1) || (lx == 1 && ly == 2 && (r & 1)))
     return p->piece(masonry(s, tt::Sack), 0.6f, 5);
   if ((lx == s->w - 2 && ly == 1) || (lx == s->w - 1 && ly == 2 && (r & 1)))
-    return p->piece(atlas::tile(r & 2 ? t::Crate : t::Barrel), 0.8f, 5);
+    return p->piece(masonryTile(s, r & 2 ? t::Crate : t::Barrel), 0.8f, 5);
   return false;
 }
 

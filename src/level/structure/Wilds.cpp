@@ -27,13 +27,13 @@ bool shrineGround(Site s, int lx, int ly, Sprite *out) {
 bool shrine(Site s, int lx, int ly, uint32_t r, Prop *p) {
   bool corner = (lx == 0 || lx == s->w - 1) && (ly == 0 || ly == s->h - 1);
   if (corner) {
-    p->add(atlas::tile(t::Pillar));
+    p->add(masonryTile(s, t::Pillar));
     if (r % 3 != 0)
-      p->add(atlas::tile(t::Pillar), -16);
+      p->add(masonryTile(s, t::Pillar), -16);
     return p->body(1.0f, 6);
   }
   if (lx == s->w / 2 && ly == s->h / 2) {
-    p->piece(atlas::tile(t::Crystal), 0.7f, 4);
+    p->piece(masonryTile(s, t::Crystal), 0.7f, 4);
     p->lamp({0.06f, 0.22f, 0.38f, 1}, 130, -12);
     return true;
   }
@@ -137,7 +137,7 @@ bool mine(Site s, int lx, int ly, uint32_t r, Prop *p) {
   if (lx == 1 && ly == 5 && (s->seed & 2))
     return p->piece(atlas::frontier(fr::Timber), 0.8f, 0);
   if (lx == 6 && ly == 3)
-    return p->piece(atlas::tile(r & 2 ? t::Crate : t::Barrel), 0.8f, 5);
+    return p->piece(masonryTile(s, r & 2 ? t::Crate : t::Barrel), 0.8f, 5);
   return false;
 }
 

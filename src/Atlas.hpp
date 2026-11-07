@@ -204,6 +204,9 @@ constexpr Sprite masonry(int material, int index) {
   s.y += float(1488 + (material / 2) * 144 - 54);
   return s;
 }
+constexpr Sprite masonryProp(int material, int slot) {
+  return {float((material * 6 + slot) * 18 + 1), 1777, 16, 16};
+}
 constexpr Sprite beast(int index) {
   return {float((index % 24) * 18 + 1), float(1380 + (index / 24) * 18 + 1), 16, 16};
 }

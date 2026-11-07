@@ -41,13 +41,13 @@ PIPELINE = (
     ("sprite kit", (432, 552), add_sprites),
     ("grounds", (432, 624), add_grounds),
     ("frontier", (432, 624), add_frontier),
-    ("expansion", (432, 1776), add_expansion),
-    ("dirt rims", (432, 1776), add_rims),
-    ("arsenal", (432, 1776), add_arsenal),
-    ("landmarks", (432, 1776), add_landmarks),
-    ("cliffs", (432, 1776), add_cliffs),
-    ("bestiary", (432, 1776), add_bestiary),
-    ("masonry", (432, 1776), add_masonry),
+    ("expansion", (432, 1794), add_expansion),
+    ("dirt rims", (432, 1794), add_rims),
+    ("arsenal", (432, 1794), add_arsenal),
+    ("landmarks", (432, 1794), add_landmarks),
+    ("cliffs", (432, 1794), add_cliffs),
+    ("bestiary", (432, 1794), add_bestiary),
+    ("masonry", (432, 1794), add_masonry),
 )
 
 

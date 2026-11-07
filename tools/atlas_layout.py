@@ -46,6 +46,7 @@ BANDS = (
     Band("cliffs", 0, 1326, 24, 3),
     Band("bestiary", 0, 1380, 24, 6),
     Band("masonry", 0, 1488, 24, 16),
+    Band("masonry props", 0, 1776, 24, 1),
 )
 
 EXPANSION_ACTORS = {
@@ -166,6 +167,7 @@ def validate_cpp_layout(path):
         "arsenal": ("(index%24)*18+1", "1020+(index/24)*18+1"),
         "beast": ("(index%24)*18+1", "1380+(index/24)*18+1"),
         "masonry": ("(material%2)*216-216", "1488+(material/2)*144-54"),
+        "masonryProp": ("(material*6+slot)*18+1", "1777"),
     }
     errors = []
     for name, terms in expected.items():
