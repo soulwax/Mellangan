@@ -1,8 +1,12 @@
 #include "campaign/Campaign.hpp"
 
+#include "campaign/Quests.hpp"
+#include "hero/Hero.hpp"
+
 #include <spdlog/fmt/fmt.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <sstream>
 
@@ -134,5 +138,15 @@ bool Campaign::load(std::string_view text, Campaign &out) {
     else if (key == "edit")
       out.edits.load(line);
   }
+  out.hero = std::clamp(out.hero, 0, HERO_COUNT - 1), out.act = std::clamp(out.act, 1, ACT_COUNT);
+  out.quest = std::clamp(out.quest, 0, QUEST_COUNT), out.lvl = std::max(out.lvl, 1);
+  for (int *n : {&out.gold, &out.day, &out.points, &out.rescued, &out.nightmare, &out.progress})
+    *n = std::max(*n, 0);
+  for (int &m : out.materials)
+    m = std::max(m, 0);
+  out.exp = std::isfinite(out.exp) ? std::max(out.exp, 0.0f) : 0.0f;
+  out.expNext = std::isfinite(out.expNext) && out.expNext > 0 ? out.expNext : 5.0f;
+  for (auto *p : {&out.x, &out.y, &out.xTown, &out.yTown, &out.qx, &out.qy})
+    *p = std::isfinite(*p) ? *p : 0;
   return !out.world.empty();
 }

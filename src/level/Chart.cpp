@@ -253,6 +253,7 @@ void Chart::load(const std::string &path) {
   sites.resize(head[2]);
   if (head[2])
     std::memcpy(sites.data(), at, head[2] * sizeof(Structure));
+  std::erase_if(sites, [](const Structure &s) { return unsigned(s.kind) >= unsigned(StructureKind::Count); });
   if (head[0] != DISTANCE_MAGIC) {
     size_t count = 0;
     for (const Structure &old : sites) {
