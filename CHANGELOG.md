@@ -6,6 +6,10 @@ All notable changes to Mellangan are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Ten campaign achievements: clear each of the five acts, begin a Nightmare campaign, clear an act with a hardcore hero, raise a watchtower, shelter five sanctuary seekers and clear three mines. They unlock the moment they happen, with a banner, and are listed on the codex achievements page (now 60).
+
 ## [0.6.6] - 2026-11-07
 
 ### Added
